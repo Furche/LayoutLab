@@ -50,6 +50,11 @@ See [docs/json_protocol.md](docs/json_protocol.md) for the full command referenc
 
 No manual copying into folders — Blender extracts the addon for you.
 
+### Diagnostics
+
+After installing, open **LayoutLab → Run Console Checks**.  
+The structured report is printed to the system console and copied to the clipboard — send it to Cursor for review.
+
 ### Option B — Copy folder
 
 1. Clone this repository:

@@ -23,6 +23,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ### Changed
 
 - `scripts/build_addon_zip.py` — builds `dist/layoutlab-<version>.zip` for Blender Install…
+- `layoutlab/diagnostics.py` — console diagnostic checks with shareable report
 - Blender addon packaged as `layoutlab/` folder (`__init__.py`)
 - `layoutlab_util.py` → `layoutlab/util.py`
 - `generators/` → `layoutlab/generators/`

@@ -593,6 +593,27 @@ class LAYOUTLAB_PT_panel(bpy.types.Panel):
         row.operator("layoutlab.new_generator", text="New")
         row.operator("layoutlab.save_generator_from_text", text="Save")
         row.operator("layoutlab.load_selected_generator", text="Load")
+        layout.separator()
+        box = layout.box()
+        box.label(text="Diagnostics", icon="CONSOLE")
+        box.operator("layoutlab.run_diagnostics", text="Run Console Checks", icon="FILE_TEXT")
+
+
+class LAYOUTLAB_OT_run_diagnostics(bpy.types.Operator):
+    bl_idname = "layoutlab.run_diagnostics"
+    bl_label = "Run Console Checks"
+
+    def execute(self, context):
+        from .diagnostics import run_console_checks
+
+        try:
+            report = run_console_checks(context)
+            context.window_manager.clipboard = report
+            self.report({"INFO"}, "Diagnostics complete — report copied to clipboard.")
+        except Exception as exc:
+            self.report({"ERROR"}, str(exc))
+            return {"CANCELLED"}
+        return {"FINISHED"}
 
 
 classes = (
@@ -611,6 +632,7 @@ classes = (
     LAYOUTLAB_OT_run_selected_generator,
     LAYOUTLAB_UL_generator_list,
     LAYOUTLAB_PT_panel,
+    LAYOUTLAB_OT_run_diagnostics,
 )
 
 
