@@ -1,16 +1,23 @@
-# LayoutLab generator
+# LayoutLab generator — see bed_basic.md for parameter reference.
 GENERATOR_NAME = "bed_basic"
 GENERATOR_CATEGORY = "Beds"
 GENERATOR_DESCRIPTION = "Parametric low bed with legs, frame, mattress, headboard and fallback sizing."
 GENERATOR_VERSION = "0.1"
 GENERATOR_ICON = "BED"
 
+# Fallback thresholds (Blender units; 1 unit ≈ 10 cm in reference room)
+MIN_BED_DIMENSION = 3
+PILLOW_COUNT_WIDTH_THRESHOLD = 13  # width >= 13 → two pillows
+PILLOW_HEIGHT = 0.45
+PILLOW_GAP = 0.2
+MATTRESS_Z_INSET_FACTOR = 0.55  # mattress sits above lower rail within frame
+
 
 def generate(params, api):
     name = params.get("name", "BED_basic")
     x, y, z = params.get("location", [0, 0, 0])
-    length = max(params.get("length", 20), 3)
-    width = max(params.get("width", 12), 3)
+    length = max(params.get("length", 20), MIN_BED_DIMENSION)
+    width = max(params.get("width", 12), MIN_BED_DIMENSION)
     collection = params.get("collection", "layout_tests")
 
     leg_height = params.get("leg_height", 2.5)
@@ -34,8 +41,15 @@ def generate(params, api):
         (0, width - post, "post_xmin_ymax"),
         (length - post, width - post, "post_xmax_ymax"),
     ]:
-        cb(f"{name}_{suffix}", [x + sx, y + sy, z], [post, post, leg_height + frame_height],
-           frame_color, collection, "bed_post", None)
+        cb(
+            f"{name}_{suffix}",
+            [x + sx, y + sy, z],
+            [post, post, leg_height + frame_height],
+            frame_color,
+            collection,
+            "bed_post",
+            None,
+        )
 
     frame_z = z + leg_height
 
@@ -48,10 +62,16 @@ def generate(params, api):
     mattress_y = y + inset
     mattress_l = max(length - 2 * inset, 1)
     mattress_w = max(width - 2 * inset, 1)
-    mattress_z = frame_z + frame_height * 0.55
-    cb(f"{name}_mattress", [mattress_x, mattress_y, mattress_z],
-       [mattress_l, mattress_w, mattress_height],
-       mattress_color, collection, "bed_mattress", None)
+    mattress_z = frame_z + frame_height * MATTRESS_Z_INSET_FACTOR
+    cb(
+        f"{name}_mattress",
+        [mattress_x, mattress_y, mattress_z],
+        [mattress_l, mattress_w, mattress_height],
+        mattress_color,
+        collection,
+        "bed_mattress",
+        None,
+    )
 
     head_h = params.get("headboard_height", 4.2)
     foot_h = params.get("footboard_height", 2.2)
@@ -67,19 +87,25 @@ def generate(params, api):
         cb(f"{name}_headboard", [x + length - rail, y, z], [rail, width, head_h], frame_color, collection, "bed_headboard", None)
         cb(f"{name}_footboard", [x, y, z], [rail, width, foot_h], frame_color, collection, "bed_footboard", None)
         pillow_y = mattress_y + mattress_w - 2.0
-    else:
+    else:  # x_min (default for unknown values)
         cb(f"{name}_headboard", [x, y, z], [rail, width, head_h], frame_color, collection, "bed_headboard", None)
         cb(f"{name}_footboard", [x + length - rail, y, z], [rail, width, foot_h], frame_color, collection, "bed_footboard", None)
         pillow_y = mattress_y + 0.2
 
-    pillow_count = 2 if width >= 13 else 1
+    pillow_count = 2 if width >= PILLOW_COUNT_WIDTH_THRESHOLD else 1
     pillow_w = max((mattress_w - 0.4) / pillow_count, 0.8)
     for i in range(pillow_count):
-        px = mattress_x + 0.2 + i * pillow_w
+        px = mattress_x + PILLOW_GAP + i * pillow_w
         py = max(min(pillow_y, mattress_y + mattress_w - 1.2), mattress_y + 0.2)
-        cb(f"{name}_pillow_{i+1}", [px, py, mattress_z + mattress_height + 0.05],
-           [pillow_w - 0.2, min(1.8, mattress_w * 0.35), 0.45],
-           pillow_color, collection, "bed_pillow", None)
+        cb(
+            f"{name}_pillow_{i + 1}",
+            [px, py, mattress_z + mattress_height + 0.05],
+            [pillow_w - PILLOW_GAP, min(1.8, mattress_w * 0.35), PILLOW_HEIGHT],
+            pillow_color,
+            collection,
+            "bed_pillow",
+            None,
+        )
 
-    cl(f"{name}_label", [x + length/2, y + width/2, mattress_z + mattress_height + 0.7], name, collection)
+    cl(f"{name}_label", [x + length / 2, y + width / 2, mattress_z + mattress_height + 0.7], name, collection)
     return {"created": name, "type": "bed_basic", "size": [length, width]}

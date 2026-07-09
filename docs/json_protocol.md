@@ -1,14 +1,21 @@
 # LayoutLab JSON Protocol
 
-Version: 0.5.0 (Draft)
+Version: **0.5.0** (Contract)
 
-> This document describes how external agents (ChatGPT, Cursor, scripts) communicate
-> with the LayoutLab Blender plugin.
+> **This document is the binding contract** between external agents (ChatGPT,
+> Cursor, scripts) and the LayoutLab Blender plugin.
 >
-> **Status markers used throughout this document:**
+> If behaviour differs from this document, treat it as a **bug** — fix the code
+> or update this document deliberately (with changelog entry).
+>
+> **Status markers:**
 >
 > - `[IMPLEMENTED]` — works in `layoutlab_chatgpt_helper_v05.py` today
-> - `[PLANNED]` — not yet implemented; listed for forward compatibility only
+> - `[PLANNED]` — not yet implemented; do not assume availability
+
+Reference code: `layoutlab_chatgpt_helper_v05.py`, `layoutlab_util.py`
+
+Related: `docs/units_and_coordinates.md`, `docs/design_decisions/DD-003-json-only-communication.md`
 
 ------------------------------------------------------------------------
 
@@ -16,47 +23,48 @@ Version: 0.5.0 (Draft)
 
 LayoutLab uses JSON as the **only** communication channel between AI and plugin.
 
-- No Python snippets sent directly to Blender operators
-- No Blender-specific scripting in AI responses intended for execution
-
-Two directions exist:
-
-| Direction | Purpose | Status |
+| Direction | Trigger | Status |
 |---|---|---|
-| **Commands → Plugin** | AI instructs Blender to create, move, or modify the scene | `[IMPLEMENTED]` |
-| **Scene ← Plugin** | Plugin exports scene state back to AI | `[IMPLEMENTED]` |
+| **Commands → Plugin** | Panel → *Apply Commands* | `[IMPLEMENTED]` |
+| **Scene ← Plugin** | Panel → *Copy Scene Layout* / *Copy Selected* | `[IMPLEMENTED]` |
+| **Generator list ← Plugin** | Panel → *Copy List* | `[IMPLEMENTED]` |
 
-Reference implementation: `layoutlab_chatgpt_helper_v05.py`
+**Not allowed:** Python snippets for direct Blender execution (except `save_generator.code`).
 
 ------------------------------------------------------------------------
 
 # 2. Protocol Version
 
-| Field | Value | Status |
-|---|---|---|
-| `layoutlab_version` in scene export | `"0.5.0"` | `[IMPLEMENTED]` |
-| `protocol_version` in command payloads | — | `[PLANNED]` |
-| Version negotiation / migration | — | `[PLANNED]` |
+| Field | Location | Value | Status |
+|---|---|---|---|
+| `layoutlab_version` | Scene export | `"0.5.0"` | `[IMPLEMENTED]` |
+| `protocol_version` | Command payload | — | `[PLANNED]` |
 
-Until `protocol_version` exists, agents should assume **v0.5 behaviour** as described here.
+Until `protocol_version` exists, agents must assume **v0.5.0** behaviour exactly as documented here.
 
 ------------------------------------------------------------------------
 
 # 3. Command Input
 
-## 3.1 Envelope Format `[IMPLEMENTED]`
+## 3.1 Source `[IMPLEMENTED]`
 
-Commands are applied via **Apply Commands** in the LayoutLab panel.
-Source: clipboard (default) or Blender text block `LayoutLab_Commands`.
+| Source | Setting | Default text block |
+|---|---|---|
+| System clipboard | `layoutlab_command_source = CLIPBOARD` | — |
+| Blender text block | `layoutlab_command_source = TEXT` | `LayoutLab_Commands` |
 
-The payload must be valid JSON in one of two forms:
+Panel: *LayoutLab → Apply ChatGPT Commands*
 
-**Form A — object with commands array (preferred):**
+## 3.2 Envelope Format `[IMPLEMENTED]`
+
+Valid JSON in one of two forms:
+
+**Form A — object with `commands` array (preferred):**
 
 ```json
 {
   "commands": [
-    { "action": "run_generator", "generator": "bed_basic", "params": { } }
+    { "action": "run_generator", "generator": "bed_basic", "params": {} }
   ]
 }
 ```
@@ -69,43 +77,70 @@ The payload must be valid JSON in one of two forms:
 ]
 ```
 
-## 3.2 Execution Semantics `[IMPLEMENTED]`
+| Input | Result |
+|---|---|
+| `{"commands": []}` | Valid no-op |
+| `{}` | Valid no-op (empty command list) |
+| Invalid JSON | Entire batch cancelled; error shown in UI |
+| `{"commands": "text"}` | Error: expected list |
 
-- Commands run **sequentially** in array order.
-- Each command is independent; later commands see effects of earlier ones.
-- **Partial success:** failed commands do not stop the batch. Failures are collected; successful commands still apply.
-- Failed command index and traceback are printed to the Blender console.
-- Invalid top-level JSON (parse error) cancels the entire batch.
+Parsing implementation: `layoutlab_util.parse_commands_payload()`
 
-## 3.3 Result Reporting `[IMPLEMENTED]`
+## 3.3 Execution Semantics `[IMPLEMENTED]`
 
-- Successful commands that return a value append to an internal results list (printed to console).
-- No structured JSON result is returned to the AI automatically — `[PLANNED]`
+1. Commands run **sequentially** in array order.
+2. Later commands see scene effects of earlier commands.
+3. **Partial success:** one failed command does not stop the batch.
+4. Failures: index + traceback printed to **Blender system console**.
+5. UI report: `WARNING` if any command failed, else `INFO`.
+6. Successful return values collected internally and printed to console as JSON.
 
-## 3.4 Structured Error Response `[PLANNED]`
+## 3.4 Result Reporting `[IMPLEMENTED]`
 
-```json
-{
-  "results": [ ],
-  "errors": [
-    { "index": 0, "action": "move", "message": "Object not found: MISSING" }
-  ]
-}
-```
+| Outcome | Where |
+|---|---|
+| Success values | Blender console (`LayoutLab results:`) |
+| Errors | Blender console (`LayoutLab errors:`) |
+| Structured JSON reply to AI | `[PLANNED]` |
+
+## 3.5 Error Behaviour Summary `[IMPLEMENTED]`
+
+| Condition | Behaviour |
+|---|---|
+| Unknown `action` | Command fails; batch continues |
+| Missing required field | Command fails (typically `KeyError`) |
+| `move` / `rotate_z` / `hide` / `show` on missing object | Command fails |
+| `delete` on missing object | Silent success |
+| `delete_generator` on missing file | Silent success |
+| `run_generator` on unknown generator | Command fails: `Generator not found` |
+| Invalid generator code | Command fails at `exec` or missing `generate()` |
 
 ------------------------------------------------------------------------
 
-# 4. Command Reference
+# 4. Command Index
 
-Every command is a JSON object with a required `"action"` field.
+| Action | Purpose | Returns value |
+|---|---|---|
+| `run_generator` | Execute parametric generator | yes (generator dict) |
+| `save_generator` | Save generator Python source | yes |
+| `delete_generator` | Delete generator file | yes |
+| `create_box` | Create box mesh | yes (Blender object) |
+| `create_clearance` | Create clearance zone | yes (Blender object) |
+| `delete_collection_objects` | Remove all objects in collection | no |
+| `delete_prefix` | Remove objects by name prefix | no |
+| `move` | Set object location | no |
+| `rotate_z` | Rotate object around Z | no |
+| `delete` | Remove object | no |
+| `hide` | Hide in viewport and render | no |
+| `show` | Show in viewport and render | no |
 
-Object references accept either `"object"` or `"name"` as the key — both are equivalent. `[IMPLEMENTED]`
+Object references: use `"object"` **or** `"name"` — equivalent. `[IMPLEMENTED]`
 
 ------------------------------------------------------------------------
 
-## 4.1 `run_generator` `[IMPLEMENTED]`
+# 5. Command Reference
 
-Executes a parametric generator by name.
+## 5.1 `run_generator` `[IMPLEMENTED]`
 
 ```json
 {
@@ -124,86 +159,95 @@ Executes a parametric generator by name.
 
 | Field | Required | Type | Description |
 |---|---|---|---|
-| `generator` | yes | string | Generator name (sanitized to `[a-zA-Z0-9_]`) |
-| `params` | no | object | Passed to `generate(params, api)`; defaults to `{}` |
+| `action` | yes | `"run_generator"` | — |
+| `generator` | yes | string | Generator name → sanitized to `[a-zA-Z0-9_]` |
+| `params` | no | object | Passed to `generate(params, api)`; default `{}` |
 
-**Return value (console):** generator-specific dict, e.g. `{"created": "...", "type": "bed_basic", "size": [12, 20]}`
+**Prerequisite:** generator file must exist in the user generator directory.
+On addon register, bundled generators from `generators/` are copied if missing.
+Use panel → *Install Default* or `save_generator` to install.
 
-### Known generator: `bed_basic` `[IMPLEMENTED]`
+**Return (console):** generator-specific dict, e.g.:
 
-| Parameter | Default | Description |
-|---|---|---|
-| `name` | `"BED_basic"` | Object name prefix |
-| `location` | `[0, 0, 0]` | Origin `[x, y, z]` in Blender units |
-| `length` | `20` | Bed length (min 3) |
-| `width` | `12` | Bed width (min 3) |
-| `collection` | `"layout_tests"` | Target Blender collection |
-| `head_side` | `"y_max"` | Headboard side: `y_max`, `y_min`, `x_max`, or other (= `x_min`) |
-| `leg_height` | `2.5` | Leg height |
-| `frame_height` | `1.0` | Frame rail height |
-| `mattress_height` | `2.0` | Mattress thickness |
-| `rail_thickness` | `0.35` | Frame rail thickness (capped relative to size) |
-| `post_size` | `0.45` | Corner post size (capped relative to size) |
-| `mattress_inset` | `0.45` | Mattress inset from frame |
-| `headboard_height` | `4.2` | Headboard height |
-| `footboard_height` | `2.2` | Footboard height |
-| `frame_color` | `[0.72, 0.55, 0.35, 1]` | RGBA |
-| `mattress_color` | `[0.86, 0.86, 0.82, 0.65]` | RGBA |
-| `pillow_color` | `[0.95, 0.95, 0.92, 1]` | RGBA |
+```json
+{ "created": "BED_120x200", "type": "bed_basic", "size": [12, 20] }
+```
 
-### `regenerate` (same generator, updated params) `[PLANNED]`
+### Generator params: `bed_basic` `[IMPLEMENTED]`
 
-Replace an existing generated object in place without manual delete.
+See `generators/bed_basic.md` for full documentation.
+
+| Parameter | Default | Unit | Description |
+|---|---|---|---|
+| `name` | `"BED_basic"` | — | Prefix for all component object names |
+| `location` | `[0, 0, 0]` | Blender units | Min corner of footprint at floor (see units doc) |
+| `length` | `20` | Blender units | Extent along **+X** (min 3) |
+| `width` | `12` | Blender units | Extent along **+Y** (min 3) |
+| `collection` | `"layout_tests"` | — | Target collection |
+| `head_side` | `"y_max"` | — | `y_max`, `y_min`, `x_max`, `x_min` |
+| `leg_height` | `2.5` | Blender units | — |
+| `frame_height` | `1.0` | Blender units | — |
+| `mattress_height` | `2.0` | Blender units | — |
+| `rail_thickness` | `0.35` | Blender units | Capped at 20% of width/length |
+| `post_size` | `0.45` | Blender units | Capped at 25% of width/length |
+| `mattress_inset` | `0.45` | Blender units | Capped at 20% of width/length |
+| `headboard_height` | `4.2` | Blender units | — |
+| `footboard_height` | `2.2` | Blender units | — |
+| `frame_color` | `[0.72, 0.55, 0.35, 1]` | RGBA 0–1 | — |
+| `mattress_color` | `[0.86, 0.86, 0.82, 0.65]` | RGBA 0–1 | — |
+| `pillow_color` | `[0.95, 0.95, 0.92, 1]` | RGBA 0–1 | — |
+
+**Component roles** set on meshes (`layoutlab_role`):
+
+`bed_post`, `bed_frame`, `bed_mattress`, `bed_headboard`, `bed_footboard`, `bed_pillow`, `label`
+
+**Standard size example:** `length: 12, width: 20` → 120 × 200 cm at 1 unit = 10 cm.
 
 ------------------------------------------------------------------------
 
-## 4.2 `save_generator` `[IMPLEMENTED]`
-
-Saves Python generator source code to the user generator directory.
+## 5.2 `save_generator` `[IMPLEMENTED]`
 
 ```json
 {
   "action": "save_generator",
-  "code": "GENERATOR_NAME = \"my_bed\"\n..."
+  "code": "GENERATOR_NAME = \"my_bed\"\nGENERATOR_CATEGORY = \"Beds\"\n..."
 }
 ```
 
 | Field | Required | Type | Description |
 |---|---|---|---|
-| `code` | yes | string | Full Python source; must contain `GENERATOR_NAME = "..."` and `def generate(params, api)` |
+| `action` | yes | `"save_generator"` | — |
+| `code` | yes | string | Full Python source with `GENERATOR_NAME` and `generate(params, api)` |
 
-**Return value:** `{"saved_generator": "<name>", "path": "<absolute path>"}`
-
-Generator files are stored at:
-
-`~/Library/Application Support/Blender/<version>/scripts/addons/layoutlab_generators/<name>.py`
-
-(macOS path; OS-dependent via Blender user scripts directory)
-
-### Generator validation before save `[PLANNED]`
-
-Syntax check, required metadata fields, forbidden patterns.
-
-------------------------------------------------------------------------
-
-## 4.3 `delete_generator` `[IMPLEMENTED]`
+**Return:**
 
 ```json
-{
-  "action": "delete_generator",
-  "generator": "bed_basic"
-}
+{ "saved_generator": "my_bed", "path": "/absolute/path/to/my_bed.py" }
 ```
 
-**Return value:** `{"deleted_generator": "<name>"}`
+**Storage path:** `{Blender user scripts}/addons/layoutlab_generators/{name}.py`
 
-No error if file does not exist.
+(OS-specific; macOS example: `~/Library/Application Support/Blender/<ver>/scripts/addons/layoutlab_generators/`)
+
+Validation before save: `[PLANNED]`
 
 ------------------------------------------------------------------------
 
-## 4.4 `create_box` `[IMPLEMENTED]`
+## 5.3 `delete_generator` `[IMPLEMENTED]`
 
-Creates a axis-aligned box mesh.
+```json
+{ "action": "delete_generator", "generator": "bed_basic" }
+```
+
+| Field | Required |
+|---|---|
+| `generator` | yes |
+
+**Return:** `{ "deleted_generator": "<name>" }` — no error if file absent.
+
+------------------------------------------------------------------------
+
+## 5.4 `create_box` `[IMPLEMENTED]`
 
 ```json
 {
@@ -214,169 +258,133 @@ Creates a axis-aligned box mesh.
   "color": [0.8, 0.8, 0.8, 1],
   "collection": "layout_tests",
   "role": "wall",
-  "display_type": null
+  "display_type": "WIRE"
 }
 ```
 
 | Field | Required | Default | Description |
 |---|---|---|---|
-| `name` | yes | — | Blender object name |
-| `location` | no | `[0, 0, 0]` | Box origin `[x, y, z]` |
-| `dimensions` | no | `[1, 1, 1]` | Size `[dx, dy, dz]` |
-| `color` | no | `[0.8, 0.8, 0.8, 1]` | RGBA material color |
-| `collection` | no | `"layout_tests"` | Target collection |
-| `role` | no | `null` | Stored as custom property `layoutlab_role` |
-| `display_type` | no | `null` | Blender viewport display mode (e.g. `"WIRE"`) |
+| `name` | yes | — | Blender object name (must be unique) |
+| `location` | no | `[0, 0, 0]` | Box min corner `[x, y, z]` |
+| `dimensions` | no | `[1, 1, 1]` | `[dx, dy, dz]` along X, Y, Z |
+| `color` | no | `[0.8, 0.8, 0.8, 1]` | RGBA; omit material if falsy |
+| `collection` | no | `"layout_tests"` | — |
+| `role` | no | none | Sets `layoutlab_role` custom property |
+| `display_type` | no | none | e.g. `"WIRE"`, `"SOLID"`, `"BOUNDS"` |
 
 ------------------------------------------------------------------------
 
-## 4.5 `create_clearance` `[IMPLEMENTED]`
-
-Creates a clearance zone (wireframe box with semantic role).
-
-```json
-{
-  "action": "create_clearance",
-  "name": "CLEARANCE_bed_access",
-  "location": [68.3, 197.7, 0],
-  "dimensions": [12, 7, 0.1],
-  "color": [0.2, 0.8, 1.0, 0.22],
-  "collection": "layout_tests",
-  "display_type": "WIRE"
-}
-```
+## 5.5 `create_clearance` `[IMPLEMENTED]`
 
 Same fields as `create_box`, except:
 
-- `role` is always set to `"clearance"` (not overridable)
-- Default `color`: `[0.2, 0.8, 1.0, 0.22]`
-- Default `display_type`: `"WIRE"`
-- Default `dimensions[2]`: `0.1` (thin slab)
-
-### Auto-generated clearance from generators `[PLANNED]`
-
-Generators emit their own clearance zones via API, not manual JSON commands.
+| Aspect | Value |
+|---|---|
+| `role` | Always `"clearance"` (ignores input) |
+| Default `color` | `[0.2, 0.8, 1.0, 0.22]` |
+| Default `display_type` | `"WIRE"` |
+| Default `dimensions[2]` | `0.1` |
 
 ------------------------------------------------------------------------
 
-## 4.6 `delete_collection_objects` `[IMPLEMENTED]`
-
-Removes all objects in a collection (collection itself remains).
+## 5.6 `delete_collection_objects` `[IMPLEMENTED]`
 
 ```json
-{
-  "action": "delete_collection_objects",
-  "collection": "layout_tests"
-}
+{ "action": "delete_collection_objects", "collection": "layout_tests" }
 ```
+
+| Field | Required |
+|---|---|
+| `collection` | yes |
+
+Removes objects in collection; collection itself remains. No error if collection missing.
 
 ------------------------------------------------------------------------
 
-## 4.7 `delete_prefix` `[IMPLEMENTED]`
-
-Removes all scene objects whose names start with a prefix.
+## 5.7 `delete_prefix` `[IMPLEMENTED]`
 
 ```json
-{
-  "action": "delete_prefix",
-  "prefix": "BED_"
-}
+{ "action": "delete_prefix", "prefix": "BED_120x200" }
 ```
+
+| Field | Required |
+|---|---|
+| `prefix` | yes |
+
+Removes **all scene objects** whose names start with `prefix`. Use before re-running a generator.
 
 ------------------------------------------------------------------------
 
-## 4.8 `move` `[IMPLEMENTED]`
+## 5.8 `move` `[IMPLEMENTED]`
 
 ```json
-{
-  "action": "move",
-  "object": "BED_120x200_mattress",
-  "location": [70.0, 200.0, 0]
-}
+{ "action": "move", "object": "BED_120x200_mattress", "location": [70, 200, 0] }
 ```
 
-| Field | Required | Description |
-|---|---|---|
-| `object` or `name` | yes | Target object name |
-| `location` | yes | New `[x, y, z]` |
+| Field | Required |
+|---|---|
+| `object` or `name` | yes |
+| `location` | yes |
 
-**Error:** raises if object not found.
+**Note:** moves **one** Blender object. Generated furniture consists of many meshes — moving the logical bed requires moving each component or re-running the generator. `[PLANNED]` semantic/group move.
 
-### Semantic move (`move_to_make_space`) `[PLANNED]`
-
-Move based on intent, not absolute coordinates.
+**Error if object not found.**
 
 ------------------------------------------------------------------------
 
-## 4.9 `rotate_z` `[IMPLEMENTED]`
+## 5.9 `rotate_z` `[IMPLEMENTED]`
 
 ```json
-{
-  "action": "rotate_z",
-  "object": "BED_120x200",
-  "degrees": 90
-}
+{ "action": "rotate_z", "object": "BED_120x200_mattress", "degrees": 90 }
 ```
 
-| Field | Required | Description |
-|---|---|---|
-| `object` or `name` | yes | Target object name |
-| `degrees` | yes | Rotation around Z axis in degrees |
+| Field | Required |
+|---|---|
+| `object` or `name` | yes |
+| `degrees` | yes |
 
-**Error:** raises if object not found.
-
-### Full `rotate` (3-axis) `[PLANNED]`
+Same single-object limitation as `move`. **Error if object not found.**
 
 ------------------------------------------------------------------------
 
-## 4.10 `delete` `[IMPLEMENTED]`
+## 5.10 `delete` `[IMPLEMENTED]`
 
 ```json
-{
-  "action": "delete",
-  "object": "TEST_BOX"
-}
+{ "action": "delete", "object": "TEST_BOX" }
 ```
 
-Silently succeeds if object does not exist.
+Silent if object does not exist.
 
 ------------------------------------------------------------------------
 
-## 4.11 `hide` / `show` `[IMPLEMENTED]`
+## 5.11 `hide` / `show` `[IMPLEMENTED]`
 
 ```json
 { "action": "hide", "object": "CLEARANCE_bed_access" }
 { "action": "show", "object": "CLEARANCE_bed_access" }
 ```
 
-Sets both `hide_viewport` and `hide_render`.
-
-**Error:** raises if object not found.
+Sets `hide_viewport` and `hide_render`. **Error if object not found.**
 
 ------------------------------------------------------------------------
 
-## 4.12 Planned Commands (not in v0.5)
+## 5.12 Planned Commands
 
-| Action | Purpose | Status |
-|---|---|---|
-| `run_generator_batch` | Multiple generators in one logical operation with shared undo | `[PLANNED]` |
-| `set_parameter` | Update params on an existing generated object and regenerate | `[PLANNED]` |
-| `analyze_layout` | Return clearance violations, paths, storage metrics | `[PLANNED]` |
-| `compare_variants` | Diff two layout states | `[PLANNED]` |
-| `create_collection` | Explicit collection management | `[PLANNED]` |
-| `group_objects` | Link meshes to a LayoutLab object identity | `[PLANNED]` |
+| Action | Purpose |
+|---|---|
+| `regenerate` | Update params on existing logical object |
+| `run_generator_batch` | Shared undo group |
+| `set_parameter` | Param change + regenerate |
+| `analyze_layout` | Constraint/clearance analysis |
+| `compare_variants` | Layout diff |
+| `create_collection` | Collection management |
+| `group_objects` | Semantic object identity |
 
 ------------------------------------------------------------------------
 
-# 5. Scene Export (Plugin → AI)
+# 6. Scene Export (Plugin → AI)
 
-## 5.1 Trigger `[IMPLEMENTED]`
-
-LayoutLab panel → **Copy Scene Layout** or **Copy Selected**
-
-Copies JSON to system clipboard.
-
-## 5.2 Export Schema `[IMPLEMENTED]`
+## 6.1 Schema `[IMPLEMENTED]`
 
 ```json
 {
@@ -385,24 +393,24 @@ Copies JSON to system clipboard.
   "unit_scale": 1.0,
   "scene": "Scene",
   "generator_dir": "/path/to/layoutlab_generators",
-  "generators": [ ],
+  "generators": [],
   "note": "Coordinates/dimensions are Blender units. In Alexander's room: 1 unit ≈ 10 cm.",
-  "objects": [ ]
+  "objects": []
 }
 ```
 
 | Field | Type | Description |
 |---|---|---|
 | `layoutlab_version` | string | Plugin version |
-| `unit` | string | Blender unit system (`METRIC`, `IMPERIAL`, `NONE`) |
-| `unit_scale` | number | Blender scale length |
+| `unit` | string | `METRIC`, `IMPERIAL`, or `NONE` |
+| `unit_scale` | number | Blender `scale_length` |
 | `scene` | string | Scene name |
-| `generator_dir` | string | Absolute path to generator storage |
-| `generators` | array | All registered generators (metadata only) |
-| `note` | string | Human-readable unit hint (project-specific) |
-| `objects` | array | Scene objects (see below) |
+| `generator_dir` | string | Absolute path to runtime generator storage |
+| `generators` | array | Installed generator metadata (see §6.2) |
+| `note` | string | Unit hint for this project |
+| `objects` | array | Exported objects (see §6.3) |
 
-### Generator metadata entry `[IMPLEMENTED]`
+## 6.2 Generator Metadata Entry `[IMPLEMENTED]`
 
 ```json
 {
@@ -415,9 +423,9 @@ Copies JSON to system clipboard.
 }
 ```
 
-## 5.3 Object Entry `[IMPLEMENTED]`
+## 6.3 Object Entry `[IMPLEMENTED]`
 
-Only objects of type `MESH`, `EMPTY`, `CURVE`, or `FONT` are exported.
+Exported types: `MESH`, `EMPTY`, `CURVE`, `FONT` only.
 
 ```json
 {
@@ -429,110 +437,64 @@ Only objects of type `MESH`, `EMPTY`, `CURVE`, or `FONT` are exported.
   "scale": [1.0, 1.0, 1.0],
   "dimensions": [11.1, 19.1, 2.0],
   "visible": true,
-  "world_bbox_corners": [ [68.75, 198.15, 3.55], "..." ],
-  "custom_properties": {
-    "layoutlab_role": "bed_mattress"
-  }
+  "world_bbox_corners": [[68.75, 198.15, 3.55], "..."],
+  "custom_properties": { "layoutlab_role": "bed_mattress" }
 }
 ```
 
-| Field | Description |
+| Field | Notes |
 |---|---|
-| `location` | Object origin, rounded to 4 decimals |
-| `rotation_euler_deg` | Euler rotation in degrees |
-| `dimensions` | World-space bounding dimensions |
-| `world_bbox_corners` | 8 corner points of world bounding box |
-| `custom_properties` | Only string/int/float/bool custom props |
+| `location` | Object origin; 4 decimal places |
+| `dimensions` | World-space AABB size |
+| `world_bbox_corners` | 8 world corners |
+| `custom_properties` | string/int/float/bool only |
 
-### Semantic object export `[PLANNED]`
-
-Export should eventually include:
-
-```json
-{
-  "layoutlab": {
-    "object_id": "uuid",
-    "generator": "bed_basic",
-    "generator_version": "0.1",
-    "params": { "length": 12, "width": 20 },
-    "component": "mattress",
-    "parent_object": "BED_120x200"
-  }
-}
-```
-
-Currently only `layoutlab_role` on individual meshes is available.
-
-## 5.4 Export Filters `[PLANNED]`
-
-- By collection
-- By `layoutlab_role`
-- Semantic objects only (exclude raw construction geometry)
+Semantic grouping (`layoutlab_object_id`, generator params on export): `[PLANNED]`
 
 ------------------------------------------------------------------------
 
-# 6. Generator List Export
+# 7. Generator List Export
 
-## 6.1 Trigger `[IMPLEMENTED]`
-
-LayoutLab panel → **Copy List** (Generator Library section)
-
-## 6.2 Schema `[IMPLEMENTED]`
+Trigger: *Copy List*
 
 ```json
 {
   "generator_dir": "/path/to/layoutlab_generators",
-  "generators": [ ]
+  "generators": []
 }
 ```
 
-Same generator metadata format as scene export.
+Same generator metadata as §6.2. Does not include scene objects.
 
 ------------------------------------------------------------------------
 
-# 7. Units and Coordinates
+# 8. Units and Coordinates
 
-## 7.1 Current Convention `[IMPLEMENTED]`
+All command coordinates and dimensions are **Blender scene units** — never auto-converted.
 
-- All coordinates and dimensions are **Blender scene units**.
-- The plugin exports Blender's unit settings but does **not** convert values.
-- Project note in export: **1 Blender unit ≈ 10 cm** in Alexander's room scene.
-- This convention is **not enforced** by the plugin — agents must respect scene context.
+**Project convention:** 1 unit ≈ 10 cm in the reference room.
 
-## 7.2 Formal Unit Contract `[PLANNED]`
-
-Documented in `docs/units_and_coordinates.md` (not yet written):
-
-- Canonical real-world mapping
-- Axis conventions (length/width/height)
-- Room origin definition
+Full specification: **`docs/units_and_coordinates.md`**
 
 ------------------------------------------------------------------------
 
-# 8. Custom Properties
+# 9. Custom Properties
 
-## 8.1 `layoutlab_role` `[IMPLEMENTED]`
+## 9.1 `layoutlab_role` `[IMPLEMENTED]`
 
 Set by `create_box`, `create_clearance`, `create_label`, and generators.
 
-Examples: `"bed_mattress"`, `"bed_post"`, `"clearance"`, `"label"`
+Examples: `bed_mattress`, `bed_post`, `clearance`, `label`
 
-Used for export filtering and future semantic grouping — `[PLANNED]`
+## 9.2 Planned Identity Schema
 
-## 8.2 Full Object Identity Schema `[PLANNED]`
-
-| Property | Purpose |
-|---|---|
-| `layoutlab_object_id` | Groups components into one logical object |
-| `layoutlab_generator` | Source generator name |
-| `layoutlab_params` | JSON-serialized parameters |
-| `layoutlab_component` | Component role within object |
+`layoutlab_object_id`, `layoutlab_generator`, `layoutlab_params`, `layoutlab_component` — `[PLANNED]`
 
 ------------------------------------------------------------------------
 
-# 9. Example Workflows
+# 10. Example Workflows
 
-## 9.1 Replace test layout with a bed `[IMPLEMENTED]`
+## 10.1 Replace layout and place bed
 
 ```json
 {
@@ -554,54 +516,63 @@ Used for export filtering and future semantic grouping — `[PLANNED]`
 }
 ```
 
-## 9.2 Install a new generator from AI `[IMPLEMENTED]`
+## 10.2 Update bed size (v0.5 pattern)
+
+```json
+{
+  "commands": [
+    { "action": "delete_prefix", "prefix": "BED_120x200" },
+    {
+      "action": "run_generator",
+      "generator": "bed_basic",
+      "params": {
+        "name": "BED_120x200",
+        "location": [68.3, 197.7, 0],
+        "length": 14,
+        "width": 20,
+        "head_side": "y_max",
+        "collection": "layout_tests"
+      }
+    }
+  ]
+}
+```
+
+## 10.3 Install generator from AI
 
 ```json
 {
   "commands": [
     {
       "action": "save_generator",
-      "code": "GENERATOR_NAME = \"wardrobe_basic\"\nGENERATOR_CATEGORY = \"Storage\"\n..."
+      "code": "GENERATOR_NAME = \"wardrobe_basic\"\n..."
     },
     {
       "action": "run_generator",
       "generator": "wardrobe_basic",
-      "params": { "name": "WARDROBE_1", "location": [0, 0, 0], "width": 8, "depth": 6, "height": 20 }
+      "params": { "name": "WARDROBE_1", "location": [0, 0, 0] }
     }
   ]
 }
 ```
 
-## 9.3 AI-driven layout iteration `[PLANNED]`
-
-1. Copy scene → AI analyzes JSON
-2. AI returns commands with semantic intent
-3. Plugin applies, exports again
-4. AI evaluates constraints (clearance, paths)
-
-Steps 1–3 work today at the geometry level. Step 4 requires Phase 2 features.
-
 ------------------------------------------------------------------------
 
-# 10. Rules for AI Agents
+# 11. Rules for AI Agents
 
-`[IMPLEMENTED]` — enforced by project policy (see `00_READ_THIS_FIRST.md`, DD-003)
-
-1. Communicate **only** via JSON commands as defined here.
-2. Do not send Python code for direct Blender execution (except inside `save_generator.code`).
+1. Use **only** JSON commands defined in this document.
+2. Do not send Python for direct Blender execution (except inside `save_generator.code`).
 3. Prefer `run_generator` over manual `create_box` when a generator exists.
-4. Use `delete_collection_objects` or `delete_prefix` before regenerating layouts.
-5. Always check exported `generators` list before calling unknown generator names.
-
-`[PLANNED]`
-
-6. Include `protocol_version` in every command payload once available.
-7. Use semantic object IDs instead of individual mesh names when regenerating.
+4. Before re-placing furniture: `delete_prefix` with the object `name` prefix, or `delete_collection_objects`.
+5. Read scene export `generators` array before calling unknown generator names.
+6. Read `note` and `docs/units_and_coordinates.md` before interpreting sizes.
+7. Remember: `move` / `rotate_z` affect **one mesh**, not a logical furniture group.
 
 ------------------------------------------------------------------------
 
-# 11. Changelog
+# 12. Changelog
 
 | Version | Date | Changes |
 |---|---|---|
-| 0.5.0 | 2026-07-09 | Initial protocol document based on `layoutlab_chatgpt_helper_v05.py` |
+| 0.5.0 | 2026-07-09 | Initial protocol document |
+| 0.5.1 | 2026-07-09 | Contract pass: command index, error table, prerequisites, units cross-link, bed_basic roles, single-object move note, bare-array fix documented |
