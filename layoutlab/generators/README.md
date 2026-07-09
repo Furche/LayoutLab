@@ -18,4 +18,5 @@ Every new generator must:
 5. Include a `{name}.md` reference document (params, components, examples, limits)
 6. Be listed in this README
 
-Pattern reference: **`bed_basic`** — review before creating generator #2.
+Pattern reference: **`bed_basic`** — review before creating generator #2.  
+Full guide: **[docs/how_to_write_generators.md](../../docs/how_to_write_generators.md)**

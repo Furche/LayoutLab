@@ -66,13 +66,12 @@ Do **not** duplicate content across documents. Link instead.
 
 | Document | Purpose | Audience | Owns | Update when… | Typical changes |
 |---|---|---|---|---|---|
-| [LayoutLab_Generator_Specification.md](../LayoutLab_Generator_Specification.md) | **Authoring standard** for all generators (rules, structure, quality bar) | Generator authors, ChatGPT, Cursor | Required metadata, `generate()` contract, do/don’t, fallbacks, naming | New generator rule; metadata constant added; quality requirement | Mandatory return dict from `generate()`; new metadata field |
+| [LayoutLab_Generator_Specification.md](../LayoutLab_Generator_Specification.md) | **Normativer Standard** — Pflichtregeln, Qualitätsbar | Generator authors, ChatGPT, Cursor | Required metadata, `generate()` contract, do/don’t, fallbacks, naming | New generator rule; metadata constant added; quality requirement | Mandatory return dict from `generate()`; new metadata field |
+| [docs/how_to_write_generators.md](how_to_write_generators.md) | **Developer guide** — tutorials, examples, workflows, anti-patterns | Humans and AI writing new generators | How-to content, examples (minimal, stool, bed, loft), debugging workflow, best practices | API usage patterns change; new canonical example; best practice added | Regenerate workflow in debugging; new anti-pattern |
 | [layoutlab/generators/README.md](../layoutlab/generators/README.md) | Index of bundled generators + short authoring checklist | Contributors | Table of shipped generators; links to per-generator docs | New bundled generator added/removed | `wardrobe_basic` row added |
 | [layoutlab/generators/<name>.md](../layoutlab/generators/bed_basic.md) | Per-generator reference (params, components, examples) | AI, authors, testers | One generator’s params, roles, limits, JSON examples | That generator’s params/behaviour/components change | New `head_side` option; pillow count rule changed |
 
-**Note:** There is no separate `how_to_write_generators.md` — by design. The **Generator Specification** is the guide; **generator_api.md** is the API lookup; **`<name>.md`** is the instance reference.
-
-**Boundary:** Spec = rules for all generators. `bed_basic.md` = only bed_basic. Do not copy full API docs into the spec.
+**Boundary:** Specification = normative rules. **how_to_write_generators** = practical guide (examples, workflow). **generator_api.md** = function signatures. **`<name>.md`** = one generator instance. Do not copy full API signatures into the guide — link instead.
 
 ------------------------------------------------------------------------
 
@@ -117,7 +116,8 @@ Do **not** duplicate content across documents. Link instead.
 | API functions for generators | `generator_api.md` | Spec may reference by name, not re-list signatures |
 | Module / layer structure | `ARCHITECTURE.md` | README: one diagram + link |
 | Object properties on meshes | `object_model.md` | ARCHITECTURE: summary table + link |
-| Generator authoring rules | `LayoutLab_Generator_Specification.md` | generators/README: checklist only |
+| Generator authoring rules | `LayoutLab_Generator_Specification.md` | how_to_write_generators: workflow/examples only |
+| Generator how-to & examples | `docs/how_to_write_generators.md` | Spec: rules only; API: signatures only |
 | Roadmap phases | `LayoutLab_Master_Design_Document.md` | README: short table + link |
 | Migration phase status | `ARCHITECTURE.md` §9 | MDD: high-level only |
 
@@ -130,7 +130,7 @@ If two documents disagree, **stop** — fix the doc or the code before continuin
 | Code change | Documents to check (minimum) |
 |---|---|
 | New JSON command | `json_protocol.md`, `CHANGELOG.md`, maybe `ARCHITECTURE.md`, maybe DD |
-| New `api` function | `generator_api.md`, `LayoutLab_Generator_Specification.md` if rule change, `CHANGELOG.md` |
+| New `api` function | `generator_api.md`, `docs/how_to_write_generators.md`, `LayoutLab_Generator_Specification.md` if rule change, `CHANGELOG.md` |
 | New generator | `layoutlab/generators/<name>.py`, `<name>.md`, `generators/README.md`, `CHANGELOG.md` |
 | Module refactor | `ARCHITECTURE.md`, `CHANGELOG.md`, `DEVLOG.md` if structural |
 | Panel / operator UI | `README.md` (if user-visible), `CHANGELOG.md` |

@@ -5,7 +5,7 @@ Version: 1.0 (Draft)
 > Dieses Dokument definiert den Standard für alle LayoutLab-Generatoren.
 > Jeder Generator im Projekt soll diesen Regeln folgen.
 
-Related: `docs/generator_api.md` (API signatures) · `docs/documentation_map.md` (when to update) · `layoutlab/generators/bed_basic.md` (reference instance)
+Related: `docs/generator_api.md` (API signatures) · `docs/how_to_write_generators.md` (developer guide) · `docs/documentation_map.md` (when to update) · `layoutlab/generators/bed_basic.md` (reference instance)
 
 ------------------------------------------------------------------------
 

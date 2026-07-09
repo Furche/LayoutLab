@@ -4,6 +4,17 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-10 — Generator Developer Guide
+
+**Context:** Specification and API reference existed, but no single practical
+tutorial for humans/AI writing generator #2.
+
+**Decision:** Add `docs/how_to_write_generators.md` as the **how-to layer**;
+`LayoutLab_Generator_Specification.md` stays normative; `generator_api.md` stays
+signatures-only. Updated documentation_map overlap rules and checklist (row 6).
+
+------------------------------------------------------------------------
+
 ## 2026-07-10 — Phase D: semantic object model
 
 **Context:** Phase C split complete. Objects were grouped only by name prefix;

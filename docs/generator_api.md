@@ -7,7 +7,7 @@ Version: 0.5.0 (Contract)
 
 **Status markers:** `[IMPLEMENTED]` · `[EXCEPTION]` · `[PLANNED]`
 
-Related: `LayoutLab_Generator_Specification.md`, `docs/json_protocol.md`
+Related: `LayoutLab_Generator_Specification.md`, `docs/how_to_write_generators.md`, `docs/json_protocol.md`
 
 ------------------------------------------------------------------------
 

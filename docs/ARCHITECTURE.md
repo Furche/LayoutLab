@@ -99,7 +99,8 @@ LayoutLab/
     ├── documentation_map.md
     ├── json_protocol.md
     ├── generator_api.md
-    └── object_model.md
+    ├── how_to_write_generators.md    [IMPLEMENTED]
+    ├── object_model.md
 ```
 
 ## 3.2 Module Map `[IMPLEMENTED]`

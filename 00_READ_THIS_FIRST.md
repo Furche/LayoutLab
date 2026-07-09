@@ -150,16 +150,17 @@ After **every** code change, actively walk this list. Mark each item **yes**
 | 3 | **DEVLOG.md** | Non-obvious technical decision, phase completion, lesson learned, rejected approach |
 | 4 | **docs/generator_api.md** | New/changed/removed `api` function or behaviour passed to generators |
 | 5 | **LayoutLab_Generator_Specification.md** | Generator authoring rules, metadata constants, quality bar, structure |
-| 6 | **layoutlab/generators/\<name\>.md** | Params, components, or behaviour of that specific bundled generator |
-| 7 | **layoutlab/generators/README.md** | New/removal of a bundled generator in the index |
-| 8 | **docs/json_protocol.md** | Commands, parameters, export schema, protocol markers |
-| 9 | **docs/ARCHITECTURE.md** | Modules, layers, migration phases, exceptions, as-built map |
-| 10 | **docs/object_model.md** | Custom properties, object grouping, semantic export |
-| 11 | **docs/units_and_coordinates.md** | Scale, axes, placement conventions |
-| 12 | **docs/documentation_map.md** | New doc file added, or document responsibility moved |
-| 13 | **AI_CONTEXT.md** | Vocabulary, mental model, team workflow, project philosophy for agents |
-| 14 | **LayoutLab_Master_Design_Document.md** | Roadmap phases, product scope (rare) |
-| 15 | **Design Decision (DD-xxx)** | Significant fork: new DD + index in `docs/design_decisions/README.md` |
+| 6 | **docs/how_to_write_generators.md** | Generator workflows, examples, best practices, anti-patterns, debugging |
+| 7 | **layoutlab/generators/\<name\>.md** | Params, components, or behaviour of that specific bundled generator |
+| 8 | **layoutlab/generators/README.md** | New/removal of a bundled generator in the index |
+| 9 | **docs/json_protocol.md** | Commands, parameters, export schema, protocol markers |
+| 10 | **docs/ARCHITECTURE.md** | Modules, layers, migration phases, exceptions, as-built map |
+| 11 | **docs/object_model.md** | Custom properties, object grouping, semantic export |
+| 12 | **docs/units_and_coordinates.md** | Scale, axes, placement conventions |
+| 13 | **docs/documentation_map.md** | New doc file added, or document responsibility moved |
+| 14 | **AI_CONTEXT.md** | Vocabulary, mental model, team workflow, project philosophy for agents |
+| 15 | **LayoutLab_Master_Design_Document.md** | Roadmap phases, product scope (rare) |
+| 16 | **Design Decision (DD-xxx)** | Significant fork: new DD + index in `docs/design_decisions/README.md` |
 
 **Minimum for most commits:** CHANGELOG (**yes**) + every other row explicitly
 **yes** or **no** in your completion summary.

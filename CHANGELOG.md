@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- `docs/how_to_write_generators.md` — generator developer guide (examples, best practices, debugging)
+
 ------------------------------------------------------------------------
 
 ## [0.5.1] — 2026-07-10

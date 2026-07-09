@@ -141,7 +141,8 @@ Read in this order:
 | 8 | [docs/object_model.md](docs/object_model.md) | Semantic object representation in scenes |
 | 9 | [docs/units_and_coordinates.md](docs/units_and_coordinates.md) | Scale, axes, placement conventions |
 | 10 | [docs/design_decisions/](docs/design_decisions/) | Formal architecture decisions (DD-001–005) |
-| 11 | [LayoutLab_Generator_Specification.md](LayoutLab_Generator_Specification.md) | How to write generators |
+| 11 | [LayoutLab_Generator_Specification.md](LayoutLab_Generator_Specification.md) | Normative generator standard |
+| 12 | [docs/how_to_write_generators.md](docs/how_to_write_generators.md) | **How to write generators** — guide, examples, debugging |
 
 ------------------------------------------------------------------------
 
@@ -177,6 +178,7 @@ LayoutLab/                          # repository root
     ├── ARCHITECTURE.md
     ├── json_protocol.md
     ├── generator_api.md
+    ├── how_to_write_generators.md
     ├── object_model.md
     ├── units_and_coordinates.md
     └── design_decisions/

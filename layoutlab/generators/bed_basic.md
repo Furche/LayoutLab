@@ -128,10 +128,14 @@ Not implemented (future generators):
 
 ## Known Limitations
 
-- No `layoutlab_object_id` — components grouped by name prefix only
-- Re-run requires `delete_prefix` on `name` before second `run_generator`
 - Label is a separate CURVE object; not part of collision geometry
 - Magic sizing constants in code (pillow placement, mattress Z offset) — acceptable for v0.1 reference generator
+- Slats, centre support, loft variant — not in this generator (see `docs/how_to_write_generators.md` §13.4 for loft pattern)
+
+## Semantic metadata (v0.5.1+)
+
+Components receive `layoutlab_object_id`, `layoutlab_params`, etc. automatically via the engine.  
+Update in place: JSON `regenerate` command (see `docs/json_protocol.md` §5.12).
 
 ------------------------------------------------------------------------
 
