@@ -410,19 +410,19 @@ Generators import nothing from `plugin/` or `browser.py`. `[PLANNED]` rule; toda
 
 # 9. Migration Plan
 
-## Phase A — Documentation foundation `[IN PROGRESS]`
+## Phase A — Documentation foundation `[COMPLETE]`
 
 | Step | Document | Status |
 |---|---|---|
 | A.1 | `docs/json_protocol.md` | `[IMPLEMENTED]` |
-| A.2 | `docs/ARCHITECTURE.md` | `[IMPLEMENTED]` (this file) |
-| A.3 | `README.md` | `[PLANNED]` |
-| A.4 | `docs/design_decisions/DD-001..005` | `[PLANNED]` |
-| A.5 | `docs/units_and_coordinates.md` | `[PLANNED]` |
+| A.2 | `docs/ARCHITECTURE.md` | `[IMPLEMENTED]` |
+| A.3 | `README.md` | `[IMPLEMENTED]` |
+| A.4 | `docs/design_decisions/DD-001..005` | `[IMPLEMENTED]` |
+| A.5 | `docs/units_and_coordinates.md` | `[IMPLEMENTED]` |
 | A.6 | `docs/generator_api.md` | `[PLANNED]` |
 | A.7 | `docs/object_model.md` | `[PLANNED]` |
 
-**Gate:** Do not split the monolith until A.1–A.5 are done.
+**Gate:** Do not split the monolith until A.1–A.5 are done. **Passed.**
 
 ## Phase B — Structure without behaviour change `[PLANNED]`
 
@@ -488,11 +488,11 @@ Referenced in Master Design Document; formal DD files `[PLANNED]`:
 
 | ID | Decision | Status |
 |---|---|---|
-| DD-001 | Generators are parametric assets | `[ACCEPTED]` not yet documented |
-| DD-002 | Generators rebuild mesh (no blind scale) | `[ACCEPTED]` not yet documented |
-| DD-003 | Communication exclusively via JSON | `[ACCEPTED]` partially in `json_protocol.md` |
-| DD-004 | UI oriented on Asset Browser | `[ACCEPTED]` not yet documented |
-| DD-005 | Generators carry metadata constants | `[ACCEPTED]` not yet documented |
+| DD-001 | Generators are parametric assets | `[ACCEPTED]` — [DD-001](design_decisions/DD-001-generators-are-parametric-assets.md) |
+| DD-002 | Generators rebuild mesh (no blind scale) | `[ACCEPTED]` — [DD-002](design_decisions/DD-002-generators-rebuild-mesh.md) |
+| DD-003 | Communication exclusively via JSON | `[ACCEPTED]` — [DD-003](design_decisions/DD-003-json-only-communication.md) |
+| DD-004 | UI oriented on Asset Browser | `[ACCEPTED]` — [DD-004](design_decisions/DD-004-asset-browser-ui.md) |
+| DD-005 | Generators carry metadata constants | `[ACCEPTED]` — [DD-005](design_decisions/DD-005-generator-metadata.md) |
 
 New decisions require a file in `docs/design_decisions/` before implementation.
 
@@ -518,3 +518,4 @@ Full vocabulary: `AI_CONTEXT.md`
 | Version | Date | Changes |
 |---|---|---|
 | 0.5.0 | 2026-07-09 | Initial architecture document (as-built + target + migration) |
+| 0.5.1 | 2026-07-09 | Phase A.4–A.5 complete: design decisions + units documented |

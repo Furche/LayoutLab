@@ -96,7 +96,7 @@ Adjust Blender version path as needed.
 }
 ```
 
-> **Units:** coordinates are Blender scene units. In the reference room scene, **1 unit ≈ 10 cm** (not enforced by the plugin — see planned `docs/units_and_coordinates.md`).
+> **Units:** coordinates are Blender scene units. In the reference room scene, **1 unit ≈ 10 cm** — see [docs/units_and_coordinates.md](docs/units_and_coordinates.md).
 
 ------------------------------------------------------------------------
 
@@ -112,7 +112,9 @@ Read in this order:
 | 4 | [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) | Vision, roadmap, architecture overview |
 | 5 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | As-built v0.5 vs. target architecture, migration plan |
 | 6 | [docs/json_protocol.md](docs/json_protocol.md) | JSON command and export specification |
-| 7 | [LayoutLab_Generator_Specification.md](LayoutLab_Generator_Specification.md) | How to write generators |
+| 7 | [docs/units_and_coordinates.md](docs/units_and_coordinates.md) | Scale, axes, placement conventions |
+| 8 | [docs/design_decisions/](docs/design_decisions/) | Formal architecture decisions (DD-001–005) |
+| 9 | [LayoutLab_Generator_Specification.md](LayoutLab_Generator_Specification.md) | How to write generators |
 
 ------------------------------------------------------------------------
 
@@ -128,7 +130,10 @@ LayoutLab/
 ├── LayoutLab_Generator_Specification.md
 └── docs/
     ├── ARCHITECTURE.md
-    └── json_protocol.md
+    ├── json_protocol.md
+    ├── units_and_coordinates.md
+    └── design_decisions/
+        └── DD-001 … DD-005
 ```
 
 **Generators at runtime** are stored outside this repo:
@@ -173,7 +178,7 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 
 | Phase | Focus | Status |
 |---|---|---|
-| **0** | Documentation foundation | In progress |
+| **0** | Documentation foundation | Complete |
 | **1** | Generators in repo, tests, API docs | Planned |
 | **2** | Monolith → module split | Planned |
 | **3** | Clearance, collision, paths, undo | Planned |
