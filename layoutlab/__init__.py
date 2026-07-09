@@ -1,6 +1,5 @@
-
 bl_info = {
-    "name": "LayoutLab ChatGPT Helper",
+    "name": "LayoutLab",
     "author": "ChatGPT / Alexander",
     "version": (0, 5, 0),
     "blender": (4, 0, 0),
@@ -16,7 +15,7 @@ import traceback
 from pathlib import Path
 from mathutils import Vector
 
-from layoutlab_util import (
+from .util import (
     infer_generator_meta_from_code,
     infer_generator_name_from_code,
     parse_commands_payload,

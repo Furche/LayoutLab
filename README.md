@@ -42,35 +42,21 @@ See [docs/json_protocol.md](docs/json_protocol.md) for the full command referenc
    ```bash
    git clone https://github.com/Furche/LayoutLab.git
    ```
-2. Copy into your Blender addons folder:
-   - `layoutlab_chatgpt_helper_v05.py`
-   - `layoutlab_util.py`
-   - `generators/` (entire folder)
-
-   Target path:
+2. Copy the **`layoutlab/`** folder into your Blender addons directory:
    - **macOS:** `~/Library/Application Support/Blender/<version>/scripts/addons/`
    - **Linux:** `~/.config/blender/<version>/scripts/addons/`
    - **Windows:** `%APPDATA%\Blender Foundation\Blender\<version>\scripts\addons\`
 
 3. Restart Blender (or refresh addons).
-4. Enable **LayoutLab ChatGPT Helper** in *Edit → Preferences → Add-ons*.
+4. Enable **LayoutLab** in *Edit → Preferences → Add-ons*.
 
 ### Option B — Symlink (development, recommended)
 
 ```bash
-ln -s /path/to/LayoutLab ~/Library/Application\ Support/Blender/4.2/scripts/addons/LayoutLab
+ln -s /path/to/LayoutLab/layoutlab ~/Library/Application\ Support/Blender/4.2/scripts/addons/layoutlab
 ```
 
-Then enable the addon from the `LayoutLab` folder (Blender loads `.py` files from subfolders). Adjust Blender version path as needed.
-
-Alternatively symlink the three install artifacts into `addons/` directly:
-
-```bash
-ADDON=~/Library/Application\ Support/Blender/4.2/scripts/addons
-ln -s /path/to/LayoutLab/layoutlab_chatgpt_helper_v05.py "$ADDON/"
-ln -s /path/to/LayoutLab/layoutlab_util.py "$ADDON/"
-ln -s /path/to/LayoutLab/generators "$ADDON/generators"
-```
+Adjust Blender version path as needed.
 
 ------------------------------------------------------------------------
 
@@ -135,11 +121,12 @@ Read in this order:
 ## Project Structure
 
 ```
-LayoutLab/
-├── layoutlab_chatgpt_helper_v05.py   # Blender addon entry point
-├── layoutlab_util.py                 # Pure-Python helpers (tests + addon)
-├── generators/
-│   └── bed_basic.py                  # Version-controlled generators
+LayoutLab/                          # repository root
+├── layoutlab/                      # Blender addon (copy or symlink this folder)
+│   ├── __init__.py                 # addon entry point
+│   ├── util.py                     # pure-Python helpers
+│   └── generators/
+│       └── bed_basic.py
 ├── tests/
 │   └── test_layoutlab_util.py
 ├── CHANGELOG.md
@@ -158,7 +145,7 @@ LayoutLab/
 ```
 
 **Generators at runtime** are copied to Blender's user directory on first load
-(if missing). Canonical sources live in `generators/` in this repository.
+(if missing). Canonical sources live in `layoutlab/generators/` in this repository.
 
 ```
 <Blender scripts>/addons/layoutlab_generators/*.py   # runtime copy

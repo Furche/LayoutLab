@@ -22,10 +22,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
-- `docs/json_protocol.md` — contract pass (v0.5.1): command index, errors, prerequisites
-- `generators/bed_basic.py` — named constants, reference doc `generators/bed_basic.md`
-- `layoutlab_chatgpt_helper_v05.py` loads `bed_basic` from `generators/` instead of embedded string
-- JSON command parsing delegated to `layoutlab_util.parse_commands_payload`
+- Blender addon moved to `layoutlab/` package (`__init__.py`); removed versioned filename
+- `layoutlab_util.py` → `layoutlab/util.py`
+- `generators/` → `layoutlab/generators/`
 
 ------------------------------------------------------------------------
 

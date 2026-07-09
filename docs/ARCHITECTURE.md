@@ -8,7 +8,7 @@ Version: 0.5.0 (Living Document)
 >
 > **Status markers:**
 >
-> - `[IMPLEMENTED]` — exists in `layoutlab_chatgpt_helper_v05.py` today
+> - `[IMPLEMENTED]` — exists in `layoutlab/` addon today
 > - `[PLANNED]` — agreed direction, not yet built
 > - `[EXCEPTION]` — deliberate v0.5 shortcut; must not become permanent without a DD
 
@@ -82,7 +82,11 @@ LayoutLab/
 ├── LayoutLab_Manifest.md
 ├── LayoutLab_Master_Design_Document.md
 ├── LayoutLab_Generator_Specification.md
-├── layoutlab_chatgpt_helper_v05.py    ← entire addon (~670 lines)
+├── layoutlab/                         ← Blender addon package
+│   ├── __init__.py
+│   ├── util.py
+│   └── generators/
+│       └── bed_basic.py
 └── docs/
     └── json_protocol.md
 ```
@@ -104,7 +108,7 @@ All layers live in one file. Logical sections:
 | Location | Contents |
 |---|---|
 | Git repo | Addon source + documentation |
-| Blender addons dir | Installed copy of `layoutlab_chatgpt_helper_v05.py` (manual install) `[IMPLEMENTED]` |
+| Blender addons dir | Installed `layoutlab/` folder (copy or symlink) `[IMPLEMENTED]` |
 | `…/scripts/addons/layoutlab_generators/` | Runtime generator `.py` files (outside repo) `[IMPLEMENTED]` `[EXCEPTION]` |
 | Blender scene | Meshes, collections, `layoutlab_role` custom props `[IMPLEMENTED]` |
 

@@ -10,10 +10,10 @@ Version: **0.5.0** (Contract)
 >
 > **Status markers:**
 >
-> - `[IMPLEMENTED]` — works in `layoutlab_chatgpt_helper_v05.py` today
+> - `[IMPLEMENTED]` — works in `layoutlab/` addon today
 > - `[PLANNED]` — not yet implemented; do not assume availability
 
-Reference code: `layoutlab_chatgpt_helper_v05.py`, `layoutlab_util.py`
+Reference code: `layoutlab/__init__.py`, `layoutlab/util.py`
 
 Related: `docs/units_and_coordinates.md`, `docs/design_decisions/DD-003-json-only-communication.md`
 
@@ -84,7 +84,7 @@ Valid JSON in one of two forms:
 | Invalid JSON | Entire batch cancelled; error shown in UI |
 | `{"commands": "text"}` | Error: expected list |
 
-Parsing implementation: `layoutlab_util.parse_commands_payload()`
+Parsing implementation: `layoutlab.util.parse_commands_payload()`
 
 ## 3.3 Execution Semantics `[IMPLEMENTED]`
 
@@ -175,7 +175,7 @@ Use panel → *Install Default* or `save_generator` to install.
 
 ### Generator params: `bed_basic` `[IMPLEMENTED]`
 
-See `generators/bed_basic.md` for full documentation.
+See `layoutlab/generators/bed_basic.md` for full documentation.
 
 | Parameter | Default | Unit | Description |
 |---|---|---|---|

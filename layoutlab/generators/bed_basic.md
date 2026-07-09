@@ -11,7 +11,7 @@ Version: 0.1 · Category: Beds
 Parametric low bed: corner posts, frame rails, mattress, headboard, footboard,
 pillows, and a text label. Geometry is rebuilt from parameters — never scaled.
 
-Source: `generators/bed_basic.py`
+Source: `layoutlab/generators/bed_basic.py`
 
 ------------------------------------------------------------------------
 

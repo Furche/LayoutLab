@@ -1,16 +1,25 @@
+import importlib.util
 import json
 import unittest
 from pathlib import Path
 
-from layoutlab_util import (
-    infer_generator_meta_from_code,
-    infer_generator_name_from_code,
-    parse_commands_payload,
-    sanitize_generator_name,
-)
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_UTIL_PATH = _REPO_ROOT / "layoutlab" / "util.py"
+_GENERATORS_DIR = _REPO_ROOT / "layoutlab" / "generators"
 
 
-GENERATORS_DIR = Path(__file__).resolve().parent.parent / "generators"
+def _load_util():
+    spec = importlib.util.spec_from_file_location("layoutlab_util", _UTIL_PATH)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+_util = _load_util()
+sanitize_generator_name = _util.sanitize_generator_name
+infer_generator_name_from_code = _util.infer_generator_name_from_code
+infer_generator_meta_from_code = _util.infer_generator_meta_from_code
+parse_commands_payload = _util.parse_commands_payload
 
 
 class TestSanitizeGeneratorName(unittest.TestCase):
@@ -27,8 +36,8 @@ class TestSanitizeGeneratorName(unittest.TestCase):
 
 class TestGeneratorMetadata(unittest.TestCase):
     def test_bed_basic_from_repo_file(self):
-        code = (GENERATORS_DIR / "bed_basic.py").read_text(encoding="utf-8")
-        meta = infer_generator_meta_from_code(code, GENERATORS_DIR / "bed_basic.py")
+        code = (_GENERATORS_DIR / "bed_basic.py").read_text(encoding="utf-8")
+        meta = infer_generator_meta_from_code(code, _GENERATORS_DIR / "bed_basic.py")
         self.assertEqual(meta["name"], "bed_basic")
         self.assertEqual(meta["category"], "Beds")
         self.assertEqual(meta["version"], "0.1")
