@@ -12,20 +12,45 @@ bl_info = {
 import bpy
 import json
 import math
-import re
 import traceback
 from pathlib import Path
 from mathutils import Vector
 
+from layoutlab_util import (
+    infer_generator_meta_from_code,
+    infer_generator_name_from_code,
+    parse_commands_payload,
+    sanitize_generator_name,
+)
 
-def sanitize_generator_name(name):
-    name = (name or "").strip()
-    name = re.sub(r"\.py$", "", name)
-    name = re.sub(r"[^a-zA-Z0-9_]+", "_", name)
-    name = name.strip("_")
-    if not name:
-        raise ValueError("Generator name is empty.")
-    return name
+
+def addon_root_dir():
+    return Path(__file__).resolve().parent
+
+
+def addon_bundled_generators_dir():
+    return addon_root_dir() / "generators"
+
+
+def load_bundled_generator_source(name):
+    path = addon_bundled_generators_dir() / f"{sanitize_generator_name(name)}.py"
+    if not path.exists():
+        raise FileNotFoundError(f"Bundled generator not found: {name}")
+    return path.read_text(encoding="utf-8")
+
+
+def default_generator_template():
+    return load_bundled_generator_source("bed_basic")
+
+
+def sync_bundled_generators():
+    bundled_dir = addon_bundled_generators_dir()
+    if not bundled_dir.is_dir():
+        return
+    for src in sorted(bundled_dir.glob("*.py")):
+        dest = generator_path(src.stem)
+        if not dest.exists():
+            dest.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
 
 
 def addon_user_dir():
@@ -41,35 +66,6 @@ def generator_path(name):
 
 def list_generator_files():
     return sorted(addon_user_dir().glob("*.py"))
-
-
-def infer_generator_name_from_code(code):
-    m = re.search(r'GENERATOR_NAME\s*=\s*[\'"]([^\'"]+)[\'"]', code)
-    if m:
-        return sanitize_generator_name(m.group(1))
-    m = re.search(r'def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', code)
-    if m and m.group(1) != "generate":
-        return sanitize_generator_name(m.group(1))
-    raise ValueError('Generator code needs GENERATOR_NAME = "name"')
-
-
-def infer_generator_meta_from_code(code, filepath=None):
-    def val(key, default=""):
-        m = re.search(rf'{key}\s*=\s*[\'"]([^\'"]*)[\'"]', code)
-        return m.group(1).strip() if m else default
-
-    name = val("GENERATOR_NAME")
-    if not name and filepath:
-        name = Path(filepath).stem
-
-    return {
-        "name": sanitize_generator_name(name),
-        "category": val("GENERATOR_CATEGORY", "Uncategorized") or "Uncategorized",
-        "description": val("GENERATOR_DESCRIPTION", ""),
-        "version": val("GENERATOR_VERSION", ""),
-        "icon": val("GENERATOR_ICON", "SCRIPT") or "SCRIPT",
-        "path": str(filepath) if filepath else "",
-    }
 
 
 def list_generators_meta():
@@ -166,9 +162,6 @@ def delete_prefix(prefix):
     for obj in list(bpy.data.objects):
         if obj.name.startswith(prefix):
             bpy.data.objects.remove(obj, do_unlink=True)
-
-
-DEFAULT_GENERATOR_TEMPLATE = '# LayoutLab generator\nGENERATOR_NAME = "bed_basic"\nGENERATOR_CATEGORY = "Beds"\nGENERATOR_DESCRIPTION = "Parametric low bed with legs, frame, mattress, headboard and fallback sizing."\nGENERATOR_VERSION = "0.1"\nGENERATOR_ICON = "BED"\n\ndef generate(params, api):\n    name = params.get("name", "BED_basic")\n    x, y, z = params.get("location", [0, 0, 0])\n    length = max(params.get("length", 20), 3)\n    width = max(params.get("width", 12), 3)\n    collection = params.get("collection", "layout_tests")\n\n    leg_height = params.get("leg_height", 2.5)\n    frame_height = params.get("frame_height", 1.0)\n    mattress_height = params.get("mattress_height", 2.0)\n    rail = min(params.get("rail_thickness", 0.35), width * 0.2, length * 0.2)\n    post = min(params.get("post_size", 0.45), width * 0.25, length * 0.25)\n    inset = min(params.get("mattress_inset", 0.45), width * 0.2, length * 0.2)\n    head_side = params.get("head_side", "y_max")\n\n    frame_color = params.get("frame_color", [0.72, 0.55, 0.35, 1])\n    mattress_color = params.get("mattress_color", [0.86, 0.86, 0.82, 0.65])\n    pillow_color = params.get("pillow_color", [0.95, 0.95, 0.92, 1])\n\n    cb = api["create_box"]\n    cl = api["create_label"]\n\n    for sx, sy, suffix in [\n        (0, 0, "post_xmin_ymin"),\n        (length - post, 0, "post_xmax_ymin"),\n        (0, width - post, "post_xmin_ymax"),\n        (length - post, width - post, "post_xmax_ymax"),\n    ]:\n        cb(f"{name}_{suffix}", [x + sx, y + sy, z], [post, post, leg_height + frame_height],\n           frame_color, collection, "bed_post", None)\n\n    frame_z = z + leg_height\n\n    cb(f"{name}_rail_y_min", [x, y, frame_z], [length, rail, frame_height], frame_color, collection, "bed_frame", None)\n    cb(f"{name}_rail_y_max", [x, y + width - rail, frame_z], [length, rail, frame_height], frame_color, collection, "bed_frame", None)\n    cb(f"{name}_rail_x_min", [x, y, frame_z], [rail, width, frame_height], frame_color, collection, "bed_frame", None)\n    cb(f"{name}_rail_x_max", [x + length - rail, y, frame_z], [rail, width, frame_height], frame_color, collection, "bed_frame", None)\n\n    mattress_x = x + inset\n    mattress_y = y + inset\n    mattress_l = max(length - 2 * inset, 1)\n    mattress_w = max(width - 2 * inset, 1)\n    mattress_z = frame_z + frame_height * 0.55\n    cb(f"{name}_mattress", [mattress_x, mattress_y, mattress_z],\n       [mattress_l, mattress_w, mattress_height],\n       mattress_color, collection, "bed_mattress", None)\n\n    head_h = params.get("headboard_height", 4.2)\n    foot_h = params.get("footboard_height", 2.2)\n    if head_side == "y_max":\n        cb(f"{name}_headboard", [x, y + width - rail, z], [length, rail, head_h], frame_color, collection, "bed_headboard", None)\n        cb(f"{name}_footboard", [x, y, z], [length, rail, foot_h], frame_color, collection, "bed_footboard", None)\n        pillow_y = y + width - rail - 2.1\n    elif head_side == "y_min":\n        cb(f"{name}_headboard", [x, y, z], [length, rail, head_h], frame_color, collection, "bed_headboard", None)\n        cb(f"{name}_footboard", [x, y + width - rail, z], [length, rail, foot_h], frame_color, collection, "bed_footboard", None)\n        pillow_y = y + rail + 0.25\n    elif head_side == "x_max":\n        cb(f"{name}_headboard", [x + length - rail, y, z], [rail, width, head_h], frame_color, collection, "bed_headboard", None)\n        cb(f"{name}_footboard", [x, y, z], [rail, width, foot_h], frame_color, collection, "bed_footboard", None)\n        pillow_y = mattress_y + mattress_w - 2.0\n    else:\n        cb(f"{name}_headboard", [x, y, z], [rail, width, head_h], frame_color, collection, "bed_headboard", None)\n        cb(f"{name}_footboard", [x + length - rail, y, z], [rail, width, foot_h], frame_color, collection, "bed_footboard", None)\n        pillow_y = mattress_y + 0.2\n\n    pillow_count = 2 if width >= 13 else 1\n    pillow_w = max((mattress_w - 0.4) / pillow_count, 0.8)\n    for i in range(pillow_count):\n        px = mattress_x + 0.2 + i * pillow_w\n        py = max(min(pillow_y, mattress_y + mattress_w - 1.2), mattress_y + 0.2)\n        cb(f"{name}_pillow_{i+1}", [px, py, mattress_z + mattress_height + 0.05],\n           [pillow_w - 0.2, min(1.8, mattress_w * 0.35), 0.45],\n           pillow_color, collection, "bed_pillow", None)\n\n    cl(f"{name}_label", [x + length/2, y + width/2, mattress_z + mattress_height + 0.7], name, collection)\n    return {"created": name, "type": "bed_basic", "size": [length, width]}\n'
 
 
 def execute_generator(name, params):
@@ -295,10 +288,7 @@ def apply_single_command(context, cmd):
 
 
 def apply_commands_json(context, text):
-    payload = json.loads(text)
-    commands = payload.get("commands", payload if isinstance(payload, list) else [])
-    if not isinstance(commands, list):
-        raise ValueError("Expected JSON with {'commands': [...]} or a list.")
+    commands = parse_commands_payload(text)
     results = []
     errors = []
     for i, cmd in enumerate(commands):
@@ -391,7 +381,7 @@ class LAYOUTLAB_OT_install_default_generator(bpy.types.Operator):
     bl_idname = "layoutlab.install_default_generator"
     bl_label = "Install bed_basic"
     def execute(self, context):
-        gen_name, p = save_generator_code(DEFAULT_GENERATOR_TEMPLATE)
+        gen_name, p = save_generator_code(load_bundled_generator_source("bed_basic"))
         context.scene.layoutlab_selected_generator = gen_name
         refresh_browser_items(context)
         self.report({"INFO"}, f"Installed: {gen_name}")
@@ -465,7 +455,7 @@ class LAYOUTLAB_OT_new_generator(bpy.types.Operator):
         txt_name = context.scene.layoutlab_generator_text_block_name
         txt = bpy.data.texts.get(txt_name) or bpy.data.texts.new(txt_name)
         txt.clear()
-        txt.write(DEFAULT_GENERATOR_TEMPLATE.replace('GENERATOR_NAME = "bed_basic"', 'GENERATOR_NAME = "new_generator"'))
+        txt.write(default_generator_template().replace('GENERATOR_NAME = "bed_basic"', 'GENERATOR_NAME = "new_generator"'))
         context.scene.layoutlab_selected_generator = "new_generator"
         self.report({"INFO"}, f"Created editable text block: {txt_name}")
         return {"FINISHED"}
@@ -645,6 +635,7 @@ def register():
     bpy.types.Scene.layoutlab_test_length = bpy.props.FloatProperty(name="Length", default=12.0)
     bpy.types.Scene.layoutlab_test_width = bpy.props.FloatProperty(name="Width", default=20.0)
     addon_user_dir()
+    sync_bundled_generators()
 
 
 def unregister():

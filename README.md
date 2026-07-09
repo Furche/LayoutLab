@@ -42,21 +42,35 @@ See [docs/json_protocol.md](docs/json_protocol.md) for the full command referenc
    ```bash
    git clone https://github.com/Furche/LayoutLab.git
    ```
-2. Copy `layoutlab_chatgpt_helper_v05.py` into your Blender addons folder:
+2. Copy into your Blender addons folder:
+   - `layoutlab_chatgpt_helper_v05.py`
+   - `layoutlab_util.py`
+   - `generators/` (entire folder)
+
+   Target path:
    - **macOS:** `~/Library/Application Support/Blender/<version>/scripts/addons/`
    - **Linux:** `~/.config/blender/<version>/scripts/addons/`
    - **Windows:** `%APPDATA%\Blender Foundation\Blender\<version>\scripts\addons\`
+
 3. Restart Blender (or refresh addons).
 4. Enable **LayoutLab ChatGPT Helper** in *Edit → Preferences → Add-ons*.
 
-### Option B — Symlink (development)
+### Option B — Symlink (development, recommended)
 
 ```bash
-ln -s /path/to/LayoutLab/layoutlab_chatgpt_helper_v05.py \
-  ~/Library/Application\ Support/Blender/4.2/scripts/addons/layoutlab_chatgpt_helper_v05.py
+ln -s /path/to/LayoutLab ~/Library/Application\ Support/Blender/4.2/scripts/addons/LayoutLab
 ```
 
-Adjust Blender version path as needed.
+Then enable the addon from the `LayoutLab` folder (Blender loads `.py` files from subfolders). Adjust Blender version path as needed.
+
+Alternatively symlink the three install artifacts into `addons/` directly:
+
+```bash
+ADDON=~/Library/Application\ Support/Blender/4.2/scripts/addons
+ln -s /path/to/LayoutLab/layoutlab_chatgpt_helper_v05.py "$ADDON/"
+ln -s /path/to/LayoutLab/layoutlab_util.py "$ADDON/"
+ln -s /path/to/LayoutLab/generators "$ADDON/generators"
+```
 
 ------------------------------------------------------------------------
 
@@ -122,7 +136,14 @@ Read in this order:
 
 ```
 LayoutLab/
-├── layoutlab_chatgpt_helper_v05.py   # Entire addon (v0.5 monolith)
+├── layoutlab_chatgpt_helper_v05.py   # Blender addon entry point
+├── layoutlab_util.py                 # Pure-Python helpers (tests + addon)
+├── generators/
+│   └── bed_basic.py                  # Version-controlled generators
+├── tests/
+│   └── test_layoutlab_util.py
+├── CHANGELOG.md
+├── DEVLOG.md
 ├── 00_READ_THIS_FIRST.md
 ├── AI_CONTEXT.md
 ├── LayoutLab_Manifest.md
@@ -136,13 +157,22 @@ LayoutLab/
         └── DD-001 … DD-005
 ```
 
-**Generators at runtime** are stored outside this repo:
+**Generators at runtime** are copied to Blender's user directory on first load
+(if missing). Canonical sources live in `generators/` in this repository.
 
 ```
-<Blender scripts>/addons/layoutlab_generators/*.py
+<Blender scripts>/addons/layoutlab_generators/*.py   # runtime copy
 ```
 
-Install via the UI or `save_generator` JSON command. Moving generators into the repository is planned.
+------------------------------------------------------------------------
+
+## Running tests
+
+From the repository root (no Blender required):
+
+```bash
+python -m unittest discover -s tests -v
+```
 
 ------------------------------------------------------------------------
 
@@ -179,7 +209,7 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 | Phase | Focus | Status |
 |---|---|---|
 | **0** | Documentation foundation | Complete |
-| **1** | Generators in repo, tests, API docs | Planned |
+| **1** | Generators in repo, tests, API docs | In progress |
 | **2** | Monolith → module split | Planned |
 | **3** | Clearance, collision, paths, undo | Planned |
 | **4** | AI layout evaluation, full apartment planning | Planned |

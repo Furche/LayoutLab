@@ -424,12 +424,12 @@ Generators import nothing from `plugin/` or `browser.py`. `[PLANNED]` rule; toda
 
 **Gate:** Do not split the monolith until A.1–A.5 are done. **Passed.**
 
-## Phase B — Structure without behaviour change `[PLANNED]`
+## Phase B — Structure without behaviour change `[IN PROGRESS]`
 
-1. Extract `generators/bed_basic.py` from embedded template string
-2. Add `tests/` for protocol parsing and metadata inference
-3. Add `CHANGELOG.md` and `DEVLOG.md`
-4. Sync mechanism: repo generators → runtime dir (or load directly from addon)
+1. Extract `generators/bed_basic.py` from embedded template string — `[IMPLEMENTED]`
+2. Add `tests/` for protocol parsing and metadata inference — `[IMPLEMENTED]`
+3. Add `CHANGELOG.md` and `DEVLOG.md` — `[IMPLEMENTED]`
+4. Sync mechanism: repo generators → runtime dir — `[IMPLEMENTED]` (on register, if missing)
 
 **Gate:** All v0.5 behaviour preserved; tests green.
 
