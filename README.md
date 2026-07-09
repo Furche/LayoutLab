@@ -8,7 +8,7 @@ Blender 4.0+ is the current editor. The long-term goal: plan entire rooms by des
 
 > *"LayoutLab does not create meshes. LayoutLab describes objects."*
 
-**Status:** v0.5 prototype — functional, monolithic, pre-architecture-split.
+**Status:** v0.5 — functional, modular addon package (Phase C split complete).
 
 Repository: https://github.com/Furche/LayoutLab
 
@@ -128,15 +128,18 @@ Read in this order:
 
 | # | Document | Purpose |
 |---|---|---|
-| 1 | [00_READ_THIS_FIRST.md](00_READ_THIS_FIRST.md) | Team roles, dev rules, how AI agents should work |
+| 0 | [docs/documentation_map.md](docs/documentation_map.md) | **Which doc to update when** — maintenance index for all documentation |
+| 1 | [00_READ_THIS_FIRST.md](00_READ_THIS_FIRST.md) | Team roles, dev rules, mandatory doc checklist |
 | 2 | [AI_CONTEXT.md](AI_CONTEXT.md) | Mental model, vocabulary, design priorities |
 | 3 | [LayoutLab_Manifest.md](LayoutLab_Manifest.md) | Why this project exists |
 | 4 | [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) | Vision, roadmap, architecture overview |
-| 5 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | As-built v0.5 vs. target architecture, migration plan |
+| 5 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | As-built vs. target architecture, migration plan |
 | 6 | [docs/json_protocol.md](docs/json_protocol.md) | JSON command and export specification |
-| 7 | [docs/units_and_coordinates.md](docs/units_and_coordinates.md) | Scale, axes, placement conventions |
-| 8 | [docs/design_decisions/](docs/design_decisions/) | Formal architecture decisions (DD-001–005) |
-| 9 | [LayoutLab_Generator_Specification.md](LayoutLab_Generator_Specification.md) | How to write generators |
+| 7 | [docs/generator_api.md](docs/generator_api.md) | Generator API reference (`api` dict) |
+| 8 | [docs/object_model.md](docs/object_model.md) | Semantic object representation in scenes |
+| 9 | [docs/units_and_coordinates.md](docs/units_and_coordinates.md) | Scale, axes, placement conventions |
+| 10 | [docs/design_decisions/](docs/design_decisions/) | Formal architecture decisions (DD-001–005) |
+| 11 | [LayoutLab_Generator_Specification.md](LayoutLab_Generator_Specification.md) | How to write generators |
 
 ------------------------------------------------------------------------
 
@@ -144,13 +147,22 @@ Read in this order:
 
 ```
 LayoutLab/                          # repository root
-├── layoutlab/                      # Blender addon (copy or symlink this folder)
-│   ├── __init__.py                 # addon entry point
+├── layoutlab/                      # Blender addon (copy, symlink, or install zip)
+│   ├── __init__.py                 # bl_info, register(), re-exports
 │   ├── util.py                     # pure-Python helpers
+│   ├── diagnostics.py              # console diagnostic checks
+│   ├── plugin/                     # panel, operators, browser properties
+│   ├── engine/                     # registry, executor
+│   ├── api/                        # geometry, materials, collections
+│   ├── protocol/                   # commands, export
 │   └── generators/
-│       └── bed_basic.py
+│       ├── bed_basic.py
+│       └── bed_basic.md
 ├── tests/
 │   └── test_layoutlab_util.py
+├── scripts/
+│   ├── build_addon_zip.py
+│   └── hooks/post-commit
 ├── CHANGELOG.md
 ├── DEVLOG.md
 ├── 00_READ_THIS_FIRST.md
@@ -159,8 +171,11 @@ LayoutLab/                          # repository root
 ├── LayoutLab_Master_Design_Document.md
 ├── LayoutLab_Generator_Specification.md
 └── docs/
+    ├── documentation_map.md        # which doc to update when
     ├── ARCHITECTURE.md
     ├── json_protocol.md
+    ├── generator_api.md
+    ├── object_model.md
     ├── units_and_coordinates.md
     └── design_decisions/
         └── DD-001 … DD-005
@@ -187,13 +202,15 @@ python -m unittest discover -s tests -v
 
 ## Architecture (short)
 
-Five target layers — today all in one file:
+Five layers — implemented as separate modules in `layoutlab/`:
 
 ```
-Blender UI  →  Main Plugin  →  Generator Engine  →  Generators  →  Scene
+Blender UI (plugin/)  →  Protocol  →  Engine  →  API  →  bpy
+                              ↓
+                         Generators  →  API only
 ```
 
-- **Plugin** handles JSON and knows no furniture logic.
+- **Plugin** handles JSON and UI; no furniture logic.
 - **Generators** know one object type and call only the LayoutLab API.
 - **AI** communicates exclusively via JSON — no Python snippets for direct execution.
 
@@ -217,13 +234,13 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 
 | Phase | Focus | Status |
 |---|---|---|
-| **0** | Documentation foundation | Complete |
-| **1** | Generators in repo, tests, API docs | In progress |
-| **2** | Monolith → module split | Planned |
-| **3** | Clearance, collision, paths, undo | Planned |
-| **4** | AI layout evaluation, full apartment planning | Planned |
+| **A** | Documentation foundation | Complete |
+| **B** | Generators in repo, tests, sync | Complete |
+| **C** | Monolith → module split | Complete |
+| **D** | Semantic object model, `regenerate` | Planned |
+| **E** | Clearance, collision, paths, undo | Planned |
 
-Full roadmap: [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) §17
+Full roadmap: [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) §17 · Phase status: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9
 
 ------------------------------------------------------------------------
 

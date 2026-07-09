@@ -129,21 +129,43 @@ If a new concept is required:
 
 Code without documentation is considered incomplete.
 
-After meaningful work update:
+**Documentation before implementation** applies to features. **Documentation with
+implementation** applies to every change — using the checklist below, not vague
+“update docs if needed”.
 
--   CHANGELOG.md
+Full index of every document, its owner scope, and overlap rules:
+**[docs/documentation_map.md](docs/documentation_map.md)**
 
-After important decisions update:
+------------------------------------------------------------------------
 
--   DEVLOG.md
+# Documentation Update Checklist
 
-After architecture changes update:
+After **every** code change, actively walk this list. Mark each item **yes**
+(update that document) or **no** (explicitly not affected). Do not skip the list.
 
--   ARCHITECTURE.md
+| # | Document | Update if the change affects… |
+|---|---|---|
+| 1 | **README.md** | Installation, quick start, visible features, project structure, roadmap summary |
+| 2 | **CHANGELOG.md** | Any user-visible or contributor-relevant change (almost always **yes**) |
+| 3 | **DEVLOG.md** | Non-obvious technical decision, phase completion, lesson learned, rejected approach |
+| 4 | **docs/generator_api.md** | New/changed/removed `api` function or behaviour passed to generators |
+| 5 | **LayoutLab_Generator_Specification.md** | Generator authoring rules, metadata constants, quality bar, structure |
+| 6 | **layoutlab/generators/\<name\>.md** | Params, components, or behaviour of that specific bundled generator |
+| 7 | **layoutlab/generators/README.md** | New/removal of a bundled generator in the index |
+| 8 | **docs/json_protocol.md** | Commands, parameters, export schema, protocol markers |
+| 9 | **docs/ARCHITECTURE.md** | Modules, layers, migration phases, exceptions, as-built map |
+| 10 | **docs/object_model.md** | Custom properties, object grouping, semantic export |
+| 11 | **docs/units_and_coordinates.md** | Scale, axes, placement conventions |
+| 12 | **docs/documentation_map.md** | New doc file added, or document responsibility moved |
+| 13 | **AI_CONTEXT.md** | Vocabulary, mental model, team workflow, project philosophy for agents |
+| 14 | **LayoutLab_Master_Design_Document.md** | Roadmap phases, product scope (rare) |
+| 15 | **Design Decision (DD-xxx)** | Significant fork: new DD + index in `docs/design_decisions/README.md` |
 
-If a new design principle appears:
+**Minimum for most commits:** CHANGELOG (**yes**) + every other row explicitly
+**yes** or **no** in your completion summary.
 
-Create a new Design Decision document.
+If a new design principle appears with real alternatives: create **DD-xxx** before
+or with the implementation (see Design Decisions below).
 
 ------------------------------------------------------------------------
 
@@ -238,7 +260,9 @@ When finishing work provide:
 
 3.  Risks
 
-4.  Next recommended step
+4.  **Documentation checklist** — which rows were yes/no (see above)
+
+5.  Next recommended step
 
 Do not only list files.
 

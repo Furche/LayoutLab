@@ -6,6 +6,8 @@ Each decision follows the format: **Problem → Decision → Alternatives → Co
 
 New decisions use the next sequential number: `DD-006`, `DD-007`, …
 
+**When to create a DD:** see [docs/documentation_map.md](../documentation_map.md) (Design decisions section).
+
 | ID | Title | Status | Date |
 |---|---|---|---|
 | [DD-001](DD-001-generators-are-parametric-assets.md) | Generators are parametric assets | Accepted | 2026-07-09 |

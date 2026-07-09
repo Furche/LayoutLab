@@ -16,6 +16,7 @@ Related documents:
 
 - `AI_CONTEXT.md` — mental model and vocabulary
 - `docs/json_protocol.md` — AI ↔ plugin JSON contract
+- `docs/documentation_map.md` — which document to update when (maintenance index)
 - `LayoutLab_Master_Design_Document.md` — vision, roadmap, team roles
 - `LayoutLab_Generator_Specification.md` — generator authoring rules
 
@@ -37,7 +38,7 @@ Geometry is the last step. See `AI_CONTEXT.md` for the full mental model.
 
 # 2. Target Architecture
 
-Five layers with strict responsibility boundaries. `[PLANNED]` as separate modules; `[IMPLEMENTED]` as logical roles inside the v0.5 monolith.
+Five layers with strict responsibility boundaries. `[IMPLEMENTED]` as separate modules in `layoutlab/` (Phase C, 2026-07).
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -67,7 +68,7 @@ Five layers with strict responsibility boundaries. `[PLANNED]` as separate modul
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Communication rule:** layers talk only through defined interfaces (JSON protocol, Generator API). `[IMPLEMENTED]` for JSON + API; module boundaries `[PLANNED]`.
+**Communication rule:** layers talk only through defined interfaces (JSON protocol, Generator API). `[IMPLEMENTED]` for JSON + API and module boundaries.
 
 ------------------------------------------------------------------------
 
@@ -83,25 +84,35 @@ LayoutLab/
 ├── LayoutLab_Master_Design_Document.md
 ├── LayoutLab_Generator_Specification.md
 ├── layoutlab/                         ← Blender addon package
-│   ├── __init__.py
+│   ├── __init__.py                    # bl_info, register(), re-exports
 │   ├── util.py
+│   ├── diagnostics.py
+│   ├── plugin/                        # panel, operators, properties
+│   ├── engine/                        # registry, executor
+│   ├── api/                           # geometry, materials, collections
+│   ├── protocol/                      # commands, export
 │   └── generators/
 │       └── bed_basic.py
+├── tests/
+│   └── test_layoutlab_util.py
 └── docs/
-    └── json_protocol.md
+    ├── documentation_map.md
+    ├── json_protocol.md
+    ├── generator_api.md
+    └── object_model.md
 ```
 
-## 3.2 Monolith Internal Map `[IMPLEMENTED]`
+## 3.2 Module Map `[IMPLEMENTED]`
 
-All layers live in one file. Logical sections:
+Layers are split into modules (Phase C):
 
-| Section | Lines (approx.) | Target layer | Responsibility |
-|---|---|---|---|
-| Generator file I/O | 21–97 | Engine + Plugin | Name sanitization, user-dir paths, metadata inference, save/load |
-| Geometry API | 100–168 | API | `create_box`, `create_label`, collections, materials, delete helpers |
-| Generator execution | 171–192 | Engine | `exec()` loader, API dict injection, `execute_generator()` |
-| JSON / commands | 195–311 | Plugin | Scene export, command parser, action dispatch |
-| UI (operators, panel) | 314–668 | Blender UI | Browser, clipboard, text blocks, registration |
+| Module | Target layer | Responsibility |
+|---|---|---|
+| `layoutlab/plugin/` | Blender UI + thin orchestration | Panel, operators, browser properties |
+| `layoutlab/protocol/` | Plugin (JSON) | Scene export, command parser, action dispatch |
+| `layoutlab/engine/` | Engine | Generator paths, metadata, `exec()` loader, `execute_generator()` |
+| `layoutlab/api/` | API | `create_box`, `create_label`, collections, materials, delete helpers |
+| `layoutlab/util.py` | Shared | Pure-Python JSON parsing, metadata inference (testable without bpy) |
 
 ## 3.3 Runtime Layout `[IMPLEMENTED]`
 
@@ -114,7 +125,7 @@ All layers live in one file. Logical sections:
 
 ## 3.4 What v0.5 Actually Delivers
 
-Phase 1 features from the Master Design Document — **functionally present, architecturally monolithic**:
+Phase 1 features from the Master Design Document:
 
 | Feature | Status |
 |---|---|
@@ -124,10 +135,10 @@ Phase 1 features from the Master Design Document — **functionally present, arc
 | Parametric `bed_basic` generator | `[IMPLEMENTED]` |
 | Generator save/load via JSON + UI | `[IMPLEMENTED]` |
 | Clearance boxes via `create_clearance` | `[IMPLEMENTED]` |
-| Separated module structure | `[PLANNED]` |
-| Generators versioned in repo | `[PLANNED]` |
+| Separated module structure | `[IMPLEMENTED]` |
+| Generators versioned in repo | `[IMPLEMENTED]` (bundled in `layoutlab/generators/`, synced on register) |
 | Semantic object identity in scene | `[PLANNED]` |
-| Automated tests | `[PLANNED]` |
+| Automated tests | `[IMPLEMENTED]` (util/metadata; bpy integration manual) |
 
 ------------------------------------------------------------------------
 
@@ -214,32 +225,32 @@ Repo generators/  →  validate  →  install/sync  →  runtime cache
 
 # 5. Subsystem Responsibilities
 
-## 5.1 Main Plugin `[IMPLEMENTED]` (monolith)
+## 5.1 Main Plugin `[IMPLEMENTED]`
 
-| Responsibility | Functions |
+| Responsibility | Module / functions |
 |---|---|
-| JSON parsing | `apply_commands_json`, `get_commands_text` |
-| Command routing | `apply_single_command` |
-| Scene export | `layout_export_json`, `object_to_dict` |
-| Generator file management | `save_generator_code`, `read_generator_code`, `delete` via commands |
+| JSON parsing | `protocol/commands.py` — `apply_commands_json`, `get_commands_text` |
+| Command routing | `protocol/commands.py` — `apply_single_command` |
+| Scene export | `protocol/export.py` — `layout_export_json`, `object_to_dict` |
+| Generator file management | `engine/registry.py` — save/load; delete via commands |
 | Logging | `print()` to Blender console |
 
 Does **not** contain furniture logic. `[IMPLEMENTED]`
 
-## 5.2 Generator Engine `[IMPLEMENTED]` (monolith)
+## 5.2 Generator Engine `[IMPLEMENTED]`
 
-| Responsibility | Functions |
+| Responsibility | Module / functions |
 |---|---|
-| Load generator source | `read_generator_code`, `exec()` |
-| Inject API | `execute_generator` builds `api` dict |
-| Metadata discovery | `infer_generator_meta_from_code`, `list_generators_meta` |
-| Name validation | `sanitize_generator_name` |
+| Load generator source | `engine/registry.py` — `read_generator_code`; `engine/executor.py` — `exec()` |
+| Inject API | `engine/executor.py` — `execute_generator` + `api/build_generator_api()` |
+| Metadata discovery | `util.py` + `engine/registry.py` — `list_generators_meta` |
+| Name validation | `util.py` — `sanitize_generator_name` |
 
 Does **not** contain UI. `[IMPLEMENTED]`
 
-## 5.3 LayoutLab API `[IMPLEMENTED]` (monolith)
+## 5.3 LayoutLab API `[IMPLEMENTED]`
 
-Functions passed to generators via the `api` dict:
+Functions passed to generators via the `api` dict (`layoutlab/api/`):
 
 | Function | Purpose |
 |---|---|
@@ -254,20 +265,20 @@ Functions passed to generators via the `api` dict:
 
 Planned additions: `create_component`, `create_clearance` (as API wrapper), `create_profile`, `create_mesh`. `[PLANNED]`
 
-Full reference: `docs/generator_api.md` `[PLANNED]`
+Full reference: `docs/generator_api.md` `[IMPLEMENTED]`
 
 ## 5.4 Generators `[IMPLEMENTED]` (partial)
 
-- One built-in template: `bed_basic` (embedded string in monolith)
+- Bundled template: `layoutlab/generators/bed_basic.py` (synced to user dir on register)
 - User-created generators stored as `.py` files outside repo
 - Contract: `generate(params, api)` + metadata constants
 - Spec: `LayoutLab_Generator_Specification.md`
 
-## 5.5 Blender UI `[IMPLEMENTED]` (monolith)
+## 5.5 Blender UI `[IMPLEMENTED]`
 
-| UI element | Operator |
+| UI element | Module / operator |
 |---|---|
-| Sidebar panel | `LAYOUTLAB_PT_panel` |
+| Sidebar panel | `plugin/panel.py` — `LAYOUTLAB_PT_panel` |
 | Copy scene / selected | `layoutlab.copy_scene` |
 | Apply commands | `layoutlab.apply_commands` |
 | Generator browser popup | `layoutlab.open_generator_browser` |
@@ -322,7 +333,7 @@ Each component mesh carries semantic identity:
 
 This enables: regenerate, undo, variants, constraint checking.
 
-Detailed schema: `docs/object_model.md` `[PLANNED]`
+Detailed schema: `docs/object_model.md` `[IMPLEMENTED]`
 
 ------------------------------------------------------------------------
 
@@ -332,7 +343,7 @@ These shortcuts are **accepted for the prototype** but must be resolved before s
 
 | Exception | Current behaviour | Target | Risk if kept |
 |---|---|---|---|
-| **Monolith file** | All layers in one `.py` | Split into package | Unmaintainable; impossible to test in isolation |
+| **Monolith file** | ~~All layers in one `.py`~~ Split into `layoutlab/` package (Phase C) | Maintain module boundaries | Resolved 2026-07 |
 | **Generators outside repo** | User scripts dir | `generators/` in repo | No version control, no review, no CI |
 | **`exec()` loading** | Dynamic execution of generator code | Import-based loader with validation | Security, no static analysis |
 | **`bpy` in generator API** | Generators can call Blender directly | API-only access | Breaks Blender independence; untestable |
@@ -346,7 +357,7 @@ Each resolved exception should produce a Design Decision document (`docs/design_
 
 # 8. Target Repository Layout
 
-`[PLANNED]` — not yet created. Migration target:
+`[IMPLEMENTED]` — current layout matches target (browser UI lives in `plugin/operators.py` + `plugin/panel.py` instead of separate `browser.py`):
 
 ```
 LayoutLab/
@@ -387,11 +398,12 @@ LayoutLab/
 │   └── test_generators.py
 │
 └── docs/
+    ├── documentation_map.md            [IMPLEMENTED]
     ├── ARCHITECTURE.md                 # this file
     ├── json_protocol.md
-    ├── generator_api.md                [PLANNED]
-    ├── object_model.md                 [PLANNED]
-    ├── units_and_coordinates.md        [PLANNED]
+    ├── generator_api.md                [IMPLEMENTED]
+    ├── object_model.md                 [IMPLEMENTED]
+    ├── units_and_coordinates.md        [IMPLEMENTED]
     └── design_decisions/
         ├── DD-001-generators-are-parametric-assets.md
         ├── DD-002-generators-rebuild-mesh.md
@@ -408,7 +420,7 @@ UI  →  Plugin  →  Engine  →  API  →  bpy
               Generators  →  API (never UI, never Plugin)
 ```
 
-Generators import nothing from `plugin/` or `browser.py`. `[PLANNED]` rule; today enforced by convention only.
+Generators import nothing from `plugin/`. `[IMPLEMENTED]` rule; enforced by convention.
 
 ------------------------------------------------------------------------
 
@@ -423,12 +435,12 @@ Generators import nothing from `plugin/` or `browser.py`. `[PLANNED]` rule; toda
 | A.3 | `README.md` | `[IMPLEMENTED]` |
 | A.4 | `docs/design_decisions/DD-001..005` | `[IMPLEMENTED]` |
 | A.5 | `docs/units_and_coordinates.md` | `[IMPLEMENTED]` |
-| A.6 | `docs/generator_api.md` | `[PLANNED]` |
-| A.7 | `docs/object_model.md` | `[PLANNED]` |
+| A.6 | `docs/generator_api.md` | `[IMPLEMENTED]` |
+| A.7 | `docs/object_model.md` | `[IMPLEMENTED]` |
 
 **Gate:** Do not split the monolith until A.1–A.5 are done. **Passed.**
 
-## Phase B — Structure without behaviour change `[IN PROGRESS]`
+## Phase B — Structure without behaviour change `[COMPLETE]`
 
 1. Extract `generators/bed_basic.py` from embedded template string — `[IMPLEMENTED]`
 2. Add `tests/` for protocol parsing and metadata inference — `[IMPLEMENTED]`
@@ -437,11 +449,11 @@ Generators import nothing from `plugin/` or `browser.py`. `[PLANNED]` rule; toda
 
 **Gate:** All v0.5 behaviour preserved; tests green.
 
-## Phase C — Monolith split `[PLANNED]`
+## Phase C — Monolith split `[COMPLETE]`
 
-1. Create `layoutlab/` package with modules per Section 8
-2. Replace `layoutlab_chatgpt_helper_v05.py` with thin wrapper or remove
-3. Update Blender install instructions in README
+1. Create `layoutlab/` package with modules per Section 8 — `[IMPLEMENTED]`
+2. Replace `layoutlab_chatgpt_helper_v05.py` with thin wrapper or remove — `[IMPLEMENTED]` (removed; package is entry point)
+3. Update Blender install instructions in README — `[IMPLEMENTED]`
 
 **Gate:** Manual test checklist passes (copy scene, apply commands, run generator, browser CRUD).
 

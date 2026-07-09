@@ -197,6 +197,7 @@ Before implementing:
 -   Is this object-specific or generic?
 -   Will this still work with 200 generators?
 -   Does this belong in the core or inside one generator?
+-   **Which documents must be updated?** (see `docs/documentation_map.md`)
 
 ------------------------------------------------------------------------
 
