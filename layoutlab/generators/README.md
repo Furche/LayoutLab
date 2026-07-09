@@ -6,6 +6,7 @@ user directory on addon register (if missing).
 | Generator | Description | Docs |
 |---|---|---|
 | `bed_basic` | Parametric low bed | [bed_basic.md](bed_basic.md) |
+| `wardrobe_basic` | Parametric wardrobe with doors, shelves, clearance | [wardrobe_basic.md](wardrobe_basic.md) |
 
 ## Authoring Checklist
 
@@ -18,5 +19,5 @@ Every new generator must:
 5. Include a `{name}.md` reference document (params, components, examples, limits)
 6. Be listed in this README
 
-Pattern reference: **`bed_basic`** — review before creating generator #2.  
+Pattern reference: **`bed_basic`**, **`wardrobe_basic`** — review before creating generator #3.  
 Full guide: **[docs/how_to_write_generators.md](../../docs/how_to_write_generators.md)**

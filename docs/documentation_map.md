@@ -43,6 +43,7 @@ Do **not** duplicate content across documents. Link instead.
 |---|---|---|---|---|---|
 | [LayoutLab_Manifest.md](../LayoutLab_Manifest.md) | Why the project exists — belief and problem statement | Everyone | Mission, problem framing, non-goals at vision level | Fundamental product direction changes (rare) | Pivot from “Blender addon” to broader platform |
 | [LayoutLab_Master_Design_Document.md](../LayoutLab_Master_Design_Document.md) | Vision, roadmap phases, product architecture overview | PO, architect, senior contributors | Long-term roadmap, phase definitions, product-level architecture | Roadmap phase completed/added; major product scope change | Phase C marked complete; Phase D scope defined |
+| [docs/Future_Ideas.md](Future_Ideas.md) | **Ideas backlog** — vision concepts before DD/architecture | PO, architect, team | Semantic objects, clearance, constraints, evaluation — not commitments | New idea matures enough to document; idea promoted to DD (remove or mark done) | Walkway analysis concept added |
 
 **Boundary:** Manifest = *why*. MDD = *where we are going*. Neither lists JSON command fields — that is `json_protocol.md`.
 

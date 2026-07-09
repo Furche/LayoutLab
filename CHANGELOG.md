@@ -12,6 +12,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 - `docs/how_to_write_generators.md` — generator developer guide (examples, best practices, debugging)
 - Panel: **Paste Generator** — save clipboard script as generator (name from `GENERATOR_NAME`, overwrites if exists)
+- `layoutlab/generators/wardrobe_basic.py` + `wardrobe_basic.md` — second bundled generator
+- `docs/Future_Ideas.md` — ideas backlog before architecture/implementation
 
 ### Changed
 
