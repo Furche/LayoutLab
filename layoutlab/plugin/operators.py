@@ -3,6 +3,7 @@ import traceback
 
 import bpy
 
+from ..util import infer_generator_name_from_code
 from ..engine.executor import execute_generator
 from ..engine.registry import (
     addon_user_dir,
@@ -69,6 +70,35 @@ class LAYOUTLAB_OT_install_default_generator(bpy.types.Operator):
         context.scene.layoutlab_selected_generator = gen_name
         refresh_browser_items(context)
         self.report({"INFO"}, f"Installed: {gen_name}")
+        return {"FINISHED"}
+
+
+class LAYOUTLAB_OT_paste_generator(bpy.types.Operator):
+    bl_idname = "layoutlab.paste_generator"
+    bl_label = "Paste Generator"
+
+    def execute(self, context):
+        code = (context.window_manager.clipboard or "").strip()
+        if not code:
+            self.report({"ERROR"}, "Clipboard is empty.")
+            return {"CANCELLED"}
+        if "def generate" not in code:
+            self.report({"ERROR"}, "Clipboard does not look like a generator (missing generate function).")
+            return {"CANCELLED"}
+        try:
+            gen_name = infer_generator_name_from_code(code)
+            existed = generator_path(gen_name).exists()
+            gen_name, p = save_generator_code(code)
+            context.scene.layoutlab_selected_generator = gen_name
+            refresh_browser_items(context)
+            if existed:
+                self.report({"INFO"}, f"Overwritten generator: {gen_name}")
+            else:
+                self.report({"INFO"}, f"Installed generator: {gen_name}")
+            print(f"LayoutLab generator saved: {gen_name} -> {p}")
+        except Exception as e:
+            self.report({"ERROR"}, str(e))
+            return {"CANCELLED"}
         return {"FINISHED"}
 
 
@@ -258,6 +288,7 @@ operator_classes = (
     LAYOUTLAB_OT_apply_commands,
     LAYOUTLAB_OT_create_command_text_block,
     LAYOUTLAB_OT_install_default_generator,
+    LAYOUTLAB_OT_paste_generator,
     LAYOUTLAB_OT_open_generator_browser,
     LAYOUTLAB_OT_refresh_generator_browser,
     LAYOUTLAB_OT_new_generator,

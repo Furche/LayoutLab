@@ -11,6 +11,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 
 - `docs/how_to_write_generators.md` — generator developer guide (examples, best practices, debugging)
+- Panel: **Paste Generator** — save clipboard script as generator (name from `GENERATOR_NAME`, overwrites if exists)
+
+### Changed
+
+- Generator Library panel simplified: browser + paste only (workbench moved to browser popup)
 
 ------------------------------------------------------------------------
 

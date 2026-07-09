@@ -19,6 +19,7 @@ Repository: https://github.com/Furche/LayoutLab
 - JSON command exchange with ChatGPT (clipboard or text block)
 - Scene export as JSON (full scene or selection)
 - Generator browser (asset-browser-like)
+- **Paste Generator** — install/overwrite a generator from clipboard script
 - Parametric `bed_basic` generator (legs, frame, mattress, pillows)
 - Semantic object metadata (`layoutlab_object_id`, params on meshes)
 - `regenerate` JSON command (update params, preserve object identity)
