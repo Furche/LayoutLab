@@ -50,6 +50,9 @@ See [docs/json_protocol.md](docs/json_protocol.md) for the full command referenc
 
 No manual copying into folders — Blender extracts the addon for you.
 
+The zip is rebuilt **automatically** after git commits that change `layoutlab/` (via `scripts/install_git_hooks.sh`).  
+Cursor also runs `python3 scripts/build_addon_zip.py` after addon changes during development.
+
 ### Diagnostics
 
 After installing, open **LayoutLab → Run Console Checks**.  

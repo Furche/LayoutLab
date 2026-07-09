@@ -1,0 +1,10 @@
+#!/bin/sh
+# Rebuild dist/layoutlab-<version>.zip when the addon package changed in this commit.
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT" || exit 0
+
+if git diff-tree --no-commit-id --name-only -r HEAD | grep -q '^layoutlab/'; then
+  echo "LayoutLab: layoutlab/ changed — rebuilding addon zip..."
+  python3 scripts/build_addon_zip.py || echo "LayoutLab: zip build failed (see above)."
+fi
