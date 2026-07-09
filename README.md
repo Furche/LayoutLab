@@ -36,7 +36,21 @@ See [docs/json_protocol.md](docs/json_protocol.md) for the full command referenc
 
 ## Installation
 
-### Option A — Copy (simple)
+### Option A — Install from zip (recommended)
+
+1. Build the installable zip (or download a release asset from GitHub):
+   ```bash
+   python3 scripts/build_addon_zip.py
+   ```
+   Creates `dist/layoutlab-<version>.zip` (e.g. `dist/layoutlab-0.5.0.zip`).
+
+2. In Blender: **Edit → Preferences → Add-ons → Install…**
+3. Select the zip file.
+4. Enable **LayoutLab** in the add-ons list.
+
+No manual copying into folders — Blender extracts the addon for you.
+
+### Option B — Copy folder
 
 1. Clone this repository:
    ```bash
@@ -50,7 +64,7 @@ See [docs/json_protocol.md](docs/json_protocol.md) for the full command referenc
 3. Restart Blender (or refresh addons).
 4. Enable **LayoutLab** in *Edit → Preferences → Add-ons*.
 
-### Option B — Symlink (development, recommended)
+### Option C — Symlink (development)
 
 ```bash
 ln -s /path/to/LayoutLab/layoutlab ~/Library/Application\ Support/Blender/4.2/scripts/addons/layoutlab

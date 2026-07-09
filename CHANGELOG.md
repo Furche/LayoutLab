@@ -22,7 +22,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
-- Blender addon moved to `layoutlab/` package (`__init__.py`); removed versioned filename
+- `scripts/build_addon_zip.py` — builds `dist/layoutlab-<version>.zip` for Blender Install…
+- Blender addon packaged as `layoutlab/` folder (`__init__.py`)
 - `layoutlab_util.py` → `layoutlab/util.py`
 - `generators/` → `layoutlab/generators/`
 
