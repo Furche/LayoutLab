@@ -8,19 +8,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+------------------------------------------------------------------------
+
+## [0.5.1] — 2026-07-10
+
 ### Added
 
-- `docs/documentation_map.md` — index of all docs: purpose, audience, update triggers, overlap rules
+- Semantic object metadata on generator meshes (`layoutlab_object_id`, `layoutlab_generator`, `layoutlab_params`, `layoutlab_component`)
+- `regenerate` JSON command — rebuild logical object with param overrides, same object_id
+- `layoutlab` block in scene export for objects with identity metadata
+- `docs/documentation_map.md` — documentation maintenance index
 - Mandatory **Documentation Update Checklist** in `00_READ_THIS_FIRST.md`
-- `docs/generator_api.md` — Generator API reference
-- `docs/object_model.md` — semantic object model (current + target)
-- `generators/bed_basic.py` — version-controlled parametric bed generator
-- `layoutlab_util.py` — pure-Python helpers (metadata inference, JSON parsing)
-- `tests/test_layoutlab_util.py` — unit tests for registry and protocol parsing
-- Bundled generator sync on addon register (copies missing generators to user dir)
-- `CHANGELOG.md` and `DEVLOG.md`
-- `layoutlab/diagnostics.py` — console diagnostic checks with shareable report
-- Module split: `layoutlab/api/`, `engine/`, `protocol/`, `plugin/`
+- `docs/generator_api.md`, `docs/object_model.md`
+- `layoutlab/api/metadata.py`, `layoutlab/protocol/semantic.py`
+- Diagnostics: metadata, regenerate, export block checks (9 checks total)
+- Unit tests: `merge_generator_params`, `component_suffix_from_name`
 
 ### Fixed
 
@@ -28,12 +30,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
-- `00_READ_THIS_FIRST.md`, `AI_CONTEXT.md`, `README.md` — doc maintenance process and outdated structure/roadmap
-- `scripts/build_addon_zip.py` — builds `dist/layoutlab-<version>.zip` for Blender Install…
-- Blender addon packaged as `layoutlab/` folder (`__init__.py`)
-- `layoutlab_util.py` → `layoutlab/util.py`
-- `generators/` → `layoutlab/generators/`
-- `docs/ARCHITECTURE.md` — Phase B/C complete, module map, A.6/A.7 implemented
+- Plugin version 0.5.1; export `layoutlab_version` 0.5.1
+- `execute_generator` returns `object_id` and tags all API-created components
+- Module split: `layoutlab/api/`, `engine/`, `protocol/`, `plugin/` (Phase C)
+- `00_READ_THIS_FIRST.md`, `AI_CONTEXT.md`, `README.md`, `docs/ARCHITECTURE.md` updated
+- Phase C and Phase D marked complete in architecture docs
 
 ------------------------------------------------------------------------
 
@@ -49,5 +50,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - Design decisions DD-001 through DD-005
 - `AI_CONTEXT.md`, `README.md`
 
-[Unreleased]: https://github.com/Furche/LayoutLab/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/Furche/LayoutLab/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/Furche/LayoutLab/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Furche/LayoutLab/releases/tag/v0.5.0

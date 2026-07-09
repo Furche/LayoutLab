@@ -80,9 +80,9 @@ Collection is **not** the logical object identity — only organization.
 
 ------------------------------------------------------------------------
 
-# 3. Target Representation `[PLANNED]`
+# 3. Target Representation `[IMPLEMENTED]` (v0.5.1)
 
-Every component mesh from a generator should carry:
+Every component mesh from a generator carries:
 
 | Custom property | Type | Example | Purpose |
 |---|---|---|---|
@@ -93,7 +93,7 @@ Every component mesh from a generator should carry:
 | `layoutlab_component` | string | `"mattress"` | Component id within object |
 | `layoutlab_role` | string | `"bed_mattress"` | Fine-grained role (keep) |
 
-### Example component (future export)
+### Example component (export) `[IMPLEMENTED]`
 
 ```json
 {
@@ -111,13 +111,13 @@ Every component mesh from a generator should carry:
 
 ### Enabled features
 
-| Feature | Requires |
-|---|---|
-| `regenerate` command | `layoutlab_params` + `layoutlab_generator` |
-| Semantic export to AI | `layoutlab` block on export |
-| Move/rotate logical object | `layoutlab_object_id` grouping |
-| Undo generator edit | stored params + generator name |
-| Variant comparison | object_id + params diff |
+| Feature | Requires | Status |
+|---|---|---|
+| `regenerate` command | `layoutlab_params` + `layoutlab_generator` | `[IMPLEMENTED]` |
+| Semantic export to AI | `layoutlab` block on export | `[IMPLEMENTED]` |
+| Move/rotate logical object | `layoutlab_object_id` grouping | `[PLANNED]` |
+| Undo generator edit | stored params + generator name | `[IMPLEMENTED]` via regenerate |
+| Variant comparison | object_id + params diff | `[PLANNED]` |
 
 ------------------------------------------------------------------------
 
@@ -172,11 +172,10 @@ Future filter: export only objects with `layoutlab_object_id` or `layoutlab_role
 
 | Phase | Change |
 |---|---|
-| v0.5 (now) | Name prefix + `layoutlab_role` only |
-| v0.6 `[PLANNED]` | API `set_object_metadata()` writes full schema on `create_box` |
-| v0.6 `[PLANNED]` | `regenerate` JSON command |
-| v0.7 `[PLANNED]` | Semantic block in scene export |
-| v0.8 `[PLANNED]` | Deprecate move-by-single-mesh for generated furniture |
+| v0.5.0 | Name prefix + `layoutlab_role` only |
+| v0.5.1 `[IMPLEMENTED]` | Engine tags `layoutlab_object_id`, params, generator on `run_generator`; `regenerate` command; `layoutlab` export block |
+| v0.6 `[PLANNED]` | Move/rotate logical object by `object_id` |
+| v0.7 `[PLANNED]` | Deprecate move-by-single-mesh for generated furniture |
 
 Existing scenes without new properties remain valid — generators still work with prefix delete + re-run.
 
@@ -195,4 +194,5 @@ Typical component count: 14 (4 posts, 4 rails, mattress, head/foot board, 1–2 
 
 | Version | Date | Changes |
 |---|---|---|
+| 0.5.1 | 2026-07-10 | Semantic metadata on generator meshes; regenerate; export `layoutlab` block |
 | 0.5.0 | 2026-07-10 | Initial object model doc (as-built + target) |

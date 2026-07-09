@@ -137,7 +137,7 @@ Phase 1 features from the Master Design Document:
 | Clearance boxes via `create_clearance` | `[IMPLEMENTED]` |
 | Separated module structure | `[IMPLEMENTED]` |
 | Generators versioned in repo | `[IMPLEMENTED]` (bundled in `layoutlab/generators/`, synced on register) |
-| Semantic object identity in scene | `[PLANNED]` |
+| Semantic object identity in scene | `[IMPLEMENTED]` (v0.5.1) |
 | Automated tests | `[IMPLEMENTED]` (util/metadata; bpy integration manual) |
 
 ------------------------------------------------------------------------
@@ -457,13 +457,13 @@ Generators import nothing from `plugin/`. `[IMPLEMENTED]` rule; enforced by conv
 
 **Gate:** Manual test checklist passes (copy scene, apply commands, run generator, browser CRUD).
 
-## Phase D — Semantic object model `[PLANNED]`
+## Phase D — Semantic object model `[COMPLETE]`
 
-1. Implement `layoutlab_object_id` + `layoutlab_params` on generated meshes
-2. Extend scene export with semantic block
-3. Add `regenerate` command to JSON protocol
+1. Implement `layoutlab_object_id` + `layoutlab_params` on generated meshes — `[IMPLEMENTED]` v0.5.1
+2. Extend scene export with semantic `layoutlab` block — `[IMPLEMENTED]`
+3. Add `regenerate` command to JSON protocol — `[IMPLEMENTED]`
 
-**Gate:** AI can read a bed from export and recreate it with different params.
+**Gate:** AI can read a bed from export and recreate it with different params — `[PASSED]` via `regenerate` + export block.
 
 ## Phase E — Phase 2 features `[PLANNED]`
 

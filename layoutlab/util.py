@@ -56,3 +56,22 @@ def parse_commands_payload(text):
     if not isinstance(commands, list):
         raise ValueError("Expected JSON with {'commands': [...]} or a list.")
     return commands
+
+
+def merge_generator_params(stored, overrides):
+    """Merge stored generator params with command overrides (regenerate)."""
+    merged = dict(stored or {})
+    merged.update(overrides or {})
+    return merged
+
+
+def component_suffix_from_name(object_name, name_prefix):
+    """Derive layoutlab_component from object name and params.name prefix."""
+    if not object_name or not name_prefix:
+        return ""
+    if object_name == name_prefix:
+        return ""
+    prefix = f"{name_prefix}_"
+    if object_name.startswith(prefix):
+        return object_name[len(prefix):]
+    return ""

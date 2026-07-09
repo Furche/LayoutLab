@@ -4,6 +4,33 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-10 — Phase D: semantic object model
+
+**Context:** Phase C split complete. Objects were grouped only by name prefix;
+export was geometry-only; AI could not update a bed in place.
+
+**Decision:**
+
+1. Engine-level metadata context in `execute_generator()` — all `create_box` /
+   `create_label` calls during generator run receive `layoutlab_*` properties
+   automatically (generators unchanged).
+2. `regenerate` command: resolve by `object_id` or component name, merge param
+   overrides, delete by `object_id`, re-run generator with **same UUID**.
+3. Export adds structured `layoutlab` block (parallel to flat `custom_properties`).
+4. Bump to v0.5.1 (not 0.6) — additive protocol extension, no breaking changes.
+
+**Why not explicit `set_object_metadata()` in generators?**
+
+Less boilerplate; bed_basic needs zero changes; metadata stays consistent.
+Optional `component=` kwarg reserved for edge cases.
+
+**Legacy scenes:** Objects without `layoutlab_object_id` still work via
+`delete_prefix` + `run_generator`.
+
+**Verification:** Diagnostics extended to 9 checks (metadata + regenerate + export).
+
+------------------------------------------------------------------------
+
 ## 2026-07-10 — Documentation maintenance system
 
 **Context:** Phase C complete and diagnostics 8/8. Risk: features ship while docs

@@ -368,13 +368,54 @@ Sets `hide_viewport` and `hide_render`. **Error if object not found.**
 
 ------------------------------------------------------------------------
 
-## 5.12 Planned Commands
+## 5.12 `regenerate` `[IMPLEMENTED]`
+
+Rebuild a logical object from stored generator metadata, optionally overriding params.
+
+```json
+{
+  "action": "regenerate",
+  "object_id": "a1b2c3d4-…",
+  "params": { "length": 14 }
+}
+```
+
+**Alternative:** reference any component mesh by name:
+
+```json
+{
+  "action": "regenerate",
+  "object": "BED_120x200_mattress",
+  "params": { "width": 22 }
+}
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `object_id` | one of `object_id` / `object` | UUID shared by all components |
+| `object` | one of `object_id` / `object` | Any component object name |
+| `params` | no | Overrides merged into stored `layoutlab_params` |
+
+**Behaviour:**
+
+1. Resolve `object_id` from field or from `object` mesh custom property.
+2. Read `layoutlab_generator` and `layoutlab_params` from existing components.
+3. Merge `params` overrides into stored params.
+4. Delete all meshes with that `layoutlab_object_id`.
+5. Re-run generator with merged params; **same `object_id` preserved**.
+
+**Legacy objects** without `layoutlab_object_id` cannot be regenerated — use `delete_prefix` + `run_generator`.
+
+**Return value (console):** `{ "regenerated", "object_id", "generator", "params", … }`
+
+------------------------------------------------------------------------
+
+## 5.13 Planned Commands
 
 | Action | Purpose |
 |---|---|
-| `regenerate` | Update params on existing logical object |
 | `run_generator_batch` | Shared undo group |
-| `set_parameter` | Param change + regenerate |
+| `set_parameter` | Param change + regenerate (alias) |
 | `analyze_layout` | Constraint/clearance analysis |
 | `compare_variants` | Layout diff |
 | `create_collection` | Collection management |
@@ -388,7 +429,7 @@ Sets `hide_viewport` and `hide_render`. **Error if object not found.**
 
 ```json
 {
-  "layoutlab_version": "0.5.0",
+  "layoutlab_version": "0.5.1",
   "unit": "METRIC",
   "unit_scale": 1.0,
   "scene": "Scene",
@@ -438,7 +479,15 @@ Exported types: `MESH`, `EMPTY`, `CURVE`, `FONT` only.
   "dimensions": [11.1, 19.1, 2.0],
   "visible": true,
   "world_bbox_corners": [[68.75, 198.15, 3.55], "..."],
-  "custom_properties": { "layoutlab_role": "bed_mattress" }
+  "custom_properties": { "layoutlab_role": "bed_mattress", "layoutlab_object_id": "…" },
+  "layoutlab": {
+    "object_id": "uuid-here",
+    "generator": "bed_basic",
+    "generator_version": "0.1",
+    "params": { "length": 12, "width": 20, "head_side": "y_max" },
+    "component": "mattress",
+    "role": "bed_mattress"
+  }
 }
 ```
 
@@ -447,9 +496,8 @@ Exported types: `MESH`, `EMPTY`, `CURVE`, `FONT` only.
 | `location` | Object origin; 4 decimal places |
 | `dimensions` | World-space AABB size |
 | `world_bbox_corners` | 8 world corners |
-| `custom_properties` | string/int/float/bool only |
-
-Semantic grouping (`layoutlab_object_id`, generator params on export): `[PLANNED]`
+| `custom_properties` | string/int/float/bool only (includes all `layoutlab_*` props) |
+| `layoutlab` | Present when `layoutlab_object_id` is set `[IMPLEMENTED]` v0.5.1 |
 
 ------------------------------------------------------------------------
 
@@ -486,9 +534,22 @@ Set by `create_box`, `create_clearance`, `create_label`, and generators.
 
 Examples: `bed_mattress`, `bed_post`, `clearance`, `label`
 
-## 9.2 Planned Identity Schema
+## 9.2 Identity Schema `[IMPLEMENTED]` (v0.5.1)
 
-`layoutlab_object_id`, `layoutlab_generator`, `layoutlab_params`, `layoutlab_component` — `[PLANNED]`
+Set automatically on meshes created via `run_generator` / `regenerate`:
+
+| Property | Set by | Purpose |
+|---|---|---|
+| `layoutlab_object_id` | Engine | Groups all components of one logical object |
+| `layoutlab_generator` | Engine | Source generator name |
+| `layoutlab_generator_version` | Engine | Generator version at creation |
+| `layoutlab_params` | Engine | JSON string of full params for regeneration |
+| `layoutlab_component` | API | Component suffix (e.g. `mattress`, `post_xmin_ymin`) |
+| `layoutlab_role` | API / generator | Fine-grained role (unchanged) |
+
+Objects from `create_box` / `create_clearance` without a generator context do **not** receive identity metadata (clearance stays role-only).
+
+See `docs/object_model.md` for the full schema.
 
 ------------------------------------------------------------------------
 

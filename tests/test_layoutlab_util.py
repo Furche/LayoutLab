@@ -20,6 +20,8 @@ sanitize_generator_name = _util.sanitize_generator_name
 infer_generator_name_from_code = _util.infer_generator_name_from_code
 infer_generator_meta_from_code = _util.infer_generator_meta_from_code
 parse_commands_payload = _util.parse_commands_payload
+merge_generator_params = _util.merge_generator_params
+component_suffix_from_name = _util.component_suffix_from_name
 
 
 class TestSanitizeGeneratorName(unittest.TestCase):
@@ -68,6 +70,28 @@ class TestParseCommandsPayload(unittest.TestCase):
     def test_invalid_json_raises(self):
         with self.assertRaises(json.JSONDecodeError):
             parse_commands_payload("{not json")
+
+
+class TestMergeGeneratorParams(unittest.TestCase):
+    def test_overrides_win(self):
+        merged = merge_generator_params({"length": 12, "width": 20}, {"length": 14})
+        self.assertEqual(merged["length"], 14)
+        self.assertEqual(merged["width"], 20)
+
+    def test_empty_overrides(self):
+        merged = merge_generator_params({"name": "BED"}, None)
+        self.assertEqual(merged["name"], "BED")
+
+
+class TestComponentSuffix(unittest.TestCase):
+    def test_mattress(self):
+        self.assertEqual(component_suffix_from_name("BED_120_mattress", "BED_120"), "mattress")
+
+    def test_label(self):
+        self.assertEqual(component_suffix_from_name("BED_120_label", "BED_120"), "label")
+
+    def test_no_match(self):
+        self.assertEqual(component_suffix_from_name("OTHER_mattress", "BED_120"), "")
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ Blender 4.0+ is the current editor. The long-term goal: plan entire rooms by des
 
 > *"LayoutLab does not create meshes. LayoutLab describes objects."*
 
-**Status:** v0.5 — functional, modular addon package (Phase C split complete).
+**Status:** v0.5.1 — modular addon with semantic object metadata and `regenerate`.
 
 Repository: https://github.com/Furche/LayoutLab
 
@@ -20,6 +20,8 @@ Repository: https://github.com/Furche/LayoutLab
 - Scene export as JSON (full scene or selection)
 - Generator browser (asset-browser-like)
 - Parametric `bed_basic` generator (legs, frame, mattress, pillows)
+- Semantic object metadata (`layoutlab_object_id`, params on meshes)
+- `regenerate` JSON command (update params, preserve object identity)
 - Save, load, and delete generators via UI or JSON
 - Clearance boxes via `create_clearance` command
 
@@ -237,7 +239,7 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 | **A** | Documentation foundation | Complete |
 | **B** | Generators in repo, tests, sync | Complete |
 | **C** | Monolith → module split | Complete |
-| **D** | Semantic object model, `regenerate` | Planned |
+| **D** | Semantic object model, `regenerate` | Complete |
 | **E** | Clearance, collision, paths, undo | Planned |
 
 Full roadmap: [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) §17 · Phase status: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9

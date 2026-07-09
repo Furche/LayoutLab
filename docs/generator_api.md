@@ -188,19 +188,35 @@ Target: API-only access (see `docs/ARCHITECTURE.md` §7).
 
 ------------------------------------------------------------------------
 
-# 7. Planned API Functions
+# 7. Automatic Object Metadata `[IMPLEMENTED]` (v0.5.1)
+
+When `execute_generator()` runs, the engine activates a metadata context.  
+`create_box` and `create_label` automatically write:
+
+- `layoutlab_object_id`, `layoutlab_generator`, `layoutlab_generator_version`
+- `layoutlab_params` (JSON string of full params)
+- `layoutlab_component` (derived from object name suffix, or explicit `component=` kwarg)
+- `layoutlab_role`
+
+Generators do **not** need to call a separate metadata function.  
+Implementation: `layoutlab/api/metadata.py`, `layoutlab/engine/executor.py`.
+
+Optional kwarg on API helpers: `component="mattress"` — overrides suffix inference.
+
+------------------------------------------------------------------------
+
+# 8. Planned API Functions
 
 | Function | Purpose |
 |---|---|
 | `create_clearance(...)` | Semantic clearance zone helper |
-| `create_component(...)` | Named component with object-model metadata |
+| `create_component(...)` | Named component with explicit metadata |
 | `create_profile(...)` | 2D profile extrusion |
 | `create_mesh(...)` | Arbitrary mesh from verts/faces |
-| `set_object_metadata(...)` | Write `layoutlab_object_id`, params (see object_model.md) |
 
 ------------------------------------------------------------------------
 
-# 8. Conventions for Generator Authors
+# 9. Conventions for Generator Authors
 
 1. **Naming:** `{params.name}_{component_suffix}` for all component objects.
 2. **Roles:** Set `layoutlab_role` on every mesh (see `docs/object_model.md`).
@@ -211,7 +227,7 @@ Target: API-only access (see `docs/ARCHITECTURE.md` §7).
 
 ------------------------------------------------------------------------
 
-# 9. Example (bed_basic pattern)
+# 10. Example (bed_basic pattern)
 
 ```python
 def generate(params, api):
@@ -228,7 +244,7 @@ def generate(params, api):
 
 ------------------------------------------------------------------------
 
-# 10. Changelog
+# 11. Changelog
 
 | Version | Date | Changes |
 |---|---|---|

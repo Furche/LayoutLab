@@ -108,7 +108,7 @@ def run_console_checks(context):
         check.ok("envelope_form: ok", "bare_array_form: ok")
 
     def check_run_generator_direct(check):
-        execute_generator(
+        result = execute_generator(
             "bed_basic",
             {
                 "name": bed_name,
@@ -121,13 +121,22 @@ def run_console_checks(context):
         )
         objs = [o for o in bpy.data.objects if o.name.startswith(bed_name)]
         roles = sorted({o.get("layoutlab_role", "") for o in objs if o.get("layoutlab_role")})
+        mattress = bpy.data.objects.get(f"{bed_name}_mattress")
         if len(objs) < 8:
             check.fail(f"expected >= 8 objects, got {len(objs)}", f"objects: {[o.name for o in objs]}")
+            return
+        if not mattress or not mattress.get("layoutlab_object_id"):
+            check.fail("mattress missing layoutlab_object_id")
+            return
+        if result.get("object_id") != mattress.get("layoutlab_object_id"):
+            check.fail("execute_generator object_id mismatch")
             return
         check.ok(
             f"object_count: {len(objs)}",
             f"roles: {roles}",
-            f"sample_objects: {[o.name for o in objs[:5]]}",
+            f"object_id: {mattress.get('layoutlab_object_id')}",
+            f"generator: {mattress.get('layoutlab_generator')}",
+            f"component: {mattress.get('layoutlab_component')}",
         )
 
     def check_apply_commands_json(check):
@@ -172,8 +181,56 @@ def run_console_checks(context):
         check.ok(
             f"command_results: {len(results)}",
             f"mattress_dimensions: {list(mattress.dimensions)}",
+            f"mattress_object_id: {mattress.get('layoutlab_object_id')}",
             f"clearance_role: {clearance.get('layoutlab_role')}",
             f"clearance_display: {clearance.display_type}",
+        )
+
+    def check_regenerate(check):
+        mattress = bpy.data.objects.get(f"{bed_name}_mattress")
+        if not mattress:
+            check.fail("mattress not found for regenerate")
+            return
+        object_id = mattress.get("layoutlab_object_id")
+        if not object_id:
+            check.fail("mattress has no layoutlab_object_id")
+            return
+        before_dims = list(mattress.dimensions)
+        payload = json.dumps(
+            {
+                "commands": [
+                    {
+                        "action": "regenerate",
+                        "object_id": object_id,
+                        "params": {"length": 16},
+                    }
+                ]
+            }
+        )
+        results, errors = apply_commands_json(context, payload)
+        if errors:
+            check.fail(f"errors: {errors}")
+            return
+        new_mattress = bpy.data.objects.get(f"{bed_name}_mattress")
+        if not new_mattress:
+            check.fail("mattress missing after regenerate")
+            return
+        if new_mattress.get("layoutlab_object_id") != object_id:
+            check.fail("object_id changed after regenerate")
+            return
+        after_dims = list(new_mattress.dimensions)
+        if before_dims == after_dims:
+            check.fail(f"dimensions unchanged: {before_dims}")
+            return
+        stored = json.loads(new_mattress.get("layoutlab_params", "{}"))
+        if stored.get("length") != 16:
+            check.fail(f"layoutlab_params length: {stored.get('length')}")
+            return
+        check.ok(
+            f"object_id_preserved: {object_id}",
+            f"dimensions_before: {before_dims}",
+            f"dimensions_after: {after_dims}",
+            f"params_length: {stored.get('length')}",
         )
 
     def check_scene_export(check):
@@ -185,11 +242,21 @@ def run_console_checks(context):
             return
         gen_names = [g["name"] for g in export.get("generators", [])]
         diag_objects = [o for o in export.get("objects", []) if o["name"].startswith(DIAG_PREFIX)]
+        mattress_export = next((o for o in export.get("objects", []) if o["name"] == f"{bed_name}_mattress"), None)
+        if not mattress_export or "layoutlab" not in mattress_export:
+            check.fail("mattress missing layoutlab block in export")
+            return
+        layoutlab = mattress_export["layoutlab"]
+        if layoutlab.get("generator") != "bed_basic":
+            check.fail(f"export generator: {layoutlab.get('generator')}")
+            return
         check.ok(
             f"layoutlab_version: {export['layoutlab_version']}",
             f"generator_count: {len(export.get('generators', []))}",
             f"bed_basic_listed: {'bed_basic' in gen_names}",
             f"diag_object_count_in_export: {len(diag_objects)}",
+            f"export_object_id: {layoutlab.get('object_id')}",
+            f"export_component: {layoutlab.get('component')}",
         )
 
     def check_cleanup(check):
@@ -211,6 +278,7 @@ def run_console_checks(context):
             _run_check("parse_commands", check_parse_commands),
             _run_check("run_generator_direct", check_run_generator_direct),
             _run_check("apply_commands_json", check_apply_commands_json),
+            _run_check("regenerate", check_regenerate),
             _run_check("scene_export", check_scene_export),
             _run_check("cleanup", check_cleanup),
         ]

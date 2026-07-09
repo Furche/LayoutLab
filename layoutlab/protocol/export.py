@@ -4,6 +4,7 @@ import math
 from mathutils import Vector
 
 from ..engine.registry import addon_user_dir, list_generators_meta
+from .semantic import layoutlab_block_from_object
 
 
 def v3(values):
@@ -14,7 +15,7 @@ def object_to_dict(obj):
     world_corners = []
     if hasattr(obj, "bound_box"):
         world_corners = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
-    return {
+    data = {
         "name": obj.name,
         "type": obj.type,
         "collection": obj.users_collection[0].name if obj.users_collection else "",
@@ -30,13 +31,17 @@ def object_to_dict(obj):
         "world_bbox_corners": [v3(c) for c in world_corners],
         "custom_properties": {k: obj[k] for k in obj.keys() if isinstance(obj[k], (str, int, float, bool))},
     }
+    layoutlab = layoutlab_block_from_object(obj)
+    if layoutlab:
+        data["layoutlab"] = layoutlab
+    return data
 
 
 def layout_export_json(context, selected_only=False):
     scene = context.scene
     objs = context.selected_objects if selected_only else scene.objects
     data = {
-        "layoutlab_version": "0.5.0",
+        "layoutlab_version": "0.5.1",
         "unit": scene.unit_settings.system,
         "unit_scale": scene.unit_settings.scale_length,
         "scene": scene.name,

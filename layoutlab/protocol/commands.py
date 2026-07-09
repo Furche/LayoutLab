@@ -4,11 +4,64 @@ import traceback
 
 import bpy
 
+from ..api.collections import delete_collection_objects, delete_prefix, delete_by_object_id, find_objects_by_object_id
 from ..api.geometry import create_box
-from ..api.collections import delete_collection_objects, delete_prefix
 from ..engine.executor import execute_generator
 from ..engine.registry import generator_path, save_generator_code
+from ..protocol.semantic import merge_generator_params
 from ..util import parse_commands_payload, sanitize_generator_name
+
+
+def _resolve_object_id(cmd):
+    object_id = cmd.get("object_id")
+    if object_id:
+        return object_id
+    ref_name = cmd.get("object") or cmd.get("name")
+    if not ref_name:
+        return None
+    ref = bpy.data.objects.get(ref_name)
+    if not ref:
+        raise ValueError(f"Object not found: {ref_name}")
+    object_id = ref.get("layoutlab_object_id")
+    if not object_id:
+        raise ValueError(
+            f"Object '{ref_name}' has no layoutlab_object_id (legacy object — use delete_prefix + run_generator)"
+        )
+    return object_id
+
+
+def _regenerate_object(cmd):
+    object_id = _resolve_object_id(cmd)
+    if not object_id:
+        raise ValueError("regenerate requires object_id or object with layoutlab_object_id")
+
+    components = find_objects_by_object_id(object_id)
+    if not components:
+        raise ValueError(f"No objects found for object_id: {object_id}")
+
+    first = components[0]
+    generator = first.get("layoutlab_generator")
+    if not generator:
+        raise ValueError("Object has no layoutlab_generator metadata")
+
+    raw_params = first.get("layoutlab_params") or "{}"
+    try:
+        stored = json.loads(raw_params)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid layoutlab_params on object: {exc}") from exc
+
+    merged = merge_generator_params(stored, cmd.get("params", {}))
+    delete_by_object_id(object_id)
+    result = execute_generator(generator, merged, object_id=object_id)
+    return {
+        "regenerated": merged.get("name", ""),
+        "object_id": object_id,
+        "generator": generator,
+        "params": merged,
+        **(result if isinstance(result, dict) else {}),
+    }
+
+
 def get_commands_text(context):
     scene = context.scene
     if scene.layoutlab_command_source == "TEXT":
@@ -27,6 +80,8 @@ def apply_single_command(context, cmd):
 
     if action == "run_generator":
         return execute_generator(cmd["generator"], cmd.get("params", {}))
+    if action == "regenerate":
+        return _regenerate_object(cmd)
     if action == "save_generator":
         gen_name, p = save_generator_code(cmd.get("code", ""))
         return {"saved_generator": gen_name, "path": str(p)}
