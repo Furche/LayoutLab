@@ -34,3 +34,17 @@ def refresh_browser_items(context):
 
     if scene.layoutlab_generator_index >= len(scene.layoutlab_generator_items):
         scene.layoutlab_generator_index = max(0, len(scene.layoutlab_generator_items) - 1)
+
+
+def _on_generator_index_changed(self, context):
+    from .quick_test import apply_quick_test_profile
+
+    scene = context.scene
+    if not scene.layoutlab_generator_items:
+        return
+    idx = min(max(scene.layoutlab_generator_index, 0), len(scene.layoutlab_generator_items) - 1)
+    gen = scene.layoutlab_generator_items[idx].name
+    if gen == scene.layoutlab_quick_test_profile_gen:
+        return
+    apply_quick_test_profile(scene, gen)
+    scene.layoutlab_quick_test_profile_gen = gen

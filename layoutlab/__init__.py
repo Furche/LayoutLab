@@ -23,6 +23,7 @@ from .engine import (
     save_generator_code,
 )
 from .plugin import classes, LayoutLabGeneratorItem
+from .plugin.properties import _on_generator_index_changed
 from .protocol.commands import apply_commands_json, get_commands_text
 from .protocol.export import layout_export_json
 
@@ -55,13 +56,16 @@ def register():
     bpy.types.Scene.layoutlab_generator_text_block_name = bpy.props.StringProperty(name="Generator Text Block", default="LayoutLab_Generator_Code")
     bpy.types.Scene.layoutlab_selected_generator = bpy.props.StringProperty(name="Selected Generator", default="bed_basic")
     bpy.types.Scene.layoutlab_generator_items = bpy.props.CollectionProperty(type=LayoutLabGeneratorItem)
-    bpy.types.Scene.layoutlab_generator_index = bpy.props.IntProperty(default=0)
+    bpy.types.Scene.layoutlab_generator_index = bpy.props.IntProperty(default=0, update=_on_generator_index_changed)
     bpy.types.Scene.layoutlab_generator_filter = bpy.props.StringProperty(name="Search", default="")
     bpy.types.Scene.layoutlab_category_filter = bpy.props.StringProperty(name="Category", default="All")
+    bpy.types.Scene.layoutlab_quick_test_profile_gen = bpy.props.StringProperty(name="Quick Test Profile", default="")
     bpy.types.Scene.layoutlab_test_object_name = bpy.props.StringProperty(name="Object Name", default="TEST_BED")
     bpy.types.Scene.layoutlab_test_location = bpy.props.FloatVectorProperty(name="Location", size=3, default=(68.3, 197.7, 0.0))
     bpy.types.Scene.layoutlab_test_length = bpy.props.FloatProperty(name="Length", default=12.0)
     bpy.types.Scene.layoutlab_test_width = bpy.props.FloatProperty(name="Width", default=20.0)
+    bpy.types.Scene.layoutlab_test_depth = bpy.props.FloatProperty(name="Depth", default=4.0)
+    bpy.types.Scene.layoutlab_test_height = bpy.props.FloatProperty(name="Height", default=15.0)
     addon_user_dir()
     sync_bundled_generators()
 
@@ -77,10 +81,13 @@ def unregister():
     del bpy.types.Scene.layoutlab_generator_index
     del bpy.types.Scene.layoutlab_generator_filter
     del bpy.types.Scene.layoutlab_category_filter
+    del bpy.types.Scene.layoutlab_quick_test_profile_gen
     del bpy.types.Scene.layoutlab_test_object_name
     del bpy.types.Scene.layoutlab_test_location
     del bpy.types.Scene.layoutlab_test_length
     del bpy.types.Scene.layoutlab_test_width
+    del bpy.types.Scene.layoutlab_test_depth
+    del bpy.types.Scene.layoutlab_test_height
 
 
 if __name__ == "__main__":

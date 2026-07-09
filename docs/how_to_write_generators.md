@@ -536,30 +536,40 @@ Parameter nur im Code, nicht in `{name}.md` — **Warum:** KI und Menschen könn
 
 Symlink-Install (Option C in README) beschleunigt Iteration.
 
-## 16.2 Quick Test (Panel)
+## 16.2 Quick Test (Browser)
 
-Der Browser nutzt UI-Felder:
+Quick Test lebt im **Generator Browser** (nicht im Sidebar-Panel). Ruft `execute_generator` auf — gleicher Pfad wie JSON.
 
-- `layoutlab_test_object_name`
-- `layoutlab_test_location` (Default: Referenzraum)
-- `layoutlab_test_length` / `layoutlab_test_width`
-
-Quick Test ruft `execute_generator` direkt auf — gleicher Code-Pfad wie JSON.
+Felder und Defaults sind **generator-spezifisch** — siehe Abschnitt unten und `layoutlab/plugin/quick_test.py`.
 
 ## 16.3 Konsole
 
 *Window → Toggle System Console* — Ergebnisse und Tracebacks erscheinen dort.
 
-## 16.4 Diagnostics
+## 16.4 Quick Test Profile
+
+Der Generator Browser passt Felder und Defaults **pro Generator** an (`layoutlab/plugin/quick_test.py`):
+
+| Generator | Felder | Default-Name |
+|---|---|---|
+| `bed_basic` | Length, Width | `TEST_BED` |
+| `wardrobe_basic` | Width, Depth, Height | `TEST_WARDROBE` |
+| andere | Length, Width | `TEST_<GENERATOR>` |
+
+Beim Wechsel in der Generator-Liste werden Test-Defaults automatisch gesetzt.
+
+Neuen Generator eintragen: Eintrag in `QUICK_TEST_PROFILES` in `quick_test.py`.
+
+## 16.5 Diagnostics
 
 *LayoutLab → Run Console Checks* — strukturierter Report (9 Checks), inkl. Metadaten und `regenerate`.
 
-## 16.5 Unit-Tests (ohne Blender)
+## 16.6 Unit-Tests (ohne Blender)
 
 Reine Logik (Metadata-Parsing, Param-Merge) in `tests/` — siehe `test_layoutlab_util.py`.  
 Generator-Geometrie: manuell in Blender + Diagnostics.
 
-## 16.6 Checkliste vor Merge
+## 16.7 Checkliste vor Merge
 
 - [ ] Alle fünf Metadaten-Konstanten gesetzt
 - [ ] Jede Komponente hat `layoutlab_role`

@@ -17,7 +17,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
-- Generator Library panel simplified: browser + paste only (workbench moved to browser popup)
+- Generator browser Quick Test: per-generator fields and defaults (`bed_basic` vs `wardrobe_basic`)
 
 ------------------------------------------------------------------------
 

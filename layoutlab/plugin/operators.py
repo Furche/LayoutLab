@@ -17,6 +17,7 @@ from ..engine.registry import (
 from ..protocol.commands import apply_commands_json, get_commands_text
 from ..protocol.export import layout_export_json
 from .properties import refresh_browser_items
+from .quick_test import build_quick_test_params, draw_quick_test_fields
 
 
 class LAYOUTLAB_OT_copy_scene(bpy.types.Operator):
@@ -107,7 +108,16 @@ class LAYOUTLAB_OT_open_generator_browser(bpy.types.Operator):
     bl_label = "Generator Browser"
     bl_options = {"REGISTER"}
     def execute(self, context):
+        from .quick_test import apply_quick_test_profile
+
         refresh_browser_items(context)
+        scene = context.scene
+        if scene.layoutlab_generator_items:
+            idx = min(max(scene.layoutlab_generator_index, 0), len(scene.layoutlab_generator_items) - 1)
+            gen = scene.layoutlab_generator_items[idx].name
+            if gen != scene.layoutlab_quick_test_profile_gen:
+                apply_quick_test_profile(scene, gen)
+                scene.layoutlab_quick_test_profile_gen = gen
         return context.window_manager.invoke_popup(self, width=760)
     def draw(self, context):
         scene = context.scene
@@ -142,10 +152,7 @@ class LAYOUTLAB_OT_open_generator_browser(bpy.types.Operator):
                 box.label(text=item.description)
             right.separator()
             right.label(text="Quick Test")
-            right.prop(scene, "layoutlab_test_object_name", text="Name")
-            right.prop(scene, "layoutlab_test_location", text="Location")
-            right.prop(scene, "layoutlab_test_length", text="Length")
-            right.prop(scene, "layoutlab_test_width", text="Width")
+            draw_quick_test_fields(right, scene, item.name)
             right.operator("layoutlab.run_selected_generator", text="Create Test Object", icon="PLAY")
             right.separator()
             right.label(text="File")
@@ -247,14 +254,7 @@ class LAYOUTLAB_OT_run_selected_generator(bpy.types.Operator):
         try:
             scene = context.scene
             gen = scene.layoutlab_generator_items[scene.layoutlab_generator_index].name if scene.layoutlab_generator_items else scene.layoutlab_selected_generator
-            params = {
-                "name": scene.layoutlab_test_object_name or f"TEST_{gen}",
-                "location": list(scene.layoutlab_test_location),
-                "length": scene.layoutlab_test_length,
-                "width": scene.layoutlab_test_width,
-                "head_side": "y_max",
-                "collection": "layout_tests",
-            }
+            params = build_quick_test_params(scene, gen)
             result = execute_generator(gen, params)
             print("LayoutLab generator result:")
             print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
