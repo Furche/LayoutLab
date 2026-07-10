@@ -22,6 +22,7 @@ infer_generator_meta_from_code = _util.infer_generator_meta_from_code
 parse_commands_payload = _util.parse_commands_payload
 merge_generator_params = _util.merge_generator_params
 component_suffix_from_name = _util.component_suffix_from_name
+generator_version_tuple = _util.generator_version_tuple
 
 
 class TestSanitizeGeneratorName(unittest.TestCase):
@@ -81,6 +82,12 @@ class TestMergeGeneratorParams(unittest.TestCase):
     def test_empty_overrides(self):
         merged = merge_generator_params({"name": "BED"}, None)
         self.assertEqual(merged["name"], "BED")
+
+
+class TestGeneratorVersionTuple(unittest.TestCase):
+    def test_ordering(self):
+        self.assertGreater(generator_version_tuple("0.2"), generator_version_tuple("0.1"))
+        self.assertEqual(generator_version_tuple("0.2"), (0, 2))
 
 
 class TestComponentSuffix(unittest.TestCase):

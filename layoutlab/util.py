@@ -25,6 +25,17 @@ def infer_generator_name_from_code(code):
     raise ValueError('Generator code needs GENERATOR_NAME = "name"')
 
 
+def generator_version_tuple(version_str):
+    """Parse GENERATOR_VERSION strings like '0.2' into comparable tuples."""
+    parts = []
+    for piece in str(version_str or "0").split("."):
+        try:
+            parts.append(int(piece))
+        except ValueError:
+            break
+    return tuple(parts) or (0,)
+
+
 def infer_generator_meta_from_code(code, filepath=None):
     def val(key, default=""):
         m = re.search(rf'{key}\s*=\s*[\'"]([^\'"]*)[\'"]', code)

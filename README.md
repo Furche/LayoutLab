@@ -59,7 +59,7 @@ Cursor also runs `python3 scripts/build_addon_zip.py` after addon changes during
 ### Diagnostics
 
 After installing, open **LayoutLab → Run Console Checks**.  
-The structured report is printed to the system console and copied to the clipboard — send it to Cursor for review.
+The structured report is **printed to the system console** (*Window → Toggle System Console*) **and** copied to the clipboard — send it to Cursor for review.
 
 ### Option B — Copy folder
 

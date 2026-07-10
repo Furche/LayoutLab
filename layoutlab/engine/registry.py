@@ -2,7 +2,12 @@ from pathlib import Path
 
 import bpy
 
-from ..util import infer_generator_meta_from_code, infer_generator_name_from_code, sanitize_generator_name
+from ..util import (
+    generator_version_tuple,
+    infer_generator_meta_from_code,
+    infer_generator_name_from_code,
+    sanitize_generator_name,
+)
 
 
 def addon_root_dir():
@@ -36,13 +41,26 @@ def default_generator_template():
 
 
 def sync_bundled_generators():
+    """Copy bundled generators into the user dir; upgrade when bundled version is newer."""
     bundled_dir = addon_bundled_generators_dir()
     if not bundled_dir.is_dir():
-        return
+        return []
+    updated = []
     for src in sorted(bundled_dir.glob("*.py")):
         dest = generator_path(src.stem)
+        bundled_code = src.read_text(encoding="utf-8")
+        bundled_ver = generator_version_tuple(infer_generator_meta_from_code(bundled_code).get("version"))
         if not dest.exists():
-            dest.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+            dest.write_text(bundled_code, encoding="utf-8")
+            updated.append((src.stem, "installed"))
+            continue
+        user_ver = generator_version_tuple(
+            infer_generator_meta_from_code(dest.read_text(encoding="utf-8")).get("version")
+        )
+        if bundled_ver > user_ver:
+            dest.write_text(bundled_code, encoding="utf-8")
+            updated.append((src.stem, f"upgraded {'.'.join(map(str, user_ver))} -> {'.'.join(map(str, bundled_ver))}"))
+    return updated
 
 
 def list_generator_files():

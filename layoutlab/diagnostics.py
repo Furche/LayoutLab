@@ -39,9 +39,17 @@ def _run_check(name, fn):
     return check
 
 
+def emit_diagnostic_report(report):
+    """Print report to the system console (Window → Toggle System Console)."""
+    print("\nLayoutLab diagnostics — full report:\n", flush=True)
+    print(report, flush=True)
+    print("", flush=True)
+
+
 def run_console_checks(context):
     import bpy
 
+    from .engine.registry import sync_bundled_generators
     from . import (
         addon_bundled_generators_dir,
         addon_root_dir,
@@ -54,8 +62,12 @@ def run_console_checks(context):
         load_bundled_generator_source,
         save_generator_code,
     )
+    from .api.collections import delete_prefix
+    from .util import generator_version_tuple, infer_generator_meta_from_code
 
     bed_name = f"{DIAG_PREFIX}BED"
+    delete_prefix(DIAG_PREFIX)
+    sync_bundled_generators()
     checks = []
     lines = []
 
@@ -83,20 +95,47 @@ def run_console_checks(context):
 
     def check_install_bed_basic(check):
         path = generator_path("bed_basic")
+        bundled_code = load_bundled_generator_source("bed_basic")
+        bundled_meta = infer_generator_meta_from_code(bundled_code)
         if not path.exists():
-            save_generator_code(load_bundled_generator_source("bed_basic"))
-        check.ok(f"bed_basic_path: {path}", f"exists: {path.exists()}")
+            save_generator_code(bundled_code)
+        else:
+            user_meta = infer_generator_meta_from_code(path.read_text(encoding="utf-8"))
+            user_ver = generator_version_tuple(user_meta.get("version"))
+            bundled_ver = generator_version_tuple(bundled_meta.get("version"))
+            if user_ver < bundled_ver:
+                save_generator_code(bundled_code)
+                check.ok(
+                    f"bed_basic_path: {path}",
+                    f"upgraded: {'.'.join(map(str, user_ver))} -> {'.'.join(map(str, bundled_ver))}",
+                )
+                return
+        user_meta = infer_generator_meta_from_code(path.read_text(encoding="utf-8"))
+        check.ok(
+            f"bed_basic_path: {path}",
+            f"user_version: {user_meta.get('version')}",
+            f"bundled_version: {bundled_meta.get('version')}",
+        )
 
     def check_generator_metadata(check):
-        code = load_bundled_generator_source("bed_basic")
-        meta = infer_generator_meta_from_code(code, generator_path("bed_basic"))
+        path = generator_path("bed_basic")
+        code = path.read_text(encoding="utf-8")
+        meta = infer_generator_meta_from_code(code, path)
+        bundled_meta = infer_generator_meta_from_code(load_bundled_generator_source("bed_basic"))
         if meta["name"] != "bed_basic":
             check.fail(f"unexpected name: {meta['name']}")
+            return
+        if generator_version_tuple(meta.get("version")) < generator_version_tuple(bundled_meta.get("version")):
+            check.fail(
+                f"user version stale: {meta.get('version')} (bundled {bundled_meta.get('version')})",
+                f"path: {path}",
+            )
             return
         check.ok(
             f"name: {meta['name']}",
             f"category: {meta['category']}",
             f"version: {meta['version']}",
+            f"source: user_generators",
         )
 
     def check_parse_commands(check):
@@ -108,17 +147,22 @@ def run_console_checks(context):
         check.ok("envelope_form: ok", "bare_array_form: ok")
 
     def check_run_generator_direct(check):
-        result = execute_generator(
-            "bed_basic",
-            {
-                "name": bed_name,
-                "location": [1000, 1000, 0],
-                "length": 12,
-                "width": 20,
-                "head_side": "y_max",
-                "collection": DIAG_COLLECTION,
-            },
-        )
+        delete_prefix(bed_name)
+        try:
+            result = execute_generator(
+                "bed_basic",
+                {
+                    "name": bed_name,
+                    "location": [1000, 1000, 0],
+                    "length": 12,
+                    "width": 20,
+                    "head_side": "y_max",
+                    "collection": DIAG_COLLECTION,
+                },
+            )
+        except Exception as exc:
+            check.fail(f"execute_generator raised: {exc}")
+            return
         objs = [o for o in bpy.data.objects if o.get("layoutlab_object_id") == result.get("object_id")]
         body = bpy.data.objects.get(f"{bed_name}_body")
         mattress = bpy.data.objects.get(f"{bed_name}_mattress")
@@ -189,6 +233,9 @@ def run_console_checks(context):
                 f"mattress_found: {bool(mattress)}",
                 f"clearance_found: {bool(clearance)}",
             )
+            return
+        if not mattress.get("layoutlab_object_id"):
+            check.fail("mattress missing layoutlab_object_id (stale generator in layoutlab_generators?)")
             return
         check.ok(
             f"command_results: {len(results)}",
@@ -317,5 +364,5 @@ def run_console_checks(context):
     lines.append(REPORT_END)
 
     report = "\n".join(lines)
-    print(report)
+    emit_diagnostic_report(report)
     return report

@@ -276,7 +276,7 @@ class LAYOUTLAB_OT_run_diagnostics(bpy.types.Operator):
         try:
             report = run_console_checks(context)
             context.window_manager.clipboard = report
-            self.report({"INFO"}, "Diagnostics complete — report copied to clipboard.")
+            self.report({"INFO"}, "Diagnostics complete — system console + clipboard.")
         except Exception as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
