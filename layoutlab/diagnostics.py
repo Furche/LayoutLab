@@ -548,6 +548,62 @@ def run_console_checks(context):
             "no_double_offset: yes",
         )
 
+    def check_clearance_export(check):
+        prefix = f"{DIAG_PREFIX}WARDROBE_EXPORT"
+        delete_prefix(prefix)
+        loc = [50.0, 120.0, 0.0]
+        execute_generator(
+            "wardrobe_basic",
+            {
+                "name": prefix,
+                "location": loc,
+                "width": 8,
+                "depth": 4,
+                "height": 15,
+                "show_clearance": True,
+                "collection": DIAG_COLLECTION,
+            },
+        )
+        export = json.loads(layout_export_json(context, selected_only=False))
+        clearance_obj = next(
+            (o for o in export.get("objects", []) if o["name"] == f"{prefix}_clearance_front_access"),
+            None,
+        )
+        if not clearance_obj:
+            check.fail("clearance object missing from export")
+            return
+        layoutlab = clearance_obj.get("layoutlab") or {}
+        clearance = layoutlab.get("clearance")
+        if not clearance:
+            check.fail("layoutlab.clearance block missing from export")
+            return
+        if clearance.get("clearance_name") != "front_access":
+            check.fail(f"export clearance_name: {clearance.get('clearance_name')}")
+            return
+        if clearance.get("requirement") != "preferred":
+            check.fail(f"export requirement: {clearance.get('requirement')}")
+            return
+        local_bounds = clearance.get("local_bounds")
+        world_bounds = clearance.get("world_bounds")
+        if not local_bounds or not world_bounds:
+            check.fail("export missing local_bounds or world_bounds")
+            return
+        local_min = local_bounds.get("min", [])
+        if len(local_min) < 2 or local_min[1] >= -0.5:
+            check.fail(f"local_bounds.min y expected negative, got {local_min}")
+            return
+        world_min = world_bounds.get("min", [])
+        if not world_min or abs(float(world_min[0]) - loc[0]) > 0.5:
+            check.fail(f"world_bounds.min x unexpected: {world_min} for loc {loc}")
+            return
+        check.ok(
+            f"clearance_name: {clearance.get('clearance_name')}",
+            f"clearance_id: {clearance.get('clearance_id', '')[:8]}…",
+            f"local_bounds.min: {local_min}",
+            f"world_bounds.min: {world_min}",
+            f"shape: {clearance.get('shape')}",
+        )
+
     def check_cleanup(check):
         apply_commands_json(
             context,
@@ -569,6 +625,7 @@ def run_console_checks(context):
             _run_check("part_bed_world_layout", check_part_bed_world_layout),
             _run_check("part_follows_main_transform", check_part_follows_main_transform),
             _run_check("wardrobe_clearance_layout", check_wardrobe_clearance_layout),
+            _run_check("clearance_export", check_clearance_export),
             _run_check("apply_commands_json", check_apply_commands_json),
             _run_check("regenerate", check_regenerate),
             _run_check("regenerate_layout_policy", check_regenerate_layout_policy),

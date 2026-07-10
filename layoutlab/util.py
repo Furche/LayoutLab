@@ -56,6 +56,39 @@ def resolve_clearance_locations(local_location=None, world_location=None, main_l
     raise ValueError("create_clearance requires location or local_location")
 
 
+def box_bounds_from_corner_and_dimensions(location, dimensions):
+    """Axis-aligned bounds for a box anchored at *location* with positive *dimensions*."""
+    loc = [float(v) for v in location]
+    dim = [float(v) for v in dimensions]
+    return {
+        "min": [round(loc[i], 4) for i in range(3)],
+        "max": [round(loc[i] + dim[i], 4) for i in range(3)],
+    }
+
+
+def axis_aligned_bounds_from_points(points):
+    """Min/max bounds for a list of [x, y, z] points."""
+    if not points:
+        return {"min": [0.0, 0.0, 0.0], "max": [0.0, 0.0, 0.0]}
+    xs, ys, zs = zip(*[(float(p[0]), float(p[1]), float(p[2])) for p in points])
+    return {
+        "min": [round(min(xs), 4), round(min(ys), 4), round(min(zs), 4)],
+        "max": [round(max(xs), 4), round(max(ys), 4), round(max(zs), 4)],
+    }
+
+
+def parse_clearance_params_json(raw):
+    if not raw:
+        return {}
+    if isinstance(raw, dict):
+        return dict(raw)
+    try:
+        parsed = json.loads(raw)
+    except (TypeError, json.JSONDecodeError):
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
 def sanitize_generator_name(name):
     name = (name or "").strip()
     name = re.sub(r"\.py$", "", name)

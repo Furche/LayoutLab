@@ -558,7 +558,32 @@ Set automatically on meshes created via `run_generator` / `regenerate`:
 | `layoutlab_part_type` | Engine | `main` / `static` / `dynamic` `[IMPLEMENTED]` v0.6 |
 | `layoutlab_role` | API / generator | Fine-grained role (unchanged) |
 
-Objects from `create_box` / `create_clearance` without a generator context do **not** receive identity metadata (clearance stays role-only).
+### Clearance export `[IMPLEMENTED]` (v0.7.1)
+
+When a Part object has `layoutlab_clearance_name`, export includes:
+
+```json
+"layoutlab": {
+  "object_id": "…",
+  "part": "clearance_front_access",
+  "clearance": {
+    "clearance_id": "…",
+    "clearance_name": "front_access",
+    "purpose": "door_access",
+    "requirement": "preferred",
+    "priority": 0,
+    "params": { "depth": 6.0 },
+    "shape": "box",
+    "local_transform": { "location": [0, -6, 0], "rotation": [0,0,0], "dimensions": [8,6,15] },
+    "local_bounds": { "min": [0, -6, 0], "max": [8, 0, 15] },
+    "world_bounds": { "min": [50, 114, 0], "max": [58, 120, 15] }
+  }
+}
+```
+
+`local_bounds` are relative to the Main Part; `world_bounds` are computed at export time. See DD-007.
+
+Objects from `create_box` / standalone JSON `create_clearance` without `layoutlab_object_id` do **not** receive the full furniture `layoutlab` block (legacy role-only behaviour).
 
 See `docs/object_model.md` for the full schema.
 

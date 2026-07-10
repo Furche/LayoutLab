@@ -337,8 +337,8 @@ Do **not** start `analyze_layout` until DD-008 is accepted.
 | 2 | DD-007 accepted | **Done** |
 | 3 | `create_clearance()` in `layoutlab/api/` | Done |
 | 4 | Refactor `wardrobe_basic` (reference: `front_access`, optional `door_swing`) | Done |
-| 5 | Export schema for clearances | |
-| 6 | Diagnostics for clearance metadata + export | |
+| 5 | Export schema for clearances | Done |
+| 6 | Diagnostics for clearance Parts + export | Done |
 | 7 | DD-008: Constraints and layout analysis | |
 | 8 | `analyze_layout` | |
 | 9 | `bed_basic` multi-zone clearances | |

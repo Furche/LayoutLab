@@ -52,5 +52,20 @@ class TestClearanceLocations(unittest.TestCase):
         self.assertEqual(world, local)
 
 
+class TestClearanceBounds(unittest.TestCase):
+    def setUp(self):
+        self.util = _load_util()
+
+    def test_box_bounds(self):
+        bounds = self.util.box_bounds_from_corner_and_dimensions([0, -6, 0], [8, 6, 15])
+        self.assertEqual(bounds["min"], [0.0, -6.0, 0.0])
+        self.assertEqual(bounds["max"], [8.0, 0.0, 15.0])
+
+    def test_axis_aligned_bounds(self):
+        bounds = self.util.axis_aligned_bounds_from_points([[0, -6, 0], [8, 0, 15], [1, -2, 3]])
+        self.assertEqual(bounds["min"], [0.0, -6.0, 0.0])
+        self.assertEqual(bounds["max"], [8.0, 0.0, 15.0])
+
+
 if __name__ == "__main__":
     unittest.main()

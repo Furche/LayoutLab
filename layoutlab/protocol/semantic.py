@@ -1,6 +1,7 @@
 import json
 
 from ..util import merge_generator_params
+from .clearance_export import clearance_export_block_from_object
 
 __all__ = ["layoutlab_block_from_object", "merge_generator_params"]
 
@@ -18,7 +19,7 @@ def layoutlab_block_from_object(obj):
         except (TypeError, json.JSONDecodeError):
             params = raw_params
 
-    return {
+    block = {
         "object_id": object_id,
         "generator": obj.get("layoutlab_generator", ""),
         "generator_version": obj.get("layoutlab_generator_version", ""),
@@ -28,3 +29,9 @@ def layoutlab_block_from_object(obj):
         "part_type": obj.get("layoutlab_part_type", ""),
         "role": obj.get("layoutlab_role", ""),
     }
+
+    clearance = clearance_export_block_from_object(obj)
+    if clearance:
+        block["clearance"] = clearance
+
+    return block

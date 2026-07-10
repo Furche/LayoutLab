@@ -10,6 +10,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ------------------------------------------------------------------------
 
+## [0.7.1] — 2026-07-10
+
+### Added
+
+- Scene export: structured `layoutlab.clearance` block with `local_bounds`, `world_bounds`, `local_transform`, `clearance_id`, `clearance_name`, `requirement`
+- Diagnostic check `clearance_export` (14 checks total)
+
+### Changed
+
+- Plugin version **0.7.1**
+
+------------------------------------------------------------------------
+
 ## [0.7.0] — 2026-07-10
 
 ### Added
