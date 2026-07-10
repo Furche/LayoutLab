@@ -2,7 +2,7 @@
 GENERATOR_NAME = "wardrobe_basic"
 GENERATOR_CATEGORY = "Storage"
 GENERATOR_DESCRIPTION = "Parametric wardrobe with carcass, doors, shelves, handles, and optional front clearance."
-GENERATOR_VERSION = "0.2"
+GENERATOR_VERSION = "0.3"
 GENERATOR_ICON = "OUTLINER_COLLECTION"
 
 MIN_WIDTH = 3.0
@@ -182,7 +182,6 @@ def generate(params, api):
     )
     ep()
 
-    api["finish"]()
     return {
         "created": name,
         "type": GENERATOR_NAME,

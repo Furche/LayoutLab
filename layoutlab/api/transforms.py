@@ -7,40 +7,50 @@ def _world_matrix_delta(a, b, tolerance=1e-3):
     return matrix_max_abs_delta(a, b) <= tolerance
 
 
-def parent_preserve_world_transform(child, parent):
+def parent_preserve_world_transform(child, parent, world=None):
     """Parent *child* to *parent* without changing its world matrix.
 
-    Generators place build meshes in absolute world coordinates (from params.location).
-    After join, child Parts must keep the same world position when parented to the
-    Main Part.
-
-    Uses Blender's ``parent_set(keep_transform=True)`` when possible — more reliable
-    than assigning ``matrix_world`` after parenting inside ``exec()`` / operators.
-    Falls back to explicit ``matrix_local`` assignment.
+    *world* should be the matrix captured at ``end_part()`` (before later ops).
     """
     if child is None or parent is None or child == parent:
         return child
 
-    world = child.matrix_world.copy()
+    target_world = (world or child.matrix_world).copy()
     view_layer = bpy.context.view_layer
 
-    if _parent_with_operator(child, parent, view_layer):
-        view_layer.update()
-        if _world_matrix_delta(child.matrix_world, world):
-            return child
+    # Reset parenting, restore intended world pose, then assign local explicitly.
+    if child.parent:
+        child.parent = None
+        if view_layer:
+            view_layer.update()
+    child.matrix_world = target_world
 
     parent_world = parent.matrix_world.copy()
-    child.parent = None
-    child.matrix_world = world
     child.parent = parent
     child.parent_type = "OBJECT"
-    child.matrix_local = parent_world.inverted() @ world
+    child.matrix_local = parent_world.inverted() @ target_world
+
     if view_layer:
         view_layer.update()
+
+    if not _world_matrix_delta(child.matrix_world, target_world, tolerance=1e-2):
+        if _parent_with_operator(child, parent, view_layer, target_world):
+            view_layer.update()
+            if _world_matrix_delta(child.matrix_world, target_world, tolerance=1e-2):
+                return child
+        child.parent = None
+        child.matrix_world = target_world
+        parent_world = parent.matrix_world.copy()
+        child.parent = parent
+        child.parent_type = "OBJECT"
+        child.matrix_local = parent_world.inverted() @ target_world
+        if view_layer:
+            view_layer.update()
+
     return child
 
 
-def _parent_with_operator(child, parent, view_layer):
+def _parent_with_operator(child, parent, view_layer, target_world):
     try:
         if bpy.context.mode != "OBJECT":
             bpy.ops.object.mode_set(mode="OBJECT")
@@ -48,6 +58,8 @@ def _parent_with_operator(child, parent, view_layer):
         return False
 
     try:
+        child.parent = None
+        child.matrix_world = target_world
         for obj in view_layer.objects:
             obj.select_set(False)
         child.select_set(True)

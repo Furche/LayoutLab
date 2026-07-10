@@ -10,6 +10,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ------------------------------------------------------------------------
 
+## [0.6.3] — 2026-07-10
+
+### Fixed
+
+- Part parenting stores world matrix at `end_part()` and restores it explicitly before setting `matrix_local` — fixes mattress offset while clearance already worked
+- Parenting runs once in the engine (`execute_generator`), not from generators calling `api["finish"]()` early
+
+### Changed
+
+- `bed_basic` / `wardrobe_basic` v0.3 — removed redundant `api["finish"]()` (engine finalizes)
+- Diagnostics: absolute mattress world-position check at offset location
+- Plugin version **0.6.3**
+
+------------------------------------------------------------------------
+
 ## [0.6.2] — 2026-07-10
 
 ### Fixed
@@ -98,7 +113,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - Design decisions DD-001 through DD-005
 - `AI_CONTEXT.md`, `README.md`
 
-[Unreleased]: https://github.com/Furche/LayoutLab/compare/v0.6.2...HEAD
+[Unreleased]: https://github.com/Furche/LayoutLab/compare/v0.6.3...HEAD
+[0.6.3]: https://github.com/Furche/LayoutLab/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/Furche/LayoutLab/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/Furche/LayoutLab/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/Furche/LayoutLab/compare/v0.5.1...v0.6.0

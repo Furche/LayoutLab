@@ -21,14 +21,15 @@ class PartDraft:
 
 
 class FinalizedPart:
-    __slots__ = ("part_id", "main", "dynamic", "role", "object")
+    __slots__ = ("part_id", "main", "dynamic", "role", "object", "world_at_finalize")
 
-    def __init__(self, part_id, main, dynamic, role, obj):
+    def __init__(self, part_id, main, dynamic, role, obj, world_at_finalize):
         self.part_id = part_id
         self.main = main
         self.dynamic = dynamic
         self.role = role
         self.object = obj
+        self.world_at_finalize = world_at_finalize
 
 
 class PartSession:
@@ -65,7 +66,10 @@ class PartSession:
         final_name = self.part_object_name(draft.part_id)
         obj = finalize_part_objects(draft.objects, final_name, self.collection)
         if obj:
-            self.parts.append(FinalizedPart(draft.part_id, draft.main, draft.dynamic, draft.role, obj))
+            world_at_finalize = obj.matrix_world.copy()
+            self.parts.append(
+                FinalizedPart(draft.part_id, draft.main, draft.dynamic, draft.role, obj, world_at_finalize)
+            )
         return obj
 
     def finish(self):
@@ -103,7 +107,7 @@ class PartSession:
                     obj["layoutlab_role"] = part.role
 
             if main_obj and obj != main_obj:
-                parent_preserve_world_transform(obj, main_obj)
+                parent_preserve_world_transform(obj, main_obj, world=part.world_at_finalize)
 
         view_layer = bpy.context.view_layer
         if view_layer:
@@ -145,6 +149,7 @@ def finalize_part_objects(objects, result_name, collection):
     bpy.ops.object.join()
     joined = view_layer.objects.active
     joined.name = result_name
+    view_layer.update()
 
     for obj in others:
         bpy.data.objects.remove(obj, do_unlink=True)

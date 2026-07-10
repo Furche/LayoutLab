@@ -373,9 +373,36 @@ def run_console_checks(context):
         if not translations_close(rels[0], rels[1], REL_TOL):
             check.fail(f"relative layout differs: origin={rels[0]} offset={rels[1]}")
             return
+        loc = [68.3, 197.7, 0.0]
+        delete_prefix(f"{DIAG_PREFIX}BED_XFORM_ABS")
+        execute_generator(
+            "bed_basic",
+            {
+                "name": f"{DIAG_PREFIX}BED_XFORM_ABS",
+                "location": loc,
+                "length": 12,
+                "width": 20,
+                "head_side": "y_max",
+                "collection": DIAG_COLLECTION,
+            },
+        )
+        body = bpy.data.objects.get(f"{DIAG_PREFIX}BED_XFORM_ABS_body")
+        mattress = bpy.data.objects.get(f"{DIAG_PREFIX}BED_XFORM_ABS_mattress")
+        inset = min(0.45, 20 * 0.2, 12 * 0.2)
+        expected = (loc[0] + inset, loc[1] + inset, loc[2] + 2.5 + 1.0 * 0.55)
+        actual = mattress.matrix_world.translation
+        actual_t = (float(actual.x), float(actual.y), float(actual.z))
+        if not translations_close(actual_t, expected, tolerance=0.08):
+            check.fail(
+                f"mattress world mismatch: expected={expected} actual={actual_t}",
+                f"body_world={tuple(body.matrix_world.translation)}",
+            )
+            return
         check.ok(
             f"relative_at_origin: {rels[0]}",
             f"relative_at_offset: {rels[1]}",
+            f"mattress_world_expected: {expected}",
+            f"mattress_world_actual: {actual_t}",
             "world_offset_independent: yes",
         )
 
