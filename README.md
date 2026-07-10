@@ -8,7 +8,7 @@ Blender 4.0+ is the current editor. The long-term goal: plan entire rooms by des
 
 > *"LayoutLab does not create meshes. LayoutLab describes objects."*
 
-**Status:** v0.7.0 — Clearance zone API (DD-007); `wardrobe_basic` v0.5 reference implementation.
+**Status:** v0.7.1 — Clearance export with local/world bounds (DD-007 steps 1–6 complete).
 
 Repository: https://github.com/Furche/LayoutLab
 

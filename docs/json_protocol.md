@@ -506,7 +506,7 @@ Exported types: `MESH`, `EMPTY`, `CURVE`, `FONT` only.
 | `dimensions` | World-space AABB size |
 | `world_bbox_corners` | 8 world corners |
 | `custom_properties` | string/int/float/bool only (includes all `layoutlab_*` props) |
-| `layoutlab` | Present when `layoutlab_object_id` is set `[IMPLEMENTED]` v0.5.1 |
+| `layoutlab` | Present when `layoutlab_object_id` is set `[IMPLEMENTED]` v0.5.1; includes `clearance` sub-block on clearance Parts `[IMPLEMENTED]` v0.7.1 |
 
 ------------------------------------------------------------------------
 

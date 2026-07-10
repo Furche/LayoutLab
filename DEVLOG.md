@@ -9,7 +9,9 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 **Shipped:** `layoutlab/api/clearance.py` with `create_clearance()`, JSON command
 unified, `wardrobe_basic` v0.5 reference (`front_access`, Main Part local coords).
 
-**Deferred:** Export schema (step 5), constraint diagnostics, DD-008, bed zones.
+**Shipped v0.7.1:** Export `layoutlab.clearance` with local + world bounds; diagnostic check.
+
+**Deferred:** DD-008, `analyze_layout`, bed zones.
 
 ------------------------------------------------------------------------
 
