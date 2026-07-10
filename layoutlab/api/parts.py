@@ -4,8 +4,8 @@ import bpy
 
 from .collections import get_or_create_collection
 from .metadata import apply_layoutlab_metadata, get_active_context
-from .transforms import parent_preserve_world_transform
-from ..util import relative_translation_from_world_matrices
+from .transforms import capture_object_world_matrix, object_world_matrix_from_location, parent_preserve_world_transform
+from ..util import relative_translation_from_locations
 
 _active_session = None
 
@@ -67,7 +67,7 @@ class PartSession:
         final_name = self.part_object_name(draft.part_id)
         obj = finalize_part_objects(draft.objects, final_name, self.collection)
         if obj:
-            world_at_finalize = obj.matrix_world.copy()
+            world_at_finalize = capture_object_world_matrix(obj)
             self.parts.append(
                 FinalizedPart(draft.part_id, draft.main, draft.dynamic, draft.role, obj, world_at_finalize)
             )
@@ -91,8 +91,6 @@ class PartSession:
             main_part = self.parts[0]
             main_obj = main_part.object
 
-        main_world = main_part.world_at_finalize if main_part else None
-
         for part in self.parts:
             obj = part.object
             meta = get_active_context()
@@ -112,12 +110,13 @@ class PartSession:
                 if part.role:
                     obj["layoutlab_role"] = part.role
 
-            if main_obj and obj != main_obj and main_world is not None:
-                rel = relative_translation_from_world_matrices(part.world_at_finalize, main_world)
+            if main_obj and obj != main_obj:
+                rel = relative_translation_from_locations(obj.location, main_obj.location)
+                target_world = object_world_matrix_from_location(obj)
                 parent_preserve_world_transform(
                     obj,
                     main_obj,
-                    world=part.world_at_finalize,
+                    world=target_world,
                     relative=rel,
                 )
             elif part.role == "clearance":

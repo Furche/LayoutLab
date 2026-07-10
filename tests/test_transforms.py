@@ -39,6 +39,20 @@ class TestRelativeTranslation(unittest.TestCase):
         rel = util.relative_translation_from_world_matrices(child, parent)
         self.assertTrue(translations_close(rel, (0.35, 0.25, 3.05), 0.01))
 
+    def test_location_offset_matches_matrix_offset(self):
+        import importlib.util
+        from pathlib import Path
+
+        util_path = Path(__file__).resolve().parent.parent / "layoutlab" / "util.py"
+        spec = importlib.util.spec_from_file_location("layoutlab_util", util_path)
+        util = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(util)
+
+        child_loc = _FakeTranslation(0.35, 0.35, 3.05)
+        parent_loc = _FakeTranslation(0.0, 0.0, 0.0)
+        rel = util.relative_translation_from_locations(child_loc, parent_loc)
+        self.assertTrue(translations_close(rel, (0.35, 0.35, 3.05), 0.01))
+
 
 if __name__ == "__main__":
     unittest.main()

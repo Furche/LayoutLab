@@ -1,6 +1,26 @@
 import bpy
+from mathutils import Matrix, Vector
 
 from ..util import relative_translation_from_world_matrices
+
+
+def object_world_matrix_from_location(obj):
+    """Reliable world matrix for unparented axis-aligned LayoutLab parts.
+
+    Inside generator ``exec()``, ``obj.matrix_world`` is often stale (still at
+    origin) while ``obj.location`` already reflects ``create_box`` placement.
+    """
+    loc = obj.location
+    return Matrix.Translation(Vector((float(loc.x), float(loc.y), float(loc.z))))
+
+
+def capture_object_world_matrix(obj):
+    view_layer = bpy.context.view_layer
+    if view_layer:
+        view_layer.update()
+    if obj.parent is None:
+        return object_world_matrix_from_location(obj)
+    return obj.matrix_world.copy()
 
 
 def _world_matrix_delta(a, b, tolerance=1e-3):

@@ -12,6 +12,15 @@ def relative_translation_from_world_matrices(child_world, parent_world):
     return (float(ct.x - pt.x), float(ct.y - pt.y), float(ct.z - pt.z))
 
 
+def relative_translation_from_locations(child_loc, parent_loc):
+    """World-space offset using Blender object ``location`` vectors (pre-parenting)."""
+    return (
+        float(child_loc.x - parent_loc.x),
+        float(child_loc.y - parent_loc.y),
+        float(child_loc.z - parent_loc.z),
+    )
+
+
 def sanitize_generator_name(name):
     name = (name or "").strip()
     name = re.sub(r"\.py$", "", name)

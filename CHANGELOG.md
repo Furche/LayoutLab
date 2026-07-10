@@ -10,6 +10,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ------------------------------------------------------------------------
 
+## [0.6.6] — 2026-07-10
+
+### Fixed
+
+- Part parenting uses ``obj.location`` (not stale ``matrix_world`` inside ``exec()``) for child offsets — fixes mattress on floor and clearance through wardrobe body
+
+### Changed
+
+- Plugin version **0.6.6**
+
+------------------------------------------------------------------------
+
 ## [0.6.5] — 2026-07-10
 
 ### Fixed
