@@ -78,7 +78,7 @@ BED_120_body          layoutlab_part: body       layoutlab_part_type: main
   └─ BED_120_label    layoutlab_part: label      layoutlab_part_type: static
 ```
 
-The `body` mesh internally joined: 4 posts + 4 rails + headboard + footboard.
+The `body` mesh internally joined: 4 posts + 4 side rails + footboard + headboard base + optional headboard rise.
 
 ## 3.2 Example: wardrobe_basic
 

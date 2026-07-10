@@ -110,16 +110,15 @@ Details: `docs/units_and_coordinates.md` §4.1
 
 Generatoren bauen Objekte aus Komponenten.
 
-Beispiel Bett:
+Beispiel Bett (`bed_basic` v0.5):
 
--   legs
--   side rails
--   headboard
--   footboard
--   slats
+-   posts (only floor contact)
+-   frame loop: side rails + footboard + structural headboard base (shared height)
+-   headboard rise (decorative, above frame top)
+-   slats `[PLANNED]`
 -   mattress
 -   pillows
--   ladder
+-   ladder (loft variants `[PLANNED]`)
 -   guard rail
 
 Komponenten sollen logisch getrennt erzeugt werden.

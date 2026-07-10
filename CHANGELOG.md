@@ -10,6 +10,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ------------------------------------------------------------------------
 
+## [0.6.8] — 2026-07-10
+
+### Changed
+
+- **`bed_basic` v0.5.0 — construction model:** only posts touch the floor; footboard and structural headboard base join the raised frame loop at `frame_bottom_z`; decorative headboard rises above `frame_top_z`
+- **`headboard_height`** now means rise above frame top (default `3.2`), not height from floor; **`footboard_height` removed** (footboard height = `frame_height`)
+- Generator code refactored with `BedConstruction` stack class
+- Documentation: `bed_basic.md`, `json_protocol.md`, `units_and_coordinates.md`, `object_model.md`, `how_to_write_generators.md`
+
+### Breaking
+
+- Existing JSON using pre-0.5 `headboard_height` / `footboard_height` semantics should be reviewed
+
+------------------------------------------------------------------------
+
 ## [0.6.7] — 2026-07-10
 
 ### Fixed

@@ -184,6 +184,13 @@ Reference generator defining axis usage for sleeping furniture:
 | `"x_max"` | High X edge |
 | other / `"x_min"` | Low X edge |
 
+### Construction heights (v0.5)
+
+Only posts touch the floor. The frame loop (side rails, footboard, structural headboard
+base) sits at `location[2] + leg_height` with height `frame_height`. The decorative
+headboard panel (`headboard_height`) rises above that frame top. See
+`layoutlab/generators/bed_basic.md`.
+
 ### Standard bed sizes (reference room, 1 unit = 10 cm)
 
 | Name | length (X) | width (Y) | Real size |

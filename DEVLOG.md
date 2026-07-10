@@ -4,6 +4,27 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-10 — bed_basic construction stack (v0.5 / plugin 0.6.8)
+
+**Context:** Footboard and headboard were placed from floor level while side rails sat
+at `leg_height`, breaking the visual of a closed timber frame. Height parameters were
+ambiguous (`headboard_height` read as “from floor”).
+
+**Decision:**
+
+1. **Construction stack** — `BedConstruction` class models floor → posts → frame loop
+   → optional headboard rise → mattress/pillows. Only posts reach the floor.
+2. **Frame loop** — side rails, footboard, and structural headboard base share
+   `frame_bottom_z` and `frame_height`.
+3. **`headboard_height`** — documented as decorative rise above frame top (default 3.2).
+   Set `0` for frame-only head end.
+4. **Remove `footboard_height`** — footboard is always a frame member.
+
+**Future:** Lattenrost, drawers, and loft variants should extend this stack, not add
+ad-hoc Z offsets.
+
+------------------------------------------------------------------------
+
 ## 2026-07-10 — Part parenting transform fix (v0.6.1)
 
 **Context:** After DD-006 Parts rollout, mattress and wardrobe clearance appeared far

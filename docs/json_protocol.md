@@ -185,14 +185,12 @@ See `layoutlab/generators/bed_basic.md` for full documentation.
 | `width` | `12` | Blender units | Extent along **+Y** (min 3) |
 | `collection` | `"layout_tests"` | — | Target collection |
 | `head_side` | `"y_max"` | — | `y_max`, `y_min`, `x_max`, `x_min` |
-| `leg_height` | `2.5` | Blender units | — |
-| `frame_height` | `1.0` | Blender units | — |
+| `leg_height` | `2.5` | Blender units | Post height below frame loop; posts extend to frame top |
+| `frame_height` | `1.0` | Blender units | Height of frame loop (rails + footboard + headboard base) |
 | `mattress_height` | `2.0` | Blender units | — |
 | `rail_thickness` | `0.35` | Blender units | Capped at 20% of width/length |
 | `post_size` | `0.45` | Blender units | Capped at 25% of width/length |
-| `mattress_inset` | `0.45` | Blender units | Capped at 20% of width/length |
-| `headboard_height` | `4.2` | Blender units | — |
-| `footboard_height` | `2.2` | Blender units | — |
+| `headboard_height` | `3.2` | Blender units | Decorative rise **above frame top** (v0.5+); alias `headboard_rise` |
 | `frame_color` | `[0.72, 0.55, 0.35, 1]` | RGBA 0–1 | — |
 | `mattress_color` | `[0.86, 0.86, 0.82, 0.65]` | RGBA 0–1 | — |
 | `pillow_color` | `[0.95, 0.95, 0.92, 1]` | RGBA 0–1 | — |

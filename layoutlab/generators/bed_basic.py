@@ -1,8 +1,8 @@
 # LayoutLab generator — see bed_basic.md for parameter reference.
 GENERATOR_NAME = "bed_basic"
 GENERATOR_CATEGORY = "Beds"
-GENERATOR_DESCRIPTION = "Parametric low bed with legs, frame, mattress, headboard and fallback sizing."
-GENERATOR_VERSION = "0.4.2"
+GENERATOR_DESCRIPTION = "Parametric low bed: posts, raised frame loop, headboard rise, mattress, pillows."
+GENERATOR_VERSION = "0.5.0"
 GENERATOR_ICON = "BED"
 
 # Fallback thresholds (Blender units; 1 unit ≈ 10 cm in reference room)
@@ -11,6 +11,304 @@ PILLOW_COUNT_WIDTH_THRESHOLD = 13  # width >= 13 → two pillows
 PILLOW_HEIGHT = 0.45
 PILLOW_GAP = 0.2
 MATTRESS_Z_INSET_FACTOR = 0.55  # mattress sits above lower rail within frame
+
+DEFAULT_HEADBOARD_RISE = 3.2  # decorative panel height above frame top
+
+
+class BedConstruction:
+    """Logical bed stack — only posts reach the floor.
+
+    Vertical order (bottom → top):
+      floor
+        posts (leg_height + frame_height)
+        frame loop at frame_bottom_z (side rails + footboard + headboard base)
+        optional headboard rise above frame_top_z
+        mattress / pillows (separate Parts)
+    """
+
+    __slots__ = (
+        "x",
+        "y",
+        "floor_z",
+        "length",
+        "width",
+        "leg_height",
+        "frame_height",
+        "rail",
+        "post",
+        "headboard_rise",
+        "head_side",
+        "frame_bottom_z",
+        "frame_top_z",
+        "post_height",
+    )
+
+    def __init__(
+        self,
+        x,
+        y,
+        floor_z,
+        length,
+        width,
+        leg_height,
+        frame_height,
+        rail,
+        post,
+        headboard_rise,
+        head_side,
+    ):
+        self.x = x
+        self.y = y
+        self.floor_z = floor_z
+        self.length = length
+        self.width = width
+        self.leg_height = leg_height
+        self.frame_height = frame_height
+        self.rail = rail
+        self.post = post
+        self.headboard_rise = max(float(headboard_rise), 0.0)
+        self.head_side = head_side
+        self.frame_bottom_z = floor_z + leg_height
+        self.frame_top_z = self.frame_bottom_z + frame_height
+        self.post_height = leg_height + frame_height
+
+    @property
+    def mattress_x(self):
+        return self.x + self.rail
+
+    @property
+    def mattress_y(self):
+        return self.y + self.rail
+
+    @property
+    def mattress_l(self):
+        return max(self.length - 2 * self.rail, 1)
+
+    @property
+    def mattress_w(self):
+        return max(self.width - 2 * self.rail, 1)
+
+    @property
+    def mattress_z(self):
+        return self.frame_bottom_z + self.frame_height * MATTRESS_Z_INSET_FACTOR
+
+    def build_posts(self, cb, name, color, collection):
+        for sx, sy, suffix in [
+            (0, 0, "post_xmin_ymin"),
+            (self.length - self.post, 0, "post_xmax_ymin"),
+            (0, self.width - self.post, "post_xmin_ymax"),
+            (self.length - self.post, self.width - self.post, "post_xmax_ymax"),
+        ]:
+            cb(
+                f"{name}__body_{suffix}",
+                [self.x + sx, self.y + sy, self.floor_z],
+                [self.post, self.post, self.post_height],
+                color,
+                collection,
+                "bed_post",
+                None,
+            )
+
+    def build_side_rails(self, cb, name, color, collection):
+        z = self.frame_bottom_z
+        h = self.frame_height
+        cb(
+            f"{name}__body_rail_y_min",
+            [self.x, self.y, z],
+            [self.length, self.rail, h],
+            color,
+            collection,
+            "bed_frame",
+            None,
+        )
+        cb(
+            f"{name}__body_rail_y_max",
+            [self.x, self.y + self.width - self.rail, z],
+            [self.length, self.rail, h],
+            color,
+            collection,
+            "bed_frame",
+            None,
+        )
+        cb(
+            f"{name}__body_rail_x_min",
+            [self.x, self.y, z],
+            [self.rail, self.width, h],
+            color,
+            collection,
+            "bed_frame",
+            None,
+        )
+        cb(
+            f"{name}__body_rail_x_max",
+            [self.x + self.length - self.rail, self.y, z],
+            [self.rail, self.width, h],
+            color,
+            collection,
+            "bed_frame",
+            None,
+        )
+
+    def _frame_end_board(self, cb, name, color, collection, part_id, role, origin, size):
+        cb(
+            f"{name}__body_{part_id}",
+            origin,
+            size,
+            color,
+            collection,
+            role,
+            None,
+        )
+
+    def build_frame_ends(self, cb, name, color, collection):
+        """Footboard and structural headboard base — same Z band as side rails."""
+        z = self.frame_bottom_z
+        h = self.frame_height
+        x, y = self.x, self.y
+        length, width, rail = self.length, self.width, self.rail
+
+        if self.head_side == "y_max":
+            self._frame_end_board(
+                cb,
+                name,
+                color,
+                collection,
+                "footboard",
+                "bed_footboard",
+                [x, y, z],
+                [length, rail, h],
+            )
+            self._frame_end_board(
+                cb,
+                name,
+                color,
+                collection,
+                "headboard_base",
+                "bed_frame",
+                [x, y + width - rail, z],
+                [length, rail, h],
+            )
+        elif self.head_side == "y_min":
+            self._frame_end_board(
+                cb,
+                name,
+                color,
+                collection,
+                "footboard",
+                "bed_footboard",
+                [x, y + width - rail, z],
+                [length, rail, h],
+            )
+            self._frame_end_board(
+                cb,
+                name,
+                color,
+                collection,
+                "headboard_base",
+                "bed_frame",
+                [x, y, z],
+                [length, rail, h],
+            )
+        elif self.head_side == "x_max":
+            self._frame_end_board(
+                cb,
+                name,
+                color,
+                collection,
+                "footboard",
+                "bed_footboard",
+                [x, y, z],
+                [rail, width, h],
+            )
+            self._frame_end_board(
+                cb,
+                name,
+                color,
+                collection,
+                "headboard_base",
+                "bed_frame",
+                [x + length - rail, y, z],
+                [rail, width, h],
+            )
+        else:
+            self._frame_end_board(
+                cb,
+                name,
+                color,
+                collection,
+                "footboard",
+                "bed_footboard",
+                [x + length - rail, y, z],
+                [rail, width, h],
+            )
+            self._frame_end_board(
+                cb,
+                name,
+                color,
+                collection,
+                "headboard_base",
+                "bed_frame",
+                [x, y, z],
+                [rail, width, h],
+            )
+
+    def build_headboard_rise(self, cb, name, color, collection):
+        """Optional decorative panel above the frame loop."""
+        if self.headboard_rise <= 0:
+            return
+
+        z = self.frame_top_z
+        h = self.headboard_rise
+        x, y = self.x, self.y
+        length, width, rail = self.length, self.width, self.rail
+
+        if self.head_side == "y_max":
+            origin = [x, y + width - rail, z]
+            size = [length, rail, h]
+        elif self.head_side == "y_min":
+            origin = [x, y, z]
+            size = [length, rail, h]
+        elif self.head_side == "x_max":
+            origin = [x + length - rail, y, z]
+            size = [rail, width, h]
+        else:
+            origin = [x, y, z]
+            size = [rail, width, h]
+
+        cb(
+            f"{name}__body_headboard_rise",
+            origin,
+            size,
+            color,
+            collection,
+            "bed_headboard",
+            None,
+        )
+
+    def pillow_anchor_y(self, pillow_depth):
+        """Y position for pillow row at the head end (y-axis beds)."""
+        if self.head_side == "y_max":
+            return self.y + self.width - self.rail - pillow_depth - 0.2
+        if self.head_side == "y_min":
+            return self.y + self.rail + 0.2
+        return self.mattress_y + self.mattress_w - 2.0
+
+    def pillow_anchor_x(self, pillow_depth):
+        """X position for pillow column at the head end (x-axis beds)."""
+        if self.head_side == "x_max":
+            return self.mattress_x + self.mattress_l - pillow_depth - 0.2
+        if self.head_side == "x_min":
+            return self.mattress_x + 0.2
+        return self.mattress_x + 0.2
+
+
+def _headboard_rise_from_params(params):
+    """Decorative headboard height above ``frame_top_z`` (see bed_basic.md)."""
+    raw = params.get("headboard_height", params.get("headboard_rise", DEFAULT_HEADBOARD_RISE))
+    try:
+        return max(float(raw), 0.0)
+    except (TypeError, ValueError):
+        return DEFAULT_HEADBOARD_RISE
 
 
 def generate(params, api):
@@ -25,8 +323,8 @@ def generate(params, api):
     mattress_height = params.get("mattress_height", 2.0)
     rail = min(params.get("rail_thickness", 0.35), width * 0.2, length * 0.2)
     post = min(params.get("post_size", 0.45), width * 0.25, length * 0.25)
-    inset = min(params.get("mattress_inset", 0.45), width * 0.2, length * 0.2)
     head_side = params.get("head_side", "y_max")
+    headboard_rise = _headboard_rise_from_params(params)
 
     frame_color = params.get("frame_color", [0.72, 0.55, 0.35, 1])
     mattress_color = params.get("mattress_color", [0.86, 0.86, 0.82, 0.65])
@@ -37,61 +335,32 @@ def generate(params, api):
     bp = api["begin_part"]
     ep = api["end_part"]
 
-    frame_z = z + leg_height
-    mattress_x = x + rail
-    mattress_y = y + rail
-    mattress_l = max(length - 2 * rail, 1)
-    mattress_w = max(width - 2 * rail, 1)
-    mattress_z = frame_z + frame_height * MATTRESS_Z_INSET_FACTOR
+    bed = BedConstruction(
+        x,
+        y,
+        z,
+        length,
+        width,
+        leg_height,
+        frame_height,
+        rail,
+        post,
+        headboard_rise,
+        head_side,
+    )
 
     bp("body", main=True, role="bed_frame")
-    for sx, sy, suffix in [
-        (0, 0, "post_xmin_ymin"),
-        (length - post, 0, "post_xmax_ymin"),
-        (0, width - post, "post_xmin_ymax"),
-        (length - post, width - post, "post_xmax_ymax"),
-    ]:
-        cb(
-            f"{name}__body_{suffix}",
-            [x + sx, y + sy, z],
-            [post, post, leg_height + frame_height],
-            frame_color,
-            collection,
-            "bed_post",
-            None,
-        )
-
-    cb(f"{name}__body_rail_y_min", [x, y, frame_z], [length, rail, frame_height], frame_color, collection, "bed_frame", None)
-    cb(f"{name}__body_rail_y_max", [x, y + width - rail, frame_z], [length, rail, frame_height], frame_color, collection, "bed_frame", None)
-    cb(f"{name}__body_rail_x_min", [x, y, frame_z], [rail, width, frame_height], frame_color, collection, "bed_frame", None)
-    cb(f"{name}__body_rail_x_max", [x + length - rail, y, frame_z], [rail, width, frame_height], frame_color, collection, "bed_frame", None)
-
-    head_h = params.get("headboard_height", 4.2)
-    foot_h = params.get("footboard_height", 2.2)
-    if head_side == "y_max":
-        cb(f"{name}__body_headboard", [x, y + width - rail, z], [length, rail, head_h], frame_color, collection, "bed_headboard", None)
-        cb(f"{name}__body_footboard", [x, y, z], [length, rail, foot_h], frame_color, collection, "bed_footboard", None)
-        pillow_y = y + width - rail - 2.1
-    elif head_side == "y_min":
-        cb(f"{name}__body_headboard", [x, y, z], [length, rail, head_h], frame_color, collection, "bed_headboard", None)
-        cb(f"{name}__body_footboard", [x, y + width - rail, z], [length, rail, foot_h], frame_color, collection, "bed_footboard", None)
-        pillow_y = y + rail + 0.25
-    elif head_side == "x_max":
-        cb(f"{name}__body_headboard", [x + length - rail, y, z], [rail, width, head_h], frame_color, collection, "bed_headboard", None)
-        cb(f"{name}__body_footboard", [x, y, z], [rail, width, foot_h], frame_color, collection, "bed_footboard", None)
-        pillow_y = mattress_y + mattress_w - 2.0
-    else:
-        cb(f"{name}__body_headboard", [x, y, z], [rail, width, head_h], frame_color, collection, "bed_headboard", None)
-        cb(f"{name}__body_footboard", [x + length - rail, y, z], [rail, width, foot_h], frame_color, collection, "bed_footboard", None)
-        pillow_y = mattress_y + 0.2
-
+    bed.build_posts(cb, name, frame_color, collection)
+    bed.build_side_rails(cb, name, frame_color, collection)
+    bed.build_frame_ends(cb, name, frame_color, collection)
+    bed.build_headboard_rise(cb, name, frame_color, collection)
     ep()
 
     bp("mattress", role="bed_mattress")
     cb(
         f"{name}__mattress",
-        [mattress_x, mattress_y, mattress_z],
-        [mattress_l, mattress_w, mattress_height],
+        [bed.mattress_x, bed.mattress_y, bed.mattress_z],
+        [bed.mattress_l, bed.mattress_w, mattress_height],
         mattress_color,
         collection,
         "bed_mattress",
@@ -101,16 +370,19 @@ def generate(params, api):
 
     pillow_count = 2 if width >= PILLOW_COUNT_WIDTH_THRESHOLD else 1
     if head_side in ("y_max", "y_min"):
-        pillow_span = mattress_l
-        pillow_depth = min(1.8, mattress_w * 0.35)
+        pillow_span = bed.mattress_l
+        pillow_depth = min(1.8, bed.mattress_w * 0.35)
         pillow_len = max((pillow_span - PILLOW_GAP * (pillow_count + 1)) / pillow_count, 0.8)
         for i in range(pillow_count):
-            px = mattress_x + PILLOW_GAP + i * (pillow_len + PILLOW_GAP)
-            py = max(min(pillow_y, mattress_y + mattress_w - pillow_depth - 0.2), mattress_y + 0.2)
+            px = bed.mattress_x + PILLOW_GAP + i * (pillow_len + PILLOW_GAP)
+            py = max(
+                min(bed.pillow_anchor_y(pillow_depth), bed.mattress_y + bed.mattress_w - pillow_depth - 0.2),
+                bed.mattress_y + 0.2,
+            )
             bp(f"pillow_{i + 1}", role="bed_pillow")
             cb(
                 f"{name}__pillow_{i + 1}",
-                [px, py, mattress_z + mattress_height + 0.05],
+                [px, py, bed.mattress_z + mattress_height + 0.05],
                 [pillow_len, pillow_depth, PILLOW_HEIGHT],
                 pillow_color,
                 collection,
@@ -119,19 +391,16 @@ def generate(params, api):
             )
             ep()
     else:
-        pillow_span = mattress_w
-        pillow_depth = min(1.8, mattress_l * 0.35)
+        pillow_span = bed.mattress_w
+        pillow_depth = min(1.8, bed.mattress_l * 0.35)
         pillow_len = max((pillow_span - PILLOW_GAP * (pillow_count + 1)) / pillow_count, 0.8)
-        if head_side == "x_max":
-            px = mattress_x + mattress_l - pillow_depth - 0.2
-        else:
-            px = mattress_x + 0.2
+        px = bed.pillow_anchor_x(pillow_depth)
         for i in range(pillow_count):
-            py = mattress_y + PILLOW_GAP + i * (pillow_len + PILLOW_GAP)
+            py = bed.mattress_y + PILLOW_GAP + i * (pillow_len + PILLOW_GAP)
             bp(f"pillow_{i + 1}", role="bed_pillow")
             cb(
                 f"{name}__pillow_{i + 1}",
-                [px, py, mattress_z + mattress_height + 0.05],
+                [px, py, bed.mattress_z + mattress_height + 0.05],
                 [pillow_depth, pillow_len, PILLOW_HEIGHT],
                 pillow_color,
                 collection,
@@ -141,7 +410,17 @@ def generate(params, api):
             ep()
 
     bp("label", role="label")
-    cl(f"{name}__label", [x + length / 2, y + width / 2, mattress_z + mattress_height + 0.7], name, collection)
+    cl(
+        f"{name}__label",
+        [x + length / 2, y + width / 2, bed.mattress_z + mattress_height + 0.7],
+        name,
+        collection,
+    )
     ep()
 
-    return {"created": name, "type": "bed_basic", "size": [length, width]}
+    return {
+        "created": name,
+        "type": "bed_basic",
+        "size": [length, width],
+        "headboard_rise": headboard_rise,
+    }

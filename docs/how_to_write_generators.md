@@ -441,14 +441,21 @@ Kernprinzipien (Auszug):
 MIN_BED_DIMENSION = 3
 PILLOW_COUNT_WIDTH_THRESHOLD = 13
 
+class BedConstruction:
+    """Posts on floor → frame loop at leg_height → optional headboard rise."""
+
 def generate(params, api):
-    name = params.get("name", "BED_basic")
-    length = max(params.get("length", 20), MIN_BED_DIMENSION)
-    width = max(params.get("width", 12), MIN_BED_DIMENSION)
-    # … Pfosten, Rahmen, Matratze getrennt — Regeln pro Komponente …
-    pillow_count = 2 if width >= PILLOW_COUNT_WIDTH_THRESHOLD else 1
-    return {"created": name, "type": "bed_basic", "size": [length, width]}
+    bed = BedConstruction(...)  # stack, not scattered Z constants
+    bed.build_posts(...)
+    bed.build_side_rails(...)
+    bed.build_frame_ends(...)      # foot + structural head at frame_bottom_z
+    bed.build_headboard_rise(...)  # decorative panel above frame_top_z
+    # mattress / pillows as separate Parts
 ```
+
+**Konstruktion:** Nur Pfosten berühren den Boden. Kopf- und Fußbrett sind Teil des
+Rahmenbands (`frame_height`), nicht vom Boden aus. `headboard_height` = Aufsatz über
+Rahmenoberkante — siehe [bed_basic.md](../layoutlab/generators/bed_basic.md).
 
 Nach Erstellung: `regenerate` mit neuen Params möglich (gleiche `object_id`).
 
