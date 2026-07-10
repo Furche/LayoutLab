@@ -10,6 +10,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ------------------------------------------------------------------------
 
+## [0.6.2] — 2026-07-10
+
+### Fixed
+
+- Part parenting uses Blender `parent_set(keep_transform=True)` so child Parts keep world position when the addon runs inside operators/`exec()` (Blender 5.0)
+
+------------------------------------------------------------------------
+
 ## [0.6.1] — 2026-07-10
 
 ### Fixed
@@ -90,7 +98,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - Design decisions DD-001 through DD-005
 - `AI_CONTEXT.md`, `README.md`
 
-[Unreleased]: https://github.com/Furche/LayoutLab/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/Furche/LayoutLab/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/Furche/LayoutLab/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/Furche/LayoutLab/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/Furche/LayoutLab/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/Furche/LayoutLab/compare/v0.5.0...v0.5.1
