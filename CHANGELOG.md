@@ -10,6 +10,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ------------------------------------------------------------------------
 
+## [0.6.7] — 2026-07-10
+
+### Fixed
+
+- `bed_basic`: two pillows divide mattress **length** (X) at head/foot, not mattress width (Y) — fixes second pillow hanging outside the frame on wide beds
+
+### Changed
+
+- `bed_basic` v0.4.2
+- Plugin version **0.6.7**
+
+------------------------------------------------------------------------
+
 ## [0.6.6] — 2026-07-10
 
 ### Fixed

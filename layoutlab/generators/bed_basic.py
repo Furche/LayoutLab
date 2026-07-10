@@ -2,7 +2,7 @@
 GENERATOR_NAME = "bed_basic"
 GENERATOR_CATEGORY = "Beds"
 GENERATOR_DESCRIPTION = "Parametric low bed with legs, frame, mattress, headboard and fallback sizing."
-GENERATOR_VERSION = "0.4.1"
+GENERATOR_VERSION = "0.4.2"
 GENERATOR_ICON = "BED"
 
 # Fallback thresholds (Blender units; 1 unit ≈ 10 cm in reference room)
@@ -100,21 +100,45 @@ def generate(params, api):
     ep()
 
     pillow_count = 2 if width >= PILLOW_COUNT_WIDTH_THRESHOLD else 1
-    pillow_w = max((mattress_w - 0.4) / pillow_count, 0.8)
-    for i in range(pillow_count):
-        px = mattress_x + PILLOW_GAP + i * pillow_w
-        py = max(min(pillow_y, mattress_y + mattress_w - 1.2), mattress_y + 0.2)
-        bp(f"pillow_{i + 1}", role="bed_pillow")
-        cb(
-            f"{name}__pillow_{i + 1}",
-            [px, py, mattress_z + mattress_height + 0.05],
-            [pillow_w - PILLOW_GAP, min(1.8, mattress_w * 0.35), PILLOW_HEIGHT],
-            pillow_color,
-            collection,
-            "bed_pillow",
-            None,
-        )
-        ep()
+    if head_side in ("y_max", "y_min"):
+        pillow_span = mattress_l
+        pillow_depth = min(1.8, mattress_w * 0.35)
+        pillow_len = max((pillow_span - PILLOW_GAP * (pillow_count + 1)) / pillow_count, 0.8)
+        for i in range(pillow_count):
+            px = mattress_x + PILLOW_GAP + i * (pillow_len + PILLOW_GAP)
+            py = max(min(pillow_y, mattress_y + mattress_w - pillow_depth - 0.2), mattress_y + 0.2)
+            bp(f"pillow_{i + 1}", role="bed_pillow")
+            cb(
+                f"{name}__pillow_{i + 1}",
+                [px, py, mattress_z + mattress_height + 0.05],
+                [pillow_len, pillow_depth, PILLOW_HEIGHT],
+                pillow_color,
+                collection,
+                "bed_pillow",
+                None,
+            )
+            ep()
+    else:
+        pillow_span = mattress_w
+        pillow_depth = min(1.8, mattress_l * 0.35)
+        pillow_len = max((pillow_span - PILLOW_GAP * (pillow_count + 1)) / pillow_count, 0.8)
+        if head_side == "x_max":
+            px = mattress_x + mattress_l - pillow_depth - 0.2
+        else:
+            px = mattress_x + 0.2
+        for i in range(pillow_count):
+            py = mattress_y + PILLOW_GAP + i * (pillow_len + PILLOW_GAP)
+            bp(f"pillow_{i + 1}", role="bed_pillow")
+            cb(
+                f"{name}__pillow_{i + 1}",
+                [px, py, mattress_z + mattress_height + 0.05],
+                [pillow_depth, pillow_len, PILLOW_HEIGHT],
+                pillow_color,
+                collection,
+                "bed_pillow",
+                None,
+            )
+            ep()
 
     bp("label", role="label")
     cl(f"{name}__label", [x + length / 2, y + width / 2, mattress_z + mattress_height + 0.7], name, collection)
