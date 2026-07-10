@@ -30,15 +30,19 @@ def get_active_context():
     return _active_context
 
 
-def apply_layoutlab_metadata(obj, context, *, component=None, role=None):
+def apply_layoutlab_metadata(obj, context, *, component=None, role=None, part=None, part_type=None):
     if context is None:
         return
     obj["layoutlab_object_id"] = context.object_id
     obj["layoutlab_generator"] = context.generator
     obj["layoutlab_generator_version"] = context.generator_version
     obj["layoutlab_params"] = context.params_json
-    if component:
-        obj["layoutlab_component"] = component
+    part_name = part or component
+    if part_name:
+        obj["layoutlab_part"] = part_name
+        obj["layoutlab_component"] = part_name
+    if part_type:
+        obj["layoutlab_part_type"] = part_type
     if role:
         obj["layoutlab_role"] = role
 

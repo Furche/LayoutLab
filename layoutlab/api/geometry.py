@@ -2,15 +2,8 @@ import bpy
 
 from .collections import get_or_create_collection
 from .materials import ensure_material
-from .metadata import apply_layoutlab_metadata, component_for_object_name, get_active_context
-
-
-def _tag_layoutlab_object(obj, name, role=None, component=None):
-    context = get_active_context()
-    if not context:
-        return
-    suffix = component or component_for_object_name(name, context.name_prefix)
-    apply_layoutlab_metadata(obj, context, component=suffix or None, role=role)
+from .metadata import get_active_context
+from .parts import register_created_object
 
 
 def create_box(name, location, dimensions, color=(0.8, 0.8, 0.8, 1), collection="layout_tests", role=None, display_type=None, component=None):
@@ -27,10 +20,12 @@ def create_box(name, location, dimensions, color=(0.8, 0.8, 0.8, 1), collection=
         obj.data.materials.append(ensure_material(f"MAT_{name}", color))
     if display_type:
         obj.display_type = display_type
+    if role and not get_active_context():
+        obj["layoutlab_role"] = role
     get_or_create_collection(collection).objects.link(obj)
-    if get_active_context():
-        _tag_layoutlab_object(obj, name, role=role, component=component)
-    elif role:
+    if register_created_object(obj):
+        return obj
+    if get_active_context() and role:
         obj["layoutlab_role"] = role
     return obj
 
@@ -44,8 +39,7 @@ def create_label(name, location, text, collection="layout_tests", size=0.35, com
     obj = bpy.data.objects.new(name, curve)
     obj.location = location
     get_or_create_collection(collection).objects.link(obj)
-    if get_active_context():
-        _tag_layoutlab_object(obj, name, role="label", component=component or "label")
-    else:
-        obj["layoutlab_role"] = "label"
+    if register_created_object(obj):
+        return obj
+    obj["layoutlab_role"] = "label"
     return obj

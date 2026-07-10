@@ -8,7 +8,7 @@ Blender 4.0+ is the current editor. The long-term goal: plan entire rooms by des
 
 > *"LayoutLab does not create meshes. LayoutLab describes objects."*
 
-**Status:** v0.5.1 — modular addon with semantic object metadata and `regenerate`.
+**Status:** v0.6.0 — Parts model: one Blender object per Part, Main Part parenting, join-on-finalize.
 
 Repository: https://github.com/Furche/LayoutLab
 

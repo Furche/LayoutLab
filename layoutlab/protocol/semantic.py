@@ -24,5 +24,7 @@ def layoutlab_block_from_object(obj):
         "generator_version": obj.get("layoutlab_generator_version", ""),
         "params": params,
         "component": obj.get("layoutlab_component", ""),
+        "part": obj.get("layoutlab_part", ""),
+        "part_type": obj.get("layoutlab_part_type", ""),
         "role": obj.get("layoutlab_role", ""),
     }

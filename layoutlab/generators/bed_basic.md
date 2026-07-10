@@ -2,7 +2,7 @@
 
 Generator reference for the JSON protocol and Generator Specification.
 
-Version: 0.1 · Category: Beds
+Version: 0.2 · Category: Beds
 
 ------------------------------------------------------------------------
 
@@ -71,17 +71,38 @@ Not implemented (future generators):
 
 ------------------------------------------------------------------------
 
-## Components
+## Parts (v0.6)
 
-| Component | Object suffix | `layoutlab_role` |
-|---|---|---|
-| Corner posts (×4) | `_post_xmin_ymin`, … | `bed_post` |
-| Frame rails (×4) | `_rail_y_min`, … | `bed_frame` |
-| Mattress | `_mattress` | `bed_mattress` |
-| Headboard | `_headboard` | `bed_headboard` |
-| Footboard | `_footboard` | `bed_footboard` |
-| Pillows | `_pillow_1`, `_pillow_2` | `bed_pillow` |
-| Label | `_label` | `label` |
+Final Blender objects after generator run:
+
+| Part id | Type | Final object name | Contents (joined build meshes) |
+|---|---|---|---|
+| `body` | **main** | `{name}_body` | 4 posts, 4 rails, headboard, footboard |
+| `mattress` | static | `{name}_mattress` | mattress volume |
+| `pillow_1`, `pillow_2` | static | `{name}_pillow_1`, … | one pillow each |
+| `label` | static | `{name}_label` | text curve |
+
+Build meshes use `{name}__{part}_{detail}` during generation (double underscore).
+
+Static Parts are parented to `body`. User moves `{name}_body` to move the whole bed.
+
+### Roles on build meshes / Parts
+
+| Detail | `layoutlab_role` |
+|---|---|
+| Corner posts (×4) | `bed_post` |
+| Frame rails (×4) | `bed_frame` |
+| Mattress | `bed_mattress` |
+| Headboard | `bed_headboard` |
+| Footboard | `bed_footboard` |
+| Pillows | `bed_pillow` |
+| Label | `label` |
+
+------------------------------------------------------------------------
+
+## Components (legacy note)
+
+Prior to v0.6 each row above was a separate Blender object. v0.6 joins them per Part — see `docs/object_model.md`.
 
 ------------------------------------------------------------------------
 
@@ -132,9 +153,9 @@ Not implemented (future generators):
 - Magic sizing constants in code (pillow placement, mattress Z offset) — acceptable for v0.1 reference generator
 - Slats, centre support, loft variant — not in this generator (see `docs/how_to_write_generators.md` §13.4 for loft pattern)
 
-## Semantic metadata (v0.5.1+)
+## Semantic metadata (v0.6)
 
-Components receive `layoutlab_object_id`, `layoutlab_params`, etc. automatically via the engine.  
+Part objects receive `layoutlab_object_id`, `layoutlab_part`, `layoutlab_part_type`, etc. at `finish()`.  
 Update in place: JSON `regenerate` command (see `docs/json_protocol.md` §5.12).
 
 ------------------------------------------------------------------------

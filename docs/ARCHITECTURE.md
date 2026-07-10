@@ -139,6 +139,7 @@ Phase 1 features from the Master Design Document:
 | Separated module structure | `[IMPLEMENTED]` |
 | Generators versioned in repo | `[IMPLEMENTED]` (bundled in `layoutlab/generators/`, synced on register) |
 | Semantic object identity in scene | `[IMPLEMENTED]` (v0.5.1) |
+| Parts model + join-on-finalize | `[IMPLEMENTED]` (v0.6) |
 | Automated tests | `[IMPLEMENTED]` (util/metadata; bpy integration manual) |
 
 ------------------------------------------------------------------------
@@ -255,6 +256,9 @@ Functions passed to generators via the `api` dict (`layoutlab/api/`):
 
 | Function | Purpose |
 |---|---|
+| `begin_part` | Start a furniture Part (main / dynamic / static) |
+| `end_part` | Finalize Part — join build meshes |
+| `finish` | Metadata, parenting, session close |
 | `create_box` | Axis-aligned mesh box |
 | `create_label` | Text curve label |
 | `ensure_material` | Get or create colored material |
@@ -292,36 +296,32 @@ Design target: Asset Browser feeling. `[IMPLEMENTED]` basic list + filter; thumb
 
 # 6. Object Model
 
-## 6.1 Conceptual Hierarchy `[PLANNED]`
+## 6.1 Conceptual Hierarchy `[IMPLEMENTED]` (v0.6)
 
 ```
 Room
 └── Layout
-    ├── Furniture Object (e.g. Bed)
-    │   └── Generator + params
-    │       └── Components (legs, mattress, …)
-    ├── Door
-    ├── Window
-    ├── Heater
-    └── Clearance Areas
+    └── Furniture Object (e.g. Bed)
+        ├── Generator + params
+        └── Parts (body, mattress, door_1, …)
+            └── Meshes (build-time only)
 ```
 
-## 6.2 Scene Representation Today `[IMPLEMENTED]`
+## 6.2 Scene Representation `[IMPLEMENTED]` (v0.6)
 
-A "bed" is **not one object** — it is a set of meshes sharing a name prefix:
+A bed is **several Part objects** sharing one `layoutlab_object_id`:
 
 ```
-BED_120x200_post_xmin_ymin    layoutlab_role: bed_post
-BED_120x200_mattress           layoutlab_role: bed_mattress
-BED_120x200_pillow_1           layoutlab_role: bed_pillow
-BED_120x200_label              layoutlab_role: label
+BED_120_body          layoutlab_part_type: main
+  ├─ BED_120_mattress layoutlab_part_type: static
+  ├─ BED_120_pillow_1
+  └─ BED_120_label
 ```
 
-Grouping is implicit (name prefix + collection). No persistent link back to generator params.
+The `body` object is joined from many build meshes (posts, rails, boards).  
+User selects and moves `body` — child Parts follow.
 
-## 6.3 Target Scene Representation `[PLANNED]`
-
-Each component mesh carries semantic identity:
+## 6.3 Metadata on Part Objects `[IMPLEMENTED]`
 
 | Custom property | Example | Purpose |
 |---|---|---|
@@ -329,7 +329,9 @@ Each component mesh carries semantic identity:
 | `layoutlab_generator` | `"bed_basic"` | Source generator |
 | `layoutlab_generator_version` | `"0.1"` | Generator version used |
 | `layoutlab_params` | `{"length": 12, …}` | JSON params for regeneration |
-| `layoutlab_component` | `"mattress"` | Component role |
+| `layoutlab_part` | `"body"` | Part id |
+| `layoutlab_part_type` | `"main"` | main / static / dynamic |
+| `layoutlab_component` | `"mattress"` | Same as part id (export compat) |
 | `layoutlab_role` | `"bed_mattress"` | `[IMPLEMENTED]` legacy / fine-grained role |
 
 This enables: regenerate, undo, variants, constraint checking.

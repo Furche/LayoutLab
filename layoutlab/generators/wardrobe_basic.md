@@ -11,8 +11,19 @@ It is intended as a second canonical generator after `bed_basic`, focused on sto
 ```python
 GENERATOR_NAME = "wardrobe_basic"
 GENERATOR_CATEGORY = "Storage"
-GENERATOR_VERSION = "0.1"
+GENERATOR_VERSION = "0.2"
 ```
+
+## Parts (v0.6)
+
+| Part id | Type | Final object | Contents |
+|---|---|---|---|
+| `body` | **main** | `{name}_body` | sides, top, bottom, back, shelves (joined) |
+| `door_1`, `door_2`, … | **dynamic** | `{name}_door_1`, … | door panel + handle (joined per door) |
+| `clearance` | static | `{name}_clearance` | front usage zone (optional) |
+| `label` | static | `{name}_label` | text label |
+
+Dynamic door Parts are parented to `body` — move body, doors follow; doors stay separate for animation.
 
 ## Coordinate Convention
 
@@ -24,11 +35,25 @@ GENERATOR_VERSION = "0.1"
 
 In Alexander's reference room convention, `1 unit ≈ 10 cm`.
 
+## Component Roles (build meshes)
+
+| Role | Build content |
+|---|---|
+| `wardrobe_side` | side panels |
+| `wardrobe_top` | top panel |
+| `wardrobe_bottom` | bottom panel |
+| `wardrobe_back` | back panel |
+| `wardrobe_shelf` | internal shelves |
+| `wardrobe_door` | door panels |
+| `wardrobe_handle` | handles |
+| `clearance` | front usage clearance |
+| `label` | text label |
+
 ## Parameters
 
 | Parameter | Default | Description |
 |---|---:|---|
-| `name` | `"WARDROBE_basic"` | Prefix for all component objects |
+| `name` | `"WARDROBE_basic"` | Prefix for all Part object names |
 | `location` | `[0, 0, 0]` | Min corner of footprint |
 | `collection` | `"layout_tests"` | Target collection |
 | `width` | `8.0` | Wardrobe width along X |
@@ -47,20 +72,6 @@ In Alexander's reference room convention, `1 unit ≈ 10 cm`.
 | `shelf_color` | wood RGBA | Shelf material color |
 | `handle_color` | dark RGBA | Handle material color |
 | `clearance_color` | blue transparent RGBA | Clearance material color |
-
-## Component Roles
-
-| Role | Components |
-|---|---|
-| `wardrobe_side` | side panels |
-| `wardrobe_top` | top panel |
-| `wardrobe_bottom` | bottom panel |
-| `wardrobe_back` | back panel |
-| `wardrobe_shelf` | internal shelves |
-| `wardrobe_door` | doors |
-| `wardrobe_handle` | handles |
-| `clearance` | front usage clearance |
-| `label` | text label |
 
 ## Example JSON
 
@@ -91,7 +102,7 @@ This generator follows the LayoutLab generator rules:
 - no UI
 - no scene analysis
 - no direct `bpy`
-- components instead of one monolithic mesh
-- semantic roles for every mesh
+- Parts API (`begin_part` / `end_part` / `finish`) — see `docs/object_model.md`
+- semantic roles for every build mesh
 - fallback behaviour for unusual dimensions
 - front clearance as early semantic usage area

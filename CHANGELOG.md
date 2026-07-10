@@ -10,14 +10,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
-- `docs/how_to_write_generators.md` — generator developer guide (examples, best practices, debugging)
-- Panel: **Paste Generator** — save clipboard script as generator (name from `GENERATOR_NAME`, overwrites if exists)
-- `layoutlab/generators/wardrobe_basic.py` + `wardrobe_basic.md` — second bundled generator
-- `docs/Future_Ideas.md` — ideas backlog before architecture/implementation
+- **Parts architecture (v0.6):** `begin_part`, `end_part`, `finish` in generator API
+- `layoutlab/api/parts.py` — Part session, mesh join, parenting to Main Part
+- `layoutlab_part`, `layoutlab_part_type` metadata and export fields
+- `docs/design_decisions/DD-006-parts-and-finalization.md`
 
 ### Changed
 
-- Generator browser Quick Test: per-generator fields and defaults (`bed_basic` vs `wardrobe_basic`)
+- `bed_basic` and `wardrobe_basic` migrated to Parts API (`GENERATOR_VERSION` 0.2)
+- `docs/object_model.md`, `docs/generator_api.md`, `docs/how_to_write_generators.md` — Parts lifecycle
+- Diagnostics: expect Part objects + Main Part parenting (still 9 checks)
+- Plugin version **0.6.0**; export `layoutlab_version` from `bl_info`
+
+### Removed
+
+- Per-mesh Blender objects for static generator components (replaced by joined Parts)
 
 ------------------------------------------------------------------------
 

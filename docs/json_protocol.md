@@ -326,7 +326,7 @@ Removes **all scene objects** whose names start with `prefix`. Use before re-run
 | `object` or `name` | yes |
 | `location` | yes |
 
-**Note:** moves **one** Blender object. Generated furniture consists of many meshes — moving the logical bed requires moving each component or re-running the generator. `[PLANNED]` semantic/group move.
+**Note:** moves **one** Blender object. For generated furniture, move the **Main Part** (`body`) — child Parts follow. `[IMPLEMENTED]` v0.6 parenting; `[PLANNED]` JSON `move` by `object_id`.
 
 **Error if object not found.**
 
@@ -486,6 +486,8 @@ Exported types: `MESH`, `EMPTY`, `CURVE`, `FONT` only.
     "generator_version": "0.1",
     "params": { "length": 12, "width": 20, "head_side": "y_max" },
     "component": "mattress",
+    "part": "mattress",
+    "part_type": "static",
     "role": "bed_mattress"
   }
 }
@@ -544,7 +546,9 @@ Set automatically on meshes created via `run_generator` / `regenerate`:
 | `layoutlab_generator` | Engine | Source generator name |
 | `layoutlab_generator_version` | Engine | Generator version at creation |
 | `layoutlab_params` | Engine | JSON string of full params for regeneration |
-| `layoutlab_component` | API | Component suffix (e.g. `mattress`, `post_xmin_ymin`) |
+| `layoutlab_component` | Engine | Part id (legacy field name) |
+| `layoutlab_part` | Engine | Part id `[IMPLEMENTED]` v0.6 |
+| `layoutlab_part_type` | Engine | `main` / `static` / `dynamic` `[IMPLEMENTED]` v0.6 |
 | `layoutlab_role` | API / generator | Fine-grained role (unchanged) |
 
 Objects from `create_box` / `create_clearance` without a generator context do **not** receive identity metadata (clearance stays role-only).

@@ -2,12 +2,8 @@
 GENERATOR_NAME = "wardrobe_basic"
 GENERATOR_CATEGORY = "Storage"
 GENERATOR_DESCRIPTION = "Parametric wardrobe with carcass, doors, shelves, handles, and optional front clearance."
-GENERATOR_VERSION = "0.1"
+GENERATOR_VERSION = "0.2"
 GENERATOR_ICON = "OUTLINER_COLLECTION"
-
-# Units:
-# LayoutLab uses Blender scene units.
-# In Alexander's reference room convention: 1 unit ≈ 10 cm.
 
 MIN_WIDTH = 3.0
 MIN_DEPTH = 2.5
@@ -62,7 +58,6 @@ def _shelf_count(height, requested=None):
         except (TypeError, ValueError):
             pass
 
-    # Rough semantic default: more height means more shelves, but not absurdly many.
     if height < 10:
         return 1
     if height < 14:
@@ -100,15 +95,16 @@ def generate(params, api):
 
     cb = api["create_box"]
     cl = api["create_label"]
+    bp = api["begin_part"]
+    ep = api["end_part"]
 
-    # Carcass: separate panels, not one scaled block.
-    cb(f"{name}_side_left", [x, y, z], [panel, depth, height], carcass_color, collection, "wardrobe_side", None)
-    cb(f"{name}_side_right", [x + width - panel, y, z], [panel, depth, height], carcass_color, collection, "wardrobe_side", None)
-    cb(f"{name}_top", [x, y, z + height - panel], [width, depth, panel], carcass_color, collection, "wardrobe_top", None)
-    cb(f"{name}_bottom", [x, y, z], [width, depth, panel], carcass_color, collection, "wardrobe_bottom", None)
-    cb(f"{name}_back", [x, y + depth - back, z], [width, back, height], carcass_color, collection, "wardrobe_back", None)
+    bp("body", main=True, role="wardrobe_body")
+    cb(f"{name}__body_side_left", [x, y, z], [panel, depth, height], carcass_color, collection, "wardrobe_side", None)
+    cb(f"{name}__body_side_right", [x + width - panel, y, z], [panel, depth, height], carcass_color, collection, "wardrobe_side", None)
+    cb(f"{name}__body_top", [x, y, z + height - panel], [width, depth, panel], carcass_color, collection, "wardrobe_top", None)
+    cb(f"{name}__body_bottom", [x, y, z], [width, depth, panel], carcass_color, collection, "wardrobe_bottom", None)
+    cb(f"{name}__body_back", [x, y + depth - back, z], [width, back, height], carcass_color, collection, "wardrobe_back", None)
 
-    # Shelves inside the carcass.
     usable_height = max(height - 2 * panel, 0.1)
     inner_width = max(width - 2 * panel, 0.1)
     inner_depth = max(depth - back - 0.15, 0.1)
@@ -116,7 +112,7 @@ def generate(params, api):
     for i in range(shelf_count):
         shelf_z = z + panel + (usable_height * (i + 1) / (shelf_count + 1))
         cb(
-            f"{name}_shelf_{i + 1}",
+            f"{name}__body_shelf_{i + 1}",
             [x + panel, y + 0.05, shelf_z],
             [inner_width, inner_depth, shelf_thickness],
             shelf_color,
@@ -124,14 +120,15 @@ def generate(params, api):
             "wardrobe_shelf",
             None,
         )
+    ep()
 
-    # Doors on the front side (y_min).
     door_width = width / door_count
     for i in range(door_count):
         door_x = x + i * door_width
-        suffix = f"door_{i + 1}"
+        part_id = f"door_{i + 1}"
+        bp(part_id, dynamic=True, role="wardrobe_door")
         cb(
-            f"{name}_{suffix}",
+            f"{name}__{part_id}_panel",
             [door_x, y - door_thickness, z + panel * 0.5],
             [door_width, door_thickness, height - panel],
             door_color,
@@ -140,7 +137,6 @@ def generate(params, api):
             None,
         )
 
-        # Handle placement: one handle per door, near the vertical seam / opening edge.
         handle_w = min(HANDLE_WIDTH_DEFAULT, max(door_width * 0.12, 0.08))
         handle_d = HANDLE_DEPTH_DEFAULT
         handle_h = min(HANDLE_HEIGHT_DEFAULT, max(height * 0.14, 0.7))
@@ -154,7 +150,7 @@ def generate(params, api):
 
         handle_z = z + height * 0.48
         cb(
-            f"{name}_handle_{i + 1}",
+            f"{name}__{part_id}_handle",
             [handle_x, y - door_thickness - handle_d, handle_z],
             [handle_w, handle_d, handle_h],
             handle_color,
@@ -162,12 +158,12 @@ def generate(params, api):
             "wardrobe_handle",
             None,
         )
+        ep()
 
-    # Front usage clearance: a semantic helper volume for opening/standing area.
-    # In v0.5 generator API, create_clearance is not exposed yet, so we use create_box.
     if show_clearance and clearance_depth > 0:
+        bp("clearance", role="clearance")
         cb(
-            f"{name}_front_clearance",
+            f"{name}__clearance",
             [x, y - door_thickness - clearance_depth, z],
             [width, clearance_depth, 0.1],
             clearance_color,
@@ -175,14 +171,18 @@ def generate(params, api):
             "clearance",
             "WIRE",
         )
+        ep()
 
+    bp("label", role="label")
     cl(
-        f"{name}_label",
+        f"{name}__label",
         [x + width / 2, y + depth / 2, z + height + 0.5],
         name,
         collection,
     )
+    ep()
 
+    api["finish"]()
     return {
         "created": name,
         "type": GENERATOR_NAME,

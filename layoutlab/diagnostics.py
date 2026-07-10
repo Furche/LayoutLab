@@ -119,24 +119,36 @@ def run_console_checks(context):
                 "collection": DIAG_COLLECTION,
             },
         )
-        objs = [o for o in bpy.data.objects if o.name.startswith(bed_name)]
-        roles = sorted({o.get("layoutlab_role", "") for o in objs if o.get("layoutlab_role")})
+        objs = [o for o in bpy.data.objects if o.get("layoutlab_object_id") == result.get("object_id")]
+        body = bpy.data.objects.get(f"{bed_name}_body")
         mattress = bpy.data.objects.get(f"{bed_name}_mattress")
-        if len(objs) < 8:
-            check.fail(f"expected >= 8 objects, got {len(objs)}", f"objects: {[o.name for o in objs]}")
+        roles = sorted({o.get("layoutlab_role", "") for o in objs if o.get("layoutlab_role")})
+        if len(objs) < 4:
+            check.fail(f"expected >= 4 part objects, got {len(objs)}", f"objects: {[o.name for o in objs]}")
+            return
+        if not body or body.get("layoutlab_part_type") != "main":
+            check.fail(f"main part missing or wrong type: {getattr(body, 'name', None)}")
             return
         if not mattress or not mattress.get("layoutlab_object_id"):
             check.fail("mattress missing layoutlab_object_id")
             return
+        if mattress.parent != body:
+            check.fail(f"mattress not parented to body (parent={getattr(mattress.parent, 'name', None)})")
+            return
         if result.get("object_id") != mattress.get("layoutlab_object_id"):
             check.fail("execute_generator object_id mismatch")
             return
+        if result.get("main_part") != f"{bed_name}_body":
+            check.fail(f"main_part: {result.get('main_part')}")
+            return
         check.ok(
-            f"object_count: {len(objs)}",
+            f"part_object_count: {len(objs)}",
+            f"parts: {result.get('parts', [])}",
+            f"main_part: {result.get('main_part')}",
             f"roles: {roles}",
             f"object_id: {mattress.get('layoutlab_object_id')}",
             f"generator: {mattress.get('layoutlab_generator')}",
-            f"component: {mattress.get('layoutlab_component')}",
+            f"layoutlab_part: {mattress.get('layoutlab_part')}",
         )
 
     def check_apply_commands_json(check):
@@ -250,13 +262,17 @@ def run_console_checks(context):
         if layoutlab.get("generator") != "bed_basic":
             check.fail(f"export generator: {layoutlab.get('generator')}")
             return
+        if layoutlab.get("part") != "mattress":
+            check.fail(f"export part: {layoutlab.get('part')}")
+            return
         check.ok(
             f"layoutlab_version: {export['layoutlab_version']}",
             f"generator_count: {len(export.get('generators', []))}",
             f"bed_basic_listed: {'bed_basic' in gen_names}",
             f"diag_object_count_in_export: {len(diag_objects)}",
             f"export_object_id: {layoutlab.get('object_id')}",
-            f"export_component: {layoutlab.get('component')}",
+            f"export_part: {layoutlab.get('part')}",
+            f"export_part_type: {layoutlab.get('part_type')}",
         )
 
     def check_cleanup(check):

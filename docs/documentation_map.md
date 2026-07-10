@@ -81,7 +81,7 @@ Do **not** duplicate content across documents. Link instead.
 | Document | Purpose | Audience | Owns | Update when… | Typical changes |
 |---|---|---|---|---|---|
 | [docs/design_decisions/README.md](design_decisions/README.md) | Index of all DDs | Everyone | DD table with status and links | New DD accepted | DD-006 row |
-| [docs/design_decisions/DD-xxx-*.md](design_decisions/DD-001-generators-are-parametric-assets.md) | Single irreversible-ish architecture/product decision | Architect, future implementers | Problem, decision, alternatives, consequences for **one** topic | Significant fork in approach (not every bugfix) | DD-006: semantic object IDs |
+| [docs/design_decisions/DD-xxx-*.md](design_decisions/DD-001-generators-are-parametric-assets.md) | Single irreversible-ish architecture/product decision | Architect, future implementers | Problem, decision, alternatives, consequences for **one** topic | Significant fork in approach (not every bugfix) | DD-006: Parts and finalization |
 
 **When is a DD required?** API shape chosen between real alternatives; protocol breaking change; generator contract change; UI paradigm change. **Not** for: typo fixes, refactors that preserve behaviour, new generator that follows existing rules.
 

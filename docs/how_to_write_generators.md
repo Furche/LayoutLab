@@ -1,6 +1,6 @@
 # LayoutLab — Generator Developer Guide
 
-Version: 1.0
+Version: 1.1
 
 > **Zielgruppe:** Menschen und KI, die neue LayoutLab-Generatoren schreiben.  
 > **Charakter:** Praktischer Leitfaden mit Beispielen und Workflows.
@@ -24,16 +24,19 @@ Verwandte Dokumente (nicht duplizieren — dort nachschlagen):
 Ein Generator ist **kein Mesh** und **kein Blender-Asset**. Er ist ein **Regelwerk**, das aus Parametern Geometrie erzeugt.
 
 ```
-Parameter  →  Generator (Regeln)  →  Komponenten  →  Meshes in der Szene
+Parameter  →  Generator (Regeln)  →  Parts  →  Meshes (Build)  →  finalisierte Part-Objekte
 ```
 
-Ein Generator beschreibt **Wissen über einen Objekttyp** — z. B. wie ein Bett bei anderer Breite seine Pfosten, Matratze und Kissen neu platziert.
+Ein Generator beschreibt **Wissen über einen Objekttyp** — z. B. wie ein Bett bei anderer Breite Pfosten, Matratze und Kissen neu platziert.
+
+**Hierarchie (v0.6):** Furniture → Parts → Meshes. Meshes existieren nur während des Generatorlaufs; in der Szene bleibt **ein Blender-Objekt pro Part**.
 
 Der Engine-Aufruf (`run_generator` / `regenerate`) kümmert sich um:
 
 - Laden und Ausführen des Python-Codes
 - Injektion der LayoutLab-API (`api`-Dict)
-- Automatisches Setzen von `layoutlab_object_id`, `layoutlab_params`, … auf erzeugte Meshes (v0.5.1+)
+- Part-Session: Join, Metadaten, Parenting zum Main Part
+- Automatisches Setzen von `layoutlab_object_id`, `layoutlab_part`, … auf finalisierte Parts
 
 Der Generator selbst enthält **nur Möbel-Logik**.
 
@@ -57,12 +60,13 @@ Der Generator selbst enthält **nur Möbel-Logik**.
 
 ## 3.1 Was ein Generator tut
 
-- Geometrie über die LayoutLab-API erzeugen
+- Geometrie über die LayoutLab-API erzeugen (innerhalb von Parts)
 - Parameter interpretieren, Defaults und Fallbacks anwenden
-- Komponenten logisch trennen (Pfosten, Matratze, …)
-- `layoutlab_role` auf jeder Komponente setzen
+- Parts logisch trennen (`body`, `door_1`, `mattress`, …)
+- Main Part markieren (`main=True`) und Dynamic Parts (`dynamic=True`)
+- `layoutlab_role` setzen (pro Part und/oder pro Mesh)
+- `api["finish"]()` am Ende aufrufen
 - Sinnvolles Return-Dict liefern (`created`, `type`, …)
-- Optional: `{name}.md` mit Parametern und Beispielen dokumentieren
 
 ## 3.2 Was ein Generator ausdrücklich NICHT tut
 
@@ -73,7 +77,7 @@ Der Generator selbst enthält **nur Möbel-Logik**.
 | Andere Generatoren aufrufen oder ändern | Engine orchestriert; keine Generator-zu-Generator-Kopplung |
 | Globale Blender-Einstellungen ändern | Seiteneffekte brechen Batch-Commands |
 | Blind skalieren statt neu bauen | Verstößt gegen DD-002 |
-| Direktes `bpy` wenn API reicht | Untestbar, bricht Architektur-Grenze |
+| Direktes `bpy.ops` (z. B. `object.join`) | Finalisierung gehört in die API (`finish`) |
 
 Ausnahme: `api["bpy"]` ist technisch verfügbar — nur nutzen, wenn **keine** API-Funktion existiert, und in `{name}.md` begründen.
 
@@ -112,7 +116,10 @@ GENERATOR_ICON = "MESH_CUBE"   # Blender icon name
 
 ```python
 def generate(params, api):
-    # … Geometrie erzeugen …
+    bp = api["begin_part"]
+    ep = api["end_part"]
+    # … Parts und Geometrie …
+    api["finish"]()
     return {"created": name, "type": GENERATOR_NAME, ...}
 ```
 
@@ -128,7 +135,7 @@ def generate(params, api):
 
 | Parameter | Typische Bedeutung |
 |---|---|
-| `name` | Präfix für **alle** Objektnamen (`BED_120x200_mattress`) |
+| `name` | Präfix für **alle** finalen Part-Objekte (`BED_120_body`, `BED_120_mattress`) |
 | `location` | `[x, y, z]` — Min-Ecke des Footprints auf dem Boden |
 | `collection` | Blender-Collection (Default: `"layout_tests"`) |
 | `length`, `width`, `height` | Ausdehnung in Blender-Units entlang Achsen |
@@ -176,8 +183,11 @@ Vollständige Signaturen: **[generator_api.md](generator_api.md)**
 
 | Funktion | Zweck |
 |---|---|
-| `create_box(name, loc, dims, color, collection, role, display_type)` | Axis-aligned Box |
-| `create_label(name, loc, text, collection, size)` | Text-Label |
+| `begin_part(part_id, main, dynamic, role)` | Part starten — danach Geometrie erzeugen |
+| `end_part()` | Part finalisieren (Join → ein Objekt) |
+| `finish()` | Metadaten, Parenting, Abschluss |
+| `create_box(...)` | Axis-aligned Box (Build-Mesh) |
+| `create_label(...)` | Text-Label (Build-Mesh/Kurve) |
 | `ensure_material(name, color)` | Material (meist via `create_box`) |
 | `get_or_create_collection(name)` | Collection holen/erzeugen |
 | `delete_collection_objects(name)` | Collection leeren |
@@ -185,29 +195,61 @@ Vollständige Signaturen: **[generator_api.md](generator_api.md)**
 | `math` | Standard-math-Modul |
 | `bpy` | Nur wenn nötig — siehe oben |
 
-### Automatische Metadaten (v0.5.1+)
+### Automatische Metadaten (v0.6)
 
-Während `execute_generator()` läuft, taggt die Engine **automatisch** jede via API erzeugte Komponente mit:
+Während `execute_generator()` läuft, taggt die Engine **beim `finish()`** jedes finalisierte Part-Objekt mit:
 
-- `layoutlab_object_id`, `layoutlab_generator`, `layoutlab_params`, `layoutlab_component`
+- `layoutlab_object_id`, `layoutlab_generator`, `layoutlab_params`
+- `layoutlab_part`, `layoutlab_part_type` (`main` / `static` / `dynamic`)
 
-Generatoren müssen das **nicht manuell** setzen. Komponenten-Suffix wird aus `{name}_{suffix}` abgeleitet.
+Generatoren müssen Metadaten **nicht manuell** setzen.
 
 ------------------------------------------------------------------------
 
-# 8. Komponenten
+# 8. Parts — Lebenszyklus
 
-## 8.1 Benennung
+Siehe auch [object_model.md](object_model.md) und [DD-006](design_decisions/DD-006-parts-and-finalization.md).
 
+## 8.1 Warum Parts?
+
+Viele Build-Meshes pro Möbelstück sind für Generatoren angenehm, aber in Blender unpraktisch (Outliner, Auswahl, Verschieben).  
+Parts sind die Zwischenebene: **intern viele Meshes, extern ein Objekt pro Part**.
+
+## 8.2 Main Part und Dynamic Parts
+
+| Typ | Flag | Beispiel | Verhalten in Blender |
+|---|---|---|---|
+| **Main Part** | `main=True` | `body` | Anklicken & verschieben — das Möbel |
+| **Static Part** | (default) | `mattress`, `label` | Ein Objekt, Kind des Main Parts |
+| **Dynamic Part** | `dynamic=True` | `door_1`, `drawer_1` | Separates Objekt, Kind des Main Parts — animierbar |
+
+## 8.3 Generator-Muster
+
+```python
+bp = api["begin_part"]
+ep = api["end_part"]
+cb = api["create_box"]
+
+bp("body", main=True, role="wardrobe_body")
+cb(f"{name}__body_side_left", [...], [...], color, collection, "wardrobe_side", None)
+cb(f"{name}__body_shelf_1", [...], [...], color, collection, "wardrobe_shelf", None)
+ep()
+
+bp("door_1", dynamic=True, role="wardrobe_door")
+cb(f"{name}__door_1_panel", [...], [...], color, collection, "wardrobe_door", None)
+ep()
+
+api["finish"]()
 ```
-{params.name}_{component_suffix}
-```
 
-Beispiele: `BED_120_mattress`, `BED_120_post_xmin_ymin`, `BED_120_label`
+**Regeln:**
 
-Suffixe sind **generator-spezifisch**, müssen aber **stabil und dokumentiert** sein.
+- Jeder `create_box` / `create_label` zwischen `begin_part` und `end_part`
+- Build-Mesh-Namen: `{name}__{part}_{detail}` (Doppel-Unterstrich)
+- Finales Objekt: `{name}_{part_id}` — von der API gesetzt
+- **Kein** `bpy.ops.object.join()` im Generator
 
-## 8.2 Rollen (`layoutlab_role`)
+## 8.4 Rollen (`layoutlab_role`)
 
 Jede Mesh-Komponente braucht eine Rolle — feingranular, generator-spezifisch:
 
@@ -218,10 +260,10 @@ cb(..., role="bed_post", ...)
 
 Export und KI nutzen Rollen zur Semantik. Liste in `{name}.md` pflegen.
 
-## 8.3 Komponenten statt Monolith
+## 8.5 Parts statt Monolith
 
 Schlecht: ein riesiger Box für das ganze Bett.  
-Gut: Pfosten, Rahmen, Matratze, Kopfteil — getrennt erzeugt, gemeinsame `object_id` via Engine.
+Gut: `body`-Part mit vielen Build-Meshes (Pfosten, Rahmen), `mattress`-Part, getrennte Dynamic Parts für Türen.
 
 ------------------------------------------------------------------------
 
@@ -283,7 +325,9 @@ return {
 | Generator-Datei | `snake_case.py` | `bed_basic.py` |
 | `GENERATOR_NAME` | = Dateiname ohne `.py` | `"bed_basic"` |
 | Objekt-Präfix | `params.name`, sprechend | `"BED_120x200"` |
-| Komponenten-Suffix | `snake_case`, stabil | `_mattress`, `_post_xmin_ymin` |
+| Part-Id | `snake_case`, stabil | `body`, `door_1`, `mattress` |
+| Build-Mesh | `{name}__{part}_{detail}` | `BED_120__body_post_xmin_ymin` |
+| Finales Part-Objekt | `{name}_{part_id}` (API) | `BED_120_body` |
 | Rollen | `{typ}_{teil}` | `bed_mattress`, `wardrobe_door` |
 | Konstanten | `UPPER_SNAKE` | `MIN_BED_DIMENSION` |
 
@@ -307,9 +351,11 @@ def generate(params, api):
     x, y, z = params.get("location", [0, 0, 0])
     size = float(params.get("size", 1))
     collection = params.get("collection", "layout_tests")
+    bp, ep = api["begin_part"], api["end_part"]
 
+    bp("body", main=True, role="demo_box")
     api["create_box"](
-        f"{name}_box",
+        f"{name}__body",
         [x, y, z],
         [size, size, size],
         [0.7, 0.7, 0.7, 1],
@@ -317,12 +363,18 @@ def generate(params, api):
         "demo_box",
         None,
     )
+    ep()
+
+    bp("label", role="label")
     api["create_label"](
-        f"{name}_label",
+        f"{name}__label",
         [x + size / 2, y + size / 2, z + size + 0.2],
         name,
         collection,
     )
+    ep()
+
+    api["finish"]()
     return {"created": name, "type": "demo_cube", "size": size}
 ```
 
@@ -454,8 +506,8 @@ Später: Clearance-Zonen für Einstieg und Spielhöhe (Phase E).
 | Praxis | Begründung |
 |---|---|
 | Keine Magic Numbers | Konstanten mit sprechenden Namen oben im File |
-| Nur API, kein `bpy` | Testbarkeit, klare Grenze Engine/Generator |
-| Komponentenbasiert | Regenerate, Export, spätere Constraints |
+| Nur API, kein `bpy` / `bpy.ops` | Testbarkeit, klare Grenze Engine/Generator |
+| Parts + Build-Meshes | UX in Blender + Regenerate + Export |
 | Keine UI im Generator | Trennung Plugin / Generator |
 | Keine Szenenanalyse | Generatoren bleiben rein parametrisch |
 | Keine Generator-Abhängigkeiten | Engine orchestriert; ein Generator = ein Objekttyp |
@@ -572,8 +624,10 @@ Generator-Geometrie: manuell in Blender + Diagnostics.
 ## 16.7 Checkliste vor Merge
 
 - [ ] Alle fünf Metadaten-Konstanten gesetzt
-- [ ] Jede Komponente hat `layoutlab_role`
-- [ ] Namen folgen `{name}_{suffix}`
+- [ ] Parts-API: `begin_part` / `end_part` / `finish`
+- [ ] Genau ein Main Part (`main=True`)
+- [ ] Dynamic Parts für bewegliche Teile
+- [ ] Jede Part/Build-Mesh hat `layoutlab_role`
 - [ ] `{name}.md` mit Params, Rollen, JSON-Beispielen
 - [ ] Eintrag in `layoutlab/generators/README.md`
 - [ ] Quick Test + mindestens ein JSON-Command getestet
@@ -603,4 +657,5 @@ Eintrag in [documentation_map.md](documentation_map.md) — Zeile **how_to_write
 
 | Version | Date | Changes |
 |---|---|---|
+| 1.1 | 2026-07-10 | Parts lifecycle, Main/Dynamic Parts, v0.6 API |
 | 1.0 | 2026-07-10 | Initial developer guide |

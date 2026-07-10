@@ -4,6 +4,32 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-10 — DD-006: Parts, finalization, Main/Dynamic Parts
+
+**Context:** First generators (`bed_basic`, `wardrobe_basic`) created 10–20 Blender objects
+per furniture piece. Good for generator code, bad UX (selection, outliner, moving).
+
+**Rejected:**
+
+- Root Empty as furniture handle — users click Empty, not mesh.
+- Selection promotion — fragile in Blender.
+
+**Decision:**
+
+1. **Furniture → Parts → Meshes** — generators still think in many build meshes; API joins
+   each Part to one Blender object at `end_part` / `finish`.
+2. **Main Part** (`body`) — the object users move; all other Parts parented as children.
+3. **Dynamic Parts** (doors, drawers) — stay separate for animation, also parented to Main.
+4. **API owns finalization** — no `bpy.ops` in generators; join/metadata/parenting in
+   `layoutlab/api/parts.py` for future extensibility (bbox, clearance, thumbnails).
+
+**Migration:** Generator authors must use `begin_part` / `end_part` / `finish`. Bump to
+v0.6.0 — breaking for generator code, not for JSON command protocol.
+
+**Verification:** Diagnostics updated (Part count, main parenting, export `part` fields).
+
+------------------------------------------------------------------------
+
 ## 2026-07-10 — Generator Developer Guide
 
 **Context:** Specification and API reference existed, but no single practical

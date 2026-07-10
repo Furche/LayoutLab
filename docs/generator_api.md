@@ -1,6 +1,6 @@
 # LayoutLab Generator API Reference
 
-Version: 0.5.0 (Contract)
+Version: 0.6.0 (Contract)
 
 > Functions available to generators via `generate(params, api)`.
 > Source: `layoutlab/api/` (after Phase C split) · implemented in v0.5.0
@@ -25,10 +25,13 @@ def generate(params, api):
 
 ------------------------------------------------------------------------
 
-# 2. API Dict Keys (v0.5)
+# 2. API Dict Keys (v0.6)
 
 | Key | Type | Status |
 |---|---|---|
+| `begin_part` | function | `[IMPLEMENTED]` |
+| `end_part` | function | `[IMPLEMENTED]` |
+| `finish` | function | `[IMPLEMENTED]` |
 | `create_box` | function | `[IMPLEMENTED]` |
 | `create_label` | function | `[IMPLEMENTED]` |
 | `ensure_material` | function | `[IMPLEMENTED]` |
@@ -40,9 +43,65 @@ def generate(params, api):
 
 ------------------------------------------------------------------------
 
-# 3. Geometry
+# 3. Part Lifecycle `[IMPLEMENTED]` (v0.6)
 
-## 3.1 `create_box` `[IMPLEMENTED]`
+Generators structure furniture as **Parts**. Each Part may create many meshes; the API joins them into one Blender object.
+
+## 3.1 `begin_part` `[IMPLEMENTED]`
+
+```python
+api["begin_part"](part_id, main=False, dynamic=False, role=None)
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `part_id` | str | required | Stable id (`"body"`, `"door_1"`, …) |
+| `main` | bool | `False` | Exactly one Main Part per furniture piece |
+| `dynamic` | bool | `False` | Moving Part — stays separate after finalize |
+| `role` | str or None | `None` | Default `layoutlab_role` for the finalized Part |
+
+**Returns:** `part_id`
+
+Must be called before `create_box` / `create_label` during `execute_generator()`.
+
+---
+
+## 3.2 `end_part` `[IMPLEMENTED]`
+
+```python
+api["end_part"]()
+```
+
+Finalizes the current Part: joins build meshes → one object named `{params.name}_{part_id}`.
+
+**Returns:** finalized `bpy.types.Object` or `None` if Part had no geometry.
+
+---
+
+## 3.3 `finish` `[IMPLEMENTED]`
+
+```python
+summary = api["finish"]()
+```
+
+Called once at the end of `generate()`:
+
+- Closes any open Part
+- Writes `layoutlab_*` metadata on all Part objects
+- Parents non-main Parts to the Main Part (world transform preserved)
+- Returns summary dict: `parts`, `main_part`, `object_count`
+
+The engine also calls `finish()` if the generator omits it.
+
+**Generators must not call `bpy.ops.object.join()`** — finalization is API-owned.
+
+See `docs/design_decisions/DD-006-parts-and-finalization.md`.
+
+------------------------------------------------------------------------
+
+# 4. Geometry
+
+## 4.1 `create_box` `[IMPLEMENTED]`
 
 ```python
 obj = api["create_box"](
@@ -77,7 +136,7 @@ Creates an axis-aligned box mesh.
 
 ---
 
-## 3.2 `create_label` `[IMPLEMENTED]`
+## 4.2 `create_label` `[IMPLEMENTED]`
 
 ```python
 obj = api["create_label"](
@@ -105,16 +164,16 @@ Creates a text curve object (FONT).
 
 ---
 
-## 3.3 `create_clearance` `[PLANNED]`
+## 4.3 `create_clearance` `[PLANNED]`
 
 Wrapper planned for clearance boxes (wireframe, `role="clearance"`).  
 Until then, use `create_box(..., role="clearance", display_type="WIRE")` or JSON `create_clearance`.
 
 ------------------------------------------------------------------------
 
-# 4. Materials
+# 5. Materials
 
-## 4.1 `ensure_material` `[IMPLEMENTED]`
+## 5.1 `ensure_material` `[IMPLEMENTED]`
 
 ```python
 mat = api["ensure_material"](name, color)
@@ -131,9 +190,9 @@ Usually called indirectly via `create_box(..., color=...)`.
 
 ------------------------------------------------------------------------
 
-# 5. Collections
+# 6. Collections
 
-## 5.1 `get_or_create_collection` `[IMPLEMENTED]`
+## 6.1 `get_or_create_collection` `[IMPLEMENTED]`
 
 ```python
 col = api["get_or_create_collection"](name)
@@ -145,7 +204,7 @@ Creates collection if missing and links it to the scene root.
 
 ---
 
-## 5.2 `delete_collection_objects` `[IMPLEMENTED]`
+## 6.2 `delete_collection_objects` `[IMPLEMENTED]`
 
 ```python
 api["delete_collection_objects"](collection_name)
@@ -157,7 +216,7 @@ Removes all objects in the collection. Collection itself remains.
 
 ---
 
-## 5.3 `delete_prefix` `[IMPLEMENTED]`
+## 6.3 `delete_prefix` `[IMPLEMENTED]`
 
 ```python
 api["delete_prefix"](prefix)
@@ -171,15 +230,15 @@ Removes all scene objects whose names **start with** `prefix`.
 
 ------------------------------------------------------------------------
 
-# 6. Standard Modules
+# 7. Standard Modules
 
-## 6.1 `math` `[IMPLEMENTED]`
+## 7.1 `math` `[IMPLEMENTED]`
 
 Standard Python `math` module (radians, min, max, …).
 
 ---
 
-## 6.2 `bpy` `[EXCEPTION]`
+## 7.2 `bpy` `[EXCEPTION]`
 
 Full Blender Python API exposed for v0.5 prototype only.
 
@@ -188,24 +247,24 @@ Target: API-only access (see `docs/ARCHITECTURE.md` §7).
 
 ------------------------------------------------------------------------
 
-# 7. Automatic Object Metadata `[IMPLEMENTED]` (v0.5.1)
+# 8. Automatic Object Metadata `[IMPLEMENTED]` (v0.6)
 
-When `execute_generator()` runs, the engine activates a metadata context.  
-`create_box` and `create_label` automatically write:
+When `execute_generator()` runs, the engine activates a metadata context and a Part session.
 
-- `layoutlab_object_id`, `layoutlab_generator`, `layoutlab_generator_version`
-- `layoutlab_params` (JSON string of full params)
-- `layoutlab_component` (derived from object name suffix, or explicit `component=` kwarg)
-- `layoutlab_role`
+- **Build meshes** are temporary; they are registered to the active Part.
+- **At `finish()`**, metadata is written to each **finalized Part object**:
+  - `layoutlab_object_id`, `layoutlab_generator`, `layoutlab_generator_version`
+  - `layoutlab_params` (JSON string of full params)
+  - `layoutlab_part`, `layoutlab_part_type` (`main` / `static` / `dynamic`)
+  - `layoutlab_component` (same as part id)
+  - `layoutlab_role` (from Part `role` or per-mesh role)
 
-Generators do **not** need to call a separate metadata function.  
-Implementation: `layoutlab/api/metadata.py`, `layoutlab/engine/executor.py`.
-
-Optional kwarg on API helpers: `component="mattress"` — overrides suffix inference.
+Generators do **not** call metadata functions directly.  
+Implementation: `layoutlab/api/parts.py`, `layoutlab/api/metadata.py`, `layoutlab/engine/executor.py`.
 
 ------------------------------------------------------------------------
 
-# 8. Planned API Functions
+# 9. Planned API Functions
 
 | Function | Purpose |
 |---|---|
@@ -216,18 +275,20 @@ Optional kwarg on API helpers: `component="mattress"` — overrides suffix infer
 
 ------------------------------------------------------------------------
 
-# 9. Conventions for Generator Authors
+# 10. Conventions for Generator Authors
 
-1. **Naming:** `{params.name}_{component_suffix}` for all component objects.
-2. **Roles:** Set `layoutlab_role` on every mesh (see `docs/object_model.md`).
-3. **Collection:** Respect `params.get("collection", "layout_tests")`.
-4. **Location:** Use `params.get("location", [0, 0, 0])` as footprint min corner.
-5. **Return value:** Return a dict with at least `created`, `type`, and useful params (e.g. `size`).
-6. **No UI:** Never create panels, operators, or read `bpy.context` for user state.
+1. **Parts:** One `begin_part` … `end_part` block per logical Part; exactly one `main=True`.
+2. **Build mesh names:** `{params.name}__{part_id}_{detail}` (double underscore before part).
+3. **Final object names:** `{params.name}_{part_id}` — assigned by API, not by generator.
+4. **Roles:** Pass `role=` on `begin_part` and/or per `create_box` call.
+5. **Collection:** Respect `params.get("collection", "layout_tests")`.
+6. **Location:** Use `params.get("location", [0, 0, 0])` as footprint min corner.
+7. **Return value:** Return dict with `created`, `type`, and useful params; engine adds `object_id`, `parts`, `main_part`.
+8. **No UI / no bpy.ops:** Never create panels or call Blender operators from generators.
 
 ------------------------------------------------------------------------
 
-# 10. Example (bed_basic pattern)
+# 11. Example (bed_basic pattern)
 
 ```python
 def generate(params, api):
@@ -235,17 +296,25 @@ def generate(params, api):
     x, y, z = params.get("location", [0, 0, 0])
     collection = params.get("collection", "layout_tests")
     cb = api["create_box"]
+    bp, ep = api["begin_part"], api["end_part"]
 
-    cb(f"{name}_mattress", [x, y, z], [10, 20, 2],
-       [0.86, 0.86, 0.82, 0.65], collection, "bed_mattress", None)
+    bp("body", main=True, role="bed_frame")
+    cb(f"{name}__body_frame", [x, y, z], [10, 20, 1], [...], collection, "bed_frame", None)
+    ep()
 
+    bp("mattress", role="bed_mattress")
+    cb(f"{name}__mattress", [x, y, z + 1], [10, 20, 2], [...], collection, "bed_mattress", None)
+    ep()
+
+    api["finish"]()
     return {"created": name, "type": "bed_basic", "size": [10, 20]}
 ```
 
 ------------------------------------------------------------------------
 
-# 11. Changelog
+# 12. Changelog
 
 | Version | Date | Changes |
 |---|---|---|
+| 0.6.0 | 2026-07-10 | `begin_part`, `end_part`, `finish`; Part-based metadata |
 | 0.5.0 | 2026-07-10 | Initial API reference from v0.5 implementation |

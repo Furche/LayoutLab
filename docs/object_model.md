@@ -1,10 +1,10 @@
 # LayoutLab Object Model
 
-Version: 0.5.0 (Draft)
+Version: 0.6.0
 
-> How logical furniture objects are represented in Blender scenes today and where the model is going.
+> How logical furniture objects are represented in Blender scenes.
 
-Related: `AI_CONTEXT.md`, `docs/generator_api.md`, `docs/json_protocol.md`
+Related: `AI_CONTEXT.md`, `docs/generator_api.md`, `docs/design_decisions/DD-006-parts-and-finalization.md`, `docs/json_protocol.md`
 
 **Status markers:** `[IMPLEMENTED]` · `[PLANNED]`
 
@@ -15,184 +15,193 @@ Related: `AI_CONTEXT.md`, `docs/generator_api.md`, `docs/json_protocol.md`
 ```
 Room
 └── Layout
-    ├── Furniture Object     (e.g. one bed — logical unit)
-    │   └── Generator + params
-    │       └── Components   (mattress, legs, … — Blender meshes)
-    ├── Architectural elements (door, window, …)
-    └── Clearance areas
+    └── Furniture Object          (one bed, one wardrobe — logical unit)
+        ├── Generator + params
+        └── Parts                 (body, mattress, door_1, …)
+            └── Meshes            (build-time only — joined per Part)
 ```
 
-A **Furniture Object** is not one mesh. It is **generator + parameters + component meshes**.
+A **Furniture Object** is **generator + parameters + finalized Part objects**.
+
+During a generator run, authors think in **many meshes** (posts, rails, shelves).  
+After finalization, the scene contains **one Blender object per Part**.
 
 ------------------------------------------------------------------------
 
-# 2. Current Representation (v0.5) `[IMPLEMENTED]`
+# 2. Hierarchy: Furniture → Parts → Meshes
 
-## 2.1 Implicit grouping
-
-Components share a **name prefix** from `params.name`:
-
-```
-BED_120x200_post_xmin_ymin
-BED_120x200_mattress
-BED_120x200_pillow_1
-BED_120x200_label
-```
-
-To delete and recreate: `delete_prefix("BED_120x200")` then `run_generator` again.
-
-**Limitation:** No persistent link from mesh back to generator params in the scene.
-
-## 2.2 Custom property: `layoutlab_role` `[IMPLEMENTED]`
-
-Set on every component by generators / API:
-
-| Role (examples) | Meaning |
-|---|---|
-| `bed_post` | Bed corner post |
-| `bed_frame` | Frame rail |
-| `bed_mattress` | Mattress volume |
-| `bed_headboard` | Headboard |
-| `bed_footboard` | Footboard |
-| `bed_pillow` | Pillow |
-| `label` | Text label |
-| `clearance` | Required free space (often wireframe) |
-| `wall` | Architectural (manual JSON) |
-
-Exported in scene JSON under `custom_properties.layoutlab_role`.
-
-## 2.3 Generator return value `[IMPLEMENTED]`
-
-```json
-{
-  "created": "BED_120x200",
-  "type": "bed_basic",
-  "size": [12, 20]
-}
-```
-
-Printed to console only — **not** stored on scene objects yet.
-
-## 2.4 Collections `[IMPLEMENTED]`
-
-Objects placed in a Blender collection (default `layout_tests`).  
-Collection is **not** the logical object identity — only organization.
-
-------------------------------------------------------------------------
-
-# 3. Target Representation `[IMPLEMENTED]` (v0.5.1)
-
-Every component mesh from a generator carries:
-
-| Custom property | Type | Example | Purpose |
+| Level | Lifetime | Blender object? | Example |
 |---|---|---|---|
-| `layoutlab_object_id` | string (UUID) | `"a1b2c3…"` | Groups all components of one logical object |
-| `layoutlab_generator` | string | `"bed_basic"` | Source generator name |
-| `layoutlab_generator_version` | string | `"0.1"` | Generator version at creation time |
-| `layoutlab_params` | string (JSON) | `'{"length":12,...}'` | Full params for regeneration |
-| `layoutlab_component` | string | `"mattress"` | Component id within object |
-| `layoutlab_role` | string | `"bed_mattress"` | Fine-grained role (keep) |
+| **Furniture** | Persistent | No (logical) | `BED_120` with shared `layoutlab_object_id` |
+| **Part** | Persistent | **Yes** — one object per Part | `BED_120_body`, `BED_120_mattress` |
+| **Mesh** | Build-time only | Temporary until Part join | `BED_120__body_post_xmin_ymin` |
 
-### Example component (export) `[IMPLEMENTED]`
+### Main Part
+
+Every furniture piece has exactly one **Main Part** (typically `body`):
+
+- Represents the structural body (frame, carcass).
+- This is what the user **clicks and moves** in Blender.
+- Name: `{params.name}_{part_id}` → `BED_120_body`.
+
+### Static Parts
+
+Non-main Parts that are not animated (mattress, pillows, label, clearance):
+
+- Finalized to one object each.
+- **Parented to the Main Part** (world transform preserved).
+- Moving the Main Part moves the entire piece.
+
+### Dynamic Parts
+
+Moving elements (doors, drawers, hinges, castors):
+
+- Remain **separate Blender objects** after finalization (`dynamic=True`).
+- Also **parented to the Main Part** — follow when the body moves.
+- Can be animated independently (door rotation, drawer slide).
+
+See **DD-006** for rejected alternatives (root Empty, selection promotion).
+
+------------------------------------------------------------------------
+
+# 3. Scene Representation (v0.6) `[IMPLEMENTED]`
+
+## 3.1 Example: bed_basic
+
+After `run_generator`:
+
+```
+BED_120_body          layoutlab_part: body       layoutlab_part_type: main
+  ├─ BED_120_mattress layoutlab_part: mattress   layoutlab_part_type: static
+  ├─ BED_120_pillow_1 layoutlab_part: pillow_1   layoutlab_part_type: static
+  ├─ BED_120_pillow_2 layoutlab_part: pillow_2   layoutlab_part_type: static
+  └─ BED_120_label    layoutlab_part: label      layoutlab_part_type: static
+```
+
+The `body` mesh internally joined: 4 posts + 4 rails + headboard + footboard.
+
+## 3.2 Example: wardrobe_basic
+
+```
+WARDROBE_80_body       main
+  ├─ WARDROBE_80_door_1   dynamic
+  ├─ WARDROBE_80_door_2   dynamic
+  ├─ WARDROBE_80_clearance static
+  └─ WARDROBE_80_label    static
+```
+
+Doors stay separate for future animation; shelves are joined into `body`.
+
+------------------------------------------------------------------------
+
+# 4. Custom Properties `[IMPLEMENTED]`
+
+Every **finalized Part object** carries:
+
+| Property | Type | Example | Purpose |
+|---|---|---|---|
+| `layoutlab_object_id` | string (UUID) | `"a1b2c3…"` | Groups all Parts of one furniture piece |
+| `layoutlab_generator` | string | `"bed_basic"` | Source generator |
+| `layoutlab_generator_version` | string | `"0.2"` | Generator version at creation |
+| `layoutlab_params` | string (JSON) | `'{"length":12,...}'` | Full params for regeneration |
+| `layoutlab_part` | string | `"body"` | Part id |
+| `layoutlab_part_type` | string | `"main"` / `"static"` / `"dynamic"` | Part category |
+| `layoutlab_component` | string | `"body"` | Same as part id (export compat) |
+| `layoutlab_role` | string | `"bed_frame"` | Fine-grained role |
+
+Build-time mesh names use `{name}__{part}_{detail}` (double underscore) and are **not** exported as separate logical objects.
+
+### Export block `[IMPLEMENTED]`
 
 ```json
 {
-  "name": "BED_120x200_mattress",
+  "name": "BED_120_mattress",
   "layoutlab": {
     "object_id": "uuid-here",
     "generator": "bed_basic",
-    "generator_version": "0.1",
-    "params": { "length": 12, "width": 20, "head_side": "y_max" },
+    "generator_version": "0.2",
+    "params": { "length": 12, "width": 20 },
     "component": "mattress",
+    "part": "mattress",
+    "part_type": "static",
     "role": "bed_mattress"
   }
 }
 ```
 
-### Enabled features
+------------------------------------------------------------------------
 
-| Feature | Requires | Status |
+# 5. Generator Lifecycle vs API Responsibilities
+
+| Responsibility | Generator | LayoutLab API |
 |---|---|---|
-| `regenerate` command | `layoutlab_params` + `layoutlab_generator` | `[IMPLEMENTED]` |
-| Semantic export to AI | `layoutlab` block on export | `[IMPLEMENTED]` |
-| Move/rotate logical object | `layoutlab_object_id` grouping | `[PLANNED]` |
-| Undo generator edit | stored params + generator name | `[IMPLEMENTED]` via regenerate |
-| Variant comparison | object_id + params diff | `[PLANNED]` |
+| Part structure (`body`, doors, …) | yes | — |
+| Build meshes per Part | yes (`create_box`, …) | registers meshes |
+| Join meshes into Part object | **no** | yes (`end_part` / `finish`) |
+| Parent Parts to Main Part | **no** | yes (`finish`) |
+| Write `layoutlab_*` metadata | **no** | yes (`finish`) |
+| `bpy.ops.object.join()` | **never** | yes (internal) |
+
+Generator pattern:
+
+```python
+api["begin_part"]("body", main=True, role="bed_frame")
+# … create_box calls …
+api["end_part"]()
+api["finish"]()
+```
 
 ------------------------------------------------------------------------
 
-# 4. Naming Conventions `[IMPLEMENTED]`
+# 6. Operations
 
-Generators **must** follow this pattern (see `bed_basic`):
-
-```
-{params.name}_{component_suffix}
-```
-
-Examples:
-
-| Suffix | Component |
+| Operation | Behaviour |
 |---|---|
-| `_mattress` | Main sleeping surface |
-| `_post_xmin_ymin` | Corner post (position in name) |
-| `_pillow_1`, `_pillow_2` | Indexed components |
-| `_label` | Text label |
-
-Suffixes are generator-specific but must be **stable and documented** in `{generator}.md`.
+| **Move furniture** | Select and move **Main Part** — children follow |
+| **Delete furniture** | `delete_prefix(params.name)` or delete by `layoutlab_object_id` |
+| **Regenerate** | `regenerate` command — same `object_id`, new Part objects |
+| **Export to AI** | One entry per Part object with `layoutlab` block |
 
 ------------------------------------------------------------------------
 
-# 5. Clearance Objects `[IMPLEMENTED]`
+# 7. Clearance Parts `[IMPLEMENTED]`
 
-Clearance is a **special component type**:
+Clearance may be its own Part (e.g. `clearance` on `wardrobe_basic`):
 
 - `layoutlab_role = "clearance"`
-- Often `display_type = WIRE`
-- Semantically: required free space, not solid geometry
-- Today: created via JSON `create_clearance` or manual API
-
-Future: generators emit clearance automatically from rules (e.g. 70 cm bed access).
+- Often wireframe display
+- Parented to Main Part like other static Parts
 
 ------------------------------------------------------------------------
 
-# 6. Non-LayoutLab Objects
-
-Scene export includes **all** meshes/curves — not only LayoutLab objects.
-
-AI should use:
-
-- `custom_properties.layoutlab_role` — LayoutLab component
-- Absence of role — architectural/manual geometry (walls, floor, …)
-
-Future filter: export only objects with `layoutlab_object_id` or `layoutlab_role`.
-
-------------------------------------------------------------------------
-
-# 7. Migration Path
+# 8. Migration Path
 
 | Phase | Change |
 |---|---|
-| v0.5.0 | Name prefix + `layoutlab_role` only |
-| v0.5.1 `[IMPLEMENTED]` | Engine tags `layoutlab_object_id`, params, generator on `run_generator`; `regenerate` command; `layoutlab` export block |
-| v0.6 `[PLANNED]` | Move/rotate logical object by `object_id` |
-| v0.7 `[PLANNED]` | Deprecate move-by-single-mesh for generated furniture |
+| v0.5.0 | Name prefix + `layoutlab_role`; many meshes per furniture |
+| v0.5.1 | `layoutlab_object_id`, params, `regenerate`, export block |
+| v0.6.0 `[IMPLEMENTED]` | Parts model — join per Part, Main/Dynamic, parenting |
+| v0.7 `[PLANNED]` | JSON `move` by `object_id` (move Main Part + children) |
 
-Existing scenes without new properties remain valid — generators still work with prefix delete + re-run.
-
-------------------------------------------------------------------------
-
-# 8. bed_basic Reference
-
-See `layoutlab/generators/bed_basic.md` for component list and roles.
-
-Logical object: one `params.name`  
-Typical component count: 14 (4 posts, 4 rails, mattress, head/foot board, 1–2 pillows, label)
+Legacy scenes without Parts: still deletable via prefix; `regenerate` rebuilds with Parts.
 
 ------------------------------------------------------------------------
 
-# 9. Changelog
+# 9. Reference Generators
+
+| Generator | Main Part | Dynamic Parts | Static Parts |
+|---|---|---|---|
+| `bed_basic` | `body` | — | `mattress`, `pillow_*`, `label` |
+| `wardrobe_basic` | `body` | `door_*` | `clearance`, `label` |
+
+Details: `layoutlab/generators/bed_basic.md`, `wardrobe_basic.md`
+
+------------------------------------------------------------------------
+
+# 10. Changelog
 
 | Version | Date | Changes |
 |---|---|---|
-| 0.5.1 | 2026-07-10 | Semantic metadata on generator meshes; regenerate; export `layoutlab` block |
-| 0.5.0 | 2026-07-10 | Initial object model doc (as-built + target) |
+| 0.6.0 | 2026-07-10 | Parts hierarchy; join-on-finalize; main/dynamic; parenting |
+| 0.5.1 | 2026-07-10 | Semantic metadata; regenerate; export `layoutlab` block |
+| 0.5.0 | 2026-07-10 | Initial object model doc |
