@@ -8,23 +8,26 @@ Blender 4.0+ is the current editor. The long-term goal: plan entire rooms by des
 
 > *"LayoutLab does not create meshes. LayoutLab describes objects."*
 
-**Status:** v0.6.1 — Parts model with fixed child-part parenting transforms.
+**Status:** v0.7.0 — Clearance zone API (DD-007); `wardrobe_basic` v0.5 reference implementation.
 
 Repository: https://github.com/Furche/LayoutLab
 
 ------------------------------------------------------------------------
 
-## What works today (v0.5)
+## What works today (v0.6)
 
 - JSON command exchange with ChatGPT (clipboard or text block)
-- Scene export as JSON (full scene or selection)
-- Generator browser (asset-browser-like)
+- Scene export as JSON (full scene or selection) with semantic `layoutlab` block
+- Generator browser (asset-browser-like) + Quick Test per generator
 - **Paste Generator** — install/overwrite a generator from clipboard script
-- Parametric `bed_basic` and `wardrobe_basic` generators
-- Semantic object metadata (`layoutlab_object_id`, params on meshes)
+- Parametric **`bed_basic` v0.5** (raised frame construction) and **`wardrobe_basic`**
+- **Parts model:** Main Part + static/dynamic child Parts, join-on-finalize
+- Semantic metadata (`layoutlab_object_id`, `layoutlab_params`, `layoutlab_part`, …)
 - `regenerate` JSON command (update params, preserve object identity)
 - Save, load, and delete generators via UI or JSON
-- Clearance boxes via `create_clearance` command
+- JSON `create_clearance` command and generator **`api["create_clearance"]`** (DD-007 metadata)
+- Bundled generator sync on addon register
+- Diagnostics (13 checks: metadata, parenting, layout, export)
 
 See [docs/json_protocol.md](docs/json_protocol.md) for the full command reference.
 
@@ -243,7 +246,7 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 | **B** | Generators in repo, tests, sync | Complete |
 | **C** | Monolith → module split | Complete |
 | **D** | Semantic object model, `regenerate` | Complete |
-| **E** | Clearance, collision, paths, undo | Planned |
+| **E** | Clearance zones (DD-007) → Constraints / analysis (DD-008) | In progress |
 
 Full roadmap: [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) §17 · Phase status: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9
 

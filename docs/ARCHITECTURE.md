@@ -268,7 +268,8 @@ Functions passed to generators via the `api` dict (`layoutlab/api/`):
 | `bpy` | `[EXCEPTION]` direct Blender access exposed |
 | `math` | Standard math module |
 
-Planned additions: `create_component`, `create_clearance` (as API wrapper), `create_profile`, `create_mesh`. `[PLANNED]`
+Planned additions: `create_component`, `create_profile`, `create_mesh`. `[PLANNED]`  
+`create_clearance` — `[IMPLEMENTED]` v0.7 (DD-007).
 
 Full reference: `docs/generator_api.md` `[IMPLEMENTED]`
 
@@ -468,9 +469,16 @@ Generators import nothing from `plugin/`. `[IMPLEMENTED]` rule; enforced by conv
 
 **Gate:** AI can read a bed from export and recreate it with different params — `[PASSED]` via `regenerate` + export block.
 
-## Phase E — Phase 2 features `[PLANNED]`
+## Phase E — Clearance & constraints `[IN PROGRESS]`
 
-Clearance system → collision checks → path analysis → generator undo → variants.
+Split into two design decisions (do not merge):
+
+| Sub-phase | DD | Focus | Status |
+|---|---|---|---|
+| E.1 | [DD-007](design_decisions/DD-007-clearance-zones.md) | Clearance zones — descriptive usage volumes | **Accepted** |
+| E.2 | [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | Placeholder |
+
+Implementation order after DD-007 acceptance: API → wardrobe refactor → export → diagnostics → DD-008 → analyze_layout → bed clearances.
 
 See Master Design Document §17 for the full product roadmap.
 

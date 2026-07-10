@@ -20,7 +20,7 @@ GENERATOR_VERSION = "0.2"
 |---|---|---|---|
 | `body` | **main** | `{name}_body` | sides, top, bottom, back, shelves (joined) |
 | `door_1`, `door_2`, … | **dynamic** | `{name}_door_1`, … | door panel + handle (joined per door) |
-| `clearance` | static | `{name}_clearance` | front usage zone (optional) |
+| `clearance_front_access` | static | `{name}_clearance_front_access` | front usage zone (`front_access`, optional) |
 | `label` | static | `{name}_label` | text label |
 
 Dynamic door Parts are parented to `body` — move body, doors follow; doors stay separate for animation.

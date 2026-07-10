@@ -2,7 +2,7 @@ import math
 
 import bpy
 
-from . import collections, geometry, materials, parts
+from . import collections, clearance, geometry, materials, parts
 
 
 def build_generator_api():
@@ -13,6 +13,7 @@ def build_generator_api():
         "end_part": parts.end_part,
         "finish": parts.finish,
         "create_box": geometry.create_box,
+        "create_clearance": clearance.create_clearance,
         "create_label": geometry.create_label,
         "delete_collection_objects": collections.delete_collection_objects,
         "delete_prefix": collections.delete_prefix,

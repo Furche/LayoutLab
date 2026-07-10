@@ -10,6 +10,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ------------------------------------------------------------------------
 
+## [0.7.0] — 2026-07-10
+
+### Added
+
+- **`api["create_clearance"]`** (DD-007): `clearance_id`, `clearance_name`, `requirement` (`required`/`preferred`), `local_transform` in params; `local_location` relative to Main Part
+- Unit tests for clearance requirement validation and local/world resolution
+
+### Changed
+
+- **`wardrobe_basic` v0.5.0:** uses `create_clearance`; Part `clearance_front_access` with `front_access` zone
+- Diagnostics: wardrobe clearance metadata checks
+- Plugin version **0.7.0**
+
+------------------------------------------------------------------------
+
 ## [0.6.8] — 2026-07-10
 
 ### Changed

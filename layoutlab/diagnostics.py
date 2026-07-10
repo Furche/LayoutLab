@@ -496,12 +496,21 @@ def run_console_checks(context):
                 },
             )
             body = bpy.data.objects.get(f"{prefix}_body")
-            clearance = bpy.data.objects.get(f"{prefix}_clearance")
+            clearance = bpy.data.objects.get(f"{prefix}_clearance_front_access")
             if not body or not clearance:
                 check.fail(f"wardrobe parts missing at {loc}")
                 return
             if clearance.parent != body:
                 check.fail(f"clearance not parented at {loc}")
+                return
+            if clearance.get("layoutlab_clearance_name") != "front_access":
+                check.fail(f"unexpected clearance_name at {loc}: {clearance.get('layoutlab_clearance_name')}")
+                return
+            if clearance.get("layoutlab_clearance_requirement") != "preferred":
+                check.fail(f"unexpected requirement at {loc}")
+                return
+            if not clearance.get("layoutlab_clearance_id"):
+                check.fail(f"missing clearance_id at {loc}")
                 return
             body_ymin, _ = _world_bbox_y_extents(body)
             _, clearance_ymax = _world_bbox_y_extents(clearance)

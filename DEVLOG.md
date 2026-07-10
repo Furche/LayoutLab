@@ -4,6 +4,31 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-10 — Clearance API v0.7 (DD-007 implementation)
+
+**Shipped:** `layoutlab/api/clearance.py` with `create_clearance()`, JSON command
+unified, `wardrobe_basic` v0.5 reference (`front_access`, Main Part local coords).
+
+**Deferred:** Export schema (step 5), constraint diagnostics, DD-008, bed zones.
+
+------------------------------------------------------------------------
+
+## 2026-07-10 — DD-007 / DD-008 split (Clearance vs Constraints)
+
+**Context:** Phase E must not combine “usage zones” and “layout verdicts” in one design.
+Early `analyze_layout` on an unstable schema would force rework.
+
+**Decision:**
+
+1. **DD-007 (Accepted):** Clearance Zones — identity (`clearance_id` + per-object
+   `clearance_name`), `required`/`preferred`, local + world bounds, shape model direction.
+2. **DD-008 (Placeholder):** Constraint engine + `analyze_layout`.
+3. Review questions resolved 2026-07-10 (see DD-007 § Resolved decisions).
+
+**Implementation gate:** DD-007 accepted → API → wardrobe → export → diagnostics → DD-008.
+
+------------------------------------------------------------------------
+
 ## 2026-07-10 — bed_basic construction stack (v0.5 / plugin 0.6.8)
 
 **Context:** Footboard and headboard were placed from floor level while side rails sat

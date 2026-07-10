@@ -274,14 +274,23 @@ Validation before save: `[PLANNED]`
 
 ## 5.5 `create_clearance` `[IMPLEMENTED]`
 
-Same fields as `create_box`, except:
+DD-007 clearance zone. Same wire defaults as before; adds semantic metadata.
 
-| Aspect | Value |
-|---|---|
-| `role` | Always `"clearance"` (ignores input) |
-| Default `color` | `[0.2, 0.8, 1.0, 0.22]` |
-| Default `display_type` | `"WIRE"` |
-| Default `dimensions[2]` | `0.1` |
+| Field | Required | Default | Description |
+|---|---|---|---|
+| `name` | yes | — | Blender object name |
+| `dimensions` | no | `[1, 1, 0.1]` | Box size |
+| `location` | no | `[0, 0, 0]` | World location (standalone) |
+| `clearance_name` | no | `name` | Semantic zone id per furniture instance |
+| `purpose` | no | `""` | Intent category |
+| `requirement` | no | `"preferred"` | `required` \| `preferred` |
+| `priority` | no | `0` | Zone priority |
+| `params` | no | — | Extra params (JSON object) |
+| `color` | no | `[0.2, 0.8, 1.0, 0.22]` | RGBA |
+| `collection` | no | `"layout_tests"` | — |
+| `display_type` | no | `"WIRE"` | — |
+
+Sets `layoutlab_clearance_*` custom properties. See `docs/generator_api.md` §4.3.
 
 ------------------------------------------------------------------------
 

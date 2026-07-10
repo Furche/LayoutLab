@@ -2,7 +2,7 @@
 GENERATOR_NAME = "wardrobe_basic"
 GENERATOR_CATEGORY = "Storage"
 GENERATOR_DESCRIPTION = "Parametric wardrobe with carcass, doors, shelves, handles, and optional front clearance."
-GENERATOR_VERSION = "0.4.2"
+GENERATOR_VERSION = "0.5.0"
 GENERATOR_ICON = "OUTLINER_COLLECTION"
 
 MIN_WIDTH = 3.0
@@ -94,6 +94,7 @@ def generate(params, api):
     clearance_color = params.get("clearance_color", [0.2, 0.8, 1.0, 0.18])
 
     cb = api["create_box"]
+    cc = api["create_clearance"]
     cl = api["create_label"]
     bp = api["begin_part"]
     ep = api["end_part"]
@@ -161,15 +162,18 @@ def generate(params, api):
         ep()
 
     if show_clearance and clearance_depth > 0:
-        bp("clearance", role="clearance")
-        cb(
-            f"{name}__clearance",
-            [x, y - door_thickness - clearance_depth, z],
+        bp("clearance_front_access", role="clearance")
+        cc(
+            f"{name}__clearance_front_access",
             [width, clearance_depth, height],
-            clearance_color,
-            collection,
-            "clearance",
-            "WIRE",
+            local_location=[0, -door_thickness - clearance_depth, 0],
+            clearance_name="front_access",
+            purpose="door_access",
+            requirement="preferred",
+            priority=0,
+            params={"depth": clearance_depth},
+            color=clearance_color,
+            collection=collection,
         )
         ep()
 

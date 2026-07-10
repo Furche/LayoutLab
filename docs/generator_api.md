@@ -176,10 +176,45 @@ Creates a text curve object (FONT).
 
 ---
 
-## 4.3 `create_clearance` `[PLANNED]`
+## 4.3 `create_clearance` `[IMPLEMENTED]`
 
-Wrapper planned for clearance boxes (wireframe, `role="clearance"`).  
-Until then, use `create_box(..., role="clearance", display_type="WIRE")` or JSON `create_clearance`.
+See [DD-007](../design_decisions/DD-007-clearance-zones.md).
+
+```python
+obj = api["create_clearance"](
+    name,
+    dimensions,
+    local_location=[0, -6, 0],
+    clearance_name="front_access",
+    purpose="door_access",
+    requirement="preferred",
+    priority=0,
+    params={"depth": 6.0},
+    color=(0.2, 0.8, 1.0, 0.22),
+    collection="layout_tests",
+)
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `name` | str | — | Build mesh name |
+| `dimensions` | `[dx, dy, dz]` | — | Box size |
+| `local_location` | `[x, y, z]` | — | **Preferred:** Main Part local space |
+| `location` | `[x, y, z]` | — | World space (standalone JSON / fallback) |
+| `clearance_name` | str | **required** | Semantic id unique per furniture instance |
+| `purpose` | str | `""` | Intent category |
+| `requirement` | str | `"preferred"` | `required` \| `preferred` |
+| `priority` | int | `0` | Higher = more important |
+| `params` | dict | `None` | Generator-specific params (stored as JSON) |
+| `color` | RGBA | blue transparent | Wire material |
+| `collection` | str | `"layout_tests"` | Target collection |
+| `display_type` | str | `"WIRE"` | Blender display mode |
+
+**Returns:** `bpy.types.Object`
+
+**Side effects:** Sets `layoutlab_clearance_id`, `layoutlab_clearance_name`, `layoutlab_clearance_requirement`, `layoutlab_clearance_params` (includes `local_transform`), `layoutlab_role = "clearance"`, `show_in_front = True`.
+
+JSON command `create_clearance` uses the same implementation.
 
 ------------------------------------------------------------------------
 

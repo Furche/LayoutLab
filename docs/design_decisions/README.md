@@ -16,6 +16,8 @@ New decisions use the next sequential number: `DD-006`, `DD-007`, …
 | [DD-004](DD-004-asset-browser-ui.md) | UI oriented on Asset Browser | Accepted | 2026-07-09 |
 | [DD-005](DD-005-generator-metadata.md) | Generators carry metadata constants | Accepted | 2026-07-09 |
 | [DD-006](DD-006-parts-and-finalization.md) | Parts model, join-on-finalize, main/dynamic parts | Accepted | 2026-07-10 |
+| [DD-007](DD-007-clearance-zones.md) | Clearance zones (descriptive usage volumes) | Accepted | 2026-07-10 |
+| [DD-008](DD-008-constraints-and-layout-analysis.md) | Constraints and layout analysis | Placeholder | — |
 
 When implementing anything that touches APIs, JSON protocol, generator behaviour,
 or UI patterns — check this index first.

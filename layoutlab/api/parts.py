@@ -119,7 +119,7 @@ class PartSession:
                     world=target_world,
                     relative=rel,
                 )
-            elif part.role == "clearance":
+            if obj.get("layoutlab_clearance_name") or part.role == "clearance":
                 obj.display_type = "WIRE"
                 obj.show_in_front = True
 

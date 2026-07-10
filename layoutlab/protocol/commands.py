@@ -4,6 +4,7 @@ import traceback
 
 import bpy
 
+from ..api.clearance import create_clearance
 from ..api.collections import delete_collection_objects, delete_prefix, delete_by_object_id, find_objects_by_object_id
 from ..api.geometry import create_box
 from ..engine.executor import execute_generator
@@ -97,9 +98,21 @@ def apply_single_command(context, cmd):
                           color=cmd.get("color", [0.8,0.8,0.8,1]), collection=cmd.get("collection", "layout_tests"),
                           role=cmd.get("role"), display_type=cmd.get("display_type"))
     if action == "create_clearance":
-        return create_box(cmd["name"], cmd.get("location", [0,0,0]), cmd.get("dimensions", [1,1,0.1]),
-                          color=cmd.get("color", [0.2,0.8,1.0,0.22]), collection=cmd.get("collection", "layout_tests"),
-                          role="clearance", display_type=cmd.get("display_type", "WIRE"))
+        dims = cmd.get("dimensions", [1, 1, 0.1])
+        loc = cmd.get("location", [0, 0, 0])
+        return create_clearance(
+            cmd["name"],
+            dims,
+            location=loc,
+            clearance_name=cmd.get("clearance_name", cmd.get("name", "zone")),
+            purpose=cmd.get("purpose", ""),
+            requirement=cmd.get("requirement", "preferred"),
+            priority=cmd.get("priority", 0),
+            params=cmd.get("params"),
+            color=tuple(cmd.get("color", [0.2, 0.8, 1.0, 0.22])),
+            collection=cmd.get("collection", "layout_tests"),
+            display_type=cmd.get("display_type", "WIRE"),
+        )
     if action == "delete_collection_objects":
         return delete_collection_objects(cmd["collection"])
     if action == "delete_prefix":

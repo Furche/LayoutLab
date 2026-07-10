@@ -86,7 +86,7 @@ The `body` mesh internally joined: 4 posts + 4 side rails + footboard + headboar
 WARDROBE_80_body       main
   ├─ WARDROBE_80_door_1   dynamic
   ├─ WARDROBE_80_door_2   dynamic
-  ├─ WARDROBE_80_clearance static
+  ├─ WARDROBE_80_clearance_front_access static
   └─ WARDROBE_80_label    static
 ```
 
@@ -169,13 +169,25 @@ api["finish"]()
 
 ------------------------------------------------------------------------
 
-# 7. Clearance Parts `[IMPLEMENTED]`
+# 7. Clearance Parts `[IMPLEMENTED]` → semantic model `[DD-007]`
 
-Clearance may be its own Part (e.g. `clearance` on `wardrobe_basic`):
+Clearance is a **static Part** parented to the Main Part (e.g. `wardrobe_basic`).
+
+Current (pre-0.7 implementation):
 
 - `layoutlab_role = "clearance"`
-- Often wireframe display
-- Parented to Main Part like other static Parts
+- Wireframe display, parented like mattress/label
+
+**Target (DD-007, v0.7):** Each zone carries:
+
+| Field | Rule |
+|---|---|
+| `layoutlab_clearance_id` | Globally unique |
+| `layoutlab_clearance_name` | Unique per `layoutlab_object_id` (e.g. `front_access`) |
+| `layoutlab_clearance_requirement` | `required` \| `preferred` |
+| Export | `local_bounds` (Main Part space) + computed `world_bounds` |
+
+See [DD-007-clearance-zones.md](design_decisions/DD-007-clearance-zones.md). Constraints and analysis → DD-008.
 
 ------------------------------------------------------------------------
 
@@ -197,7 +209,7 @@ Legacy scenes without Parts: still deletable via prefix; `regenerate` rebuilds w
 | Generator | Main Part | Dynamic Parts | Static Parts |
 |---|---|---|---|
 | `bed_basic` | `body` | — | `mattress`, `pillow_*`, `label` |
-| `wardrobe_basic` | `body` | `door_*` | `clearance`, `label` |
+| `wardrobe_basic` | `body` | `door_*` | `clearance_front_access`, `label` |
 
 Details: `layoutlab/generators/bed_basic.md`, `wardrobe_basic.md`
 

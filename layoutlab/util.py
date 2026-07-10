@@ -21,6 +21,41 @@ def relative_translation_from_locations(child_loc, parent_loc):
     )
 
 
+CLEARANCE_REQUIREMENTS = frozenset({"required", "preferred"})
+
+
+def validate_clearance_requirement(requirement):
+    req = (requirement or "preferred").strip().lower()
+    if req not in CLEARANCE_REQUIREMENTS:
+        raise ValueError(
+            f"clearance requirement must be one of {sorted(CLEARANCE_REQUIREMENTS)}, got {requirement!r}"
+        )
+    return req
+
+
+def resolve_clearance_locations(local_location=None, world_location=None, main_location=None):
+    """Return (world_location, local_location) for axis-aligned clearance boxes."""
+    main = main_location
+
+    if local_location is not None:
+        local = tuple(float(v) for v in local_location)
+        if main is not None:
+            world = (main[0] + local[0], main[1] + local[1], main[2] + local[2])
+        else:
+            world = local
+        return world, local
+
+    if world_location is not None:
+        world = tuple(float(v) for v in world_location)
+        if main is not None:
+            local = (world[0] - main[0], world[1] - main[1], world[2] - main[2])
+        else:
+            local = world
+        return world, local
+
+    raise ValueError("create_clearance requires location or local_location")
+
+
 def sanitize_generator_name(name):
     name = (name or "").strip()
     name = re.sub(r"\.py$", "", name)
