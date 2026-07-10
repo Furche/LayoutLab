@@ -417,13 +417,39 @@ Rebuild a logical object from stored generator metadata, optionally overriding p
 
 ------------------------------------------------------------------------
 
-## 5.13 Planned Commands
+## 5.13 `analyze_layout` `[PROPOSED]` (DD-008)
+
+Constraint analysis — **reads** exported clearances, **does not** modify scene.
+
+See [DD-008](../design_decisions/DD-008-constraints-and-layout-analysis.md).
+
+```json
+{
+  "action": "analyze_layout",
+  "scope": "scene",
+  "collection": "layout_tests"
+}
+```
+
+| Field | Default | Description |
+|---|---|---|
+| `scope` | `"scene"` | `"scene"` \| `"collection"` \| `"selection"` |
+| `collection` | — | Required when `scope` is `"collection"` |
+
+**Return (v1):** `{ "analyzed", "summary": { "errors", "warnings", "info" }, "findings": [...] }`
+
+Each finding references `clearance_ref` + `overlaps[]`. Severity derives from clearance `requirement` (`required` → error, `preferred` → warning).
+
+**Not implemented until DD-008 is accepted.**
+
+------------------------------------------------------------------------
+
+## 5.14 Other Planned Commands
 
 | Action | Purpose |
 |---|---|
 | `run_generator_batch` | Shared undo group |
 | `set_parameter` | Param change + regenerate (alias) |
-| `analyze_layout` | Constraint/clearance analysis |
 | `compare_variants` | Layout diff |
 | `create_collection` | Collection management |
 | `group_objects` | Semantic object identity |

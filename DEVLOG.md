@@ -4,6 +4,17 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-10 — DD-008 proposed (Constraints & analyze_layout)
+
+**Scope:** Separate from DD-007. v1 constraint type `zone_must_be_clear` (AABB overlap).
+`required` → error, `preferred` → warning. JSON command `analyze_layout` returns
+`findings` + `summary` — never writes to export.
+
+**Gate:** Review open questions → accept → implement layout_analysis.py → diagnostics
+→ bed clearances last.
+
+------------------------------------------------------------------------
+
 ## 2026-07-10 — Clearance API v0.7 (DD-007 implementation)
 
 **Shipped:** `layoutlab/api/clearance.py` with `create_clearance()`, JSON command

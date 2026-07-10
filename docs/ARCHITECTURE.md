@@ -476,7 +476,7 @@ Split into two design decisions (do not merge):
 | Sub-phase | DD | Focus | Status |
 |---|---|---|---|
 | E.1 | [DD-007](design_decisions/DD-007-clearance-zones.md) | Clearance zones — descriptive usage volumes | **Accepted** |
-| E.2 | [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | Placeholder |
+| E.2 | [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | **Proposed** |
 
 Implementation order after DD-007 acceptance: API → wardrobe refactor → export → diagnostics → DD-008 → analyze_layout → bed clearances.
 

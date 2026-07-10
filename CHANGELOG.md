@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **DD-008 proposed:** Constraint engine + `analyze_layout` — reads DD-007 clearances, emits findings (errors/warnings)
+
 ------------------------------------------------------------------------
 
 ## [0.7.1] — 2026-07-10
