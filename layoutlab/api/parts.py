@@ -5,6 +5,7 @@ import bpy
 from .collections import get_or_create_collection
 from .metadata import apply_layoutlab_metadata, get_active_context
 from .transforms import parent_preserve_world_transform
+from ..util import relative_translation_from_world_matrices
 
 _active_session = None
 
@@ -78,14 +79,19 @@ class PartSession:
         if self.current and self.current.objects:
             self.end_part()
 
+        main_part = None
         main_obj = None
         for part in self.parts:
             if part.main:
+                main_part = part
                 main_obj = part.object
                 break
 
         if main_obj is None and self.parts:
-            main_obj = self.parts[0].object
+            main_part = self.parts[0]
+            main_obj = main_part.object
+
+        main_world = main_part.world_at_finalize if main_part else None
 
         for part in self.parts:
             obj = part.object
@@ -106,8 +112,14 @@ class PartSession:
                 if part.role:
                     obj["layoutlab_role"] = part.role
 
-            if main_obj and obj != main_obj:
-                parent_preserve_world_transform(obj, main_obj, world=part.world_at_finalize)
+            if main_obj and obj != main_obj and main_world is not None:
+                rel = relative_translation_from_world_matrices(part.world_at_finalize, main_world)
+                parent_preserve_world_transform(
+                    obj,
+                    main_obj,
+                    world=part.world_at_finalize,
+                    relative=rel,
+                )
             elif part.role == "clearance":
                 obj.display_type = "WIRE"
                 obj.show_in_front = True

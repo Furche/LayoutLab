@@ -2,7 +2,7 @@
 GENERATOR_NAME = "bed_basic"
 GENERATOR_CATEGORY = "Beds"
 GENERATOR_DESCRIPTION = "Parametric low bed with legs, frame, mattress, headboard and fallback sizing."
-GENERATOR_VERSION = "0.4"
+GENERATOR_VERSION = "0.4.1"
 GENERATOR_ICON = "BED"
 
 # Fallback thresholds (Blender units; 1 unit ≈ 10 cm in reference room)

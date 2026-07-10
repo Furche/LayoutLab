@@ -10,6 +10,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ------------------------------------------------------------------------
 
+## [0.6.5] — 2026-07-10
+
+### Fixed
+
+- Part parenting uses frozen `world_at_finalize` matrices for relative offsets (not live `matrix_world` during `exec()`) — fixes mattress/pillows/clearance at non-zero Quick Test locations
+- Wardrobe clearance wire box uses full wardrobe height again (was 1.0)
+
+### Changed
+
+- Quick Test default location `(0, 0, 0)` instead of `(68.3, 197.7, 0)`
+- `bed_basic` v0.4.1, `wardrobe_basic` v0.4.2
+- Plugin version **0.6.5**
+
+------------------------------------------------------------------------
+
 ## [0.6.4] — 2026-07-10
 
 ### Fixed

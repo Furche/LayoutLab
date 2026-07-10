@@ -5,6 +5,13 @@ import re
 from pathlib import Path
 
 
+def relative_translation_from_world_matrices(child_world, parent_world):
+    """World-space offset from *parent_world* origin to *child_world* origin."""
+    ct = child_world.translation
+    pt = parent_world.translation
+    return (float(ct.x - pt.x), float(ct.y - pt.y), float(ct.z - pt.z))
+
+
 def sanitize_generator_name(name):
     name = (name or "").strip()
     name = re.sub(r"\.py$", "", name)

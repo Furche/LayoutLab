@@ -1,5 +1,7 @@
 import bpy
 
+from ..util import relative_translation_from_world_matrices
+
 
 def _world_matrix_delta(a, b, tolerance=1e-3):
     return matrix_max_abs_delta(a, b) <= tolerance
@@ -9,18 +11,16 @@ def _parent_has_identity_rotation(parent, tolerance=1e-5):
     return all(abs(float(r)) <= tolerance for r in parent.rotation_euler)
 
 
-def parent_preserve_world_transform(child, parent, world=None):
+def parent_preserve_world_transform(child, parent, world=None, relative=None):
     """Parent *child* to *parent* without changing its world matrix.
 
-    LayoutLab generators are axis-aligned (no rotation). For that common case we
-    set ``child.location`` to the world-space offset — more reliable inside
-    ``exec()`` than assigning ``matrix_world`` / ``matrix_local`` after parenting.
+    When *relative* is provided (from frozen end_part matrices), use a plain
+    translation offset — most reliable inside ``exec()`` for axis-aligned furniture.
     """
     if child is None or parent is None or child == parent:
         return child
 
     target_world = (world or child.matrix_world).copy()
-    target_loc = target_world.translation.copy()
     view_layer = bpy.context.view_layer
 
     if child.parent:
@@ -31,9 +31,12 @@ def parent_preserve_world_transform(child, parent, world=None):
     child.parent = parent
     child.parent_type = "OBJECT"
 
-    if _parent_has_identity_rotation(parent):
-        parent_loc = parent.matrix_world.translation
-        offset = target_loc - parent_loc
+    if relative is not None and _parent_has_identity_rotation(parent):
+        child.location = relative
+        child.rotation_euler = (0.0, 0.0, 0.0)
+        child.scale = (1.0, 1.0, 1.0)
+    elif _parent_has_identity_rotation(parent):
+        offset = target_world.translation - parent.matrix_world.translation
         child.location = (float(offset.x), float(offset.y), float(offset.z))
         child.rotation_euler = (0.0, 0.0, 0.0)
         child.scale = (1.0, 1.0, 1.0)
