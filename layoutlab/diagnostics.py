@@ -345,7 +345,12 @@ def run_console_checks(context):
         return min(ys), max(ys)
 
     def check_part_bed_world_layout(check):
-        from ..api.transforms import parenting_local_matches_world, relative_translation_tuple, translations_close
+        from ..api.transforms import (
+            child_local_looks_like_world_coords,
+            parenting_local_matches_world,
+            relative_translation_tuple,
+            translations_close,
+        )
 
         prefix = f"{DIAG_PREFIX}BED_XFORM"
         rels = []
@@ -373,22 +378,19 @@ def run_console_checks(context):
             if not parenting_local_matches_world(mattress, body):
                 check.fail(f"parent matrix inconsistent at {loc}")
                 return
+            if child_local_looks_like_world_coords(mattress):
+                check.fail(f"mattress local looks like world at {loc}: {tuple(mattress.location)}")
+                return
             rel = relative_translation_tuple(mattress, body)
-        if abs(rel[0]) > 5 or abs(rel[1]) > 5 or rel[2] < 0 or rel[2] > 15:
-            check.fail(f"mattress too far from body at {loc}: rel={rel}")
-            return
-        if child_local_looks_like_world_coords(mattress):
-            check.fail(f"mattress local looks like world at {loc}: {tuple(mattress.location)}")
-            return
-        rels.append(rel)
-        if not translations_close(rels[0], rels[1], REL_TOL):
-            check.fail(f"relative layout differs: origin={rels[0]} offset={rels[1]}")
-            return
-        from ..api.transforms import child_local_looks_like_world_coords
+            if abs(rel[0]) > 5 or abs(rel[1]) > 5 or rel[2] < 0 or rel[2] > 15:
+                check.fail(f"mattress too far from body at {loc}: rel={rel}")
+                return
+            rels.append(rel)
 
-        if child_local_looks_like_world_coords(mattress):
-            check.fail(f"mattress local at offset looks like world: {tuple(mattress.location)}")
+        if len(rels) != 2 or not translations_close(rels[0], rels[1], REL_TOL):
+            check.fail(f"relative layout differs: origin={rels[0] if rels else None} offset={rels[1] if len(rels) > 1 else None}")
             return
+
         loc = [68.3, 197.7, 0.0]
         delete_prefix(f"{DIAG_PREFIX}BED_XFORM_ABS")
         execute_generator(
