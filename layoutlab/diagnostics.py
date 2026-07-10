@@ -186,6 +186,14 @@ def run_console_checks(context):
         if not parenting_local_matches_world(mattress, body):
             check.fail("mattress parenting matrix inconsistent (world/local mismatch)")
             return
+        from ..api.transforms import child_local_looks_like_world_coords
+
+        if child_local_looks_like_world_coords(mattress):
+            check.fail(
+                f"mattress local coords look like world coords: {tuple(mattress.location)}",
+                f"body_world={tuple(body.matrix_world.translation)}",
+            )
+            return
         if result.get("object_id") != mattress.get("layoutlab_object_id"):
             check.fail("execute_generator object_id mismatch")
             return
@@ -366,12 +374,20 @@ def run_console_checks(context):
                 check.fail(f"parent matrix inconsistent at {loc}")
                 return
             rel = relative_translation_tuple(mattress, body)
-            if abs(rel[0]) > 5 or abs(rel[1]) > 5 or rel[2] < 0 or rel[2] > 15:
-                check.fail(f"mattress too far from body at {loc}: rel={rel}")
-                return
-            rels.append(rel)
+        if abs(rel[0]) > 5 or abs(rel[1]) > 5 or rel[2] < 0 or rel[2] > 15:
+            check.fail(f"mattress too far from body at {loc}: rel={rel}")
+            return
+        if child_local_looks_like_world_coords(mattress):
+            check.fail(f"mattress local looks like world at {loc}: {tuple(mattress.location)}")
+            return
+        rels.append(rel)
         if not translations_close(rels[0], rels[1], REL_TOL):
             check.fail(f"relative layout differs: origin={rels[0]} offset={rels[1]}")
+            return
+        from ..api.transforms import child_local_looks_like_world_coords
+
+        if child_local_looks_like_world_coords(mattress):
+            check.fail(f"mattress local at offset looks like world: {tuple(mattress.location)}")
             return
         loc = [68.3, 197.7, 0.0]
         delete_prefix(f"{DIAG_PREFIX}BED_XFORM_ABS")
@@ -388,8 +404,8 @@ def run_console_checks(context):
         )
         body = bpy.data.objects.get(f"{DIAG_PREFIX}BED_XFORM_ABS_body")
         mattress = bpy.data.objects.get(f"{DIAG_PREFIX}BED_XFORM_ABS_mattress")
-        inset = min(0.45, 20 * 0.2, 12 * 0.2)
-        expected = (loc[0] + inset, loc[1] + inset, loc[2] + 2.5 + 1.0 * 0.55)
+        rail = min(0.35, 20 * 0.2, 12 * 0.2)
+        expected = (loc[0] + rail, loc[1] + rail, loc[2] + 2.5 + 1.0 * 0.55)
         actual = mattress.matrix_world.translation
         actual_t = (float(actual.x), float(actual.y), float(actual.z))
         if not translations_close(actual_t, expected, tolerance=0.08):

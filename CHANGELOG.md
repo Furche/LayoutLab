@@ -10,6 +10,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ------------------------------------------------------------------------
 
+## [0.6.4] — 2026-07-10
+
+### Fixed
+
+- Part parenting uses translation offset (`child.location = world − parent`) for axis-aligned furniture — fixes mattress/pillow appearing at world coords as local coords
+- Wardrobe clearance: visual height 1.0 (was 0.1), `show_in_front` for wireframe visibility
+- Bed mattress aligned to frame inner edge (`rail` inset, not separate `inset` param)
+
+### Changed
+
+- `bed_basic` / `wardrobe_basic` v0.4
+- Diagnostics detect `child.location` looking like world coordinates
+- Plugin version **0.6.4**
+
+------------------------------------------------------------------------
+
 ## [0.6.3] — 2026-07-10
 
 ### Fixed
@@ -113,7 +129,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - Design decisions DD-001 through DD-005
 - `AI_CONTEXT.md`, `README.md`
 
-[Unreleased]: https://github.com/Furche/LayoutLab/compare/v0.6.3...HEAD
+[Unreleased]: https://github.com/Furche/LayoutLab/compare/v0.6.4...HEAD
+[0.6.4]: https://github.com/Furche/LayoutLab/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/Furche/LayoutLab/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/Furche/LayoutLab/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/Furche/LayoutLab/compare/v0.6.0...v0.6.1

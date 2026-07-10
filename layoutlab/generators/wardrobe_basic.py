@@ -2,7 +2,7 @@
 GENERATOR_NAME = "wardrobe_basic"
 GENERATOR_CATEGORY = "Storage"
 GENERATOR_DESCRIPTION = "Parametric wardrobe with carcass, doors, shelves, handles, and optional front clearance."
-GENERATOR_VERSION = "0.3"
+GENERATOR_VERSION = "0.4"
 GENERATOR_ICON = "OUTLINER_COLLECTION"
 
 MIN_WIDTH = 3.0
@@ -23,7 +23,7 @@ HANDLE_HEIGHT_DEFAULT = 1.6
 CLEARANCE_DEPTH_DEFAULT = 6.0
 
 DOUBLE_DOOR_THRESHOLD = 6.0
-TRIPLE_DOOR_THRESHOLD = 12.0
+CLEARANCE_VISUAL_HEIGHT = 1.0
 
 
 def _clamp(value, minimum, fallback):
@@ -165,7 +165,7 @@ def generate(params, api):
         cb(
             f"{name}__clearance",
             [x, y - door_thickness - clearance_depth, z],
-            [width, clearance_depth, 0.1],
+            [width, clearance_depth, CLEARANCE_VISUAL_HEIGHT],
             clearance_color,
             collection,
             "clearance",

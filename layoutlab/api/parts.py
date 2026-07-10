@@ -108,6 +108,9 @@ class PartSession:
 
             if main_obj and obj != main_obj:
                 parent_preserve_world_transform(obj, main_obj, world=part.world_at_finalize)
+            elif part.role == "clearance":
+                obj.display_type = "WIRE"
+                obj.show_in_front = True
 
         view_layer = bpy.context.view_layer
         if view_layer:
@@ -132,6 +135,8 @@ def finalize_part_objects(objects, result_name, collection):
 
     if len(meshes) == 1 and not others:
         meshes[0].name = result_name
+        if meshes[0].display_type == "WIRE":
+            meshes[0].show_in_front = True
         return meshes[0]
 
     if not meshes:

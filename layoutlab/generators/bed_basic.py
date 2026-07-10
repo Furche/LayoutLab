@@ -2,7 +2,7 @@
 GENERATOR_NAME = "bed_basic"
 GENERATOR_CATEGORY = "Beds"
 GENERATOR_DESCRIPTION = "Parametric low bed with legs, frame, mattress, headboard and fallback sizing."
-GENERATOR_VERSION = "0.3"
+GENERATOR_VERSION = "0.4"
 GENERATOR_ICON = "BED"
 
 # Fallback thresholds (Blender units; 1 unit ≈ 10 cm in reference room)
@@ -38,10 +38,10 @@ def generate(params, api):
     ep = api["end_part"]
 
     frame_z = z + leg_height
-    mattress_x = x + inset
-    mattress_y = y + inset
-    mattress_l = max(length - 2 * inset, 1)
-    mattress_w = max(width - 2 * inset, 1)
+    mattress_x = x + rail
+    mattress_y = y + rail
+    mattress_l = max(length - 2 * rail, 1)
+    mattress_w = max(width - 2 * rail, 1)
     mattress_z = frame_z + frame_height * MATTRESS_Z_INSET_FACTOR
 
     bp("body", main=True, role="bed_frame")
