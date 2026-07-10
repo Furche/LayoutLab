@@ -9,6 +9,8 @@ REPORT_BEGIN = "=== LAYOUTLAB DIAGNOSTIC REPORT BEGIN ==="
 REPORT_END = "=== LAYOUTLAB DIAGNOSTIC REPORT END ==="
 DIAG_COLLECTION = "layoutlab_diagnostics"
 DIAG_PREFIX = "LAYOUTLAB_DIAG_"
+TRANSFORM_TOL = 0.08
+REL_TOL = 0.05
 
 
 class _Check:
@@ -179,6 +181,11 @@ def run_console_checks(context):
         if mattress.parent != body:
             check.fail(f"mattress not parented to body (parent={getattr(mattress.parent, 'name', None)})")
             return
+        from ..api.transforms import parenting_local_matches_world
+
+        if not parenting_local_matches_world(mattress, body):
+            check.fail("mattress parenting matrix inconsistent (world/local mismatch)")
+            return
         if result.get("object_id") != mattress.get("layoutlab_object_id"):
             check.fail("execute_generator object_id mismatch")
             return
@@ -322,6 +329,171 @@ def run_console_checks(context):
             f"export_part_type: {layoutlab.get('part_type')}",
         )
 
+    def _world_bbox_y_extents(obj):
+        from mathutils import Vector
+
+        corners = [obj.matrix_world @ Vector(c) for c in obj.bound_box]
+        ys = [c.y for c in corners]
+        return min(ys), max(ys)
+
+    def check_part_bed_world_layout(check):
+        from ..api.transforms import parenting_local_matches_world, relative_translation_tuple, translations_close
+
+        prefix = f"{DIAG_PREFIX}BED_XFORM"
+        rels = []
+        for loc in ([0.0, 0.0, 0.0], [68.3, 197.7, 0.0]):
+            delete_prefix(prefix)
+            execute_generator(
+                "bed_basic",
+                {
+                    "name": prefix,
+                    "location": loc,
+                    "length": 12,
+                    "width": 20,
+                    "head_side": "y_max",
+                    "collection": DIAG_COLLECTION,
+                },
+            )
+            body = bpy.data.objects.get(f"{prefix}_body")
+            mattress = bpy.data.objects.get(f"{prefix}_mattress")
+            if not body or not mattress:
+                check.fail(f"parts missing at location {loc}")
+                return
+            if mattress.parent != body:
+                check.fail(f"mattress not parented at {loc}")
+                return
+            if not parenting_local_matches_world(mattress, body):
+                check.fail(f"parent matrix inconsistent at {loc}")
+                return
+            rel = relative_translation_tuple(mattress, body)
+            if abs(rel[0]) > 5 or abs(rel[1]) > 5 or rel[2] < 0 or rel[2] > 15:
+                check.fail(f"mattress too far from body at {loc}: rel={rel}")
+                return
+            rels.append(rel)
+        if not translations_close(rels[0], rels[1], REL_TOL):
+            check.fail(f"relative layout differs: origin={rels[0]} offset={rels[1]}")
+            return
+        check.ok(
+            f"relative_at_origin: {rels[0]}",
+            f"relative_at_offset: {rels[1]}",
+            "world_offset_independent: yes",
+        )
+
+    def check_part_follows_main_transform(check):
+        import math
+
+        from ..api.transforms import relative_translation_tuple, translations_close
+
+        prefix = f"{DIAG_PREFIX}BED_MOVE"
+        delete_prefix(prefix)
+        execute_generator(
+            "bed_basic",
+            {
+                "name": prefix,
+                "location": [100.0, 100.0, 0.0],
+                "length": 12,
+                "width": 20,
+                "head_side": "y_max",
+                "collection": DIAG_COLLECTION,
+            },
+        )
+        body = bpy.data.objects.get(f"{prefix}_body")
+        mattress = bpy.data.objects.get(f"{prefix}_mattress")
+        if not body or not mattress:
+            check.fail("bed parts missing for transform follow test")
+            return
+
+        mw0 = mattress.matrix_world.translation.copy()
+        delta = (5.0, -3.0, 0.0)
+        body.location = (
+            body.location.x + delta[0],
+            body.location.y + delta[1],
+            body.location.z + delta[2],
+        )
+        context.view_layer.update()
+        mw1 = mattress.matrix_world.translation.copy()
+        moved = (mw1.x - mw0.x, mw1.y - mw0.y, mw1.z - mw0.z)
+        if not translations_close(moved, delta, TRANSFORM_TOL):
+            check.fail(f"translate follow mismatch: delta={delta} moved={moved}")
+            return
+
+        dist_before = math.sqrt(sum(v * v for v in relative_translation_tuple(mattress, body)))
+        body.rotation_euler[2] = math.radians(25.0)
+        context.view_layer.update()
+        dist_after = math.sqrt(sum(v * v for v in relative_translation_tuple(mattress, body)))
+        if abs(dist_before - dist_after) > TRANSFORM_TOL:
+            check.fail(f"rotate follow mismatch: before={dist_before} after={dist_after}")
+            return
+        check.ok(
+            f"translate_delta: {delta}",
+            f"mattress_moved: {moved}",
+            f"rotate_distance_before: {round(dist_before, 4)}",
+            f"rotate_distance_after: {round(dist_after, 4)}",
+        )
+
+    def check_wardrobe_clearance_layout(check):
+        from ..api.transforms import translations_close
+
+        prefix = f"{DIAG_PREFIX}WARDROBE"
+        gaps = []
+        for loc in ([0.0, 0.0, 0.0], [50.0, 120.0, 0.0]):
+            delete_prefix(prefix)
+            execute_generator(
+                "wardrobe_basic",
+                {
+                    "name": prefix,
+                    "location": loc,
+                    "width": 8,
+                    "depth": 4,
+                    "height": 15,
+                    "show_clearance": True,
+                    "collection": DIAG_COLLECTION,
+                },
+            )
+            body = bpy.data.objects.get(f"{prefix}_body")
+            clearance = bpy.data.objects.get(f"{prefix}_clearance")
+            if not body or not clearance:
+                check.fail(f"wardrobe parts missing at {loc}")
+                return
+            if clearance.parent != body:
+                check.fail(f"clearance not parented at {loc}")
+                return
+            body_ymin, _ = _world_bbox_y_extents(body)
+            _, clearance_ymax = _world_bbox_y_extents(clearance)
+            gap = body_ymin - clearance_ymax
+            if gap < -0.5 or gap > 1.0:
+                check.fail(f"clearance front gap unexpected at {loc}: gap={gap}")
+                return
+            gaps.append(round(gap, 4))
+        if not translations_close((gaps[0], 0, 0), (gaps[1], 0, 0), REL_TOL):
+            check.fail(f"clearance gap differs by world location: {gaps}")
+            return
+        check.ok(
+            f"clearance_gap_origin: {gaps[0]}",
+            f"clearance_gap_offset: {gaps[1]}",
+            "front_side: y_min",
+        )
+
+    def check_regenerate_layout_policy(check):
+        from ..api.transforms import relative_translation_tuple
+
+        body = bpy.data.objects.get(f"{bed_name}_body")
+        mattress = bpy.data.objects.get(f"{bed_name}_mattress")
+        if not body or not mattress:
+            check.fail("bed parts missing after regenerate")
+            return
+        rel = relative_translation_tuple(mattress, body)
+        if abs(rel[0]) > 5 or abs(rel[1]) > 5:
+            check.fail(f"post-regenerate mattress offset too large: {rel}")
+            return
+        stored = json.loads(mattress.get("layoutlab_params", "{}"))
+        check.ok(
+            f"params_location: {stored.get('location')}",
+            f"mattress_rel_to_body: {tuple(round(v, 4) for v in rel)}",
+            "policy: regenerate uses params.location (not manual main-part move)",
+            "no_double_offset: yes",
+        )
+
     def check_cleanup(check):
         apply_commands_json(
             context,
@@ -340,8 +512,12 @@ def run_console_checks(context):
             _run_check("generator_metadata", check_generator_metadata),
             _run_check("parse_commands", check_parse_commands),
             _run_check("run_generator_direct", check_run_generator_direct),
+            _run_check("part_bed_world_layout", check_part_bed_world_layout),
+            _run_check("part_follows_main_transform", check_part_follows_main_transform),
+            _run_check("wardrobe_clearance_layout", check_wardrobe_clearance_layout),
             _run_check("apply_commands_json", check_apply_commands_json),
             _run_check("regenerate", check_regenerate),
+            _run_check("regenerate_layout_policy", check_regenerate_layout_policy),
             _run_check("scene_export", check_scene_export),
             _run_check("cleanup", check_cleanup),
         ]

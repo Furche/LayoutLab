@@ -25,6 +25,10 @@ GENERATOR_VERSION = "0.2"
 
 Dynamic door Parts are parented to `body` — move body, doors follow; doors stay separate for animation.
 
+**Front / clearance:** Wardrobe front is **`y_min`**. Optional `clearance` Part sits in
+**−Y** from the door plane (`y - door_thickness - clearance_depth`). Parenting uses
+the shared Part API — no manual matrix code in the generator.
+
 ## Coordinate Convention
 
 - `location` is the min corner of the wardrobe footprint at floor level.

@@ -4,6 +4,7 @@ import bpy
 
 from .collections import get_or_create_collection
 from .metadata import apply_layoutlab_metadata, get_active_context
+from .transforms import parent_preserve_world_transform
 
 _active_session = None
 
@@ -102,7 +103,11 @@ class PartSession:
                     obj["layoutlab_role"] = part.role
 
             if main_obj and obj != main_obj:
-                _parent_keep_transform(obj, main_obj)
+                parent_preserve_world_transform(obj, main_obj)
+
+        view_layer = bpy.context.view_layer
+        if view_layer:
+            view_layer.update()
 
         self.summary = {
             "parts": [p.part_id for p in self.parts],
@@ -111,12 +116,6 @@ class PartSession:
         }
         self.finished = True
         return self.summary
-
-
-def _parent_keep_transform(child, parent):
-    matrix_world = child.matrix_world.copy()
-    child.parent = parent
-    child.matrix_world = matrix_world
 
 
 def finalize_part_objects(objects, result_name, collection):
@@ -133,6 +132,8 @@ def finalize_part_objects(objects, result_name, collection):
 
     if not meshes:
         return None
+
+    meshes = sorted(meshes, key=lambda o: (o.location.x, o.location.y, o.location.z))
 
     view_layer = bpy.context.view_layer
     for obj in bpy.context.scene.objects:

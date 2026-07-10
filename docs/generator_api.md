@@ -95,6 +95,18 @@ The engine also calls `finish()` if the generator omits it.
 
 **Generators must not call `bpy.ops.object.join()`** — finalization is API-owned.
 
+### Parenting and coordinates `[IMPLEMENTED]` (v0.6.1)
+
+Generators place build meshes in **world coordinates** (absolute from `params.location`).
+At `finish()`, non-main Parts are parented to the Main Part via
+`parent_preserve_world_transform` in `layoutlab/api/transforms.py`:
+
+- World matrix is preserved (no visible jump).
+- `matrix_local = parent.matrix_world.inverted() @ child.matrix_world`
+- Generators must **not** set `child.parent` or matrix hacks themselves.
+
+See `docs/units_and_coordinates.md` §4.1 and DD-006.
+
 See `docs/design_decisions/DD-006-parts-and-finalization.md`.
 
 ------------------------------------------------------------------------
@@ -316,5 +328,6 @@ def generate(params, api):
 
 | Version | Date | Changes |
 |---|---|---|
+| 0.6.1 | 2026-07-10 | Parenting coordinate model documented |
 | 0.6.0 | 2026-07-10 | `begin_part`, `end_part`, `finish`; Part-based metadata |
 | 0.5.0 | 2026-07-10 | Initial API reference from v0.5 implementation |

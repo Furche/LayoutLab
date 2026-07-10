@@ -265,6 +265,18 @@ Export und KI nutzen Rollen zur Semantik. Liste in `{name}.md` pflegen.
 Schlecht: ein riesiger Box für das ganze Bett.  
 Gut: `body`-Part mit vielen Build-Meshes (Pfosten, Rahmen), `mattress`-Part, getrennte Dynamic Parts für Türen.
 
+## 8.6 Koordinaten und Parenting `[IMPLEMENTED]` (v0.6.1)
+
+| Regel | Detail |
+|---|---|
+| `params.location` | Weltposition des Main-Part-Footprints (Min-Ecke) |
+| Build-Geometrie | Absolute Weltkoordinaten in `create_box` / `create_label` |
+| Parenting | Nur die API — **kein** `obj.parent = …` in Generatoren |
+| Nach `finish()` | Child-Parts haben lokale Matrix relativ zu Main Part; Weltposition unverändert |
+| Regenerate | Nutzt gespeicherte `params.location`, nicht manuelle Main-Part-Verschiebung |
+
+Details: [units_and_coordinates.md](units_and_coordinates.md) §4.1
+
 ------------------------------------------------------------------------
 
 # 9. Fallbacks

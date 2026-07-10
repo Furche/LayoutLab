@@ -110,9 +110,35 @@ on export (`rotation_euler_deg`).
 
 ## 4.1 Location Semantics `[IMPLEMENTED]`
 
-`location: [x, y, z]` in JSON commands and generator params is the **minimum
-corner** (bottom-left-front) of the object's bounding footprint — the point
-where `create_box` places the box origin.
+`location: [x, y, z]` in JSON commands and generator params is the **world-space
+minimum corner** of the furniture footprint on the floor — the anchor of the
+**Main Part** after finalization.
+
+```
+params.location  →  Main Part object origin (world) after join
+                 →  all generator math uses absolute world coords from this point
+```
+
+Generators compute Part build meshes in **world coordinates** (each `create_box`
+location is absolute). The Part API parents non-main Parts to the Main Part and
+converts their transforms to **local space** without changing world position.
+
+See `layoutlab/api/transforms.py` — `parent_preserve_world_transform`.
+
+### Parts coordinate model (v0.6.1) `[IMPLEMENTED]`
+
+| Stage | Coordinate space |
+|---|---|
+| Generator `create_box` / `create_label` | World (absolute from `params.location`) |
+| After `end_part()` join | World (each Part is an independent object) |
+| After `finish()` parenting | Child Parts: local relative to Main Part; world unchanged |
+| User moves Main Part | Entire furniture follows (children inherit transform) |
+
+**Regenerate policy:** `regenerate` rebuilds from stored `params.location`. A
+manual move of the Main Part is **not** preserved unless `params.location` is
+updated. No double offset on regenerate — only a possible jump back to param location.
+
+## 4.2 Location Semantics — create_box `[IMPLEMENTED]`
 
 ```
 create_box(name, [x, y, z], [dx, dy, dz])
@@ -121,14 +147,14 @@ create_box(name, [x, y, z], [dx, dy, dz])
 
 Not the centre of the object. Not the room centre.
 
-## 4.2 Dimensions `[IMPLEMENTED]`
+## 4.3 Dimensions `[IMPLEMENTED]`
 
 `dimensions: [dx, dy, dz]` — size along X, Y, Z respectively.
 
 Always positive values. Rotation changes world orientation but export reports
 axis-aligned bounding box dimensions.
 
-## 4.3 Rotation `[IMPLEMENTED]`
+## 4.4 Rotation `[IMPLEMENTED]`
 
 - `rotate_z` command rotates around the object's origin (Z axis, degrees).
 - Full 3-axis rotation `[PLANNED]`.
@@ -276,6 +302,7 @@ Scene export includes:
 
 | Version | Date | Changes |
 |---|---|---|
+| 0.6.1 | 2026-07-10 | Parts parenting coordinate model; regenerate location policy |
 | 0.5.0 | 2026-07-09 | Initial document based on v0.5 prototype and reference room |
 
 ## References

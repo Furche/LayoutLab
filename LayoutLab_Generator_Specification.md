@@ -86,9 +86,27 @@ Nicht:
 -   size2
 -   foo
 
+**Regenerate policy:** `regenerate` uses stored `params.location`, not the current Main Part world transform. Manual moves are not preserved unless params are updated.
+
 ------------------------------------------------------------------------
 
-# 5. Komponenten
+# 5. Koordinaten und Parts `[IMPLEMENTED]` (v0.6.1)
+
+| Thema | Regel |
+|---|---|
+| `params.location` | Weltposition des Main-Part-Footprints (Min-Ecke am Boden) |
+| Generator-Geometrie | Absolute Weltkoordinaten — `create_box([x,y,z], …)` |
+| Parenting | API setzt `matrix_local`; Generatoren **kein** manuelles Parenting |
+| Main Part Origin | Nach Join: niedrigste Build-Mesh-Position (sortiert vor Join) |
+| Clearance | Eigenes Part, Frontseite `y_min`, child of Main Part |
+| Dynamic Parts | Geparentet wie static — „dynamic“ = animierbar, nicht unparented |
+| Regenerate | Nutzt `params.location` aus Metadaten |
+
+Details: `docs/units_and_coordinates.md` §4.1
+
+------------------------------------------------------------------------
+
+# 6. Komponenten
 
 Generatoren bauen Objekte aus Komponenten.
 
@@ -108,7 +126,7 @@ Komponenten sollen logisch getrennt erzeugt werden.
 
 ------------------------------------------------------------------------
 
-# 6. Parametrik
+# 7. Parametrik
 
 Die Geometrie wird niemals einfach skaliert.
 
@@ -132,7 +150,7 @@ scale X = 1.5
 
 ------------------------------------------------------------------------
 
-# 7. Fallbacks
+# 8. Fallbacks
 
 Generatoren müssen mit ungewöhnlichen Eingaben umgehen.
 
@@ -154,7 +172,7 @@ Keine Exception, wenn sich das Problem sinnvoll lösen lässt.
 
 ------------------------------------------------------------------------
 
-# 8. API-Regeln
+# 9. API-Regeln
 
 Generatoren kommunizieren ausschließlich über die LayoutLab-API.
 
@@ -182,7 +200,7 @@ Keine direkten bpy-Hacks, sofern die API eine passende Funktion bietet.
 
 ------------------------------------------------------------------------
 
-# 9. Komponentenbibliothek (Ziel)
+# 10. Komponentenbibliothek (Ziel)
 
 Langfristig sollen Generatoren auf wiederverwendbaren Bausteinen
 aufbauen.
@@ -213,7 +231,7 @@ So entstehen komplexe Möbel aus standardisierten Komponenten.
 
 ------------------------------------------------------------------------
 
-# 10. Vererbung (Vision)
+# 11. Vererbung (Vision)
 
 Später können Generatoren voneinander ableiten.
 
@@ -233,7 +251,7 @@ Gemeinsame Logik wird nur einmal implementiert.
 
 ------------------------------------------------------------------------
 
-# 11. Generator Browser
+# 12. Generator Browser
 
 Jeder Generator sollte liefern:
 
@@ -254,7 +272,7 @@ Später zusätzlich:
 
 ------------------------------------------------------------------------
 
-# 12. Dokumentation
+# 13. Dokumentation
 
 Jeder Generator sollte dokumentieren:
 
@@ -267,7 +285,7 @@ Damit kann sowohl Cursor als auch ChatGPT ihn korrekt verwenden.
 
 ------------------------------------------------------------------------
 
-# 13. Qualitätsrichtlinien
+# 14. Qualitätsrichtlinien
 
 Ein guter Generator ist:
 
@@ -286,7 +304,7 @@ Ein schlechter Generator:
 
 ------------------------------------------------------------------------
 
-# 14. Zukunft
+# 15. Zukunft
 
 Generatoren sollen irgendwann nicht nur Geometrie erzeugen.
 

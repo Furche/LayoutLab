@@ -8,9 +8,33 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+------------------------------------------------------------------------
+
+## [0.6.1] — 2026-07-10
+
+### Fixed
+
+- Child Part parenting double-translation when `params.location` far from origin — explicit `matrix_local` in `layoutlab/api/transforms.py`
+- Mattress, clearance, pillows, labels now stay at generator-intended world positions after `finish()`
+
 ### Added
 
-- **Parts architecture (v0.6):** `begin_part`, `end_part`, `finish` in generator API
+- Transform diagnostic checks (bed layout at origin vs offset, main-part move/rotate follow, wardrobe clearance adjacency, regenerate layout policy)
+- `tests/test_transforms.py` — translation comparison helper tests
+
+### Changed
+
+- Join sorts build meshes by location before `object.join()` for stable Main Part origin
+- Documentation: coordinate model in `units_and_coordinates.md`, DD-006 amendment, generator specs
+- Plugin version **0.6.1**; diagnostics now **13 checks**
+
+------------------------------------------------------------------------
+
+## [0.6.0] — 2026-07-10
+
+### Added
+
+- **Parts architecture:** `begin_part`, `end_part`, `finish` in generator API
 - `layoutlab/api/parts.py` — Part session, mesh join, parenting to Main Part
 - `layoutlab_part`, `layoutlab_part_type` metadata and export fields
 - `docs/design_decisions/DD-006-parts-and-finalization.md`
@@ -18,8 +42,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ### Changed
 
 - `bed_basic` and `wardrobe_basic` migrated to Parts API (`GENERATOR_VERSION` 0.2)
-- `docs/object_model.md`, `docs/generator_api.md`, `docs/how_to_write_generators.md` — Parts lifecycle
-- Diagnostics: expect Part objects + Main Part parenting (still 9 checks)
 - Plugin version **0.6.0**; export `layoutlab_version` from `bl_info`
 
 ### Removed
@@ -68,6 +90,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - Design decisions DD-001 through DD-005
 - `AI_CONTEXT.md`, `README.md`
 
-[Unreleased]: https://github.com/Furche/LayoutLab/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/Furche/LayoutLab/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/Furche/LayoutLab/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/Furche/LayoutLab/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/Furche/LayoutLab/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Furche/LayoutLab/releases/tag/v0.5.0

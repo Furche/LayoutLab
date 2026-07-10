@@ -140,7 +140,12 @@ Build-time mesh names use `{name}__{part}_{detail}` (double underscore) and are 
 | Join meshes into Part object | **no** | yes (`end_part` / `finish`) |
 | Parent Parts to Main Part | **no** | yes (`finish`) |
 | Write `layoutlab_*` metadata | **no** | yes (`finish`) |
+| Set `child.parent` / matrix hacks | **never** | yes (`parent_preserve_world_transform`) |
 | `bpy.ops.object.join()` | **never** | yes (internal) |
+
+**Coordinates:** Generators use absolute world positions from `params.location`.
+The API converts child Parts to local transforms at `finish()` without changing world
+position. See `layoutlab/api/transforms.py` and `docs/units_and_coordinates.md`.
 
 Generator pattern:
 
@@ -202,6 +207,7 @@ Details: `layoutlab/generators/bed_basic.md`, `wardrobe_basic.md`
 
 | Version | Date | Changes |
 |---|---|---|
+| 0.6.1 | 2026-07-10 | Fix child Part parenting transforms (no double translation) |
 | 0.6.0 | 2026-07-10 | Parts hierarchy; join-on-finalize; main/dynamic; parenting |
 | 0.5.1 | 2026-07-10 | Semantic metadata; regenerate; export `layoutlab` block |
 | 0.5.0 | 2026-07-10 | Initial object model doc |

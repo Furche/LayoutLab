@@ -113,6 +113,23 @@ All Parts share the same `layoutlab_object_id` for regenerate/delete.
 
 ------------------------------------------------------------------------
 
+## Amendment — Parenting transforms (v0.6.1)
+
+**Problem:** Child Parts appeared at wrong world positions when `params.location` was
+far from the origin (double translation after parenting).
+
+**Cause:** Setting `child.matrix_world` after `child.parent = parent` is unreliable;
+`matrix_local` must be assigned explicitly:
+`parent.matrix_world.inverted() @ child.matrix_world`.
+
+**Fix:** `layoutlab/api/transforms.py` — `parent_preserve_world_transform`, used in
+`PartSession.finish()`. Join meshes sorted by location before join for stable Main Part origin.
+
+**Generator contract:** Unchanged — absolute world coordinates from `params.location`.
+No per-generator matrix hacks.
+
+------------------------------------------------------------------------
+
 ## Related documents
 
 - `docs/object_model.md` — Furniture → Parts → Meshes

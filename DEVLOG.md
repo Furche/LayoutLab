@@ -4,6 +4,28 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-10 — Part parenting transform fix (v0.6.1)
+
+**Context:** After DD-006 Parts rollout, mattress and wardrobe clearance appeared far
+from the body when `params.location` was away from the world origin. Same bug on
+multiple generators → API issue, not generator placement formulas.
+
+**Cause:** `_parent_keep_transform` used `child.matrix_world = saved` after parenting.
+In Blender this leaves incorrect `matrix_local` in operator/exec contexts — world
+position effectively doubles the parent offset.
+
+**Fix:** `parent_preserve_world_transform` sets
+`matrix_local = parent.matrix_world.inverted() @ child.matrix_world` explicitly.
+Join meshes sorted by location for predictable Main Part origin.
+
+**Regenerate policy (documented):** Rebuild uses stored `params.location`, not current
+Main Part transform. No double offset; manual moves may be reset on regenerate.
+
+**Verification:** 4 new diagnostic checks (13 total) for layout at origin vs offset,
+follow on move/rotate, clearance adjacency.
+
+------------------------------------------------------------------------
+
 ## 2026-07-10 — DD-006: Parts, finalization, Main/Dynamic Parts
 
 **Context:** First generators (`bed_basic`, `wardrobe_basic`) created 10–20 Blender objects

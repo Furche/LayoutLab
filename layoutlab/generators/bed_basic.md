@@ -86,6 +86,10 @@ Build meshes use `{name}__{part}_{detail}` during generation (double underscore)
 
 Static Parts are parented to `body`. User moves `{name}_body` to move the whole bed.
 
+**Coordinates (v0.6.1):** All build meshes use **absolute world coordinates** from
+`params.location`. The Part API converts child Parts to local space at `finish()`
+without changing world position. See `docs/units_and_coordinates.md`.
+
 ### Roles on build meshes / Parts
 
 | Detail | `layoutlab_role` |
