@@ -2,7 +2,7 @@
 GENERATOR_NAME = "wardrobe_basic"
 GENERATOR_CATEGORY = "Storage"
 GENERATOR_DESCRIPTION = "Parametric wardrobe with carcass, doors, shelves, handles, and optional front clearance."
-GENERATOR_VERSION = "0.4"
+GENERATOR_VERSION = "0.4.1"
 GENERATOR_ICON = "OUTLINER_COLLECTION"
 
 MIN_WIDTH = 3.0
