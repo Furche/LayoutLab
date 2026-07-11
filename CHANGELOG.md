@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Diagnostics:** `from ..api` / `from ..protocol` in `diagnostics.py` → `from .api` / `from .protocol` (7 checks failed with relative import error)
+
 ### Added
 
 - **v0.8.0 — `analyze_layout` (DD-008):** `layoutlab/protocol/layout_analysis.py`, `zone_must_be_clear` AABB overlap, JSON command wired in `commands.py`
