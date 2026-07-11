@@ -181,12 +181,12 @@ def run_console_checks(context):
         if mattress.parent != body:
             check.fail(f"mattress not parented to body (parent={getattr(mattress.parent, 'name', None)})")
             return
-        from ..api.transforms import parenting_local_matches_world
+        from .api.transforms import parenting_local_matches_world
 
         if not parenting_local_matches_world(mattress, body):
             check.fail("mattress parenting matrix inconsistent (world/local mismatch)")
             return
-        from ..api.transforms import child_local_looks_like_world_coords
+        from .api.transforms import child_local_looks_like_world_coords
 
         if child_local_looks_like_world_coords(mattress):
             check.fail(
@@ -345,7 +345,7 @@ def run_console_checks(context):
         return min(ys), max(ys)
 
     def check_part_bed_world_layout(check):
-        from ..api.transforms import (
+        from .api.transforms import (
             child_local_looks_like_world_coords,
             parenting_local_matches_world,
             relative_translation_tuple,
@@ -427,7 +427,7 @@ def run_console_checks(context):
     def check_part_follows_main_transform(check):
         import math
 
-        from ..api.transforms import relative_translation_tuple, translations_close
+        from .api.transforms import relative_translation_tuple, translations_close
 
         prefix = f"{DIAG_PREFIX}BED_MOVE"
         delete_prefix(prefix)
@@ -477,7 +477,7 @@ def run_console_checks(context):
         )
 
     def check_wardrobe_clearance_layout(check):
-        from ..api.transforms import translations_close
+        from .api.transforms import translations_close
 
         prefix = f"{DIAG_PREFIX}WARDROBE"
         gaps = []
@@ -529,7 +529,7 @@ def run_console_checks(context):
         )
 
     def check_regenerate_layout_policy(check):
-        from ..api.transforms import relative_translation_tuple
+        from .api.transforms import relative_translation_tuple
 
         body = bpy.data.objects.get(f"{bed_name}_body")
         mattress = bpy.data.objects.get(f"{bed_name}_mattress")
@@ -605,7 +605,7 @@ def run_console_checks(context):
         )
 
     def check_analyze_layout_clear(check):
-        from ..protocol.layout_analysis import analyze_layout
+        from .protocol.layout_analysis import analyze_layout
 
         prefix = f"{DIAG_PREFIX}ANALYZE_CLR"
         delete_prefix(prefix)
@@ -643,7 +643,7 @@ def run_console_checks(context):
         )
 
     def check_analyze_layout_blocked(check):
-        from ..protocol.layout_analysis import analyze_layout
+        from .protocol.layout_analysis import analyze_layout
 
         prefix = f"{DIAG_PREFIX}ANALYZE_BLK"
         delete_prefix(prefix)
