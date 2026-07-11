@@ -17,7 +17,7 @@ New decisions use the next sequential number: `DD-006`, `DD-007`, …
 | [DD-005](DD-005-generator-metadata.md) | Generators carry metadata constants | Accepted | 2026-07-09 |
 | [DD-006](DD-006-parts-and-finalization.md) | Parts model, join-on-finalize, main/dynamic parts | Accepted | 2026-07-10 |
 | [DD-007](DD-007-clearance-zones.md) | Clearance zones (descriptive usage volumes) | Accepted | 2026-07-10 |
-| [DD-008](DD-008-constraints-and-layout-analysis.md) | Constraints and layout analysis | **Proposed** | 2026-07-10 |
+| [DD-008](DD-008-constraints-and-layout-analysis.md) | Constraints and layout analysis | Accepted | 2026-07-12 |
 | [DD-009](DD-009-ai-execution-boundary.md) | AI execution boundary; plugin responsibility | **Proposed** | 2026-07-11 |
 
 When implementing anything that touches APIs, JSON protocol, generator behaviour,

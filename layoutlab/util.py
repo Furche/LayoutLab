@@ -77,6 +77,28 @@ def axis_aligned_bounds_from_points(points):
     }
 
 
+def aabb_intersects(bounds_a, bounds_b):
+    """True if two axis-aligned boxes overlap with volume > 0 (DD-008 v1)."""
+    a_min = bounds_a.get("min", [0, 0, 0])
+    a_max = bounds_a.get("max", [0, 0, 0])
+    b_min = bounds_b.get("min", [0, 0, 0])
+    b_max = bounds_b.get("max", [0, 0, 0])
+    for i in range(3):
+        if float(a_max[i]) <= float(b_min[i]) or float(b_max[i]) <= float(a_min[i]):
+            return False
+    return True
+
+
+def requirement_to_severity(requirement):
+    """Map clearance requirement to analysis severity (DD-008)."""
+    req = (requirement or "preferred").strip().lower()
+    if req == "required":
+        return "error"
+    if req == "informational":
+        return "info"
+    return "warning"
+
+
 def parse_clearance_params_json(raw):
     if not raw:
         return {}

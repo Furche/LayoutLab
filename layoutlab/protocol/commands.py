@@ -117,6 +117,10 @@ def apply_single_command(context, cmd):
         return delete_collection_objects(cmd["collection"])
     if action == "delete_prefix":
         return delete_prefix(cmd["prefix"])
+    if action == "analyze_layout":
+        from .layout_analysis import analyze_layout
+
+        return analyze_layout(context, cmd)
 
     obj = bpy.data.objects.get(name) if name else None
     if action == "move":

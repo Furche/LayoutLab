@@ -417,7 +417,7 @@ Rebuild a logical object from stored generator metadata, optionally overriding p
 
 ------------------------------------------------------------------------
 
-## 5.13 `analyze_layout` `[PROPOSED]` (DD-008)
+## 5.13 `analyze_layout` `[IMPLEMENTED]` (DD-008)
 
 Constraint analysis — **reads** exported clearances, **does not** modify scene.
 
@@ -435,12 +435,13 @@ See [DD-008](../design_decisions/DD-008-constraints-and-layout-analysis.md).
 |---|---|---|
 | `scope` | `"scene"` | `"scene"` \| `"collection"` \| `"selection"` |
 | `collection` | — | Required when `scope` is `"collection"` |
+| `include` | `["clearances"]` | v1: only `"clearances"` supported |
 
-**Return (v1):** `{ "analyzed", "summary": { "errors", "warnings", "info" }, "findings": [...] }`
+**Return (v1):** `{ "analyzed", "scope", "object_count", "clearance_count", "summary": { "errors", "warnings", "info" }, "findings": [...] }`
 
 Each finding references `clearance_ref` + `overlaps[]`. Severity derives from clearance `requirement` (`required` → error, `preferred` → warning).
 
-**Not implemented until DD-008 is accepted.**
+**Implementation:** `layoutlab/protocol/layout_analysis.py`
 
 ------------------------------------------------------------------------
 

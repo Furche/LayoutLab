@@ -132,6 +132,7 @@ If two documents disagree, **stop** — fix the doc or the code before continuin
 | Code change | Documents to check (minimum) |
 |---|---|
 | New JSON command | `json_protocol.md`, `CHANGELOG.md`, maybe `ARCHITECTURE.md`, maybe DD |
+| `analyze_layout` / layout analysis | `layout_analysis.py`, `json_protocol.md`, `diagnostics.py`, `CHANGELOG.md` |
 | New `api` function | `generator_api.md`, `docs/how_to_write_generators.md`, `LayoutLab_Generator_Specification.md` if rule change, `CHANGELOG.md` |
 | New generator | `layoutlab/generators/<name>.py`, `<name>.md`, `generators/README.md`, `CHANGELOG.md` |
 | Module refactor | `ARCHITECTURE.md`, `CHANGELOG.md`, `DEVLOG.md` if structural |

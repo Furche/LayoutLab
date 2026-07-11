@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-12 (product vision sharpened — roadmap unchanged)  
-**Plugin version:** 0.7.1 · **Branch:** `main` (sync with `origin/main`)
+**Last updated:** 2026-07-12 (v0.8.0 — analyze_layout)  
+**Plugin version:** 0.8.0 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,9 +24,9 @@
 ```
 Projekt: LayoutLab, Blender-Addon.
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Plugin v0.7.1, bed_basic/wardrobe_basic v0.5.0, main synced mit origin.
-DD-007 Accepted (Clearance done). DD-008/009 Proposed.
-Nächstes: DD-008 review → analyze_layout → bed clearances.
+Plugin v0.8.0, bed_basic/wardrobe_basic v0.5.0.
+DD-007 Accepted. DD-008 Accepted (analyze_layout shipped). DD-009 Proposed.
+Nächstes: DD-009 review → bed_basic multi-zone clearances.
 Deutsch, DD-first, minimal diffs. Lies docs/HANDOFF.md + 00_READ_THIS_FIRST.md.
 ```
 
@@ -65,7 +65,7 @@ User Intent → Generator (rules) → Parts API → Blender scene
 | Cursor role | Implements; does **not** silently change architecture |
 | Code style | Minimal diffs, match conventions, no over-engineering |
 | Tests | `python3 -m unittest discover -s tests` (no bpy for util tests) |
-| Blender QA | Diagnostics in addon — target **14/14 PASS** |
+| Blender QA | Diagnostics in addon — target **16/16 PASS** |
 
 Alexander gives precise architecture feedback (e.g. don't merge clearance + constraints in one DD).
 
@@ -75,10 +75,10 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 | Component | Version |
 |---|---|
-| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.7.1** |
+| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.8.0** |
 | `bed_basic` | **0.5.0** — raised frame construction (`BedConstruction`) |
 | `wardrobe_basic` | **0.5.0** — `create_clearance`, part `clearance_front_access` |
-| Latest zip | `dist/layoutlab-0.7.1.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.8.0.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -89,8 +89,9 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 - Generators: `bed_basic`, `wardrobe_basic`; generator browser + Quick Test
 - JSON: `run_generator`, `regenerate`, scene export, `create_clearance`
 - **`api["create_clearance"]`** (DD-007): metadata + Main-Part-local placement
+- **`analyze_layout`** JSON command (DD-008): findings from clearance overlap
 - Export: `layoutlab.clearance` with `local_bounds` + `world_bounds`
-- Bundled generator sync; 14 diagnostic checks
+- Bundled generator sync; 16 diagnostic checks
 
 ------------------------------------------------------------------------
 
@@ -100,7 +101,7 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 |---|---|---|
 | DD-001–006 | Generators, JSON, Parts, … | Accepted |
 | [DD-007](design_decisions/DD-007-clearance-zones.md) | Clearance zones | **Accepted** — impl. steps 1–6 done |
-| [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | **Proposed** |
+| [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | **Accepted** — v1 shipped |
 | [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary | **Proposed** |
 
 ### DD-007 (key points)
@@ -109,11 +110,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 - `requirement`: `required` \| `preferred`
 - Export: local bounds (Main Part space) + world bounds (at export time)
 
-### DD-008 (next implementation — after Accepted)
+### DD-008 (implemented v0.8.0)
 
-- Analyzer reads clearances; emits `findings` (not stored in export)
-- v1: `zone_must_be_clear` (AABB overlap)
-- JSON `analyze_layout` — **not implemented yet**
+- `analyze_layout` JSON command — `zone_must_be_clear`, AABB overlap
+- `required` → error, `preferred` → warning
+- Diagnostics: clear layout + wardrobe/bed blocked scenario
 
 ### DD-009 (documentation only — **Proposed, awaiting Alexander review**)
 
@@ -141,12 +142,10 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. **Review DD-008** → Accepted  
-2. **Review DD-009** → Accepted  
-3. Implement `layout_analysis.py` + `analyze_layout` (DD-008)  
-4. Diagnostics: blocked vs clear layout (wardrobe reference)  
-5. **`bed_basic` multi-zone clearances** — only after analyzer works  
-6. **Not now:** bridge, expert bpy mode, generator #3, network agent  
+1. **Review DD-009** → Accepted  
+2. **`bed_basic` multi-zone clearances** — `bed_entry` per generator params  
+3. Diagnostic: bed entry blocked vs clear  
+4. **Not now:** bridge, expert bpy mode, generator #3, walkway graph  
 
 ------------------------------------------------------------------------
 
@@ -160,7 +159,7 @@ layoutlab/
 ├── protocol/            # commands, export, semantic, clearance_export
 ├── generators/          # bed_basic, wardrobe_basic (+ .md each)
 ├── plugin/              # panel, browser, quick_test
-└── diagnostics.py       # 14 checks
+└── diagnostics.py       # 16 checks
 
 docs/
 ├── design_decisions/    # DD-001 … DD-009
@@ -220,8 +219,8 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 
 1. ✅ Generator docs, API, modular plugin, browser, regenerate  
 2. ✅ Clearance (DD-007 implemented)  
-3. 🔄 Constraints + analyze_layout (DD-008)  
-4. ⏳ New generators **after** clearance/constraint track  
+3. 🔄 Constraints + analyze_layout (DD-008) — **v0.8.0 shipped**  
+4. ⏳ `bed_basic` multi-zone clearances  
 5. 📋 Bridge / direct AI communication (Future — DD-009)
 
 ------------------------------------------------------------------------
@@ -230,6 +229,6 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 
 | Date | Change |
 |---|---|
-| 2026-07-12 | Product vision sharpened — Future_Ideas reorganized, roadmap unchanged |
+| 2026-07-12 | v0.8.0 — DD-008 Accepted, `analyze_layout` implemented |
 | 2026-07-11 | DD-009 doc sync — review gate, cross-doc Proposed markers |
 | 2026-07-11 | Initial handoff doc created |

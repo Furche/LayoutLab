@@ -1,7 +1,8 @@
 # DD-008 — Constraints and Layout Analysis
 
-**Status:** Proposed (awaiting review)  
+**Status:** Accepted  
 **Date:** 2026-07-10  
+**Accepted:** 2026-07-12  
 **Version:** 0.8.0 (target)  
 **Related:** [DD-007](DD-007-clearance-zones.md) (Clearance — input only) · [DD-006](DD-006-parts-and-finalization.md) (Parts)
 
@@ -276,6 +277,17 @@ Promote to new DD when a feature needs persistent constraint definitions indepen
 
 ------------------------------------------------------------------------
 
+## Resolved decisions (review 2026-07-12)
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | Partial overlap | **Any AABB intersection volume > 0** counts as violation in v1 |
+| 2 | Blocker types | **Only `MESH`** objects; exclude CURVE/FONT labels |
+| 3 | Orphan clearances | **Include** in analysis (no `layoutlab_object_id` skip) |
+| 4 | UI in v0.8 | **JSON-only first**; sidebar button deferred |
+
+------------------------------------------------------------------------
+
 ## Implementation order (after DD-008 accepted)
 
 | Step | Work |
@@ -296,3 +308,4 @@ Do **not** implement walkway graph or scoring in the same release as v1 analyzer
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-07-10 | Initial proposal — constraints separate from DD-007 clearances |
+| 1.0 | 2026-07-12 | Accepted — review decisions resolved; v1 analyzer specified |

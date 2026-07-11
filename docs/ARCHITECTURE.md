@@ -33,7 +33,7 @@ human requirements for a space into spatial solutions (`[FUTURE VISION]` — see
 Blender is the current editor. It is not the product.
 
 **Current phase (`[IMPLEMENTED]` / `[PLANNED]`):** Execution Layer — generators, Parts,
-`object_id`, regeneration, clearances (DD-007), constraints / `analyze_layout` (DD-008 Proposed),
+`object_id`, regeneration, clearances (DD-007), constraints / `analyze_layout` (DD-008 Accepted),
 JSON protocol. This foundation remains correct and unchanged.
 
 ```
@@ -520,7 +520,7 @@ Split into two design decisions (do not merge):
 | Sub-phase | DD | Focus | Status |
 |---|---|---|---|
 | E.1 | [DD-007](design_decisions/DD-007-clearance-zones.md) | Clearance zones — descriptive usage volumes | **Accepted** |
-| E.2 | [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | **Proposed** |
+| E.2 | [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | **Accepted** — v0.8.0 shipped |
 | E.doc | [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary (documentation only) | **Proposed** — no implementation |
 
 Implementation order after DD-007 acceptance: API → wardrobe refactor → export → diagnostics → DD-008 → analyze_layout → bed clearances. Bridge / Expert Mode: **Future Idea** per DD-009 — separate DD before code.

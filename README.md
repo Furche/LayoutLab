@@ -8,7 +8,7 @@ Blender 4.0+ is the current editor. The long-term goal: describe problems and go
 
 > *"LayoutLab does not create meshes. LayoutLab describes objects — and, long-term, spatial solutions for human needs."*
 
-**Status:** v0.7.1 — Clearance export with local/world bounds (DD-007 steps 1–6 complete). Product vision extension: [docs/Future_Ideas.md](docs/Future_Ideas.md) (no roadmap change).
+**Status:** v0.8.0 — `analyze_layout` constraint analysis (DD-008). Clearance export (DD-007). Product vision: [docs/Future_Ideas.md](docs/Future_Ideas.md).
 
 Repository: https://github.com/Furche/LayoutLab
 
@@ -26,8 +26,9 @@ Repository: https://github.com/Furche/LayoutLab
 - `regenerate` JSON command (update params, preserve object identity)
 - Save, load, and delete generators via UI or JSON
 - JSON `create_clearance` command and generator **`api["create_clearance"]`** (DD-007 metadata)
+- JSON **`analyze_layout`** command — clearance overlap findings (DD-008)
 - Bundled generator sync on addon register
-- Diagnostics (13 checks: metadata, parenting, layout, export)
+- Diagnostics (16 checks: metadata, parenting, layout, export, analyze_layout)
 
 See [docs/json_protocol.md](docs/json_protocol.md) for the full command reference.
 
@@ -247,7 +248,7 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 | **B** | Generators in repo, tests, sync | Complete |
 | **C** | Monolith → module split | Complete |
 | **D** | Semantic object model, `regenerate` | Complete |
-| **E** | Clearance zones (DD-007) → Constraints / analysis (DD-008) | In progress |
+| **E** | Clearance zones (DD-007) → Constraints / analysis (DD-008) | DD-008 shipped (v0.8.0); bed clearances next |
 
 Full roadmap: [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) §17 · Phase status: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9
 

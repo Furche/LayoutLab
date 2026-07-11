@@ -10,7 +10,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
-- **Product vision sharpened (docs only):** Reorganized `Future_Ideas.md` — problem-first planning, functional room design, accessibility, solution search space, Intent/Planning/Execution layers; minimal updates to Manifest, MDD, AI_CONTEXT, README, ARCHITECTURE. **No roadmap or implementation change.**
+- **v0.8.0 — `analyze_layout` (DD-008):** `layoutlab/protocol/layout_analysis.py`, `zone_must_be_clear` AABB overlap, JSON command wired in `commands.py`
+- **Diagnostics:** `analyze_layout_clear`, `analyze_layout_blocked` (16 checks total)
+- **Unit tests:** `aabb_intersects`, `requirement_to_severity` in `tests/test_layout_analysis.py`
+- **DD-008 Accepted** with resolved review decisions (2026-07-12)
 
 ### Added (prior)
 
@@ -19,6 +22,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ### Added (prior)
 
 - **DD-008 proposed:** Constraint engine + `analyze_layout` — reads DD-007 clearances, emits findings (errors/warnings)
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## [0.8.0] — 2026-07-12
+
+### Added
+
+- JSON command `analyze_layout` — constraint findings from clearance zones (DD-008)
+- `layoutlab/protocol/layout_analysis.py` — `zone_must_be_clear` v1
+- Diagnostic checks `analyze_layout_clear`, `analyze_layout_blocked` (16 checks total)
+- Pure-Python helpers `aabb_intersects`, `requirement_to_severity` in `util.py`
+
+### Changed
+
+- Plugin version **0.8.0**
+- DD-008 status → **Accepted**
 
 ------------------------------------------------------------------------
 

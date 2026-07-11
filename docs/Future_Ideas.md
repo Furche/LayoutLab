@@ -392,7 +392,7 @@ Constraint *evaluation* → DD-008 (**Planned**).
 
 ### Constraint System
 
-**Status:** **Planned** (DD-008 Proposed)
+**Status:** **Implemented** (DD-008 Accepted, v0.8.0) — v1 `zone_must_be_clear` only
 
 Objects expose semantic rules evaluated at analysis time.
 

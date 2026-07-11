@@ -4,6 +4,18 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-12 — DD-008 Accepted + analyze_layout (v0.8.0)
+
+**Review decisions:** any AABB overlap > 0; blockers MESH only; orphan clearances included;
+JSON-only (no UI button).
+
+**Shipped:** `layout_analysis.py`, `analyze_layout` command, diagnostics for clear/blocked
+wardrobe+bed scenario. Wardrobe `front_access` (preferred) → warning when bed blocks.
+
+**Next:** `bed_basic` multi-zone clearances (DD-008 step 5); DD-009 review still pending.
+
+------------------------------------------------------------------------
+
 ## 2026-07-12 — Product vision sharpened (documentation only)
 
 **Context:** LayoutLab is long-term not a furniture generator but a system that translates

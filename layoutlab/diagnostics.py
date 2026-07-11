@@ -604,6 +604,109 @@ def run_console_checks(context):
             f"shape: {clearance.get('shape')}",
         )
 
+    def check_analyze_layout_clear(check):
+        from ..protocol.layout_analysis import analyze_layout
+
+        prefix = f"{DIAG_PREFIX}ANALYZE_CLR"
+        delete_prefix(prefix)
+        execute_generator(
+            "wardrobe_basic",
+            {
+                "name": prefix,
+                "location": [0, 0, 0],
+                "width": 8,
+                "depth": 4,
+                "height": 15,
+                "show_clearance": True,
+                "collection": DIAG_COLLECTION,
+            },
+        )
+        result = analyze_layout(
+            context,
+            {"action": "analyze_layout", "scope": "collection", "collection": DIAG_COLLECTION},
+        )
+        if not result.get("analyzed"):
+            check.fail("analyzed=false")
+            return
+        findings = result.get("findings", [])
+        summary = result.get("summary", {})
+        if findings:
+            check.fail(f"expected no findings, got {findings}")
+            return
+        if any(summary.get(k, 0) for k in ("errors", "warnings", "info")):
+            check.fail(f"expected zero summary counts, got {summary}")
+            return
+        check.ok(
+            f"clearance_count: {result.get('clearance_count')}",
+            f"findings: 0",
+            f"summary: {summary}",
+        )
+
+    def check_analyze_layout_blocked(check):
+        from ..protocol.layout_analysis import analyze_layout
+
+        prefix = f"{DIAG_PREFIX}ANALYZE_BLK"
+        delete_prefix(prefix)
+        execute_generator(
+            "wardrobe_basic",
+            {
+                "name": f"{prefix}_WARDROBE",
+                "location": [0, 0, 0],
+                "width": 8,
+                "depth": 4,
+                "height": 15,
+                "show_clearance": True,
+                "collection": DIAG_COLLECTION,
+            },
+        )
+        execute_generator(
+            "bed_basic",
+            {
+                "name": f"{prefix}_BED",
+                "location": [0, -6, 0],
+                "length": 12,
+                "width": 20,
+                "head_side": "y_max",
+                "collection": DIAG_COLLECTION,
+            },
+        )
+        result = analyze_layout(
+            context,
+            {"action": "analyze_layout", "scope": "collection", "collection": DIAG_COLLECTION},
+        )
+        if not result.get("analyzed"):
+            check.fail("analyzed=false")
+            return
+        findings = result.get("findings", [])
+        front = [
+            f
+            for f in findings
+            if f.get("clearance_ref", {}).get("clearance_name") == "front_access"
+        ]
+        if len(front) != 1:
+            check.fail(f"expected 1 front_access finding, got {len(front)}: {findings}")
+            return
+        finding = front[0]
+        if finding.get("severity") != "warning":
+            check.fail(f"expected warning (preferred), got {finding.get('severity')}")
+            return
+        if finding.get("constraint_type") != "zone_must_be_clear":
+            check.fail(f"constraint_type: {finding.get('constraint_type')}")
+            return
+        overlaps = finding.get("overlaps", [])
+        if not overlaps:
+            check.fail("expected overlaps")
+            return
+        if not any("BED" in o.get("object_name", "") and "body" in o.get("object_name", "") for o in overlaps):
+            check.fail(f"bed body not in overlaps: {overlaps}")
+            return
+        check.ok(
+            f"severity: {finding.get('severity')}",
+            f"clearance_name: front_access",
+            f"overlap_count: {len(overlaps)}",
+            f"summary: {result.get('summary')}",
+        )
+
     def check_cleanup(check):
         apply_commands_json(
             context,
@@ -626,6 +729,8 @@ def run_console_checks(context):
             _run_check("part_follows_main_transform", check_part_follows_main_transform),
             _run_check("wardrobe_clearance_layout", check_wardrobe_clearance_layout),
             _run_check("clearance_export", check_clearance_export),
+            _run_check("analyze_layout_clear", check_analyze_layout_clear),
+            _run_check("analyze_layout_blocked", check_analyze_layout_blocked),
             _run_check("apply_commands_json", check_apply_commands_json),
             _run_check("regenerate", check_regenerate),
             _run_check("regenerate_layout_policy", check_regenerate_layout_policy),
