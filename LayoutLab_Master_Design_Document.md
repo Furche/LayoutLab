@@ -202,6 +202,22 @@ Keine Blender-Operatoren.
 
 Dadurch bleiben Plugin und KI entkoppelt.
 
+Details: DD-003. Strategische Begründung (warum Plugin trotz direkter KI-Möglichkeit):
+DD-009 — KI plant, LayoutLab führt deterministisch aus.
+
+## 11.1 KI vs. Plugin (DD-009)
+
+| Ebene | Aufgabe |
+|---|---|
+| KI | Nutzerwunsch, Varianten, Auswahl der Operationen |
+| LayoutLab | Stabile Ausführung: Generatoren, Parts, Metadaten, Regeneration, Clearances, Analyse |
+| Blender | Editor-Host (aktuell) |
+
+Langfristig: lokale **Bridge** (kein Clipboard) — nur definierte LayoutLab-Operationen,
+kein beliebiges Remote-Python. **Expertenmodus** (direktes bpy) optional, nicht Standard.
+
+Noch nicht implementieren — siehe `docs/Future_Ideas.md` und DD-009.
+
 ------------------------------------------------------------------------
 
 # 12. Design Decisions (DD)
@@ -219,6 +235,8 @@ DD-003 Kommunikation ausschließlich über JSON.
 DD-004 UI orientiert sich am Asset Browser.
 
 DD-005 Generatoren besitzen Metadaten.
+
+DD-009 KI plant — LayoutLab führt über stabile API aus (Plugin bleibt Pfad).
 
 ------------------------------------------------------------------------
 

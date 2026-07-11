@@ -76,3 +76,4 @@ LayoutLab workflows.
 - `docs/json_protocol.md`
 - `00_READ_THIS_FIRST.md` — AI agent rules
 - `LayoutLab_Master_Design_Document.md` §11
+- [DD-009](DD-009-ai-execution-boundary.md) — why plugin execution layer exists (broader than JSON transport)

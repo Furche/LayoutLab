@@ -143,6 +143,21 @@ before asking
 
 "What code should I write?"
 
+## Execution boundary (DD-009)
+
+LayoutLab separates **planning** from **execution**:
+
+| Role | Responsibility |
+|---|---|
+| **AI / planning client** | User intent, variants, *what* to place or change |
+| **LayoutLab plugin** | Deterministic *how* — generators, parts, metadata, clearances, analysis |
+
+The AI must **not** re-implement Blender parenting, `object_id`, or generator rules in ad-hoc Python each session. It uses the **LayoutLab protocol** (JSON today; future local bridge).
+
+Direct Blender control by AI is a possible **future Expert Mode** only — not the standard path. See [DD-009](docs/design_decisions/DD-009-ai-execution-boundary.md).
+
+Rules live in versioned software (plugin, generators, DDs), not only in prompts.
+
 ------------------------------------------------------------------------
 
 # Evolution Path

@@ -70,6 +70,31 @@ Five layers with strict responsibility boundaries. `[IMPLEMENTED]` as separate m
 
 **Communication rule:** layers talk only through defined interfaces (JSON protocol, Generator API). `[IMPLEMENTED]` for JSON + API and module boundaries.
 
+## 2.1 AI execution boundary `[PROPOSED]` — DD-009
+
+A specialized AI *could* drive Blender directly via Python. LayoutLab **still requires a plugin** because core behaviour must be deterministic, testable, and model-independent.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Planning layer (AI / user intent)                      │
+│  WHAT: which furniture, params, layout variants         │
+├─────────────────────────────────────────────────────────┤
+│  LayoutLab execution layer (plugin + engine)            │
+│  HOW: object_id, parts, parenting, regenerate,          │
+│       clearances, analyze_layout, export                │
+├─────────────────────────────────────────────────────────┤
+│  Blender (editor host)                                  │
+└─────────────────────────────────────────────────────────┘
+```
+
+| Mode | Status | Description |
+|---|---|---|
+| **Standard** | Today | AI → JSON protocol → plugin → Blender |
+| **Bridge** | Future Idea | Local agent; same ops, no clipboard — see DD-009 |
+| **Expert** | Future Idea | Opt-in direct bpy; not production default |
+
+Full decision: [DD-009](design_decisions/DD-009-ai-execution-boundary.md). Transport detail: [DD-003](design_decisions/DD-003-json-only-communication.md).
+
 ------------------------------------------------------------------------
 
 # 3. As-Built: v0.5 Prototype
@@ -520,6 +545,7 @@ Referenced in Master Design Document; formal DD files `[PLANNED]`:
 | DD-003 | Communication exclusively via JSON | `[ACCEPTED]` — [DD-003](design_decisions/DD-003-json-only-communication.md) |
 | DD-004 | UI oriented on Asset Browser | `[ACCEPTED]` — [DD-004](design_decisions/DD-004-asset-browser-ui.md) |
 | DD-005 | Generators carry metadata constants | `[ACCEPTED]` — [DD-005](design_decisions/DD-005-generator-metadata.md) |
+| DD-006–009 | Parts, clearances, constraints, AI boundary | See [design_decisions/README.md](design_decisions/README.md) |
 
 New decisions require a file in `docs/design_decisions/` before implementation.
 

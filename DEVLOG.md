@@ -4,6 +4,16 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-11 — DD-009 proposed (AI execution boundary)
+
+**Question:** Why keep the plugin if AI could drive Blender directly?
+
+**Answer:** Plugin owns deterministic HOW — object_id, parts, parenting, regenerate,
+clearances, analysis, testable protocol. AI owns WHAT. Direct bpy = future Expert Mode
+only. Bridge (local, API-only) = future; not implemented.
+
+------------------------------------------------------------------------
+
 ## 2026-07-10 — DD-008 proposed (Constraints & analyze_layout)
 
 **Scope:** Separate from DD-007. v1 constraint type `zone_must_be_clear` (AABB overlap).
