@@ -10,6 +10,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **docs/HANDOFF.md** — session handoff for new chat agents (status, next steps, pitfalls)
+
+### Added (prior)
+
 - **DD-009 proposed:** AI execution boundary — AI plans, plugin executes; bridge & expert mode as future ideas only
 
 ### Added (prior)
