@@ -66,7 +66,11 @@ def _is_clearance_object(obj):
 
 
 def _is_blocker_mesh(obj):
-    return getattr(obj, "type", None) == "MESH"
+    if getattr(obj, "type", None) != "MESH":
+        return False
+    if obj.get("layoutlab_clearance_name") or obj.get("layoutlab_role") == "clearance":
+        return False
+    return True
 
 
 def _blocker_overlap_entry(obj):

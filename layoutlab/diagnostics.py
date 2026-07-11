@@ -608,7 +608,7 @@ def run_console_checks(context):
         from .protocol.layout_analysis import analyze_layout
 
         prefix = f"{DIAG_PREFIX}ANALYZE_CLR"
-        delete_prefix(prefix)
+        delete_prefix(DIAG_PREFIX)
         execute_generator(
             "wardrobe_basic",
             {
@@ -646,11 +646,12 @@ def run_console_checks(context):
         from .protocol.layout_analysis import analyze_layout
 
         prefix = f"{DIAG_PREFIX}ANALYZE_BLK"
-        delete_prefix(prefix)
+        delete_prefix(DIAG_PREFIX)
+        wardrobe_name = f"{prefix}_WARDROBE"
         execute_generator(
             "wardrobe_basic",
             {
-                "name": f"{prefix}_WARDROBE",
+                "name": wardrobe_name,
                 "location": [0, 0, 0],
                 "width": 8,
                 "depth": 4,
@@ -682,6 +683,7 @@ def run_console_checks(context):
             f
             for f in findings
             if f.get("clearance_ref", {}).get("clearance_name") == "front_access"
+            and f.get("clearance_ref", {}).get("furniture_name") == wardrobe_name
         ]
         if len(front) != 1:
             check.fail(f"expected 1 front_access finding, got {len(front)}: {findings}")

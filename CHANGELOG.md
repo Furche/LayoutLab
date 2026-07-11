@@ -10,6 +10,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Diagnostics:** analyze_layout checks now `delete_prefix(DIAG_PREFIX)` for isolated collection; blocked check filters by `furniture_name`
+- **analyze_layout:** clearance wire meshes excluded from blocker list (usage zones, not obstacles)
 - **Diagnostics:** `from ..api` / `from ..protocol` in `diagnostics.py` → `from .api` / `from .protocol` (7 checks failed with relative import error)
 
 ### Added
