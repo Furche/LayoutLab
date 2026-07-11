@@ -236,7 +236,7 @@ DD-004 UI orientiert sich am Asset Browser.
 
 DD-005 Generatoren besitzen Metadaten.
 
-DD-009 KI plant — LayoutLab führt über stabile API aus (Plugin bleibt Pfad).
+DD-009 KI plant — LayoutLab führt über stabile API aus (Plugin bleibt Pfad). **Status: Proposed** — Review ausstehend.
 
 ------------------------------------------------------------------------
 

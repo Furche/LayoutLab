@@ -502,8 +502,9 @@ Split into two design decisions (do not merge):
 |---|---|---|---|
 | E.1 | [DD-007](design_decisions/DD-007-clearance-zones.md) | Clearance zones — descriptive usage volumes | **Accepted** |
 | E.2 | [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | **Proposed** |
+| E.doc | [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary (documentation only) | **Proposed** — no implementation |
 
-Implementation order after DD-007 acceptance: API → wardrobe refactor → export → diagnostics → DD-008 → analyze_layout → bed clearances.
+Implementation order after DD-007 acceptance: API → wardrobe refactor → export → diagnostics → DD-008 → analyze_layout → bed clearances. Bridge / Expert Mode: **Future Idea** per DD-009 — separate DD before code.
 
 See Master Design Document §17 for the full product roadmap.
 

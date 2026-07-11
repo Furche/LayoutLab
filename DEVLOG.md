@@ -4,6 +4,18 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-11 — DD-009 documentation sync (review package)
+
+**Goal:** DD-009 remains **Proposed** until Alexander reviews; cross-docs reference it
+without implying bridge/expert implementation is approved.
+
+**Changed:** Review gate in DD-009; `json_protocol` Related line; ARCHITECTURE Phase E
+row for DD-009 (doc only); HANDOFF + documentation_map + MDD §12 status markers.
+
+**Not done:** No Accepted status; no bridge/agent/network/expert code.
+
+------------------------------------------------------------------------
+
 ## 2026-07-11 — DD-009 proposed (AI execution boundary)
 
 **Question:** Why keep the plugin if AI could drive Blender directly?

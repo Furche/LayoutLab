@@ -2,8 +2,25 @@
 
 **Status:** Proposed (awaiting review)  
 **Date:** 2026-07-11  
-**Version:** —  
+**Version:** 0.1 (draft)  
 **Related:** [DD-003](DD-003-json-only-communication.md) (JSON transport today) · [DD-007](DD-007-clearance-zones.md) · [DD-008](DD-008-constraints-and-layout-analysis.md)
+
+------------------------------------------------------------------------
+
+## Review gate
+
+This document is **Proposed** until Alexander (Product Owner) reviews and accepts it.
+
+| Rule | Detail |
+|---|---|
+| Do not set status to **Accepted** | Until review is complete |
+| Do not implement | Bridge, local agent, MCP server, network service, or Expert Mode |
+| Cross-docs may reference DD-009 | As **Proposed** / **Future Idea** only — no implied commitment |
+| DD-003 unchanged | JSON remains the standard transport until a future DD amends it |
+
+Open questions in §Open questions remain unresolved; they do not block acceptance of the
+core boundary (AI plans WHAT, plugin executes HOW), but bridge/expert details need
+follow-up DDs before any code.
 
 ------------------------------------------------------------------------
 
@@ -255,3 +272,4 @@ When bridge arrives, DD-003 may gain an amendment (“JSON or bridge RPC”) wit
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-07-11 | Initial proposal — AI vs plugin boundary, hybrid future, bridge concept |
+| 0.2 | 2026-07-11 | Review gate section — explicit Proposed status, no premature implementation |

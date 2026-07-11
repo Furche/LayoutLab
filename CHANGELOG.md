@@ -10,7 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
-- **docs/HANDOFF.md** — session handoff for new chat agents (status, next steps, pitfalls)
+- **DD-009 doc sync:** Review gate in DD-009; cross-links in `json_protocol.md`, `ARCHITECTURE.md`, `documentation_map.md`, `HANDOFF.md`, MDD §12 (all remain **Proposed** / Future Idea — no Accepted change)
 
 ### Added (prior)
 

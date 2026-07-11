@@ -44,7 +44,7 @@ Do **not** duplicate content across documents. Link instead.
 | [LayoutLab_Manifest.md](../LayoutLab_Manifest.md) | Why the project exists — belief and problem statement | Everyone | Mission, problem framing, non-goals at vision level | Fundamental product direction changes (rare) | Pivot from “Blender addon” to broader platform |
 | [LayoutLab_Master_Design_Document.md](../LayoutLab_Master_Design_Document.md) | Vision, roadmap phases, product architecture overview | PO, architect, senior contributors | Long-term roadmap, phase definitions, product-level architecture | Roadmap phase completed/added; major product scope change | Phase C marked complete; Phase D scope defined |
 | [docs/Future_Ideas.md](Future_Ideas.md) | **Ideas backlog** — vision concepts before DD/architecture | PO, architect, team | Semantic objects, clearance, constraints, evaluation — not commitments | New idea matures enough to document; idea promoted to DD (remove or mark done) | Walkway analysis concept added |
-| [docs/HANDOFF.md](HANDOFF.md) | **Session handoff** — current status, next steps, pitfalls for new agents | New chat sessions, Cursor, ChatGPT | Version, DD status, git path, workflow, next steps, technical gotchas | Milestone completed; DD accepted; version bump; next-steps change | v0.7.1 clearance track done |
+| [docs/HANDOFF.md](HANDOFF.md) | **Session handoff** — current status, next steps, pitfalls for new agents | New chat sessions, Cursor, ChatGPT | Version, DD status (incl. Proposed awaiting review), git path, workflow, next steps, technical gotchas | Milestone completed; DD accepted; version bump; next-steps change; DD review package synced | DD-009 Proposed, review pending |
 
 **Boundary:** Manifest = *why*. MDD = *where we are going*. Neither lists JSON command fields — that is `json_protocol.md`.
 
@@ -81,7 +81,7 @@ Do **not** duplicate content across documents. Link instead.
 
 | Document | Purpose | Audience | Owns | Update when… | Typical changes |
 |---|---|---|---|---|---|
-| [docs/design_decisions/README.md](design_decisions/README.md) | Index of all DDs | Everyone | DD table with status and links | New DD accepted | DD-006 row |
+| [docs/design_decisions/README.md](design_decisions/README.md) | Index of all DDs | Everyone | DD table with status and links | New DD created or accepted | DD-009 row (Proposed) |
 | [docs/design_decisions/DD-xxx-*.md](design_decisions/DD-001-generators-are-parametric-assets.md) | Single irreversible-ish architecture/product decision | Architect, future implementers | Problem, decision, alternatives, consequences for **one** topic | Significant fork in approach (not every bugfix) | DD-006: Parts and finalization |
 
 **When is a DD required?** API shape chosen between real alternatives; protocol breaking change; generator contract change; UI paradigm change. **Not** for: typo fixes, refactors that preserve behaviour, new generator that follows existing rules.

@@ -3,7 +3,7 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-11  
+**Last updated:** 2026-07-11 (DD-009 doc sync — review package)  
 **Plugin version:** 0.7.1 · **Branch:** `main` (sync with `origin/main`)
 
 ------------------------------------------------------------------------
@@ -41,7 +41,7 @@ User Intent → Generator (rules) → Parts API → Blender scene
 ```
 
 - Blender 4.0+ is the **editor**, not the product.
-- **AI** plans (WHAT); **plugin** executes deterministically (HOW) — [DD-009](design_decisions/DD-009-ai-execution-boundary.md).
+- **AI** communicates via JSON (DD-003); execution boundary in [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (**Proposed** — AI plans WHAT, plugin executes HOW).
 - Today: **JSON** clipboard/text block ([DD-003](design_decisions/DD-003-json-only-communication.md)).
 
 **Install:** `dist/layoutlab-<version>.zip` → Blender Preferences → Add-ons.  
@@ -113,10 +113,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 - v1: `zone_must_be_clear` (AABB overlap)
 - JSON `analyze_layout` — **not implemented yet**
 
-### DD-009 (documentation only for now)
+### DD-009 (documentation only — **Proposed, awaiting Alexander review**)
 
 - Plugin stays API-first; direct AI→bpy = future Expert Mode only
-- Local bridge = Future Idea — **do not implement** without new DD
+- Local bridge = **Future Idea** — **do not implement** without new DD + DD-009 Accepted
+- Review gate: see DD-009 §Review gate — no status change to Accepted until PO approves
 
 ------------------------------------------------------------------------
 
@@ -227,4 +228,5 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 
 | Date | Change |
 |---|---|
+| 2026-07-11 | DD-009 doc sync — review gate, cross-doc Proposed markers |
 | 2026-07-11 | Initial handoff doc created |
