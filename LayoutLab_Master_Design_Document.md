@@ -13,15 +13,27 @@ Version: 0.9 (Living Document)
 
 LayoutLab ist **kein Blender-Addon zum Platzieren von Möbeln**.
 
-LayoutLab ist eine **parametrische Raumplanungsplattform**, bei der
-Objekte ihre eigene Logik besitzen und von einer KI auf semantischer
-Ebene erzeugt, verändert und bewertet werden können.
+LayoutLab ist eine **parametrische Raumplanungsplattform**, die langfristig
+**menschliche Anforderungen an einen Raum in räumliche Lösungen übersetzt**.
 
-Nicht: \> "Skaliere diesen Würfel."
+Objekte besitzen eigene Logik; eine KI kann auf semantischer Ebene planen;
+das Plugin führt deterministisch aus (DD-009 Proposed).
 
-Sondern:
+**Heute (Execution Layer):** Generatoren, JSON, Clearances, Analyse — siehe Roadmap §17.
 
-> "Erzeuge ein 120x200 Hochbett mit Leiter links."
+**Langfristig (Problem-first):** Nutzer beschreibt Ziele, nicht zwingend Möbeltypen.
+
+Nicht: > „Skaliere diesen Würfel.“
+
+Auch nicht (nur langfristig als Endziel): > „Erzeuge ein Hochbett.“
+
+Sondern als Richtung:
+
+> „Schaffe Schlafplätze, halte Spielfläche frei, blockiere Fenster und Heizung nicht.“
+
+Ein Hochbett ist dann nur eine mögliche Lösung.
+
+Visionsdetails: [docs/Future_Ideas.md](docs/Future_Ideas.md) — **keine Kursänderung** der aktuellen Roadmap.
 
 ------------------------------------------------------------------------
 
@@ -29,17 +41,23 @@ Sondern:
 
 Das System soll irgendwann in der Lage sein,
 
+-   Nutzeranforderungen in natürlicher Sprache zu verstehen (Problem-first)
 -   komplette Räume zu analysieren
--   Möblierung vorzuschlagen
--   Kollisionsfreiheit sicherzustellen
--   Laufwege zu prüfen
--   Spielflächen zu bewerten
--   Stauraum zu optimieren
--   Lichtverhältnisse zu berücksichtigen
--   mehrere Varianten gegeneinander zu vergleichen
--   KI-gestützte Empfehlungen zu erzeugen
+-   Lösungsvarianten zu entwickeln und zu bewerten
+-   Möblierung vorzuschlagen — oder vorhandene Möbel umzustellen
+-   bei Bedarf individuelle oder integrierte Konstruktionen zu entwerfen
+-   Barrierefreiheit und besondere Bedürfnisse zu berücksichtigen
+-   Kollisionsfreiheit und Laufwege zu prüfen
+-   Spielflächen, Stauraum, Licht zu bewerten
+-   mehrere Varianten gegeneinander zu vergleichen und zu erklären
 
-Blender ist zunächst nur das Frontend.
+**Leitsatz:** LayoutLab optimiert räumliche Lösungen für menschliche Bedürfnisse —
+nicht Möbel um ihrer selbst willen.
+
+Blender ist zunächst nur das Frontend. Die aktuelle Entwicklung (Phase E: Clearances,
+Constraints, `analyze_layout`) bleibt die richtige Basisebene — siehe §17 Roadmap (unverändert).
+
+Ausführlich: [docs/Future_Ideas.md](docs/Future_Ideas.md).
 
 ------------------------------------------------------------------------
 
@@ -392,8 +410,8 @@ Der Fokus liegt auf Raumplanung.
 
 > LayoutLab erzeugt keine Meshes.
 >
-> LayoutLab beschreibt Objekte.
+> LayoutLab beschreibt Objekte — und langfristig: räumliche Lösungen für menschliche Bedürfnisse.
 >
-> Meshes sind lediglich deren aktuelle Darstellung.
+> Meshes und Möbel sind Mittel, nicht das Ziel.
 
-Dieses Prinzip soll zukünftige Entscheidungen leiten.
+Dieses Prinzip soll zukünftige Entscheidungen leiten. Die technische Roadmap (§17) bleibt bestehen.

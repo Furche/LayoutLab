@@ -3,7 +3,7 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-11 (DD-009 doc sync — review package)  
+**Last updated:** 2026-07-12 (product vision sharpened — roadmap unchanged)  
 **Plugin version:** 0.7.1 · **Branch:** `main` (sync with `origin/main`)
 
 ------------------------------------------------------------------------
@@ -34,11 +34,13 @@ Deutsch, DD-first, minimal diffs. Lies docs/HANDOFF.md + 00_READ_THIS_FIRST.md.
 
 # What is LayoutLab?
 
-Parametric **semantic interior planning** for Blender — not mesh placement.
+Parametric **semantic interior planning** for Blender — long-term: translate human room requirements into spatial solutions (not primarily a furniture placer).
 
 ```
 User Intent → Generator (rules) → Parts API → Blender scene
 ```
+
+(Long-term: Intent → Planning → Execution — see [Future_Ideas.md](Future_Ideas.md) §9.)
 
 - Blender 4.0+ is the **editor**, not the product.
 - **AI** communicates via JSON (DD-003); execution boundary in [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (**Proposed** — AI plans WHAT, plugin executes HOW).
@@ -228,5 +230,6 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 
 | Date | Change |
 |---|---|
+| 2026-07-12 | Product vision sharpened — Future_Ideas reorganized, roadmap unchanged |
 | 2026-07-11 | DD-009 doc sync — review gate, cross-doc Proposed markers |
 | 2026-07-11 | Initial handoff doc created |

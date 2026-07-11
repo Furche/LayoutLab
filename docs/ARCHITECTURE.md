@@ -10,11 +10,13 @@ Version: 0.5.0 (Living Document)
 >
 > - `[IMPLEMENTED]` — exists in `layoutlab/` addon today
 > - `[PLANNED]` — agreed direction, not yet built
+> - `[FUTURE VISION]` — product direction documented in `Future_Ideas.md`; no implementation commitment
 > - `[EXCEPTION]` — deliberate v0.5 shortcut; must not become permanent without a DD
 
 Related documents:
 
 - `AI_CONTEXT.md` — mental model and vocabulary
+- `docs/Future_Ideas.md` — long-term product vision (problem-first, accessibility, planning layers)
 - `docs/json_protocol.md` — AI ↔ plugin JSON contract
 - `docs/documentation_map.md` — which document to update when (maintenance index)
 - `LayoutLab_Master_Design_Document.md` — vision, roadmap, team roles
@@ -24,15 +26,32 @@ Related documents:
 
 # 1. System Purpose
 
-LayoutLab is a **semantic, parametric interior planning engine**.
+LayoutLab is a **semantic interior planning engine** — long-term, it should translate
+human requirements for a space into spatial solutions (`[FUTURE VISION]` — see
+[Future_Ideas.md](Future_Ideas.md) §1).
 
 Blender is the current editor. It is not the product.
+
+**Current phase (`[IMPLEMENTED]` / `[PLANNED]`):** Execution Layer — generators, Parts,
+`object_id`, regeneration, clearances (DD-007), constraints / `analyze_layout` (DD-008 Proposed),
+JSON protocol. This foundation remains correct and unchanged.
 
 ```
 User Intent → Object Knowledge → Generator → Components → Geometry → Mesh
 ```
 
 Geometry is the last step. See `AI_CONTEXT.md` for the full mental model.
+
+### Long-term product layers `[FUTURE VISION]`
+
+| Layer | Status | Role |
+|---|---|---|
+| **Execution / Geometry** | Now | Create, move, regenerate, export, analyze |
+| **Planning** | Later | Variants, evaluate, improve |
+| **Problem solving** | Long-term | Requirements → solution space selection |
+
+The five technical modules below (UI → Protocol → Engine → API → Generators) implement
+**Execution** today. Planning and problem-solving sit above them — not in the addon yet.
 
 ------------------------------------------------------------------------
 

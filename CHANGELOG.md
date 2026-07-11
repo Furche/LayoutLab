@@ -10,7 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
-- **DD-009 doc sync:** Review gate in DD-009; cross-links in `json_protocol.md`, `ARCHITECTURE.md`, `documentation_map.md`, `HANDOFF.md`, MDD §12 (all remain **Proposed** / Future Idea — no Accepted change)
+- **Product vision sharpened (docs only):** Reorganized `Future_Ideas.md` — problem-first planning, functional room design, accessibility, solution search space, Intent/Planning/Execution layers; minimal updates to Manifest, MDD, AI_CONTEXT, README, ARCHITECTURE. **No roadmap or implementation change.**
 
 ### Added (prior)
 

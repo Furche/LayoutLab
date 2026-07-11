@@ -6,7 +6,8 @@
 
 # We are not building a Blender addon.
 
-We are building a new way to think about interior planning.
+We are building a new way to think about interior planning — and, long-term,
+a way to **translate human requirements for a space into spatial solutions**.
 
 Blender is currently our editor.
 
@@ -74,9 +75,12 @@ The user should be able to say
 
 > Make enough room for a second child.
 
-That requires semantic objects.
+or
 
-Not meshes.
+> Keep as much play area as possible while two children can sleep here.
+
+That requires understanding **problems and goals first** — furniture is only a means.
+Semantic objects and spatial rules make that possible. Not meshes.
 
 ------------------------------------------------------------------------
 
@@ -97,7 +101,7 @@ We stand on the shoulders of Blender instead of reinventing them.
 
 # Long-Term Vision
 
-One day LayoutLab should be able to answer questions like:
+One day LayoutLab should answer questions like:
 
 -   Does this room work for two children?
 -   Can an adult still sit beside the bed?
@@ -106,6 +110,14 @@ One day LayoutLab should be able to answer questions like:
 -   Can I fit another wardrobe?
 -   Is there enough daylight?
 -   Which layout is objectively better?
+-   Can a wheelchair user move safely here?
+-   Are paths clear for someone with visual impairment?
+
+**Guiding principle (long-term):** LayoutLab optimizes spatial solutions for human
+needs — not furniture for its own sake.
+
+Details and status markers: [docs/Future_Ideas.md](docs/Future_Ideas.md) §1 Product Vision.
+Current implementation remains the Execution Layer (generators, JSON, analysis).
 
 ------------------------------------------------------------------------
 
@@ -142,8 +154,10 @@ then this project has succeeded.
 
 LayoutLab is not about drawing furniture.
 
-It is about teaching software how furniture works.
+It is about turning human requirements into workable spatial solutions.
 
-Once the software understands objects,
+Furniture, layout, and custom constructions are means — not the goal.
 
-creating geometry becomes the easy part.
+Once the software understands objects and room functions,
+
+creating geometry becomes the easier part.

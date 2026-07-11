@@ -4,6 +4,20 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-12 — Product vision sharpened (documentation only)
+
+**Context:** LayoutLab is long-term not a furniture generator but a system that translates
+human room requirements into spatial solutions. Furniture is a means, not the goal.
+
+**Changed:** `Future_Ideas.md` reorganized into 10 themed sections; light touch on Manifest,
+MDD §1/2/19, AI_CONTEXT, README, ARCHITECTURE §1, HANDOFF, documentation_map.
+
+**Explicitly not changed:** Roadmap phases, DD-007/008, code, no new solvers/synthesis/accessibility engine.
+
+**Layers documented:** Execution (now) → Planning (later) → Problem solving (long-term).
+
+------------------------------------------------------------------------
+
 ## 2026-07-11 — DD-009 documentation sync (review package)
 
 **Goal:** DD-009 remains **Proposed** until Alexander reviews; cross-docs reference it

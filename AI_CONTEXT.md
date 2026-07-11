@@ -9,13 +9,19 @@ Version: 1.0
 
 # What is LayoutLab?
 
-LayoutLab is an engine for semantic, parametric interior planning.
+LayoutLab is an engine for **semantic interior planning** — long-term, it translates
+**human requirements for a space into spatial solutions**.
 
-It is **not** a mesh editor.
+It is **not** a mesh editor or a furniture placer.
 
 Meshes are only one possible representation of knowledge.
 
-The core asset is knowledge.
+The core asset is knowledge. Furniture is a *means*, not the end goal.
+
+> LayoutLab optimizes spatial solutions for human needs — not furniture for its own sake.
+
+See [docs/Future_Ideas.md](docs/Future_Ideas.md) §1 for the sharpened product vision.
+**Current work** (generators, JSON, clearances, analysis) is the correct Execution Layer foundation.
 
 ------------------------------------------------------------------------
 
@@ -27,8 +33,11 @@ User → Mesh → Edit Mesh
 
 LayoutLab:
 
-User → Intent → Object Knowledge → Generator → Components → Geometry →
-Mesh
+User → Intent (problems, goals) → Requirements → Solution space →
+Object Knowledge → Generator → Components → Geometry → Mesh
+
+**Today** most interaction still flows through generators and JSON — that is correct
+for the current phase. **Long-term**, intent and planning layers sit above execution.
 
 Geometry is the final step, not the first.
 
@@ -162,14 +171,21 @@ Rules live in versioned software (plugin, generators, DDs), not only in prompts.
 
 # Evolution Path
 
+**Layer 1 — Execution / Geometry (now):** generators, parts, regenerate, clearances, analyze
+
+**Layer 2 — Planning (future):** variants, evaluate, discard, improve
+
+**Layer 3 — Problem solving (long-term):** understand requirements, choose solution types
+
 Today
 
 Generator → Mesh
 
 Future
 
-Knowledge → Rules → Generator → Components → Constraints → Geometry
-Builder → Mesh
+Intent → Planning → Execution → spatial solutions for human needs
+
+Knowledge → Rules → Generator → Components → Constraints → Geometry → Mesh
 
 Knowledge becomes the highest abstraction.
 
@@ -218,18 +234,14 @@ Before implementing:
 
 # Future Possibilities
 
-The architecture should be flexible enough to support:
+The architecture should be flexible enough to support problem-first planning for:
 
--   furniture
--   kitchens
--   bathrooms
--   offices
--   gardens
--   campers
--   apartments
--   complete buildings
+-   accessibility and diverse human needs
+-   functional room design (sleeping, playing, circulation, …)
+-   custom furniture synthesis (within scope limits — no structural engineering in current roadmap)
+-   furniture, kitchens, bathrooms, offices, gardens, campers, apartments, complete buildings
 
-Without redesigning the engine.
+Without redesigning the execution engine. Details: [docs/Future_Ideas.md](docs/Future_Ideas.md).
 
 ------------------------------------------------------------------------
 

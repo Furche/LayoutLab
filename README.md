@@ -1,14 +1,14 @@
 # LayoutLab
 
-**Semantic, parametric interior planning for Blender.**
+**Semantic interior planning for Blender** — long-term: translate human room requirements into spatial solutions.
 
-LayoutLab is not a furniture placement addon. It is an engine where objects understand what they are — beds know where legs belong, wardrobes know when they need another door — and geometry is generated from rules, not blind mesh scaling.
+LayoutLab is not a furniture placement addon. It is an engine where objects understand what they are — beds know where legs belong, wardrobes know when they need another door — and geometry is generated from rules, not blind mesh scaling. **Furniture is a means to satisfy requirements, not the primary goal.**
 
-Blender 4.0+ is the current editor. The long-term goal: plan entire rooms by describing intent to an AI, without manually editing hundreds of meshes.
+Blender 4.0+ is the current editor. The long-term goal: describe problems and goals in natural language; LayoutLab proposes spatial solutions — without manually editing hundreds of meshes.
 
-> *"LayoutLab does not create meshes. LayoutLab describes objects."*
+> *"LayoutLab does not create meshes. LayoutLab describes objects — and, long-term, spatial solutions for human needs."*
 
-**Status:** v0.7.1 — Clearance export with local/world bounds (DD-007 steps 1–6 complete).
+**Status:** v0.7.1 — Clearance export with local/world bounds (DD-007 steps 1–6 complete). Product vision extension: [docs/Future_Ideas.md](docs/Future_Ideas.md) (no roadmap change).
 
 Repository: https://github.com/Furche/LayoutLab
 
