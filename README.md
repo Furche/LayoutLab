@@ -136,17 +136,18 @@ Read in this order:
 |---|---|---|
 | 0 | [docs/documentation_map.md](docs/documentation_map.md) | **Which doc to update when** — maintenance index for all documentation |
 | 1 | [00_READ_THIS_FIRST.md](00_READ_THIS_FIRST.md) | Team roles, dev rules, mandatory doc checklist |
-| 2 | [AI_CONTEXT.md](AI_CONTEXT.md) | Mental model, vocabulary, design priorities |
-| 3 | [LayoutLab_Manifest.md](LayoutLab_Manifest.md) | Why this project exists |
-| 4 | [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) | Vision, roadmap, architecture overview |
-| 5 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | As-built vs. target architecture, migration plan |
-| 6 | [docs/json_protocol.md](docs/json_protocol.md) | JSON command and export specification |
-| 7 | [docs/generator_api.md](docs/generator_api.md) | Generator API reference (`api` dict) |
-| 8 | [docs/object_model.md](docs/object_model.md) | Semantic object representation in scenes |
-| 9 | [docs/units_and_coordinates.md](docs/units_and_coordinates.md) | Scale, axes, placement conventions |
-| 10 | [docs/design_decisions/](docs/design_decisions/) | Formal architecture decisions (DD-001–005) |
-| 11 | [LayoutLab_Generator_Specification.md](LayoutLab_Generator_Specification.md) | Normative generator standard |
-| 12 | [docs/how_to_write_generators.md](docs/how_to_write_generators.md) | **How to write generators** — guide, examples, debugging |
+| 2 | [docs/HANDOFF.md](docs/HANDOFF.md) | **Current status & next steps** — start here for new chat sessions |
+| 3 | [AI_CONTEXT.md](AI_CONTEXT.md) | Mental model, vocabulary, design priorities |
+| 4 | [LayoutLab_Manifest.md](LayoutLab_Manifest.md) | Why this project exists |
+| 5 | [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) | Vision, roadmap, architecture overview |
+| 6 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | As-built vs. target architecture, migration plan |
+| 7 | [docs/json_protocol.md](docs/json_protocol.md) | JSON command and export specification |
+| 8 | [docs/generator_api.md](docs/generator_api.md) | Generator API reference (`api` dict) |
+| 9 | [docs/object_model.md](docs/object_model.md) | Semantic object representation in scenes |
+| 10 | [docs/units_and_coordinates.md](docs/units_and_coordinates.md) | Scale, axes, placement conventions |
+| 11 | [docs/design_decisions/](docs/design_decisions/) | Formal architecture decisions (DD-001+) |
+| 12 | [LayoutLab_Generator_Specification.md](LayoutLab_Generator_Specification.md) | Normative generator standard |
+| 13 | [docs/how_to_write_generators.md](docs/how_to_write_generators.md) | **How to write generators** — guide, examples, debugging |
 
 ------------------------------------------------------------------------
 
