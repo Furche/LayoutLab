@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- **DD-009 Accepted** (2026-07-12) — AI plans WHAT, plugin executes HOW; bridge/expert deferred to future DDs
+
 ### Fixed
 
 - **Diagnostics:** analyze_layout checks now `delete_prefix(DIAG_PREFIX)` for isolated collection; blocked check filters by `furniture_name`
