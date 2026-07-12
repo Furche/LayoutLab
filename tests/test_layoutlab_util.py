@@ -43,7 +43,7 @@ class TestGeneratorMetadata(unittest.TestCase):
         meta = infer_generator_meta_from_code(code, _GENERATORS_DIR / "bed_basic.py")
         self.assertEqual(meta["name"], "bed_basic")
         self.assertEqual(meta["category"], "Beds")
-        self.assertEqual(meta["version"], "0.5.0")
+        self.assertEqual(meta["version"], "0.6.0")
         self.assertEqual(meta["icon"], "BED")
         self.assertIn("Parametric low bed", meta["description"])
 

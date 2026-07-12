@@ -709,6 +709,114 @@ def run_console_checks(context):
             f"summary: {result.get('summary')}",
         )
 
+    def check_analyze_layout_bed_clear(check):
+        from .protocol.layout_analysis import analyze_layout
+
+        bed_name = f"{DIAG_PREFIX}BED_ENTRY_CLR"
+        delete_prefix(DIAG_PREFIX)
+        execute_generator(
+            "bed_basic",
+            {
+                "name": bed_name,
+                "location": [0, 0, 0],
+                "length": 12,
+                "width": 20,
+                "head_side": "y_max",
+                "collection": DIAG_COLLECTION,
+                "clearances": [
+                    {
+                        "clearance_name": "bed_entry",
+                        "side": "foot",
+                        "requirement": "preferred",
+                        "depth": 6.0,
+                    }
+                ],
+            },
+        )
+        clearance = bpy.data.objects.get(f"{bed_name}_clearance_bed_entry")
+        if not clearance or clearance.get("layoutlab_clearance_name") != "bed_entry":
+            check.fail(f"bed_entry clearance missing: {getattr(clearance, 'name', None)}")
+            return
+        result = analyze_layout(
+            context,
+            {"action": "analyze_layout", "scope": "collection", "collection": DIAG_COLLECTION},
+        )
+        if result.get("findings"):
+            check.fail(f"expected no findings, got {result.get('findings')}")
+            return
+        check.ok(
+            f"clearance_count: {result.get('clearance_count')}",
+            f"bed_entry: {clearance.get('layoutlab_clearance_name')}",
+            f"findings: 0",
+        )
+
+    def check_analyze_layout_bed_blocked(check):
+        from .protocol.layout_analysis import analyze_layout
+
+        bed_name = f"{DIAG_PREFIX}BED_ENTRY_BLK"
+        delete_prefix(DIAG_PREFIX)
+        execute_generator(
+            "bed_basic",
+            {
+                "name": bed_name,
+                "location": [0, 0, 0],
+                "length": 12,
+                "width": 20,
+                "head_side": "y_max",
+                "collection": DIAG_COLLECTION,
+                "clearances": [
+                    {
+                        "clearance_name": "bed_entry",
+                        "side": "foot",
+                        "requirement": "preferred",
+                        "depth": 6.0,
+                    }
+                ],
+            },
+        )
+        apply_commands_json(
+            context,
+            json.dumps(
+                {
+                    "commands": [
+                        {
+                            "action": "create_box",
+                            "name": f"{DIAG_PREFIX}BED_ENTRY_OBSTACLE",
+                            "location": [0, -4, 0],
+                            "dimensions": [12, 4, 4],
+                            "collection": DIAG_COLLECTION,
+                        }
+                    ]
+                }
+            ),
+        )
+        result = analyze_layout(
+            context,
+            {"action": "analyze_layout", "scope": "collection", "collection": DIAG_COLLECTION},
+        )
+        bed_findings = [
+            f
+            for f in result.get("findings", [])
+            if f.get("clearance_ref", {}).get("clearance_name") == "bed_entry"
+            and f.get("clearance_ref", {}).get("furniture_name") == bed_name
+        ]
+        if len(bed_findings) != 1:
+            check.fail(f"expected 1 bed_entry finding, got {len(bed_findings)}: {result.get('findings')}")
+            return
+        finding = bed_findings[0]
+        if finding.get("severity") != "warning":
+            check.fail(f"expected warning, got {finding.get('severity')}")
+            return
+        overlaps = finding.get("overlaps", [])
+        if not any("OBSTACLE" in o.get("object_name", "") for o in overlaps):
+            check.fail(f"obstacle not in overlaps: {overlaps}")
+            return
+        check.ok(
+            f"severity: {finding.get('severity')}",
+            f"clearance_name: bed_entry",
+            f"overlap_count: {len(overlaps)}",
+        )
+
     def check_cleanup(check):
         apply_commands_json(
             context,
@@ -733,6 +841,8 @@ def run_console_checks(context):
             _run_check("clearance_export", check_clearance_export),
             _run_check("analyze_layout_clear", check_analyze_layout_clear),
             _run_check("analyze_layout_blocked", check_analyze_layout_blocked),
+            _run_check("analyze_layout_bed_clear", check_analyze_layout_bed_clear),
+            _run_check("analyze_layout_bed_blocked", check_analyze_layout_bed_blocked),
             _run_check("apply_commands_json", check_apply_commands_json),
             _run_check("regenerate", check_regenerate),
             _run_check("regenerate_layout_policy", check_regenerate_layout_policy),

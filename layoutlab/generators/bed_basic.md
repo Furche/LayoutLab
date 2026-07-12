@@ -2,7 +2,7 @@
 
 Generator reference for the JSON protocol and Generator Specification.
 
-Version: 0.5 · Category: Beds
+Version: 0.6 · Category: Beds
 
 ------------------------------------------------------------------------
 
@@ -99,6 +99,28 @@ Sleeping direction is along **Y** when `head_side` is `y_max` or `y_min`.
 | `mattress_color` | `[0.86, 0.86, 0.82, 0.65]` | RGBA semi-transparent |
 | `pillow_color` | `[0.95, 0.95, 0.92, 1]` | RGBA |
 
+### Clearances (v0.6, DD-007/008)
+
+Optional `clearances` array — wire zones parented to `body`, checked by `analyze_layout`.
+
+| Field | Default | Description |
+|---|---|---|
+| `clearance_name` | `"bed_entry"` | Semantic name (unique per bed) |
+| `side` | `"foot"` | Approach side — see below |
+| `depth` | `6.0` | Extension beyond bed edge (Blender units) |
+| `requirement` | `"preferred"` | `required` \| `preferred` |
+| `purpose` | `"bed_access"` | Intent label |
+
+**`side` when `head_side` is `y_max`:** `foot` (−Y), `head` (+Y), `left`/`x_min` (−X), `right`/`x_max` (+X).
+
+```json
+"clearances": [
+  { "clearance_name": "bed_entry", "side": "foot", "requirement": "preferred", "depth": 6.0 }
+]
+```
+
+Omit `clearances` for no zones (backward compatible).
+
 ### Removed / deprecated (v0.5)
 
 | Parameter | Status |
@@ -154,6 +176,7 @@ Final Blender objects after generator run:
 | `body` | **main** | `{name}_body` | 4 posts, 4 side rails, footboard, headboard base, optional headboard rise |
 | `mattress` | static | `{name}_mattress` | mattress volume |
 | `pillow_1`, `pillow_2` | static | `{name}_pillow_1`, … | one pillow each |
+| `clearance_*` | static | `{name}_clearance_bed_entry`, … | optional entry zones (v0.6) |
 | `label` | static | `{name}_label` | text curve |
 
 Build meshes use `{name}__{part}_{detail}` during generation (double underscore).

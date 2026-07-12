@@ -4,6 +4,13 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-12 — bed_basic v0.6.0 bed_entry clearances
+
+**Shipped:** `clearances` param array on `bed_basic` — `bed_entry` zones by `side` (foot/head/left/right),
+`create_clearance` parts parented to body. Diagnostics: bed entry clear + blocked scenarios.
+
+------------------------------------------------------------------------
+
 ## 2026-07-12 — DD-009 Accepted (AI execution boundary)
 
 **Core decision:** AI/planning client owns intent and operation selection; LayoutLab plugin

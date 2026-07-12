@@ -28,7 +28,7 @@ Repository: https://github.com/Furche/LayoutLab
 - JSON `create_clearance` command and generator **`api["create_clearance"]`** (DD-007 metadata)
 - JSON **`analyze_layout`** command — clearance overlap findings (DD-008)
 - Bundled generator sync on addon register
-- Diagnostics (16 checks: metadata, parenting, layout, export, analyze_layout)
+- Diagnostics (18 checks: metadata, parenting, layout, export, analyze_layout, bed_entry)
 
 See [docs/json_protocol.md](docs/json_protocol.md) for the full command reference.
 
@@ -248,7 +248,7 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 | **B** | Generators in repo, tests, sync | Complete |
 | **C** | Monolith → module split | Complete |
 | **D** | Semantic object model, `regenerate` | Complete |
-| **E** | Clearance zones (DD-007) → Constraints / analysis (DD-008) | DD-008 shipped (v0.8.0); bed clearances next |
+| **E** | Clearance zones (DD-007) → Constraints / analysis (DD-008) → bed clearances | Complete (v0.8.0) |
 
 Full roadmap: [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) §17 · Phase status: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9
 

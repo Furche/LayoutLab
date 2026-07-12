@@ -2,7 +2,7 @@
 GENERATOR_NAME = "bed_basic"
 GENERATOR_CATEGORY = "Beds"
 GENERATOR_DESCRIPTION = "Parametric low bed: posts, raised frame loop, headboard rise, mattress, pillows."
-GENERATOR_VERSION = "0.5.0"
+GENERATOR_VERSION = "0.6.0"
 GENERATOR_ICON = "BED"
 
 # Fallback thresholds (Blender units; 1 unit ≈ 10 cm in reference room)
@@ -13,6 +13,103 @@ PILLOW_GAP = 0.2
 MATTRESS_Z_INSET_FACTOR = 0.55  # mattress sits above lower rail within frame
 
 DEFAULT_HEADBOARD_RISE = 3.2  # decorative panel height above frame top
+DEFAULT_ENTRY_CLEARANCE_DEPTH = 6.0
+CLEARANCE_COLOR = (0.2, 0.8, 1.0, 0.22)
+
+
+def _clearance_height(bed, mattress_height):
+    return max(bed.mattress_z + float(mattress_height) - bed.floor_z, bed.post_height)
+
+
+def _zone_for_side(bed, side, depth, mattress_height):
+    """Return (local_location, dimensions) for a bed_entry clearance in body local space."""
+    h = _clearance_height(bed, mattress_height)
+    depth = max(float(depth), 0.1)
+    length, width = bed.length, bed.width
+    side = (side or "foot").strip().lower()
+
+    if bed.head_side == "y_max":
+        if side in ("foot", "y_min", "foot_end"):
+            return [0.0, -depth, 0.0], [length, depth, h]
+        if side in ("head", "y_max", "head_end"):
+            return [0.0, width, 0.0], [length, depth, h]
+        if side in ("left", "x_min"):
+            return [-depth, 0.0, 0.0], [depth, width, h]
+        if side in ("right", "x_max"):
+            return [length, 0.0, 0.0], [depth, width, h]
+    elif bed.head_side == "y_min":
+        if side in ("foot", "y_max", "foot_end"):
+            return [0.0, width, 0.0], [length, depth, h]
+        if side in ("head", "y_min", "head_end"):
+            return [0.0, -depth, 0.0], [length, depth, h]
+        if side in ("left", "x_min"):
+            return [-depth, 0.0, 0.0], [depth, width, h]
+        if side in ("right", "x_max"):
+            return [length, 0.0, 0.0], [depth, width, h]
+    elif bed.head_side == "x_max":
+        if side in ("foot", "x_min", "foot_end"):
+            return [-depth, 0.0, 0.0], [depth, width, h]
+        if side in ("head", "x_max", "head_end"):
+            return [length, 0.0, 0.0], [depth, width, h]
+        if side in ("left", "y_min"):
+            return [0.0, -depth, 0.0], [length, depth, h]
+        if side in ("right", "y_max"):
+            return [0.0, width, 0.0], [length, depth, h]
+    else:
+        if side in ("foot", "x_max", "foot_end"):
+            return [length, 0.0, 0.0], [depth, width, h]
+        if side in ("head", "x_min", "head_end"):
+            return [-depth, 0.0, 0.0], [depth, width, h]
+        if side in ("left", "y_min"):
+            return [0.0, -depth, 0.0], [length, depth, h]
+        if side in ("right", "y_max"):
+            return [0.0, width, 0.0], [length, depth, h]
+
+    raise ValueError(f"unknown bed clearance side {side!r} for head_side={bed.head_side!r}")
+
+
+def _iter_clearance_specs(params):
+    raw = params.get("clearances")
+    if not raw or not isinstance(raw, list):
+        return []
+    return [item for item in raw if isinstance(item, dict)]
+
+
+def _build_clearances(bed, name, params, mattress_height, collection, api):
+    specs = _iter_clearance_specs(params)
+    if not specs:
+        return
+
+    cc = api["create_clearance"]
+    bp = api["begin_part"]
+    ep = api["end_part"]
+    seen_names = set()
+
+    for spec in specs:
+        side = spec.get("side", "foot")
+        depth = spec.get("depth", DEFAULT_ENTRY_CLEARANCE_DEPTH)
+        clearance_name = str(spec.get("clearance_name", "bed_entry")).strip() or "bed_entry"
+        if clearance_name in seen_names:
+            clearance_name = f"{clearance_name}_{side}"
+        seen_names.add(clearance_name)
+
+        local_loc, dims = _zone_for_side(bed, side, depth, mattress_height)
+        part_id = f"clearance_{clearance_name}"
+
+        bp(part_id, role="clearance")
+        cc(
+            f"{name}__{part_id}",
+            dims,
+            local_location=local_loc,
+            clearance_name=clearance_name,
+            purpose=str(spec.get("purpose", "bed_access")),
+            requirement=spec.get("requirement", "preferred"),
+            priority=int(spec.get("priority", 0) or 0),
+            params={"side": side, "depth": float(depth)},
+            color=tuple(spec.get("color", CLEARANCE_COLOR)),
+            collection=collection,
+        )
+        ep()
 
 
 class BedConstruction:
@@ -356,6 +453,8 @@ def generate(params, api):
     bed.build_headboard_rise(cb, name, frame_color, collection)
     ep()
 
+    _build_clearances(bed, name, params, mattress_height, collection, api)
+
     bp("mattress", role="bed_mattress")
     cb(
         f"{name}__mattress",
@@ -423,4 +522,5 @@ def generate(params, api):
         "type": "bed_basic",
         "size": [length, width],
         "headboard_rise": headboard_rise,
+        "clearance_count": len(_iter_clearance_specs(params)),
     }

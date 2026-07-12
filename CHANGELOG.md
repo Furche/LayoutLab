@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **bed_basic v0.6.0:** optional `clearances` — `bed_entry` zones; diagnostics bed clear/blocked (18 checks)
 - **DD-009 Accepted** (2026-07-12) — AI plans WHAT, plugin executes HOW; bridge/expert deferred to future DDs
 
 ### Fixed
