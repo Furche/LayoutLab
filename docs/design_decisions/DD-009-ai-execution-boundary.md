@@ -1,28 +1,21 @@
 # DD-009 — AI Execution Boundary and Plugin Responsibility
 
-**Status:** Proposed (awaiting review)  
+**Status:** Accepted  
 **Date:** 2026-07-11  
-**Version:** 0.1 (draft)  
+**Accepted:** 2026-07-12  
+**Version:** 1.0  
 **Related:** [DD-003](DD-003-json-only-communication.md) (JSON transport today) · [DD-007](DD-007-clearance-zones.md) · [DD-008](DD-008-constraints-and-layout-analysis.md)
 
 ------------------------------------------------------------------------
 
-## Review gate
+## Acceptance note
 
-This document is **Proposed** until Alexander (Product Owner) reviews and accepts it.
+**Accepted 2026-07-12** (Alexander). Core boundary is binding:
 
-| Rule | Detail |
-|---|---|
-| Do not set status to **Accepted** | Until review is complete |
-| Do not implement | Bridge, local agent, MCP server, network service, or Expert Mode |
-| Cross-docs may reference DD-009 | As **Proposed** / **Future Idea** only — no implied commitment |
-| DD-003 unchanged | JSON remains the standard transport until a future DD amends it |
+> AI plans WHAT; LayoutLab plugin executes HOW — deterministically, via versioned API.
 
-Open questions in §Open questions remain unresolved; they do not block acceptance of the
-core boundary (AI plans WHAT, plugin executes HOW), but bridge/expert details need
-follow-up DDs before any code.
-
-------------------------------------------------------------------------
+**Not accepted for implementation:** Bridge, local agent, MCP server, Expert Mode — remain **Future Idea**;
+require **separate DD(s)** before any code. Open questions below are deferred to those future DDs.
 
 ## Problem
 
@@ -253,11 +246,32 @@ When bridge arrives, DD-003 may gain an amendment (“JSON or bridge RPC”) wit
 
 ------------------------------------------------------------------------
 
+## Deferred decisions (bridge / expert — separate DD required)
+
+The following open questions **do not block DD-009**. They must be resolved in a future
+**Bridge DD** (and optionally **Expert Mode DD**) before implementation.
+
+| # | Topic | Default assumption (non-binding until bridge DD) |
+|---|---|---|
+| 1 | Bridge auth | Localhost only + **Blender UI approval per session** |
+| 2 | Preview scope | Batch limits defined in bridge DD (DoS protection) |
+| 3 | Expert mode | **Opt-in only**; full `bpy` with explicit user consent — no sandbox in v1 |
+| 4 | Logging | Opt-in transcript (file or Blender text block) |
+| 5 | Bridge process | Decided in bridge DD (in-addon socket vs separate process vs MCP) |
+| 6 | Schema discovery | Runtime introspection from generator metadata + docs |
+| 7 | Conflict resolution | **LayoutLab API wins** in production; Expert for exploration only |
+| 8 | Offline / privacy | **Required** — bridge must work without cloud |
+| 9 | Expert mode audience | Internal dev first; power users later if justified |
+| 10 | Bridge vs clipboard | **Coexist** — clipboard remains for manual debugging |
+
+------------------------------------------------------------------------
+
 ## Recommended phase for Bridge (non-binding)
 
 | Phase | Focus | Bridge? |
 |---|---|---|
 | Now – E.2 | Clearances + `analyze_layout` (DD-007/008) | **No** — finish deterministic core |
+| E.2 complete | `analyze_layout` shipped (v0.8.0) | **No** — bed clearances next |
 | E complete | Stable protocol: generate, regenerate, export, analyze | **Plan** bridge DD, schema inventory |
 | Post-E / v0.9 | 3+ generators, diagnostics green, param schemas documented | **MVP bridge** — `get_scene`, `run_generator`, `analyze_layout`, undo group |
 | v1.0+ | Preview → analyze → revise → commit workflow | **Full preview API** |
@@ -273,3 +287,4 @@ When bridge arrives, DD-003 may gain an amendment (“JSON or bridge RPC”) wit
 |---|---|---|
 | 0.1 | 2026-07-11 | Initial proposal — AI vs plugin boundary, hybrid future, bridge concept |
 | 0.2 | 2026-07-11 | Review gate section — explicit Proposed status, no premature implementation |
+| 1.0 | 2026-07-12 | **Accepted** — core boundary binding; bridge/expert deferred to future DDs |

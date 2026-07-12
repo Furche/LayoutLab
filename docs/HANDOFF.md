@@ -25,8 +25,8 @@
 Projekt: LayoutLab, Blender-Addon.
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
 Plugin v0.8.0, bed_basic/wardrobe_basic v0.5.0.
-DD-007 Accepted. DD-008 Accepted (analyze_layout shipped). DD-009 Proposed.
-Nächstes: DD-009 review → bed_basic multi-zone clearances.
+DD-007 Accepted. DD-008 Accepted. DD-009 Accepted.
+Nächstes: bed_basic multi-zone clearances.
 Deutsch, DD-first, minimal diffs. Lies docs/HANDOFF.md + 00_READ_THIS_FIRST.md.
 ```
 
@@ -43,7 +43,7 @@ User Intent → Generator (rules) → Parts API → Blender scene
 (Long-term: Intent → Planning → Execution — see [Future_Ideas.md](Future_Ideas.md) §9.)
 
 - Blender 4.0+ is the **editor**, not the product.
-- **AI** communicates via JSON (DD-003); execution boundary in [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (**Proposed** — AI plans WHAT, plugin executes HOW).
+- **AI** communicates via JSON (DD-003); execution boundary [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (**Accepted** — AI plans WHAT, plugin executes HOW).
 - Today: **JSON** clipboard/text block ([DD-003](design_decisions/DD-003-json-only-communication.md)).
 
 **Install:** `dist/layoutlab-<version>.zip` → Blender Preferences → Add-ons.  
@@ -102,7 +102,7 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | DD-001–006 | Generators, JSON, Parts, … | Accepted |
 | [DD-007](design_decisions/DD-007-clearance-zones.md) | Clearance zones | **Accepted** — impl. steps 1–6 done |
 | [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | **Accepted** — v1 shipped |
-| [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary | **Proposed** |
+| [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary | **Accepted** |
 
 ### DD-007 (key points)
 
@@ -116,11 +116,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 - `required` → error, `preferred` → warning
 - Diagnostics: clear layout + wardrobe/bed blocked scenario
 
-### DD-009 (documentation only — **Proposed, awaiting Alexander review**)
+### DD-009 (Accepted — documentation only, no bridge/expert code)
 
-- Plugin stays API-first; direct AI→bpy = future Expert Mode only
-- Local bridge = **Future Idea** — **do not implement** without new DD + DD-009 Accepted
-- Review gate: see DD-009 §Review gate — no status change to Accepted until PO approves
+- AI plans WHAT; plugin executes HOW (deterministic API)
+- Bridge + Expert Mode = **Future Idea** — separate DD(s) before implementation
+- Deferred defaults documented in DD-009 §Deferred decisions
 
 ------------------------------------------------------------------------
 
@@ -142,10 +142,9 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. **Review DD-009** → Accepted  
-2. **`bed_basic` multi-zone clearances** — `bed_entry` per generator params  
-3. Diagnostic: bed entry blocked vs clear  
-4. **Not now:** bridge, expert bpy mode, generator #3, walkway graph  
+1. **`bed_basic` multi-zone clearances** — `bed_entry` per generator params  
+2. Diagnostic: bed entry blocked vs clear  
+3. **Not now:** bridge, expert bpy mode, generator #3, walkway graph  
 
 ------------------------------------------------------------------------
 
@@ -229,6 +228,6 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 
 | Date | Change |
 |---|---|
-| 2026-07-12 | v0.8.0 — DD-008 Accepted, `analyze_layout` implemented |
+| 2026-07-12 | DD-009 Accepted — AI/plugin execution boundary |
 | 2026-07-11 | DD-009 doc sync — review gate, cross-doc Proposed markers |
 | 2026-07-11 | Initial handoff doc created |

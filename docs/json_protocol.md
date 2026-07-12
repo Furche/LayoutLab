@@ -15,7 +15,7 @@ Version: **0.5.0** (Contract)
 
 Reference code: `layoutlab/__init__.py`, `layoutlab/util.py`
 
-Related: `docs/units_and_coordinates.md`, [DD-003](design_decisions/DD-003-json-only-communication.md) (transport), [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (execution boundary — **Proposed**)
+Related: `docs/units_and_coordinates.md`, [DD-003](design_decisions/DD-003-json-only-communication.md) (transport), [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (execution boundary — **Accepted**)
 
 ------------------------------------------------------------------------
 

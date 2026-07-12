@@ -306,7 +306,7 @@ Generators become rule systems rather than raw geometry builders. Today: Parts m
 
 The current JSON API belongs to the **Execution Layer** only. A future AI bridge must **not** merge these layers — it forwards defined operations; it does not replace planning logic inside the addon without a DD.
 
-See [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (**Proposed**): AI plans WHAT; plugin executes HOW.
+See [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (**Accepted**): AI plans WHAT; plugin executes HOW.
 
 ### AI–Plugin Direct Communication
 
@@ -335,7 +335,7 @@ A small local process or in-addon listener that exposes:
 
 The bridge forwards to the addon; it does not reimplement generator logic.
 
-See DD-009 for architecture sketch and security open questions. **Do not implement** without DD-009 Accepted + separate bridge DD.
+See DD-009 for architecture sketch and security open questions. **Do not implement** without separate bridge DD.
 
 ### Optional Direct Blender Expert Mode
 
@@ -343,7 +343,7 @@ See DD-009 for architecture sketch and security open questions. **Do not impleme
 
 AI may run controlled `bpy` for exploration or one-off debugging when user opts in.
 
-**Rules (from DD-009 Proposed):**
+**Rules (from DD-009 Accepted):**
 
 - Not a replacement for LayoutLab API in production workflows
 - Must be logged; prefer preview/undo wrapper
@@ -428,7 +428,7 @@ All of the following stay required regardless of Layer 2/3:
 
 - Generators, Parts, `object_id`, regeneration
 - Clearances (DD-007), Constraints / `analyze_layout` (DD-008)
-- JSON protocol (DD-003), execution boundary (DD-009 Proposed)
+- JSON protocol (DD-003), execution boundary (DD-009 Accepted)
 
 ### Evolution path
 

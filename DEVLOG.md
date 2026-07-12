@@ -4,6 +4,18 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-12 — DD-009 Accepted (AI execution boundary)
+
+**Core decision:** AI/planning client owns intent and operation selection; LayoutLab plugin
+owns deterministic execution (generators, parts, metadata, clearances, analyze_layout).
+
+**Deferred:** Bridge, Expert Mode, MCP — separate DD(s) required. Default assumptions
+documented in DD-009 §Deferred decisions (non-binding until bridge DD).
+
+**Not implemented:** No network service, agent, or direct bpy mode.
+
+------------------------------------------------------------------------
+
 ## 2026-07-12 — DD-008 Accepted + analyze_layout (v0.8.0)
 
 **Review decisions:** any AABB overlap > 0; blockers MESH only; orphan clearances included;

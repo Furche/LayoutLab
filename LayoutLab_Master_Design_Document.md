@@ -17,7 +17,7 @@ LayoutLab ist eine **parametrische Raumplanungsplattform**, die langfristig
 **menschliche Anforderungen an einen Raum in räumliche Lösungen übersetzt**.
 
 Objekte besitzen eigene Logik; eine KI kann auf semantischer Ebene planen;
-das Plugin führt deterministisch aus (DD-009 Proposed).
+das Plugin führt deterministisch aus (DD-009 Accepted).
 
 **Heute (Execution Layer):** Generatoren, JSON, Clearances, Analyse — siehe Roadmap §17.
 
@@ -254,7 +254,7 @@ DD-004 UI orientiert sich am Asset Browser.
 
 DD-005 Generatoren besitzen Metadaten.
 
-DD-009 KI plant — LayoutLab führt über stabile API aus (Plugin bleibt Pfad). **Status: Proposed** — Review ausstehend.
+DD-009 KI plant — LayoutLab führt über stabile API aus (Plugin bleibt Pfad). **Accepted** 2026-07-12.
 
 ------------------------------------------------------------------------
 

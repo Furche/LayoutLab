@@ -89,7 +89,7 @@ Five layers with strict responsibility boundaries. `[IMPLEMENTED]` as separate m
 
 **Communication rule:** layers talk only through defined interfaces (JSON protocol, Generator API). `[IMPLEMENTED]` for JSON + API and module boundaries.
 
-## 2.1 AI execution boundary `[PROPOSED]` — DD-009
+## 2.1 AI execution boundary `[ACCEPTED]` — DD-009
 
 A specialized AI *could* drive Blender directly via Python. LayoutLab **still requires a plugin** because core behaviour must be deterministic, testable, and model-independent.
 
@@ -521,7 +521,7 @@ Split into two design decisions (do not merge):
 |---|---|---|---|
 | E.1 | [DD-007](design_decisions/DD-007-clearance-zones.md) | Clearance zones — descriptive usage volumes | **Accepted** |
 | E.2 | [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | **Accepted** — v0.8.0 shipped |
-| E.doc | [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary (documentation only) | **Proposed** — no implementation |
+| E.doc | [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary | **Accepted** — documentation only; bridge deferred |
 
 Implementation order after DD-007 acceptance: API → wardrobe refactor → export → diagnostics → DD-008 → analyze_layout → bed clearances. Bridge / Expert Mode: **Future Idea** per DD-009 — separate DD before code.
 

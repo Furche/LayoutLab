@@ -163,7 +163,7 @@ LayoutLab separates **planning** from **execution**:
 
 The AI must **not** re-implement Blender parenting, `object_id`, or generator rules in ad-hoc Python each session. It uses the **LayoutLab protocol** (JSON today; future local bridge).
 
-Direct Blender control by AI is a possible **future Expert Mode** only — not the standard path. See [DD-009](docs/design_decisions/DD-009-ai-execution-boundary.md).
+Direct Blender control by AI is a possible **future Expert Mode** only — not the standard path. See [DD-009](docs/design_decisions/DD-009-ai-execution-boundary.md) (**Accepted**).
 
 Rules live in versioned software (plugin, generators, DDs), not only in prompts.
 

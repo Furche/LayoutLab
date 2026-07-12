@@ -222,7 +222,7 @@ Blender UI (plugin/)  →  Protocol  →  Engine  →  API  →  bpy
 
 - **Plugin** handles JSON and UI; no furniture logic.
 - **Generators** know one object type and call only the LayoutLab API.
-- **AI** communicates exclusively via JSON — no Python snippets for direct execution (DD-003). Execution boundary: [DD-009](docs/design_decisions/DD-009-ai-execution-boundary.md) (**Proposed**).
+- **AI** communicates exclusively via JSON — no Python snippets for direct execution (DD-003). Execution boundary: [DD-009](docs/design_decisions/DD-009-ai-execution-boundary.md) (**Accepted**).
 
 Full details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
