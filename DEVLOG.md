@@ -14,6 +14,9 @@ Third canonical generator validates Parts/Clearance/analyze path without analyze
 
 **Next (agreed):** more furniture or DD-008 second constraint type — not bridge/viewer without DD.
 
+**Open (2026-07-12, from real room test):** Room-aware analysis (walls as blockers); tiered clearance
+groups for bed/desk (foot required, sides preferred, at_least_one OK) vs wardrobe single-zone — needs DD-008 v2.
+
 ------------------------------------------------------------------------
 
 ## 2026-07-12 — Runtime independence (architectural note, docs only)

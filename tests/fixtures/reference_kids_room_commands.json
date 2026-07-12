@@ -1,21 +1,12 @@
 {
-  "description": "Reference children's room — LayoutLab generators placed inside the real room floor bounds from scene export (2026-07-12). Existing IKEA meshes stay in collection 'furniture'; this batch uses 'reference_kids_room'. Scale: 1 unit ≈ 10 cm.",
+  "description": "Reference children's room — LayoutLab generators inside floor bounds; positions avoid IKEA bbox overlap where possible (see reference_kids_room_room.json). Collection 'reference_kids_room' is separate from 'furniture'.",
   "collection": "reference_kids_room",
-  "room_bounds": {
-    "floor_min": [65.3444, 196.8293, 0],
-    "floor_max": [107.3444, 218.6293, 0],
-    "size_units": [42.0, 21.8],
-    "size_meters": [4.2, 2.18],
-    "window_wall": "x_min",
-    "door_wall": "x_max",
-    "heizung_bbox_x": [65.8094, 66.8094],
-    "heizung_bbox_y": [202.4787, 213.4787]
-  },
+  "room_bounds_ref": "reference_kids_room_room.json",
   "layout_notes": [
-    "Bed west strip (x 66–78), full room depth in Y.",
-    "Wardrobe south-east of bed (x 78.5–86.5, y 197.2–201.2).",
-    "Desk north-east of bed (x 78.5–90.5, y 211.5–217.5); chair clearance in −Y does not overlap wardrobe.",
-    "Does not replace existing furniture collection — may visually overlap if both visible."
+    "Bed west strip — foot clearance may extend through south wall (room-aware analysis not yet implemented).",
+    "Wardrobe south-east of bed — overlaps trofast if both collections visible; hide 'furniture' for clean test.",
+    "Desk east of room center — avoids IKEA Tisch bbox (x 86.5–92).",
+    "Generators use y_min front convention; IKEA pieces may be rotated differently."
   ],
   "commands": [
     {
@@ -27,7 +18,7 @@
       "generator": "bed_basic",
       "params": {
         "name": "BED_120x200",
-        "location": [66.0, 197.2, 0],
+        "location": [66.5, 198.0, 0],
         "length": 12,
         "width": 20,
         "head_side": "y_max",
@@ -36,6 +27,18 @@
             "clearance_name": "bed_entry",
             "side": "foot",
             "depth": 6.0,
+            "requirement": "preferred"
+          },
+          {
+            "clearance_name": "bed_entry",
+            "side": "left",
+            "depth": 5.0,
+            "requirement": "preferred"
+          },
+          {
+            "clearance_name": "bed_entry",
+            "side": "right",
+            "depth": 5.0,
             "requirement": "preferred"
           }
         ],
@@ -60,7 +63,7 @@
       "generator": "desk_basic",
       "params": {
         "name": "DESK_120x60",
-        "location": [78.5, 211.5, 0],
+        "location": [94.0, 208.0, 0],
         "width": 12,
         "depth": 6,
         "height": 7.5,
@@ -81,17 +84,20 @@
     {
       "furniture": "BED_120x200",
       "clearance_name": "bed_entry",
-      "requirement": "preferred"
+      "requirement": "preferred",
+      "note": "future: tiered group — foot highest priority"
     },
     {
       "furniture": "WARDROBE_80",
       "clearance_name": "front_access",
-      "requirement": "preferred"
+      "requirement": "preferred",
+      "note": "simple: zone must be clear"
     },
     {
       "furniture": "DESK_120x60",
       "clearance_name": "chair_access",
-      "requirement": "required"
+      "requirement": "required",
+      "note": "future: at_least_one among access zones"
     }
   ]
 }

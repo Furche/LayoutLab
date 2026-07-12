@@ -1,0 +1,82 @@
+{
+  "description": "Room + existing furniture bounds from Blender scene export (2026-07-12). Used to place LayoutLab reference generators and (future) room-aware analysis.",
+  "layoutlab_version": "0.8.1",
+  "scale_note": "1 Blender unit ≈ 10 cm",
+  "room": {
+    "floor_min": [65.3444, 196.8293, 0],
+    "floor_max": [107.3444, 218.6293, 0],
+    "size_units": [42.0, 21.8],
+    "size_meters": [4.2, 2.18],
+    "walls_height_units": 26.0,
+    "window_wall": "x_min",
+    "door_wall": "x_max"
+  },
+  "fixed_elements": [
+    {
+      "name": "window",
+      "bbox_min": [64.3444, 201.6347, 8.8],
+      "bbox_max": [65.3444, 213.9293, 23.5]
+    },
+    {
+      "name": "heizung",
+      "bbox_min": [65.8094, 202.4787, 0],
+      "bbox_max": [66.8094, 213.4787, 7.5]
+    },
+    {
+      "name": "door",
+      "bbox_min": [107.3444, 199.3159, 0],
+      "bbox_max": [110.0141, 206.396, 18.4453]
+    }
+  ],
+  "existing_furniture": [
+    {
+      "name": "kleiderschrank",
+      "collection": "furniture",
+      "rotation_z_deg": 270,
+      "bbox_min": [103.4157, 210.5104, 0],
+      "bbox_max": [107.2158, 218.3104, 15.2]
+    },
+    {
+      "name": "billy.001",
+      "collection": "furniture",
+      "bbox_min": [99.0191, 196.8499, 10.6002],
+      "bbox_max": [107.0008, 199.6502, 21.2008]
+    },
+    {
+      "name": "billy.002",
+      "collection": "furniture",
+      "bbox_min": [99.0191, 196.8499, 0],
+      "bbox_max": [107.0008, 199.6502, 10.6006]
+    },
+    {
+      "name": "kinderkueche",
+      "collection": "furniture",
+      "bbox_min": [90.3377, 196.6933, 0.086],
+      "bbox_max": [97.0979, 200.6075, 10.1135]
+    },
+    {
+      "name": "Tisch",
+      "collection": "furniture",
+      "bbox_min": [86.5195, 212.8832, 0.0532],
+      "bbox_max": [92.0195, 218.3832, 4.5531]
+    },
+    {
+      "name": "trofast",
+      "collection": "furniture",
+      "bbox_min": [80.5141, 196.8234, 0.066],
+      "bbox_max": [89.8257, 201.2002, 9.116]
+    },
+    {
+      "name": "stuhl.001",
+      "collection": "furniture",
+      "bbox_min": [88.3496, 210.6791, 0.0532],
+      "bbox_max": [91.0496, 213.6091, 5.4033]
+    },
+    {
+      "name": "stuhl.002",
+      "collection": "furniture",
+      "bbox_min": [92.0753, 213.8548, 0.0532],
+      "bbox_max": [95.0052, 216.5549, 5.4033]
+    }
+  ]
+}
