@@ -25,9 +25,8 @@ GENERATOR_VERSION = "0.2"
 
 Dynamic door Parts are parented to `body` — move body, doors follow; doors stay separate for animation.
 
-**Front / clearance:** Wardrobe front is **`y_min`**. Optional `clearance` Part sits in
-**−Y** from the door plane (`y - door_thickness - clearance_depth`). Parenting uses
-the shared Part API — no manual matrix code in the generator.
+**Front / clearance:** Default **`front_side: y_min`** — doors and clearance in **−Y** (back panel at +Y).
+Use **`front_side: y_max`** when the back sits on the south wall (`y_min`): doors and clearance open **+Y** into the room.
 
 ## Coordinate Convention
 
@@ -66,6 +65,7 @@ In Alexander's reference room convention, `1 unit ≈ 10 cm`.
 | `door_count` | auto | 1/2/3 doors depending on width; explicit value capped at 4 |
 | `shelf_count` | auto | Number of internal shelves; explicit value capped at 8 |
 | `show_clearance` | `True` | Creates front usage clearance |
+| `front_side` | `"y_min"` | Door face: `y_min` (default) or `y_max` (back on south wall) |
 | `clearance_depth` | `6.0` | Front clearance depth |
 | `panel_thickness` | `0.25` | Side/top/bottom thickness |
 | `back_thickness` | `0.15` | Back panel thickness |

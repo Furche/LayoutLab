@@ -42,7 +42,7 @@ class TestReferenceKidsRoomFixture(unittest.TestCase):
             for c in self.fixture["commands"]
             if c.get("action") == "run_generator"
         }
-        self.assertEqual(gens, {"bed_basic", "wardrobe_basic", "desk_basic"})
+        self.assertEqual(gens, {"bed_basic", "desk_basic"})
 
     def test_desk_has_chair_clearance(self):
         desk_cmds = [

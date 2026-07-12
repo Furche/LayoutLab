@@ -10,7 +10,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
-- **`desk_basic` v0.1.0:** third reference generator — tabletop, legs, optional `chair_access` clearance (`required` by default)
+- **`wardrobe_basic` v0.6.0:** `front_side` (`y_min` | `y_max`) — doors/clearance flip for wall placement
+
+### Changed
+
+- **Reference fixture:** bed + desk only in real kids room (no duplicate wardrobe — IKEA `kleiderschrank` exists); desk clear of kleiderschrank bbox
+- Plugin version **0.8.2**
+
+### Added (prior)
 - **Diagnostics:** `desk_clearance_layout`, `analyze_layout_desk_clear`, `analyze_layout_desk_blocked` (22 checks total)
 - **Fixture:** `tests/fixtures/reference_kids_room_commands.json` — bed + wardrobe + desk reference layout
 - **Unit tests:** `tests/test_desk_basic.py` — chair zone geometry + fixture validation

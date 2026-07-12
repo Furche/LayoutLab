@@ -1,12 +1,11 @@
 {
-  "description": "Reference children's room — LayoutLab generators inside floor bounds; positions avoid IKEA bbox overlap where possible (see reference_kids_room_room.json). Collection 'reference_kids_room' is separate from 'furniture'.",
+  "description": "Reference children's room — bed + desk inside floor bounds; positions avoid IKEA bbox overlap (see reference_kids_room_room.json). No LayoutLab wardrobe here — real 'kleiderschrank' already in collection 'furniture'.",
   "collection": "reference_kids_room",
   "room_bounds_ref": "reference_kids_room_room.json",
   "layout_notes": [
-    "Bed west strip — foot clearance may extend through south wall (room-aware analysis not yet implemented).",
-    "Wardrobe south-east of bed — overlaps trofast if both collections visible; hide 'furniture' for clean test.",
-    "Desk east of room center — avoids IKEA Tisch bbox (x 86.5–92).",
-    "Generators use y_min front convention; IKEA pieces may be rotated differently."
+    "Bed west strip (x 66.5–78.5), clear of heizung (x max ~66.8).",
+    "Desk x 88–100, y 201–207 — clear of kleiderschrank (x min 103.4) and Tisch (y min 212.9).",
+    "Hide collection 'furniture' for a clean LayoutLab-only view."
   ],
   "commands": [
     {
@@ -47,23 +46,10 @@
     },
     {
       "action": "run_generator",
-      "generator": "wardrobe_basic",
-      "params": {
-        "name": "WARDROBE_80",
-        "location": [78.5, 197.2, 0],
-        "width": 8,
-        "depth": 4,
-        "height": 15,
-        "show_clearance": true,
-        "collection": "reference_kids_room"
-      }
-    },
-    {
-      "action": "run_generator",
       "generator": "desk_basic",
       "params": {
         "name": "DESK_120x60",
-        "location": [94.0, 208.0, 0],
+        "location": [88.0, 201.0, 0],
         "width": 12,
         "depth": 6,
         "height": 7.5,
@@ -75,8 +61,6 @@
   "expected_objects": [
     "BED_120x200_body",
     "BED_120x200_mattress",
-    "WARDROBE_80_body",
-    "WARDROBE_80_clearance_front_access",
     "DESK_120x60_body",
     "DESK_120x60_clearance_chair_access"
   ],
@@ -84,20 +68,12 @@
     {
       "furniture": "BED_120x200",
       "clearance_name": "bed_entry",
-      "requirement": "preferred",
-      "note": "future: tiered group — foot highest priority"
-    },
-    {
-      "furniture": "WARDROBE_80",
-      "clearance_name": "front_access",
-      "requirement": "preferred",
-      "note": "simple: zone must be clear"
+      "requirement": "preferred"
     },
     {
       "furniture": "DESK_120x60",
       "clearance_name": "chair_access",
-      "requirement": "required",
-      "note": "future: at_least_one among access zones"
+      "requirement": "required"
     }
   ]
 }

@@ -2,7 +2,7 @@
 GENERATOR_NAME = "wardrobe_basic"
 GENERATOR_CATEGORY = "Storage"
 GENERATOR_DESCRIPTION = "Parametric wardrobe with carcass, doors, shelves, handles, and optional front clearance."
-GENERATOR_VERSION = "0.5.0"
+GENERATOR_VERSION = "0.6.0"
 GENERATOR_ICON = "OUTLINER_COLLECTION"
 
 MIN_WIDTH = 3.0
@@ -67,6 +67,26 @@ def _shelf_count(height, requested=None):
     return 4
 
 
+def _normalize_front_side(value):
+    side = (value or "y_min").strip().lower()
+    if side in ("y_min", "y_max"):
+        return side
+    raise ValueError(f"unknown wardrobe front_side {value!r} (use y_min or y_max)")
+
+
+def _clearance_spec(front_side, width, depth, height, door_thickness, clearance_depth):
+    """Return (local_location, dimensions) for front_access in body local space."""
+    if front_side == "y_min":
+        return (
+            [0.0, -door_thickness - clearance_depth, 0.0],
+            [width, clearance_depth, height],
+        )
+    return (
+        [0.0, depth + door_thickness, 0.0],
+        [width, clearance_depth, height],
+    )
+
+
 def generate(params, api):
     name = params.get("name", "WARDROBE_basic")
     x, y, z = params.get("location", [0, 0, 0])
@@ -86,6 +106,7 @@ def generate(params, api):
 
     show_clearance = bool(params.get("show_clearance", True))
     clearance_depth = _clamp(params.get("clearance_depth", CLEARANCE_DEPTH_DEFAULT), 0.0, CLEARANCE_DEPTH_DEFAULT)
+    front_side = _normalize_front_side(params.get("front_side", "y_min"))
 
     carcass_color = params.get("carcass_color", [0.70, 0.58, 0.42, 1.0])
     door_color = params.get("door_color", [0.82, 0.74, 0.62, 1.0])
@@ -104,7 +125,11 @@ def generate(params, api):
     cb(f"{name}__body_side_right", [x + width - panel, y, z], [panel, depth, height], carcass_color, collection, "wardrobe_side", None)
     cb(f"{name}__body_top", [x, y, z + height - panel], [width, depth, panel], carcass_color, collection, "wardrobe_top", None)
     cb(f"{name}__body_bottom", [x, y, z], [width, depth, panel], carcass_color, collection, "wardrobe_bottom", None)
-    cb(f"{name}__body_back", [x, y + depth - back, z], [width, back, height], carcass_color, collection, "wardrobe_back", None)
+    if front_side == "y_min":
+        back_y = y + depth - back
+    else:
+        back_y = y
+    cb(f"{name}__body_back", [x, back_y, z], [width, back, height], carcass_color, collection, "wardrobe_back", None)
 
     usable_height = max(height - 2 * panel, 0.1)
     inner_width = max(width - 2 * panel, 0.1)
@@ -124,13 +149,20 @@ def generate(params, api):
     ep()
 
     door_width = width / door_count
+    if front_side == "y_min":
+        door_y = y - door_thickness
+        handle_y = y - door_thickness - HANDLE_DEPTH_DEFAULT
+    else:
+        door_y = y + depth
+        handle_y = y + depth + HANDLE_DEPTH_DEFAULT
+
     for i in range(door_count):
         door_x = x + i * door_width
         part_id = f"door_{i + 1}"
         bp(part_id, dynamic=True, role="wardrobe_door")
         cb(
             f"{name}__{part_id}_panel",
-            [door_x, y - door_thickness, z + panel * 0.5],
+            [door_x, door_y, z + panel * 0.5],
             [door_width, door_thickness, height - panel],
             door_color,
             collection,
@@ -152,7 +184,7 @@ def generate(params, api):
         handle_z = z + height * 0.48
         cb(
             f"{name}__{part_id}_handle",
-            [handle_x, y - door_thickness - handle_d, handle_z],
+            [handle_x, handle_y, handle_z],
             [handle_w, handle_d, handle_h],
             handle_color,
             collection,
@@ -162,16 +194,19 @@ def generate(params, api):
         ep()
 
     if show_clearance and clearance_depth > 0:
+        local_loc, dims = _clearance_spec(
+            front_side, width, depth, height, door_thickness, clearance_depth
+        )
         bp("clearance_front_access", role="clearance")
         cc(
             f"{name}__clearance_front_access",
-            [width, clearance_depth, height],
-            local_location=[0, -door_thickness - clearance_depth, 0],
+            dims,
+            local_location=local_loc,
             clearance_name="front_access",
             purpose="door_access",
             requirement="preferred",
             priority=0,
-            params={"depth": clearance_depth},
+            params={"depth": clearance_depth, "front_side": front_side},
             color=clearance_color,
             collection=collection,
         )
@@ -193,4 +228,5 @@ def generate(params, api):
         "door_count": door_count,
         "shelf_count": shelf_count,
         "clearance": show_clearance,
+        "front_side": front_side,
     }
