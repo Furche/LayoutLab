@@ -1,0 +1,82 @@
+{
+  "description": "Reference children's room — bed, wardrobe, desk at Alexander's room scale (1 unit ≈ 10 cm). Apply via LayoutLab panel or apply_commands_json.",
+  "collection": "reference_kids_room",
+  "reference_location_example": [68.3, 197.7, 0],
+  "commands": [
+    {
+      "action": "delete_collection_objects",
+      "collection": "reference_kids_room"
+    },
+    {
+      "action": "run_generator",
+      "generator": "bed_basic",
+      "params": {
+        "name": "BED_120x200",
+        "location": [68.3, 197.7, 0],
+        "length": 12,
+        "width": 20,
+        "head_side": "y_max",
+        "clearances": [
+          {
+            "clearance_name": "bed_entry",
+            "side": "foot",
+            "depth": 6.0,
+            "requirement": "preferred"
+          }
+        ],
+        "collection": "reference_kids_room"
+      }
+    },
+    {
+      "action": "run_generator",
+      "generator": "wardrobe_basic",
+      "params": {
+        "name": "WARDROBE_80",
+        "location": [82.0, 197.7, 0],
+        "width": 8,
+        "depth": 4,
+        "height": 15,
+        "show_clearance": true,
+        "collection": "reference_kids_room"
+      }
+    },
+    {
+      "action": "run_generator",
+      "generator": "desk_basic",
+      "params": {
+        "name": "DESK_120x60",
+        "location": [68.3, 175.0, 0],
+        "width": 12,
+        "depth": 6,
+        "height": 7.5,
+        "show_clearance": true,
+        "collection": "reference_kids_room"
+      }
+    }
+  ],
+  "expected_objects": [
+    "BED_120x200_body",
+    "BED_120x200_mattress",
+    "WARDROBE_80_body",
+    "WARDROBE_80_clearance_front_access",
+    "DESK_120x60_body",
+    "DESK_120x60_clearance_chair_access"
+  ],
+  "expected_clearances": [
+    {
+      "furniture": "BED_120x200",
+      "clearance_name": "bed_entry",
+      "requirement": "preferred"
+    },
+    {
+      "furniture": "WARDROBE_80",
+      "clearance_name": "front_access",
+      "requirement": "preferred"
+    },
+    {
+      "furniture": "DESK_120x60",
+      "clearance_name": "chair_access",
+      "requirement": "required"
+    }
+  ]
+}

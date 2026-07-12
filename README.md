@@ -20,7 +20,7 @@ Repository: https://github.com/Furche/LayoutLab
 - Scene export as JSON (full scene or selection) with semantic `layoutlab` block
 - Generator browser (asset-browser-like) + Quick Test per generator
 - **Paste Generator** — install/overwrite a generator from clipboard script
-- Parametric **`bed_basic` v0.5** (raised frame construction) and **`wardrobe_basic`**
+- Parametric **`bed_basic`**, **`wardrobe_basic`**, and **`desk_basic`** reference generators
 - **Parts model:** Main Part + static/dynamic child Parts, join-on-finalize
 - Semantic metadata (`layoutlab_object_id`, `layoutlab_params`, `layoutlab_part`, …)
 - `regenerate` JSON command (update params, preserve object identity)

@@ -8,7 +8,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **`desk_basic` v0.1.0:** third reference generator — tabletop, legs, optional `chair_access` clearance (`required` by default)
+- **Diagnostics:** `desk_clearance_layout`, `analyze_layout_desk_clear`, `analyze_layout_desk_blocked` (22 checks total)
+- **Fixture:** `tests/fixtures/reference_kids_room_commands.json` — bed + wardrobe + desk reference layout
+- **Unit tests:** `tests/test_desk_basic.py` — chair zone geometry + fixture validation
+
 ### Changed
+
+- Plugin version **0.8.1**
+
+### Changed (prior)
 
 - **Runtime independence (docs):** LayoutLab Core vs Blender Runtime — Future_Ideas §11, ARCHITECTURE §2.2; no implementation
 - **bed_basic v0.6.0:** optional `clearances` — `bed_entry` zones; diagnostics bed clear/blocked (18 checks)

@@ -87,11 +87,13 @@ def run_console_checks(context):
     def check_environment(check):
         bundled = addon_bundled_generators_dir()
         bed_bundled = bundled / "bed_basic.py"
+        desk_bundled = bundled / "desk_basic.py"
         user_dir = addon_user_dir()
         check.ok(
             f"addon_root: {addon_root_dir()}",
             f"bundled_generators: {bundled}",
             f"bed_basic_bundled: {bed_bundled.exists()}",
+            f"desk_basic_bundled: {desk_bundled.exists()}",
             f"user_generators: {user_dir}",
         )
 
@@ -115,6 +117,30 @@ def run_console_checks(context):
         user_meta = infer_generator_meta_from_code(path.read_text(encoding="utf-8"))
         check.ok(
             f"bed_basic_path: {path}",
+            f"user_version: {user_meta.get('version')}",
+            f"bundled_version: {bundled_meta.get('version')}",
+        )
+
+    def check_install_desk_basic(check):
+        path = generator_path("desk_basic")
+        bundled_code = load_bundled_generator_source("desk_basic")
+        bundled_meta = infer_generator_meta_from_code(bundled_code)
+        if not path.exists():
+            save_generator_code(bundled_code)
+        else:
+            user_meta = infer_generator_meta_from_code(path.read_text(encoding="utf-8"))
+            user_ver = generator_version_tuple(user_meta.get("version"))
+            bundled_ver = generator_version_tuple(bundled_meta.get("version"))
+            if user_ver < bundled_ver:
+                save_generator_code(bundled_code)
+                check.ok(
+                    f"desk_basic_path: {path}",
+                    f"upgraded: {'.'.join(map(str, user_ver))} -> {'.'.join(map(str, bundled_ver))}",
+                )
+                return
+        user_meta = infer_generator_meta_from_code(path.read_text(encoding="utf-8"))
+        check.ok(
+            f"desk_basic_path: {path}",
             f"user_version: {user_meta.get('version')}",
             f"bundled_version: {bundled_meta.get('version')}",
         )
@@ -817,6 +843,162 @@ def run_console_checks(context):
             f"overlap_count: {len(overlaps)}",
         )
 
+    def check_desk_clearance_layout(check):
+        from .api.transforms import translations_close
+
+        prefix = f"{DIAG_PREFIX}DESK"
+        gaps = []
+        for loc in ([0.0, 0.0, 0.0], [50.0, 120.0, 0.0]):
+            delete_prefix(prefix)
+            execute_generator(
+                "desk_basic",
+                {
+                    "name": prefix,
+                    "location": loc,
+                    "width": 10,
+                    "depth": 5,
+                    "height": 7.5,
+                    "show_clearance": True,
+                    "collection": DIAG_COLLECTION,
+                },
+            )
+            body = bpy.data.objects.get(f"{prefix}_body")
+            clearance = bpy.data.objects.get(f"{prefix}_clearance_chair_access")
+            if not body or not clearance:
+                check.fail(f"desk parts missing at {loc}")
+                return
+            if clearance.parent != body:
+                check.fail(f"clearance not parented at {loc}")
+                return
+            if clearance.get("layoutlab_clearance_name") != "chair_access":
+                check.fail(f"unexpected clearance_name at {loc}: {clearance.get('layoutlab_clearance_name')}")
+                return
+            if clearance.get("layoutlab_clearance_requirement") != "required":
+                check.fail(f"unexpected requirement at {loc}")
+                return
+            if not clearance.get("layoutlab_clearance_id"):
+                check.fail(f"missing clearance_id at {loc}")
+                return
+            body_ymin, _ = _world_bbox_y_extents(body)
+            _, clearance_ymax = _world_bbox_y_extents(clearance)
+            gap = body_ymin - clearance_ymax
+            if gap < -0.5 or gap > 1.0:
+                check.fail(f"clearance front gap unexpected at {loc}: gap={gap}")
+                return
+            gaps.append(round(gap, 4))
+        if not translations_close((gaps[0], 0, 0), (gaps[1], 0, 0), REL_TOL):
+            check.fail(f"clearance gap differs by world location: {gaps}")
+            return
+        check.ok(
+            f"clearance_gap_origin: {gaps[0]}",
+            f"clearance_gap_offset: {gaps[1]}",
+            "front_side: y_min",
+            "clearance_name: chair_access",
+        )
+
+    def check_analyze_layout_desk_clear(check):
+        from .protocol.layout_analysis import analyze_layout
+
+        prefix = f"{DIAG_PREFIX}DESK_CLR"
+        delete_prefix(DIAG_PREFIX)
+        execute_generator(
+            "desk_basic",
+            {
+                "name": prefix,
+                "location": [0, 0, 0],
+                "width": 10,
+                "depth": 5,
+                "height": 7.5,
+                "show_clearance": True,
+                "collection": DIAG_COLLECTION,
+            },
+        )
+        result = analyze_layout(
+            context,
+            {"action": "analyze_layout", "scope": "collection", "collection": DIAG_COLLECTION},
+        )
+        if not result.get("analyzed"):
+            check.fail("analyzed=false")
+            return
+        findings = result.get("findings", [])
+        if findings:
+            check.fail(f"expected no findings, got {findings}")
+            return
+        check.ok(
+            f"clearance_count: {result.get('clearance_count')}",
+            f"findings: 0",
+            f"summary: {result.get('summary')}",
+        )
+
+    def check_analyze_layout_desk_blocked(check):
+        from .protocol.layout_analysis import analyze_layout
+
+        prefix = f"{DIAG_PREFIX}DESK_BLK"
+        desk_name = f"{prefix}_DESK"
+        delete_prefix(DIAG_PREFIX)
+        execute_generator(
+            "desk_basic",
+            {
+                "name": desk_name,
+                "location": [0, 0, 0],
+                "width": 10,
+                "depth": 5,
+                "height": 7.5,
+                "show_clearance": True,
+                "collection": DIAG_COLLECTION,
+            },
+        )
+        apply_commands_json(
+            context,
+            json.dumps(
+                {
+                    "commands": [
+                        {
+                            "action": "create_box",
+                            "name": f"{prefix}_OBSTACLE",
+                            "location": [0, -4, 0],
+                            "dimensions": [10, 3, 5],
+                            "collection": DIAG_COLLECTION,
+                        }
+                    ]
+                }
+            ),
+        )
+        result = analyze_layout(
+            context,
+            {"action": "analyze_layout", "scope": "collection", "collection": DIAG_COLLECTION},
+        )
+        if not result.get("analyzed"):
+            check.fail("analyzed=false")
+            return
+        findings = result.get("findings", [])
+        chair = [
+            f
+            for f in findings
+            if f.get("clearance_ref", {}).get("clearance_name") == "chair_access"
+            and f.get("clearance_ref", {}).get("furniture_name") == desk_name
+        ]
+        if len(chair) != 1:
+            check.fail(f"expected 1 chair_access finding, got {len(chair)}: {findings}")
+            return
+        finding = chair[0]
+        if finding.get("severity") != "error":
+            check.fail(f"expected error (required), got {finding.get('severity')}")
+            return
+        if finding.get("constraint_type") != "zone_must_be_clear":
+            check.fail(f"constraint_type: {finding.get('constraint_type')}")
+            return
+        overlaps = finding.get("overlaps", [])
+        if not any("OBSTACLE" in o.get("object_name", "") for o in overlaps):
+            check.fail(f"obstacle not in overlaps: {overlaps}")
+            return
+        check.ok(
+            f"severity: {finding.get('severity')}",
+            f"clearance_name: chair_access",
+            f"overlap_count: {len(overlaps)}",
+            f"summary: {result.get('summary')}",
+        )
+
     def check_cleanup(check):
         apply_commands_json(
             context,
@@ -832,6 +1014,7 @@ def run_console_checks(context):
         [
             _run_check("environment", check_environment),
             _run_check("install_bed_basic", check_install_bed_basic),
+            _run_check("install_desk_basic", check_install_desk_basic),
             _run_check("generator_metadata", check_generator_metadata),
             _run_check("parse_commands", check_parse_commands),
             _run_check("run_generator_direct", check_run_generator_direct),
@@ -843,6 +1026,9 @@ def run_console_checks(context):
             _run_check("analyze_layout_blocked", check_analyze_layout_blocked),
             _run_check("analyze_layout_bed_clear", check_analyze_layout_bed_clear),
             _run_check("analyze_layout_bed_blocked", check_analyze_layout_bed_blocked),
+            _run_check("desk_clearance_layout", check_desk_clearance_layout),
+            _run_check("analyze_layout_desk_clear", check_analyze_layout_desk_clear),
+            _run_check("analyze_layout_desk_blocked", check_analyze_layout_desk_blocked),
             _run_check("apply_commands_json", check_apply_commands_json),
             _run_check("regenerate", check_regenerate),
             _run_check("regenerate_layout_policy", check_regenerate_layout_policy),

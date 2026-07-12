@@ -4,6 +4,18 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-12 — desk_basic v0.1.0 (generator #3)
+
+**Shipped:** `desk_basic` with `chair_access` clearance (`required` → analyze `error` when blocked).
+Third canonical generator validates Parts/Clearance/analyze path without analyzer changes.
+
+**Also:** reference kids room fixture (`tests/fixtures/reference_kids_room_commands.json`),
+4 new diagnostics (22 total). Plugin 0.8.1.
+
+**Next (agreed):** more furniture or DD-008 second constraint type — not bridge/viewer without DD.
+
+------------------------------------------------------------------------
+
 ## 2026-07-12 — Runtime independence (architectural note, docs only)
 
 **Question:** Must LayoutLab live inside Blender forever?

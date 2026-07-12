@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-12 (v0.8.0 — analyze_layout)  
-**Plugin version:** 0.8.0 · **Branch:** `main`
+**Last updated:** 2026-07-12 (v0.8.1 + desk_basic + reference fixture)  
+**Plugin version:** 0.8.1 · **Branch:** `main` (synced with `origin/main`)
 
 ------------------------------------------------------------------------
 
@@ -22,11 +22,22 @@
 **Copy-paste prompt for new chat:**
 
 ```
-Projekt: LayoutLab, Blender-Addon.
+LayoutLab — Blender-Addon für semantische Raumplanung (Execution Layer).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Plugin v0.8.0, bed_basic v0.6.0, wardrobe_basic v0.5.0.
-DD-007/008/009 Accepted. Nächstes: neuer Generator oder Bridge-DD planen.
-Deutsch, DD-first, minimal diffs. Lies docs/HANDOFF.md + 00_READ_THIS_FIRST.md.
+Branch: main, synced mit origin. Plugin v0.8.1.
+
+Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
+Aktueller Stand (2026-07-12):
+- DD-008 Accepted: analyze_layout + layout_analysis.py (Clearance-Overlap)
+- DD-009 Accepted: AI plant WAS, Plugin führt WIE aus
+- Generatoren: bed_basic, wardrobe_basic, desk_basic (chair_access clearance)
+- 22 Diagnostic-Checks (inkl. desk clear/blocked analyze)
+- Fixture: tests/fixtures/reference_kids_room_commands.json
+
+Bitte auf Deutsch antworten. Keine vollen Diagnostic-Reports inline — nur fehlgeschlagene Checks oder Dateireferenz.
+Commits/PRs nur auf explizite Anfrage. Lies docs/HANDOFF.md für Details.
+
+[Nächste Aufgabe hier einfügen]
 ```
 
 ------------------------------------------------------------------------
@@ -65,6 +76,7 @@ User Intent → Generator (rules) → Parts API → Blender scene
 | Code style | Minimal diffs, match conventions, no over-engineering |
 | Tests | `python3 -m unittest discover -s tests` (no bpy for util tests) |
 | Blender QA | Diagnostics in addon — target **18/18 PASS** |
+| Agent context | `.cursor/rules/` — Git/PR/LayoutLab-Konventionen; keine vollen Diagnostic-Dumps in Chat |
 
 Alexander gives precise architecture feedback (e.g. don't merge clearance + constraints in one DD).
 
@@ -74,10 +86,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 | Component | Version |
 |---|---|
-| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.8.0** |
+| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.8.1** |
 | `bed_basic` | **0.6.0** — raised frame construction (`BedConstruction`) + optional `bed_entry` clearances |
 | `wardrobe_basic` | **0.5.0** — `create_clearance`, part `clearance_front_access` |
-| Latest zip | `dist/layoutlab-0.8.0.zip` (rebuilt on commit when `layoutlab/` changes) |
+| `desk_basic` | **0.1.0** — tabletop + legs, optional `chair_access` clearance (`required`) |
+| Latest zip | `dist/layoutlab-0.8.1.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -85,12 +98,13 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 - **Parts model** (DD-006): main `body`, static/dynamic children, join at `finish()`
 - **Parenting:** child offsets from `obj.location` (not stale `matrix_world` in `exec()`)
-- Generators: `bed_basic`, `wardrobe_basic`; generator browser + Quick Test
+- Generators: `bed_basic`, `wardrobe_basic`, `desk_basic`; generator browser + Quick Test
 - JSON: `run_generator`, `regenerate`, scene export, `create_clearance`
 - **`api["create_clearance"]`** (DD-007): metadata + Main-Part-local placement
 - **`analyze_layout`** JSON command (DD-008): findings from clearance overlap
 - Export: `layoutlab.clearance` with `local_bounds` + `world_bounds`
-- Bundled generator sync; 18 diagnostic checks
+- Bundled generator sync; 22 diagnostic checks
+- Reference kids room fixture: `tests/fixtures/reference_kids_room_commands.json`
 
 ------------------------------------------------------------------------
 
@@ -127,6 +141,9 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 | Date | Milestone |
 |---|---|
+| 2026-07-12 | bed_basic v0.6.0 — `bed_entry` clearances + diagnostics |
+| 2026-07-12 | Runtime independence documented (Core vs Blender) |
+| 2026-07-12 | DD-008/009 Accepted; analyze_layout shipped (v0.8.0) |
 | 2026-07-11 | DD-009 proposed — AI vs plugin boundary |
 | 2026-07-11 | DD-008 proposed — constraints / analyze_layout |
 | 2026-07-10 | v0.7.1 — clearance export + diagnostic |
@@ -135,14 +152,16 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | 2026-07-10 | Parenting fixes v0.6.5–0.6.8 |
 | 2026-07-10 | DD-007 Accepted |
 
-**Latest commit (at last handoff update):** `2c1eb7a` — DD-009
+**Latest commit (at last handoff update):** `f636809` — runtime independence docs
 
 ------------------------------------------------------------------------
 
 # Next steps (agreed order)
 
-1. **New generators** or extended param schemas (after bed clearances)  
-2. **Not now:** bridge, expert bpy mode, walkway graph  
+1. **More furniture** or **DD-008 v2** (second constraint type, e.g. `door_swing`)  
+2. **Not now:** bridge, expert bpy mode, walkway graph, viewer  
+
+`desk_basic` + reference fixture ✅ (2026-07-12)
 
 ------------------------------------------------------------------------
 
@@ -156,7 +175,11 @@ layoutlab/
 ├── protocol/            # commands, export, semantic, clearance_export
 ├── generators/          # bed_basic, wardrobe_basic (+ .md each)
 ├── plugin/              # panel, browser, quick_test
-└── diagnostics.py       # 18 checks
+└── diagnostics.py       # 22 checks
+
+tests/
+├── fixtures/
+│   └── reference_kids_room_commands.json
 
 docs/
 ├── design_decisions/    # DD-001 … DD-009
@@ -217,9 +240,10 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 1. ✅ Generator docs, API, modular plugin, browser, regenerate  
 2. ✅ Clearance (DD-007 implemented)  
 3. 🔄 Constraints + analyze_layout (DD-008) — **v0.8.0 shipped**  
-4. ⏳ `bed_basic` multi-zone clearances — **v0.6.0 shipped**  
-5. ⏳ New generators after constraint track  
-5. 📋 Bridge / direct AI communication (Future — DD-009)
+4. ✅ `bed_basic` multi-zone clearances — **v0.6.0 shipped**  
+5. ✅ New generators after constraint track — **desk_basic v0.1.0 shipped**  
+6. ⏳ More furniture or DD-008 second constraint type  
+7. 📋 Bridge / direct AI communication (Future — separate DD before code)
 
 ------------------------------------------------------------------------
 
@@ -227,6 +251,7 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 
 | Date | Change |
 |---|---|
+| 2026-07-12 | Handoff prompt + recent milestones; `.cursor/rules/` note |
 | 2026-07-12 | DD-009 Accepted — AI/plugin execution boundary |
 | 2026-07-11 | DD-009 doc sync — review gate, cross-doc Proposed markers |
 | 2026-07-11 | Initial handoff doc created |
