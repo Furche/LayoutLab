@@ -75,13 +75,17 @@ Ein Mesh ist nur das Ergebnis.
 
 # 4. Systemarchitektur
 
-LayoutLab besteht aus fünf Ebenen:
+LayoutLab besteht aus fünf Ebenen (heutige Blender-Runtime):
 
 1.  Blender UI
 2.  Hauptplugin
 3.  Generator Engine
 4.  Generatoren
 5.  Szene
+
+Langfristig (Future Vision, keine Implementierung): **LayoutLab Core** + **Runtime-Adapter**
+— Blender bleibt erste Runtime, kein Ersatz geplant. Siehe
+[docs/Future_Ideas.md](docs/Future_Ideas.md) §11, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §2.2.
 
 Das Hauptplugin kennt keine Möbellogik.
 

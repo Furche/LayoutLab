@@ -127,14 +127,18 @@ This difference affects every architectural decision.
 
 # Blender's Role
 
-Blender is currently the editor.
+Blender is the **first LayoutLab runtime** — primary editor and development platform today.
 
-It is NOT the engine.
+It is NOT the permanent product centre, and it is NOT the only possible long-term host.
 
-The engine should remain as independent from Blender as practical.
+The **LayoutLab Core** (generators, object model, protocols, analysis) should stay as
+independent from Blender as practical. Blender-specific code belongs in the **runtime adapter**
+(`api/`, `plugin/`, bpy glue). See [docs/Future_Ideas.md](docs/Future_Ideas.md) §11.
 
-If one day a web frontend or another 3D application is used, the core
-ideas should remain valid.
+**Rule for new work:** *Is this LayoutLab property or Blender property?*
+
+No custom render engine; a future own viewport would use an existing 3D framework.
+**No viewer or second runtime is planned for implementation now.**
 
 ------------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 # Future Ideas
 
 > Living document. Ideas only — not commitments.  
-> **Last reorganized:** 2026-07-12 (product vision sharpened — no roadmap or implementation change)
+> **Last reorganized:** 2026-07-12 (runtime independence note added)
 
 ## Purpose
 
@@ -442,6 +442,95 @@ Knowledge becomes the highest abstraction; furniture commands become one output 
 
 ------------------------------------------------------------------------
 
+# 11. Blender-independent LayoutLab Runtime and Viewport
+
+**Status:** Future Vision / Architectural Option — **not implemented**, no DD required yet
+
+### Core idea
+
+Blender is understood as the **first LayoutLab runtime** (Blender Backend / Adapter), not necessarily the permanent product centre.
+
+Long-term target shape:
+
+```
+LayoutLab Core
+    ├── Blender Runtime / Adapter     ← today (primary, fully supported)
+    └── future Viewer or Editor       ← optional; existing 3D framework, not custom engine
+```
+
+### LayoutLab Core (domain logic)
+
+Furniture and layout knowledge that should survive a runtime change:
+
+- Project / room / object models (semantic)
+- Generators, Parts, parameters, stable `object_id`
+- Clearances, constraints, layout analysis rules
+- Protocols and data models (JSON export schema, command contract)
+- Variant and planning logic (future)
+
+### Blender Runtime (adapter today)
+
+Blender-specific implementation — acceptable here, not in Core:
+
+- `bpy` mesh/object creation, collections, materials
+- Parenting, selection, undo, viewport display
+- Addon UI (panel, operators, diagnostics harness)
+- Scene import/export **into** Blender data blocks
+
+### Architectural rule (from 2026-07-12)
+
+Before new features, ask:
+
+> **Is this LayoutLab property or Blender property?**
+
+| LayoutLab | Blender Runtime |
+|---|---|
+| Clearance semantics, overlap rules | Wire mesh display, `show_in_front` |
+| `object_id`, params merge policy | `bpy.data.objects`, parenting |
+| JSON command contract | Clipboard, text blocks, operators |
+| Generator rules | `create_box` mesh instantiation |
+
+**Does not mean:** immediate full abstraction or refactor.  
+**Does mean:** no *new* unnecessary `bpy` coupling; document existing coupling; implement new Core logic as pure Python / neutral data where practical.
+
+### Neutral scene description (direction)
+
+Generators should eventually be able to emit a **runtime-neutral description** (furniture, parts, primitives, transforms, material refs, metadata, clearances) that any adapter translates — Blender first.
+
+**Not implementing now.** Current export JSON (`layoutlab` blocks, bounds) is the first neutral artifact; generators still call `api["create_box"]` directly.
+
+### Future viewport (read-only first)
+
+A later **external read-only viewer** could:
+
+- Load LayoutLab scene export JSON
+- Draw room + furniture + clearance volumes
+- Offer camera, picking, variant comparison (read-only)
+- Display AI planning output alongside the scene
+
+Rendering via an **existing framework** (e.g. Three.js, Babylon.js, Godot as host) — **not** a custom GPU pipeline from scratch.
+
+**First sensible experiment:** read-only viewer of current export format — no write path, no generator execution in browser.
+
+### Explicitly out of scope now
+
+- Babylon.js / Three.js / Godot prototype
+- Separate repository or product fork
+- Replacing Blender as dev platform or primary runtime
+- Custom render engine
+- Large refactor for abstraction alone
+
+### When a formal DD becomes necessary
+
+Promote to **DD-010+** when starting either:
+
+- a **neutral intermediate scene model** (not just export JSON), or
+- a **second runtime** with write support (not read-only viewer).
+
+Until then: document here + `ARCHITECTURE.md` §2.2.
+
+------------------------------------------------------------------------
+
 # 10. Deferred / Experimental Ideas
 
 **Status:** Experimental Idea — not scheduled
@@ -457,6 +546,7 @@ Ideas captured for later discussion. No DD, no roadmap slot.
 | Automatic layout repair | AI + planning layer, not execution |
 | Room boundary / wall detection | Unless explicit room mesh in scene |
 | Physics collision | Rejected for v1 analyzer — semantic AABB sufficient (DD-008) |
+| **Read-only export viewer** | See §11 — after export schema frozen; Three.js/Babylon/Godot host |
 
 ### Important observation
 

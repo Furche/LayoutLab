@@ -59,7 +59,7 @@ User Intent → Generator (rules) → Parts API → Blender scene
 |---|---|
 | Language | **German** for user communication |
 | Architecture | Idea → **DD** → docs → code. Don't skip DD for big decisions. |
-| Separation | Clearance (DD-007) ≠ Constraints (DD-008) ≠ AI boundary (DD-009) |
+| Separation | Clearance (DD-007) ≠ Constraints (DD-008) ≠ AI boundary (DD-009) ≠ Runtime (Blender = first adapter, §Future_Ideas §11) |
 | Commits | Commit/push when user asks or at clear milestone — **not** every tiny edit unasked |
 | Cursor role | Implements; does **not** silently change architecture |
 | Code style | Minimal diffs, match conventions, no over-engineering |

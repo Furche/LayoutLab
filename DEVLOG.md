@@ -4,6 +4,17 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-12 — Runtime independence (architectural note, docs only)
+
+**Question:** Must LayoutLab live inside Blender forever?
+
+**Answer:** Blender is the **first runtime adapter**, not the permanent product centre.
+Core domain logic should avoid new bpy coupling; export JSON is the cross-runtime artifact.
+A future read-only viewer (Three.js/Babylon/Godot host) is possible — **no custom render engine**.
+No DD until neutral scene model or second write runtime starts.
+
+------------------------------------------------------------------------
+
 ## 2026-07-12 — bed_basic v0.6.0 bed_entry clearances
 
 **Shipped:** `clearances` param array on `bed_basic` — `bed_entry` zones by `side` (foot/head/left/right),

@@ -114,6 +114,74 @@ A specialized AI *could* drive Blender directly via Python. LayoutLab **still re
 
 Full decision: [DD-009](design_decisions/DD-009-ai-execution-boundary.md). Transport detail: [DD-003](design_decisions/DD-003-json-only-communication.md).
 
+## 2.2 LayoutLab Core vs Blender Runtime `[FUTURE VISION]`
+
+Blender is the **first runtime adapter**, not the permanent centre of the product. See
+[Future_Ideas.md](Future_Ideas.md) §11.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  LayoutLab Core (domain)                                │
+│  Object model, generators, parts, clearances,           │
+│  constraints, analysis rules, protocols, stable IDs     │
+│  Prefer: pure Python + neutral JSON/data                │
+├─────────────────────────────────────────────────────────┤
+│  Runtime adapter(s)                                     │
+│  [IMPLEMENTED] Blender — bpy meshes, UI, undo, export   │
+│  [FUTURE VISION] Read-only viewer / other editor host    │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Rule for new work:** *Is this LayoutLab or Blender?* — domain logic must not depend on
+`bpy` unless it is explicitly runtime glue. No second runtime until a DD says otherwise.
+
+**Today:** Blender remains the **primary, fully supported** development platform and frontend.
+No replacement, no viewer prototype in current roadmap.
+
+### Runtime coupling inventory `[AS-BUILT]` (2026-07-12)
+
+| Coupling | Modules | Notes |
+|---|---|---|
+| **Low — testable without Blender** | `util.py`, overlap math in `layout_analysis` + tests | JSON parse, bounds, severity, generator meta inference, bed clearance geometry |
+| **Medium — logic + bpy duck-typing** | `protocol/semantic.py`, `protocol/clearance_export.py`, `api/clearance.py`, `api/metadata.py`, generators via `api` dict | Generators **do not** import `bpy` directly; executor injects API |
+| **High — Blender scene host** | `api/parts.py`, `geometry.py`, `collections.py`, `materials.py`, `transforms.py`, `engine/executor.py`, `protocol/commands.py`, `protocol/export.py`, `plugin/*`, `diagnostics.py` | Expected for Blender-first v0.8 |
+
+**Neutral scene artifact today:** scene export JSON + `layoutlab` semantic blocks (`json_protocol.md`, `object_model.md`) — sufficient for a future **read-only** external viewer experiment, not yet a full neutral authoring model.
+
+### Protected module boundaries (guardrails)
+
+| New feature type | Preferred home | Avoid |
+|---|---|---|
+| Constraint / analysis rules | `protocol/layout_analysis.py`, `util.py` | `plugin/operators.py` |
+| Export / command schema | `json_protocol.md`, `protocol/` | Panel UI |
+| Generator furniture rules | `generators/*.py` via `api` only | Direct `bpy` in generators |
+| Metadata keys | `object_model.md`, `semantic.py` | Ad-hoc custom props without doc |
+| Blender display / undo | `plugin/`, `api/geometry.py` | Business rules |
+
+**Small decisions that prevent large migrations later:**
+
+- Keep generators on **`api` injection** only (already normative).
+- Add pure-Python helpers to **`util.py`** (or future `core/`) before bpy wrappers.
+- Treat **export JSON** as the cross-runtime contract; extend schema before viewer code.
+- Do not embed layout rules in **diagnostics** beyond pass/fail orchestration.
+
+### Read-only viewer experiment — when & prerequisites
+
+**Sensible timing:** after export schema is stable for one release (Phase E complete ✅),
+and when there is a concrete need to **share layouts without Blender** (review, client, web).
+Optional trigger: Bridge MVP makes JSON snapshots frequent.
+
+**Prerequisites (no implementation yet):**
+
+1. Frozen **export schema** version field + changelog discipline (`json_protocol.md`)
+2. **World bounds** + transforms for furniture and clearances in export (✅ DD-007/008)
+3. **Primitive sufficient** subset documented (boxes + wireframes enough for v1)
+4. Written **viewer scope DD** (read-only, no generator exec, no write-back)
+5. Sample **fixture scenes** (export JSON) in repo for regression
+6. Framework choice note in DD (Three.js / Babylon / Godot) — host only, not LayoutLab engine
+
+**Not required for experiment:** neutral authoring model, second write runtime, or Core/adapter code split in Python.
+
 ------------------------------------------------------------------------
 
 # 3. As-Built: v0.5 Prototype
