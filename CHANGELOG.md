@@ -8,11 +8,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-### Fixed
+### Added
+
+- **Scene-unit adaptation:** JSON/generators stay in LayoutLab units (1 = 10 cm); `create_box` / walls / labels / `move` convert via `scene.unit_settings.scale_length`; export converts back (`scale_convention`, `bu_per_ll_unit`)
+
+### Changed
+
+- Plugin version **0.9.3**
+
+### Fixed (prior)
 
 - **`create_quad` / room walls:** removed `Mesh.calc_normals()` (removed in Blender 4.x) — walls/openings failed after floor only
 
-### Changed
+### Changed (prior)
 
 - Plugin version **0.9.2**
 

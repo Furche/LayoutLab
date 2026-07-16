@@ -1,6 +1,6 @@
 # Units and Coordinates
 
-Version: 0.5.0 (Draft)
+Version: 0.9.3
 
 > Defines how LayoutLab interprets space in Blender scenes.
 > Required reading before writing generators, JSON commands, or interpreting scene export.
@@ -26,46 +26,58 @@ generators must respect explicitly.
 
 # 2. Scale Convention
 
-## 2.1 Reference Room `[CONVENTION]`
+## 2.1 LayoutLab units `[IMPLEMENTED]`
 
-In Alexander's reference room scene:
+Protocol, JSON commands, generator params, and scene export use **LayoutLab units**:
 
 ```
-1 Blender unit = 10 cm = 0.1 m
+1 LayoutLab unit = 10 cm = 0.1 m
 ```
 
 Examples:
 
-| Real size | Blender units |
+| Real size | LayoutLab units |
 |---|---|
 | 120 cm | `12` |
 | 200 cm | `20` |
 | 35 cm | `3.5` |
 | 2.5 m ceiling | `25` |
+| 75 cm radiator | `7.5` |
 
-This mapping is exported as a human-readable note in scene JSON `[IMPLEMENTED]`:
+## 2.2 Adaptation to scene units `[IMPLEMENTED]`
 
-```json
-"note": "Coordinates/dimensions are Blender units. In Alexander's room: 1 unit ≈ 10 cm."
+The plugin **does not change** Blender scene unit settings. It converts at the geometry boundary:
+
+```
+bu = ll * 0.1 / scale_length
+ll = bu * scale_length / 0.1
 ```
 
-## 2.2 Plugin Behaviour `[IMPLEMENTED]`
+| Scene `scale_length` | Meaning | `height: 7.5` becomes |
+|---|---|---|
+| `1.0` (fresh default) | 1 BU = 1 m | `0.75` BU ≈ 75 cm |
+| `0.1` | 1 BU = 10 cm | `7.5` BU (identity) |
 
-- The plugin reads Blender's unit settings (`METRIC`, `IMPERIAL`, `NONE`) and
-  exports them — but **does not convert** command or export values.
-- Generators work in raw Blender units.
-- AI agents must read the export `note` field and scene context before interpreting sizes.
+Applied in `create_box`, `create_quad`, `create_label`, `move`, and clearance placement. Export reports LayoutLab units again, plus:
 
-## 2.3 Formal Enforcement `[PLANNED]`
+```json
+"scale_convention": "1_unit_equals_10cm",
+"bu_per_ll_unit": 0.1,
+"unit_scale": 1.0
+```
+
+**Old reference scenes** that were modelled as 10 cm per BU while leaving `scale_length=1.0` should set **Unit Scale = 0.1** once (meshes unchanged, display correct, conversion factor = 1).
+
+## 2.3 Formal Enforcement `[IMPLEMENTED]` (partial)
 
 | Feature | Status |
 |---|---|
-| `scale_convention` field in scene export | `[PLANNED]` |
+| `scale_convention` / `bu_per_ll_unit` in scene export | `[IMPLEMENTED]` |
+| LL ↔ BU conversion on create/export | `[IMPLEMENTED]` |
 | Validation warning on unit mismatch | `[PLANNED]` |
-| Generator params in real-world units (cm) with conversion layer | `[PLANNED]` — rejected for v0.5; generators use Blender units directly |
+| Generator params in real-world units (cm) with separate conversion layer | Not needed — LL units are the protocol |
 
-**Decision (v0.5):** keep Blender units end-to-end. Simpler JSON, no conversion bugs.
-Real-world labels are the AI's job until a formal conversion layer is needed.
+**Decision:** keep LayoutLab units end-to-end in JSON; adapt mesh size to the active scene.
 
 ------------------------------------------------------------------------
 
@@ -276,20 +288,22 @@ Scene export includes:
 {
   "unit": "METRIC",
   "unit_scale": 1.0,
-  "note": "… 1 unit ≈ 10 cm …"
+  "scale_convention": "1_unit_equals_10cm",
+  "bu_per_ll_unit": 0.1,
+  "note": "Coordinates/dimensions are LayoutLab units (1 unit = 10 cm). …"
 }
 ```
 
-- `location`, `dimensions`, `world_bbox_corners` — all in Blender units.
-- No centimetre fields in v0.5.
+- `location`, `dimensions`, `world_bbox_corners` — LayoutLab units (converted from scene BU).
+- `rooms[]` model fields — LayoutLab units (source of truth, not re-derived from mesh).
 
 ## 8.2 AI Interpretation Rules
 
-1. Read `note` and infer scale (default: 1 unit = 10 cm in reference room).
-2. Use `world_bbox_corners` for collision and spacing calculations.
-3. Use `custom_properties.layoutlab_role` to identify component types.
-4. Do not assume metric conversion — compute explicitly if scale is known.
-5. When generating commands, output Blender units matching the scene convention.
+1. Treat all command and export coordinates as LayoutLab units (1 = 10 cm).
+2. Read `bu_per_ll_unit` only if you need raw Blender mesh sizes.
+3. Use `world_bbox_corners` for collision and spacing calculations.
+4. Use `custom_properties.layoutlab_role` to identify component types.
+5. When generating commands, output LayoutLab units — the plugin adapts to the scene.
 
 ------------------------------------------------------------------------
 
@@ -297,11 +311,12 @@ Scene export includes:
 
 | Mistake | Correct approach |
 |---|---|
-| Sending cm values when scene uses 10 cm units | Divide cm by 10 → Blender units |
+| Sending centimetre values as if they were LL units | Divide cm by 10 → LayoutLab units |
 | Using object centre as `location` | Use min corner (bottom-left at floor) |
 | Scaling generated mesh instead of changing params | Change generator params and re-run |
 | Assuming Z floor at non-zero | Check exported object Z values first |
 | Mixing head_side without checking orientation | Read existing bed export or ask |
+| Expecting scene Unit Scale to be forced to 0.1 | Plugin adapts; set Unit Scale=0.1 only for old 10cm-BU scenes |
 
 ------------------------------------------------------------------------
 
@@ -309,6 +324,7 @@ Scene export includes:
 
 | Version | Date | Changes |
 |---|---|---|
+| 0.9.3 | 2026-07-17 | Scene-unit adaptation: LL↔BU via `scale_length`; export `scale_convention` |
 | 0.6.1 | 2026-07-10 | Parts parenting coordinate model; regenerate location policy |
 | 0.5.0 | 2026-07-09 | Initial document based on v0.5 prototype and reference room |
 

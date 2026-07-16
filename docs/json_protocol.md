@@ -515,13 +515,15 @@ Also: `update_room`, `delete_room`, `update_opening`, `remove_opening`, `update_
 
 ```json
 {
-  "layoutlab_version": "0.5.1",
+  "layoutlab_version": "0.9.3",
   "unit": "METRIC",
   "unit_scale": 1.0,
+  "scale_convention": "1_unit_equals_10cm",
+  "bu_per_ll_unit": 0.1,
   "scene": "Scene",
   "generator_dir": "/path/to/layoutlab_generators",
   "generators": [],
-  "note": "Coordinates/dimensions are Blender units. In Alexander's room: 1 unit ≈ 10 cm.",
+  "note": "Coordinates/dimensions are LayoutLab units (1 unit = 10 cm). Scene Blender units: multiply by bu_per_ll_unit.",
   "objects": []
 }
 ```
@@ -531,6 +533,8 @@ Also: `update_room`, `delete_room`, `update_opening`, `remove_opening`, `update_
 | `layoutlab_version` | string | Plugin version |
 | `unit` | string | `METRIC`, `IMPERIAL`, or `NONE` |
 | `unit_scale` | number | Blender `scale_length` |
+| `scale_convention` | string | Always `1_unit_equals_10cm` for protocol values |
+| `bu_per_ll_unit` | number | Factor: Blender units = LayoutLab units × this |
 | `scene` | string | Scene name |
 | `generator_dir` | string | Absolute path to runtime generator storage |
 | `generators` | array | Installed generator metadata (see §6.2) |
@@ -606,9 +610,8 @@ Same generator metadata as §6.2. Does not include scene objects.
 
 # 8. Units and Coordinates
 
-All command coordinates and dimensions are **Blender scene units** — never auto-converted.
-
-**Project convention:** 1 unit ≈ 10 cm in the reference room.
+All command coordinates and dimensions are **LayoutLab units** (1 unit = 10 cm).
+The plugin converts to/from Blender scene units using `scale_length` (`bu = ll × 0.1 / scale_length`).
 
 Full specification: **`docs/units_and_coordinates.md`**
 

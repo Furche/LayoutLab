@@ -4,11 +4,13 @@ from .collections import get_or_create_collection
 from .materials import ensure_material
 from .metadata import get_active_context
 from .parts import register_created_object
+from .units import to_bu, to_bu_vec
 
 
 def create_box(name, location, dimensions, color=(0.8, 0.8, 0.8, 1), collection="layout_tests", role=None, display_type=None, component=None):
-    lx, ly, lz = [float(v) for v in location]
-    dx, dy, dz = [float(v) for v in dimensions]
+    """Create a box. ``location`` / ``dimensions`` are LayoutLab units (1 = 10 cm)."""
+    lx, ly, lz = to_bu_vec(location)
+    dx, dy, dz = to_bu_vec(dimensions)
     mesh = bpy.data.meshes.new(name + "_mesh")
     verts = [(0,0,0),(dx,0,0),(dx,dy,0),(0,dy,0),(0,0,dz),(dx,0,dz),(dx,dy,dz),(0,dy,dz)]
     faces = [(0,1,2,3),(4,7,6,5),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)]
@@ -31,16 +33,17 @@ def create_box(name, location, dimensions, color=(0.8, 0.8, 0.8, 1), collection=
 
 
 def create_quad(name, corners, color=(0.8, 0.8, 0.8, 1), collection="layout_tests", role=None, display_type=None, backface_culling=True):
-    """Create a single-sided quad from 4 world-space corners (right-hand winding).
+    """Create a single-sided quad from 4 corners in LayoutLab units (right-hand winding).
 
     With ``backface_culling=True`` (default), the reverse side is see-through
     (e.g. room walls with inward normals: opaque inside, open from outside).
     """
     if len(corners) != 4:
         raise ValueError("create_quad requires exactly 4 corners")
-    origin = [float(corners[0][0]), float(corners[0][1]), float(corners[0][2])]
+    corners_bu = [to_bu_vec(c) for c in corners]
+    origin = [float(corners_bu[0][0]), float(corners_bu[0][1]), float(corners_bu[0][2])]
     local = []
-    for corner in corners:
+    for corner in corners_bu:
         local.append(
             (
                 float(corner[0]) - origin[0],
@@ -69,13 +72,14 @@ def create_quad(name, corners, color=(0.8, 0.8, 0.8, 1), collection="layout_test
 
 
 def create_label(name, location, text, collection="layout_tests", size=0.35, component=None):
+    """Create a text label. ``location`` / ``size`` are LayoutLab units."""
     curve = bpy.data.curves.new(name + "_curve", type="FONT")
     curve.body = text
-    curve.size = size
+    curve.size = to_bu(size)
     curve.align_x = "CENTER"
     curve.align_y = "CENTER"
     obj = bpy.data.objects.new(name, curve)
-    obj.location = location
+    obj.location = to_bu_vec(location)
     get_or_create_collection(collection).objects.link(obj)
     if register_created_object(obj):
         return obj

@@ -2,6 +2,7 @@
 
 from mathutils import Vector
 
+from ..api.units import from_bu_vec
 from ..util import (
     axis_aligned_bounds_from_points,
     box_bounds_from_corner_and_dimensions,
@@ -14,6 +15,7 @@ def _round_v3(values):
 
 
 def world_bounds_from_object(obj):
+    """Axis-aligned bounds in Blender scene units (for analyze_layout)."""
     if not hasattr(obj, "bound_box"):
         return {"min": [0.0, 0.0, 0.0], "max": [0.0, 0.0, 0.0]}
     corners = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
@@ -21,7 +23,11 @@ def world_bounds_from_object(obj):
 
 
 def local_bounds_from_object(obj):
-    """Bounds in Main Part space — from stored transform or parent inverse."""
+    """Bounds in Main Part space — from stored transform or parent inverse.
+
+    Stored clearance transforms are LayoutLab units; mesh-derived fallback is
+    converted to LayoutLab units for export consistency.
+    """
     stored = parse_clearance_params_json(obj.get("layoutlab_clearance_params"))
     local_transform = stored.get("local_transform")
     if isinstance(local_transform, dict):
@@ -34,9 +40,15 @@ def local_bounds_from_object(obj):
     if parent and hasattr(obj, "bound_box"):
         inv = parent.matrix_world.inverted()
         corners = [inv @ (obj.matrix_world @ Vector(corner)) for corner in obj.bound_box]
-        return axis_aligned_bounds_from_points([_round_v3(c) for c in corners])
+        return axis_aligned_bounds_from_points(
+            [_round_v3(from_bu_vec(c)) for c in corners]
+        )
 
-    return world_bounds_from_object(obj)
+    wb = world_bounds_from_object(obj)
+    return {
+        "min": _round_v3(from_bu_vec(wb["min"])),
+        "max": _round_v3(from_bu_vec(wb["max"])),
+    }
 
 
 def clearance_export_block_from_object(obj):
@@ -48,6 +60,7 @@ def clearance_export_block_from_object(obj):
     local_transform = stored.get("local_transform") if isinstance(stored.get("local_transform"), dict) else None
     params = {k: v for k, v in stored.items() if k != "local_transform"}
 
+    wb = world_bounds_from_object(obj)
     block = {
         "clearance_id": obj.get("layoutlab_clearance_id", ""),
         "clearance_name": clearance_name,
@@ -57,7 +70,10 @@ def clearance_export_block_from_object(obj):
         "params": params,
         "shape": (local_transform or {}).get("shape", "box"),
         "local_bounds": local_bounds_from_object(obj),
-        "world_bounds": world_bounds_from_object(obj),
+        "world_bounds": {
+            "min": _round_v3(from_bu_vec(wb["min"])),
+            "max": _round_v3(from_bu_vec(wb["max"])),
+        },
     }
 
     if local_transform:

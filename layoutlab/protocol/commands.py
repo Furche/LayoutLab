@@ -145,7 +145,9 @@ def apply_single_command(context, cmd):
     obj = bpy.data.objects.get(name) if name else None
     if action == "move":
         if not obj: raise ValueError(f"Object not found: {name}")
-        obj.location = cmd["location"]
+        from ..api.units import to_bu_vec
+
+        obj.location = to_bu_vec(cmd["location"])
     elif action == "rotate_z":
         if not obj: raise ValueError(f"Object not found: {name}")
         obj.rotation_euler.z = math.radians(float(cmd["degrees"]))
