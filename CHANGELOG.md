@@ -10,9 +10,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Reference fixture:** `reference_kids_room_commands.json` — room shell + bed + desk in meters inside `KIDS_ROOM`
+
+### Added (prior)
+
 - **Constructive wall openings (v0.10.1):** walls split into inward panels around doors/windows (no Boolean); opening wires kept as markers
 
-### Changed
+### Changed (prior)
 
 - Plugin version **0.10.1**
 - Opening/fixed defaults in meters (`door` 0.9×2.0, `window` sill 0.8, radiator 0.75)

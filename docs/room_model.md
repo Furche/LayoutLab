@@ -44,8 +44,9 @@ Overlapping openings on the same wall raise an error at sync/panel build.
 
 ## Reference kids room shell
 
-See `tests/fixtures/reference_kids_room_shell_commands.json` — footprint ≈ 4.2 × 2.18 m at `[0, 0, 0]`.
+Shell only: `tests/fixtures/reference_kids_room_shell_commands.json` — footprint ≈ 4.2 × 2.18 m at `[0, 0, 0]`.
 
+Full layout (shell + bed + desk): `tests/fixtures/reference_kids_room_commands.json`.
 ------------------------------------------------------------------------
 
 ## Export

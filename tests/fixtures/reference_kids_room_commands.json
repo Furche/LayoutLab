@@ -1,37 +1,77 @@
 {
-  "description": "Reference children's room — bed + desk (Blender units, Metric 1 unit = 1 m). Positions are illustrative; prefer room shell at origin for new layouts.",
-  "collection": "reference_kids_room",
-  "room_bounds_ref": "reference_kids_room_room.json",
+  "description": "Kids room at origin: Room Model shell + bed + desk (Metric, 1 unit = 1 m).",
+  "collection": "layoutlab_room",
   "layout_notes": [
-    "Sizes are meters (Blender native). Bed 1.2×2.0, desk 1.2×0.6×0.75."
+    "Room 4.2 × 2.18 × 2.6 m at [0,0,0].",
+    "Bed west strip clear of radiator (x≥0.15); almost fills depth (width 2.0).",
+    "Desk against north wall, east half; chair clearance faces −Y into the room.",
+    "No LayoutLab wardrobe — IKEA kleiderschrank is out of scope for this fixture."
   ],
   "commands": [
     {
       "action": "delete_collection_objects",
-      "collection": "reference_kids_room"
+      "collection": "layoutlab_room"
+    },
+    {
+      "action": "create_room",
+      "params": {
+        "name": "KIDS_ROOM",
+        "location": [0, 0, 0],
+        "width": 4.2,
+        "depth": 2.18,
+        "height": 2.6,
+        "wall_thickness": 0.02,
+        "collection": "layoutlab_room"
+      }
+    },
+    {
+      "action": "add_opening",
+      "params": {
+        "room": "KIDS_ROOM",
+        "opening_name": "window_west",
+        "kind": "window",
+        "wall_side": "west",
+        "offset": 0.48054,
+        "width": 1.22946,
+        "height": 1.47,
+        "sill_height": 0.88
+      }
+    },
+    {
+      "action": "add_opening",
+      "params": {
+        "room": "KIDS_ROOM",
+        "opening_name": "door_east",
+        "kind": "door",
+        "wall_side": "east",
+        "offset": 0.24866,
+        "width": 0.70801,
+        "height": 1.84453
+      }
+    },
+    {
+      "action": "add_fixed_element",
+      "params": {
+        "room": "KIDS_ROOM",
+        "fixed_name": "heizung",
+        "kind": "radiator",
+        "wall_side": "west",
+        "offset": 0.56494,
+        "width": 1.1,
+        "depth": 0.1,
+        "height": 0.75
+      }
     },
     {
       "action": "run_generator",
       "generator": "bed_basic",
       "params": {
         "name": "BED_120x200",
-        "location": [0.5, 0.2, 0],
+        "location": [0.15, 0.09, 0],
         "length": 1.2,
         "width": 2.0,
         "head_side": "y_max",
         "clearances": [
-          {
-            "clearance_name": "bed_entry",
-            "side": "foot",
-            "depth": 0.6,
-            "requirement": "preferred"
-          },
-          {
-            "clearance_name": "bed_entry",
-            "side": "left",
-            "depth": 0.5,
-            "requirement": "preferred"
-          },
           {
             "clearance_name": "bed_entry",
             "side": "right",
@@ -39,7 +79,7 @@
             "requirement": "preferred"
           }
         ],
-        "collection": "reference_kids_room"
+        "collection": "layoutlab_room"
       }
     },
     {
@@ -47,16 +87,17 @@
       "generator": "desk_basic",
       "params": {
         "name": "DESK_120x60",
-        "location": [2.5, 0.5, 0],
+        "location": [2.7, 1.58, 0],
         "width": 1.2,
         "depth": 0.6,
         "height": 0.75,
         "show_clearance": true,
-        "collection": "reference_kids_room"
+        "collection": "layoutlab_room"
       }
     }
   ],
   "expected_objects": [
+    "KIDS_ROOM_floor",
     "BED_120x200_body",
     "BED_120x200_mattress",
     "DESK_120x60_body",
@@ -73,5 +114,10 @@
       "clearance_name": "chair_access",
       "requirement": "required"
     }
-  ]
+  ],
+  "expected_bounds": {
+    "room": {"min": [0, 0, 0], "max": [4.2, 2.18, 2.6]},
+    "bed": {"min": [0.15, 0.09, 0], "max": [1.35, 2.09, null]},
+    "desk": {"min": [2.7, 1.58, 0], "max": [3.9, 2.18, 0.75]}
+  }
 }

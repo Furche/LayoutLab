@@ -1,5 +1,5 @@
 {
-  "description": "DD-010 Room Model shell — kids room footprint at origin (Blender units, Metric 1 unit = 1 m). Inward-facing wall planes.",
+  "description": "DD-010 Room Model shell only — kids room at origin (Metric, 1 unit = 1 m). For full layout see reference_kids_room_commands.json.",
   "collection": "layoutlab_room",
   "commands": [
     {

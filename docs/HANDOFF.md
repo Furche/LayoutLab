@@ -160,11 +160,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. Blender QA: Room Model diagnostics + kids room shell fixture  
-2. Optional: wire furniture fixtures into LayoutLab room; room-as-blocker in `analyze_layout`  
+1. Blender QA: full kids room fixture (shell + bed + desk)  
+2. Optional: room-as-blocker in `analyze_layout`  
 3. **Not now:** polygon walls, multi-room, standalone, capture  
 
-`desk_basic` ✅ · wardrobe `front_side` ✅ · **DD-010 Room Model MVP ✅ (v0.9.0)**
+`desk_basic` ✅ · wardrobe `front_side` ✅ · **DD-010 Room Model** ✅ · constructive openings ✅ · native meters ✅
 
 ------------------------------------------------------------------------
 

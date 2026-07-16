@@ -36,6 +36,12 @@ class TestReferenceKidsRoomFixture(unittest.TestCase):
         self.assertIn("commands", self.fixture)
         self.assertGreaterEqual(len(self.fixture["commands"]), 3)
 
+    def test_includes_room_shell(self):
+        actions = [c.get("action") for c in self.fixture["commands"]]
+        self.assertIn("create_room", actions)
+        self.assertIn("add_opening", actions)
+        self.assertIn("add_fixed_element", actions)
+
     def test_generators_present(self):
         gens = {
             c["generator"]
@@ -43,6 +49,27 @@ class TestReferenceKidsRoomFixture(unittest.TestCase):
             if c.get("action") == "run_generator"
         }
         self.assertEqual(gens, {"bed_basic", "desk_basic"})
+
+    def test_furniture_inside_room(self):
+        room = next(c for c in self.fixture["commands"] if c.get("action") == "create_room")
+        rw = float(room["params"]["width"])
+        rd = float(room["params"]["depth"])
+        bed = next(
+            c for c in self.fixture["commands"]
+            if c.get("action") == "run_generator" and c.get("generator") == "bed_basic"
+        )
+        desk = next(
+            c for c in self.fixture["commands"]
+            if c.get("action") == "run_generator" and c.get("generator") == "desk_basic"
+        )
+        bx, by, _ = bed["params"]["location"]
+        self.assertGreaterEqual(bx, 0.0)
+        self.assertGreaterEqual(by, 0.0)
+        self.assertLessEqual(bx + bed["params"]["length"], rw + 1e-6)
+        self.assertLessEqual(by + bed["params"]["width"], rd + 1e-6)
+        dx, dy, _ = desk["params"]["location"]
+        self.assertLessEqual(dx + desk["params"]["width"], rw + 1e-6)
+        self.assertLessEqual(dy + desk["params"]["depth"], rd + 1e-6)
 
     def test_desk_has_chair_clearance(self):
         desk_cmds = [
@@ -61,6 +88,8 @@ class TestReferenceKidsRoomFixture(unittest.TestCase):
         collection = self.fixture["collection"]
         for cmd in self.fixture["commands"]:
             if cmd.get("action") == "run_generator":
+                self.assertEqual(cmd["params"].get("collection"), collection)
+            if cmd.get("action") == "create_room":
                 self.assertEqual(cmd["params"].get("collection"), collection)
 
 
