@@ -54,5 +54,31 @@ class TestRequirementToSeverity(unittest.TestCase):
         self.assertEqual(self.util.requirement_to_severity(None), "warning")
 
 
+class TestIsAnalyzeBlocker(unittest.TestCase):
+    def setUp(self):
+        self.util = _load_util()
+
+    def test_furniture_mesh_is_blocker(self):
+        self.assertTrue(self.util.is_analyze_blocker("MESH", role="bed_frame"))
+
+    def test_room_wall_is_blocker(self):
+        self.assertTrue(self.util.is_analyze_blocker("MESH", role="room_wall"))
+
+    def test_room_fixed_is_blocker(self):
+        self.assertTrue(self.util.is_analyze_blocker("MESH", role="room_fixed"))
+
+    def test_room_floor_excluded(self):
+        self.assertFalse(self.util.is_analyze_blocker("MESH", role="room_floor"))
+
+    def test_room_opening_excluded(self):
+        self.assertFalse(self.util.is_analyze_blocker("MESH", role="room_opening"))
+
+    def test_clearance_excluded(self):
+        self.assertFalse(self.util.is_analyze_blocker("MESH", role="clearance", has_clearance_name=True))
+
+    def test_curve_excluded(self):
+        self.assertFalse(self.util.is_analyze_blocker("CURVE", role="label"))
+
+
 if __name__ == "__main__":
     unittest.main()

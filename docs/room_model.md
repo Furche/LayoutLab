@@ -57,5 +57,6 @@ Scene export includes top-level `rooms[]` with `layoutlab.room`-equivalent field
 
 ## Not in MVP
 
-Polygon footprints, free `add_wall`/`move_wall`, multi-room, analyze room-as-blocker (follow-up).
+Polygon footprints, free `add_wall`/`move_wall`, multi-room (follow-up).
 Boolean modifiers are intentionally unused — openings use constructive panel splits.
+`analyze_layout` treats `room_wall` / `room_fixed` as blockers; floor/opening wires are excluded.

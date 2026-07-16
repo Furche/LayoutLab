@@ -690,7 +690,7 @@ def run_console_checks(context):
             "bed_basic",
             {
                 "name": f"{prefix}_BED",
-                "location": [0, -6, 0],
+                "location": [0, -1.0, 0],
                 "length": 1.2,
                 "width": 2.0,
                 "head_side": "y_max",
@@ -808,8 +808,8 @@ def run_console_checks(context):
                         {
                             "action": "create_box",
                             "name": f"{DIAG_PREFIX}BED_ENTRY_OBSTACLE",
-                            "location": [0, -4, 0],
-                            "dimensions": [1.2, 0.4, 0.4],
+                            "location": [0, -0.5, 0],
+                            "dimensions": [1.2, 0.3, 0.4],
                             "collection": DIAG_COLLECTION,
                         }
                     ]
@@ -906,8 +906,8 @@ def run_console_checks(context):
             {
                 "name": prefix,
                 "location": [0, 0, 0],
-"width": 1.0,
-                    "depth": 0.5,
+                "width": 1.0,
+                "depth": 0.5,
                 "height": 0.75,
                 "show_clearance": True,
                 "collection": DIAG_COLLECTION,
@@ -941,8 +941,8 @@ def run_console_checks(context):
             {
                 "name": desk_name,
                 "location": [0, 0, 0],
-"width": 1.0,
-                    "depth": 0.5,
+                "width": 1.0,
+                "depth": 0.5,
                 "height": 0.75,
                 "show_clearance": True,
                 "collection": DIAG_COLLECTION,
@@ -956,7 +956,7 @@ def run_console_checks(context):
                         {
                             "action": "create_box",
                             "name": f"{prefix}_OBSTACLE",
-                            "location": [0, -4, 0],
+                            "location": [0, -0.45, 0],
                             "dimensions": [1.0, 0.3, 0.5],
                             "collection": DIAG_COLLECTION,
                         }
@@ -1111,6 +1111,76 @@ def run_console_checks(context):
             f"command_results: {len(results)}",
         )
 
+    def check_analyze_layout_room_wall(check):
+        """Wardrobe clearance through south wall → finding; floor must not be a blocker."""
+        from .protocol.layout_analysis import analyze_layout
+
+        prefix = f"{DIAG_PREFIX}ROOM_AN"
+        delete_prefix(DIAG_PREFIX)
+        results, errors = apply_commands_json(
+            context,
+            json.dumps(
+                {
+                    "commands": [
+                        {
+                            "action": "create_room",
+                            "params": {
+                                "name": prefix,
+                                "location": [0, 0, 0],
+                                "width": 3.0,
+                                "depth": 3.0,
+                                "height": 2.5,
+                                "wall_thickness": 0.02,
+                                "collection": DIAG_COLLECTION,
+                            },
+                        }
+                    ]
+                }
+            ),
+        )
+        if errors:
+            check.fail(f"create_room errors: {errors[0][:200]}")
+            return
+        wardrobe_name = f"{prefix}_WARDROBE"
+        execute_generator(
+            "wardrobe_basic",
+            {
+                "name": wardrobe_name,
+                "location": [1.0, 0.05, 0],
+                "width": 0.8,
+                "depth": 0.4,
+                "height": 1.5,
+                "show_clearance": True,
+                "front_side": "y_min",
+                "collection": DIAG_COLLECTION,
+            },
+        )
+        result = analyze_layout(
+            context,
+            {"action": "analyze_layout", "scope": "collection", "collection": DIAG_COLLECTION},
+        )
+        findings = [
+            f
+            for f in result.get("findings", [])
+            if f.get("clearance_ref", {}).get("clearance_name") == "front_access"
+            and f.get("clearance_ref", {}).get("furniture_name") == wardrobe_name
+        ]
+        if len(findings) != 1:
+            check.fail(f"expected 1 front_access finding vs room wall, got {len(findings)}: {result.get('findings')}")
+            return
+        overlaps = findings[0].get("overlaps", [])
+        if any(o.get("role") == "room_floor" for o in overlaps):
+            check.fail(f"room_floor must not be a blocker: {overlaps}")
+            return
+        if not any(o.get("role") == "room_wall" for o in overlaps):
+            check.fail(f"expected room_wall in overlaps: {overlaps}")
+            return
+        check.ok(
+            f"severity: {findings[0].get('severity')}",
+            f"wall_overlaps: {sum(1 for o in overlaps if o.get('role') == 'room_wall')}",
+            "floor_excluded: yes",
+        )
+
     def check_cleanup(check):
         apply_commands_json(
             context,
@@ -1142,6 +1212,7 @@ def run_console_checks(context):
             _run_check("analyze_layout_desk_clear", check_analyze_layout_desk_clear),
             _run_check("analyze_layout_desk_blocked", check_analyze_layout_desk_blocked),
             _run_check("room_model_create", check_room_model_create),
+            _run_check("analyze_layout_room_wall", check_analyze_layout_room_wall),
             _run_check("apply_commands_json", check_apply_commands_json),
             _run_check("regenerate", check_regenerate),
             _run_check("regenerate_layout_policy", check_regenerate_layout_policy),

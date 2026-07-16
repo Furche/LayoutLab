@@ -439,7 +439,9 @@ See [DD-008](../design_decisions/DD-008-constraints-and-layout-analysis.md).
 
 **Return (v1):** `{ "analyzed", "scope", "object_count", "clearance_count", "summary": { "errors", "warnings", "info" }, "findings": [...] }`
 
-Each finding references `clearance_ref` + `overlaps[]`. Severity derives from clearance `requirement` (`required` → error, `preferred` → warning).
+Each finding references `clearance_ref` + `overlaps[]` (includes `role`, e.g. `room_wall` / `room_fixed`). Severity derives from clearance `requirement` (`required` → error, `preferred` → warning).
+
+**Room fabric:** `room_wall` and `room_fixed` are blockers. `room_floor` and `room_opening` (wire placeholders) are excluded so floor contact does not false-positive.
 
 **Implementation:** `layoutlab/protocol/layout_analysis.py`
 

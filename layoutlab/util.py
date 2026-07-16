@@ -23,6 +23,25 @@ def relative_translation_from_locations(child_loc, parent_loc):
 
 CLEARANCE_REQUIREMENTS = frozenset({"required", "preferred"})
 
+# Mesh roles that must not count as obstacles in analyze_layout
+ANALYZE_NON_BLOCKER_ROLES = frozenset({
+    "clearance",
+    "room_floor",
+    "room_opening",
+    "label",
+})
+
+
+def is_analyze_blocker(obj_type, role="", has_clearance_name=False):
+    """True if an object should be treated as an obstacle for zone_must_be_clear."""
+    if obj_type != "MESH":
+        return False
+    if has_clearance_name or role == "clearance":
+        return False
+    if role in ANALYZE_NON_BLOCKER_ROLES:
+        return False
+    return True
+
 
 def validate_clearance_requirement(requirement):
     req = (requirement or "preferred").strip().lower()

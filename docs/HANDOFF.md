@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-17 (v0.10.1 constructive wall openings)  
-**Plugin version:** 0.10.1 · **Branch:** `main`
+**Last updated:** 2026-07-17 (v0.10.2 analyze_layout room blockers)  
+**Plugin version:** 0.10.2 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution Layer).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.1.
+Branch: main. Plugin v0.10.2.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-16):
@@ -86,12 +86,12 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 | Component | Version |
 |---|---|
-| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.10.1** |
+| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.10.2** |
 | `bed_basic` | **0.7.0** — raised frame construction (`BedConstruction`) + optional `bed_entry` clearances; sizes in meters |
 | `wardrobe_basic` | **0.7.0** — `front_side` (`y_min` \| `y_max`), `create_clearance`, part `clearance_front_access`; sizes in meters |
 | `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance (`required`); sizes in meters |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.10.1.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.2.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -160,11 +160,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. Blender QA: full kids room fixture (shell + bed + desk)  
-2. Optional: room-as-blocker in `analyze_layout`  
-3. **Not now:** polygon walls, multi-room, standalone, capture  
+1. Blender QA: `analyze_layout` against kids room (walls/heater as blockers)  
+2. Optional: tiered multi-zone clearances / polygon  
+3. **Not now:** multi-room, standalone, capture  
 
-`desk_basic` ✅ · wardrobe `front_side` ✅ · **DD-010 Room Model** ✅ · constructive openings ✅ · native meters ✅
+`desk_basic` ✅ · Room Model ✅ · constructive openings ✅ · native meters ✅ · **room-aware analyze ✅**
 
 ------------------------------------------------------------------------
 

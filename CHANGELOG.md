@@ -10,6 +10,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **`analyze_layout` room-aware (v0.10.2):** `room_wall` / `room_fixed` count as blockers; `room_floor` / `room_opening` excluded; overlap entries include `role`; diagnostic `analyze_layout_room_wall`
+
+### Changed
+
+- Plugin version **0.10.2**
+- Diagnostics: meter-scale obstacle positions for bed/desk blocked checks
+
+### Added (prior)
+
 - **Reference fixture:** `reference_kids_room_commands.json` — room shell + bed + desk in meters inside `KIDS_ROOM`
 
 ### Added (prior)

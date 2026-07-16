@@ -2,7 +2,7 @@
 
 import json
 
-from ..util import aabb_intersects, requirement_to_severity
+from ..util import aabb_intersects, is_analyze_blocker, requirement_to_severity
 from .clearance_export import world_bounds_from_object
 
 CONSTRAINT_TYPE_ZONE_MUST_BE_CLEAR = "zone_must_be_clear"
@@ -66,11 +66,11 @@ def _is_clearance_object(obj):
 
 
 def _is_blocker_mesh(obj):
-    if getattr(obj, "type", None) != "MESH":
-        return False
-    if obj.get("layoutlab_clearance_name") or obj.get("layoutlab_role") == "clearance":
-        return False
-    return True
+    return is_analyze_blocker(
+        getattr(obj, "type", None),
+        role=obj.get("layoutlab_role", "") or "",
+        has_clearance_name=bool(obj.get("layoutlab_clearance_name")),
+    )
 
 
 def _blocker_overlap_entry(obj):
@@ -78,6 +78,7 @@ def _blocker_overlap_entry(obj):
         "object_name": obj.name,
         "object_id": obj.get("layoutlab_object_id", ""),
         "part": obj.get("layoutlab_part", ""),
+        "role": obj.get("layoutlab_role", ""),
     }
 
 
