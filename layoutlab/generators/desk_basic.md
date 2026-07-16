@@ -37,7 +37,7 @@ GENERATOR_VERSION = "0.1.0"
 Clearance `chair_access` sits in **−Y** from the front edge — the space where a
 chair is pulled out.
 
-In Alexander's reference room convention, `1 unit ≈ 10 cm`.
+Sizes are Blender scene units (Metric default: 1 unit = 1 meter).
 
 ## Component Roles (build meshes)
 
@@ -56,7 +56,7 @@ In Alexander's reference room convention, `1 unit ≈ 10 cm`.
 | `location` | `[0, 0, 0]` | Min corner at floor |
 | `width` | `12.0` | Desktop width (X), min 4 |
 | `depth` | `6.0` | Desktop depth (Y), min 3 |
-| `height` | `7.5` | Desktop height (Z), min 5 (~75 cm) |
+| `height` | `0.75` | Desktop height (Z), min 0.5 |
 | `top_thickness` | `0.25` | Tabletop thickness |
 | `leg_thickness` | `0.4` | Square leg cross-section |
 | `show_clearance` | `true` | Emit `chair_access` zone |
@@ -89,7 +89,7 @@ by default — a blocked chair zone is a functional impairment.
     "location": [68.3, 175.0, 0],
     "width": 12,
     "depth": 6,
-    "height": 7.5,
+    "height": 0.75,
     "show_clearance": true,
     "collection": "reference_kids_room"
   }

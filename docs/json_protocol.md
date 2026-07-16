@@ -149,8 +149,8 @@ Object references: use `"object"` **or** `"name"` — equivalent. `[IMPLEMENTED]
   "params": {
     "name": "BED_120x200",
     "location": [68.3, 197.7, 0],
-    "length": 12,
-    "width": 20,
+    "length": 1.2,
+    "width": 2.0,
     "head_side": "y_max",
     "collection": "layout_tests"
   }
@@ -199,7 +199,7 @@ See `layoutlab/generators/bed_basic.md` for full documentation.
 
 `bed_post`, `bed_frame`, `bed_mattress`, `bed_headboard`, `bed_footboard`, `bed_pillow`, `label`
 
-**Standard size example:** `length: 12, width: 20` → 120 × 200 cm at 1 unit = 10 cm.
+**Standard size example:** `length: 1.2, width: 2.0` → 120 × 200 cm (Metric, 1 unit = 1 m).
 
 ------------------------------------------------------------------------
 
@@ -457,10 +457,10 @@ Editable **Room Model** — not a furniture generator. See [room_model.md](room_
   "params": {
     "name": "KIDS_ROOM",
     "location": [0, 0, 0],
-    "width": 42,
-    "depth": 21.8,
-    "height": 26,
-    "wall_thickness": 0.2,
+    "width": 4.2,
+    "depth": 2.18,
+    "height": 2.6,
+    "wall_thickness": 0.02,
     "collection": "layoutlab_room"
   }
 }
@@ -515,15 +515,13 @@ Also: `update_room`, `delete_room`, `update_opening`, `remove_opening`, `update_
 
 ```json
 {
-  "layoutlab_version": "0.9.3",
+  "layoutlab_version": "0.10.0",
   "unit": "METRIC",
   "unit_scale": 1.0,
-  "scale_convention": "1_unit_equals_10cm",
-  "bu_per_ll_unit": 0.1,
   "scene": "Scene",
   "generator_dir": "/path/to/layoutlab_generators",
   "generators": [],
-  "note": "Coordinates/dimensions are LayoutLab units (1 unit = 10 cm). Scene Blender units: multiply by bu_per_ll_unit.",
+  "note": "Coordinates/dimensions are Blender scene units (native). With Metric and unit_scale=1.0, 1 unit = 1 meter.",
   "objects": []
 }
 ```
@@ -533,8 +531,6 @@ Also: `update_room`, `delete_room`, `update_opening`, `remove_opening`, `update_
 | `layoutlab_version` | string | Plugin version |
 | `unit` | string | `METRIC`, `IMPERIAL`, or `NONE` |
 | `unit_scale` | number | Blender `scale_length` |
-| `scale_convention` | string | Always `1_unit_equals_10cm` for protocol values |
-| `bu_per_ll_unit` | number | Factor: Blender units = LayoutLab units × this |
 | `scene` | string | Scene name |
 | `generator_dir` | string | Absolute path to runtime generator storage |
 | `generators` | array | Installed generator metadata (see §6.2) |
@@ -574,7 +570,7 @@ Exported types: `MESH`, `EMPTY`, `CURVE`, `FONT` only.
     "object_id": "uuid-here",
     "generator": "bed_basic",
     "generator_version": "0.1",
-    "params": { "length": 12, "width": 20, "head_side": "y_max" },
+    "params": { "length": 1.2, "width": 2.0, "head_side": "y_max" },
     "component": "mattress",
     "part": "mattress",
     "part_type": "static",
@@ -610,8 +606,8 @@ Same generator metadata as §6.2. Does not include scene objects.
 
 # 8. Units and Coordinates
 
-All command coordinates and dimensions are **LayoutLab units** (1 unit = 10 cm).
-The plugin converts to/from Blender scene units using `scale_length` (`bu = ll × 0.1 / scale_length`).
+All command coordinates and dimensions are **Blender scene units** (native).
+With Metric and `unit_scale=1.0`, **1 unit = 1 meter**.
 
 Full specification: **`docs/units_and_coordinates.md`**
 
@@ -685,8 +681,8 @@ See `docs/object_model.md` for the full schema.
       "params": {
         "name": "BED_120x200",
         "location": [68.3, 197.7, 0],
-        "length": 12,
-        "width": 20,
+        "length": 1.2,
+        "width": 2.0,
         "head_side": "y_max",
         "collection": "layout_tests"
       }
@@ -708,7 +704,7 @@ See `docs/object_model.md` for the full schema.
         "name": "BED_120x200",
         "location": [68.3, 197.7, 0],
         "length": 14,
-        "width": 20,
+        "width": 2.0,
         "head_side": "y_max",
         "collection": "layout_tests"
       }

@@ -107,7 +107,7 @@ Optional `clearances` array — wire zones parented to `body`, checked by `analy
 |---|---|---|
 | `clearance_name` | `"bed_entry"` | Semantic name (unique per bed) |
 | `side` | `"foot"` | Approach side — see below |
-| `depth` | `6.0` | Extension beyond bed edge (Blender units) |
+| `depth` | `0.6` | Extension beyond bed edge (meters) |
 | `requirement` | `"preferred"` | `required` \| `preferred` |
 | `purpose` | `"bed_access"` | Intent label |
 
@@ -228,8 +228,8 @@ without changing world position. See `docs/units_and_coordinates.md`.
   "params": {
     "name": "BED_120x200",
     "location": [0, 0, 0],
-    "length": 12,
-    "width": 20,
+    "length": 1.2,
+    "width": 2.0,
     "head_side": "y_max",
     "collection": "layout_tests"
   }

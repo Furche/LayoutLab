@@ -2,28 +2,28 @@
 GENERATOR_NAME = "wardrobe_basic"
 GENERATOR_CATEGORY = "Storage"
 GENERATOR_DESCRIPTION = "Parametric wardrobe with carcass, doors, shelves, handles, and optional front clearance."
-GENERATOR_VERSION = "0.6.0"
+GENERATOR_VERSION = "0.7.0"
 GENERATOR_ICON = "OUTLINER_COLLECTION"
 
-MIN_WIDTH = 3.0
-MIN_DEPTH = 2.5
-MIN_HEIGHT = 8.0
+MIN_WIDTH = 0.3
+MIN_DEPTH = 0.25
+MIN_HEIGHT = 0.8
 
-DEFAULT_WIDTH = 8.0
-DEFAULT_DEPTH = 4.0
-DEFAULT_HEIGHT = 15.0
+DEFAULT_WIDTH = 0.8
+DEFAULT_DEPTH = 0.4
+DEFAULT_HEIGHT = 1.5
 
-PANEL_THICKNESS_DEFAULT = 0.25
-BACK_THICKNESS_DEFAULT = 0.15
-SHELF_THICKNESS_DEFAULT = 0.18
-DOOR_THICKNESS_DEFAULT = 0.18
-HANDLE_WIDTH_DEFAULT = 0.12
-HANDLE_DEPTH_DEFAULT = 0.12
-HANDLE_HEIGHT_DEFAULT = 1.6
-CLEARANCE_DEPTH_DEFAULT = 6.0
+PANEL_THICKNESS_DEFAULT = 0.025
+BACK_THICKNESS_DEFAULT = 0.015
+SHELF_THICKNESS_DEFAULT = 0.018
+DOOR_THICKNESS_DEFAULT = 0.018
+HANDLE_WIDTH_DEFAULT = 0.012
+HANDLE_DEPTH_DEFAULT = 0.012
+HANDLE_HEIGHT_DEFAULT = 0.16
+CLEARANCE_DEPTH_DEFAULT = 0.6
 
-DOUBLE_DOOR_THRESHOLD = 6.0
-TRIPLE_DOOR_THRESHOLD = 12.0
+DOUBLE_DOOR_THRESHOLD = 0.6
+TRIPLE_DOOR_THRESHOLD = 1.2
 
 
 def _clamp(value, minimum, fallback):
@@ -58,11 +58,11 @@ def _shelf_count(height, requested=None):
         except (TypeError, ValueError):
             pass
 
-    if height < 10:
+    if height < 1.0:
         return 1
-    if height < 14:
+    if height < 1.4:
         return 2
-    if height < 18:
+    if height < 1.8:
         return 3
     return 4
 
@@ -96,10 +96,10 @@ def generate(params, api):
     depth = _clamp(params.get("depth", DEFAULT_DEPTH), MIN_DEPTH, DEFAULT_DEPTH)
     height = _clamp(params.get("height", DEFAULT_HEIGHT), MIN_HEIGHT, DEFAULT_HEIGHT)
 
-    panel = min(_clamp(params.get("panel_thickness", PANEL_THICKNESS_DEFAULT), 0.08, PANEL_THICKNESS_DEFAULT), width * 0.18, depth * 0.18)
-    back = min(_clamp(params.get("back_thickness", BACK_THICKNESS_DEFAULT), 0.05, BACK_THICKNESS_DEFAULT), depth * 0.15)
-    shelf_thickness = min(_clamp(params.get("shelf_thickness", SHELF_THICKNESS_DEFAULT), 0.05, SHELF_THICKNESS_DEFAULT), height * 0.05)
-    door_thickness = min(_clamp(params.get("door_thickness", DOOR_THICKNESS_DEFAULT), 0.05, DOOR_THICKNESS_DEFAULT), depth * 0.12)
+    panel = min(_clamp(params.get("panel_thickness", PANEL_THICKNESS_DEFAULT), 0.008, PANEL_THICKNESS_DEFAULT), width * 0.18, depth * 0.18)
+    back = min(_clamp(params.get("back_thickness", BACK_THICKNESS_DEFAULT), 0.005, BACK_THICKNESS_DEFAULT), depth * 0.15)
+    shelf_thickness = min(_clamp(params.get("shelf_thickness", SHELF_THICKNESS_DEFAULT), 0.005, SHELF_THICKNESS_DEFAULT), height * 0.05)
+    door_thickness = min(_clamp(params.get("door_thickness", DOOR_THICKNESS_DEFAULT), 0.005, DOOR_THICKNESS_DEFAULT), depth * 0.12)
 
     door_count = _door_count(width, params.get("door_count"))
     shelf_count = _shelf_count(height, params.get("shelf_count"))
@@ -215,9 +215,10 @@ def generate(params, api):
     bp("label", role="label")
     cl(
         f"{name}__label",
-        [x + width / 2, y + depth / 2, z + height + 0.5],
+        [x + width / 2, y + depth / 2, z + height + 0.05],
         name,
         collection,
+        0.035,
     )
     ep()
 

@@ -43,7 +43,7 @@ class TestGeneratorMetadata(unittest.TestCase):
         meta = infer_generator_meta_from_code(code, _GENERATORS_DIR / "bed_basic.py")
         self.assertEqual(meta["name"], "bed_basic")
         self.assertEqual(meta["category"], "Beds")
-        self.assertEqual(meta["version"], "0.6.0")
+        self.assertEqual(meta["version"], "0.7.0")
         self.assertEqual(meta["icon"], "BED")
         self.assertIn("Parametric low bed", meta["description"])
 
@@ -75,9 +75,9 @@ class TestParseCommandsPayload(unittest.TestCase):
 
 class TestMergeGeneratorParams(unittest.TestCase):
     def test_overrides_win(self):
-        merged = merge_generator_params({"length": 12, "width": 20}, {"length": 14})
-        self.assertEqual(merged["length"], 14)
-        self.assertEqual(merged["width"], 20)
+        merged = merge_generator_params({"length": 1.2, "width": 2.0}, {"length": 1.4})
+        self.assertEqual(merged["length"], 1.4)
+        self.assertEqual(merged["width"], 2.0)
 
     def test_empty_overrides(self):
         merged = merge_generator_params({"name": "BED"}, None)

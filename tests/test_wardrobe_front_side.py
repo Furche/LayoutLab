@@ -17,14 +17,14 @@ class TestWardrobeFrontSide(unittest.TestCase):
         self.mod = _load_wardrobe_basic()
 
     def test_y_min_clearance(self):
-        loc, dims = self.mod._clearance_spec("y_min", 8.0, 4.0, 15.0, 0.18, 6.0)
-        self.assertEqual(loc, [0.0, -6.18, 0.0])
-        self.assertEqual(dims, [8.0, 6.0, 15.0])
+        loc, dims = self.mod._clearance_spec("y_min", 0.8, 0.4, 1.5, 0.018, 0.6)
+        self.assertEqual(loc, [0.0, -0.618, 0.0])
+        self.assertEqual(dims, [0.8, 0.6, 1.5])
 
     def test_y_max_clearance(self):
-        loc, dims = self.mod._clearance_spec("y_max", 8.0, 4.0, 15.0, 0.18, 6.0)
-        self.assertEqual(loc, [0.0, 4.18, 0.0])
-        self.assertEqual(dims, [8.0, 6.0, 15.0])
+        loc, dims = self.mod._clearance_spec("y_max", 0.8, 0.4, 1.5, 0.018, 0.6)
+        self.assertAlmostEqual(loc[1], 0.418)
+        self.assertEqual(dims, [0.8, 0.6, 1.5])
 
     def test_unknown_front_side_raises(self):
         with self.assertRaises(ValueError):

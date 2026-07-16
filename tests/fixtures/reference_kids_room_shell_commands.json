@@ -1,5 +1,5 @@
 {
-  "description": "DD-010 Room Model shell — kids room footprint at origin (1 unit ≈ 10 cm). Inward-facing wall planes.",
+  "description": "DD-010 Room Model shell — kids room footprint at origin (Blender units, Metric 1 unit = 1 m). Inward-facing wall planes.",
   "collection": "layoutlab_room",
   "commands": [
     {
@@ -11,10 +11,10 @@
       "params": {
         "name": "KIDS_ROOM",
         "location": [0, 0, 0],
-        "width": 42.0,
-        "depth": 21.8,
-        "height": 26.0,
-        "wall_thickness": 0.2,
+        "width": 4.2,
+        "depth": 2.18,
+        "height": 2.6,
+        "wall_thickness": 0.02,
         "collection": "layoutlab_room"
       }
     },
@@ -25,10 +25,10 @@
         "opening_name": "window_west",
         "kind": "window",
         "wall_side": "west",
-        "offset": 4.8054,
-        "width": 12.2946,
-        "height": 14.7,
-        "sill_height": 8.8
+        "offset": 0.48054,
+        "width": 1.22946,
+        "height": 1.47,
+        "sill_height": 0.88
       }
     },
     {
@@ -38,9 +38,9 @@
         "opening_name": "door_east",
         "kind": "door",
         "wall_side": "east",
-        "offset": 2.4866,
-        "width": 7.0801,
-        "height": 18.4453
+        "offset": 0.24866,
+        "width": 0.70801,
+        "height": 1.84453
       }
     },
     {
@@ -50,10 +50,10 @@
         "fixed_name": "heizung",
         "kind": "radiator",
         "wall_side": "west",
-        "offset": 5.6494,
-        "width": 11.0,
-        "depth": 1.0,
-        "height": 7.5
+        "offset": 0.56494,
+        "width": 1.1,
+        "depth": 0.1,
+        "height": 0.75
       }
     }
   ]

@@ -2,21 +2,21 @@
 GENERATOR_NAME = "desk_basic"
 GENERATOR_CATEGORY = "Work"
 GENERATOR_DESCRIPTION = "Parametric desk with tabletop, legs, and optional chair-access clearance."
-GENERATOR_VERSION = "0.1.0"
+GENERATOR_VERSION = "0.2.0"
 GENERATOR_ICON = "MESH_CUBE"
 
-MIN_WIDTH = 4.0
-MIN_DEPTH = 3.0
-MIN_HEIGHT = 5.0
+MIN_WIDTH = 0.4
+MIN_DEPTH = 0.3
+MIN_HEIGHT = 0.5
 
-DEFAULT_WIDTH = 12.0
-DEFAULT_DEPTH = 6.0
-DEFAULT_HEIGHT = 7.5
+DEFAULT_WIDTH = 1.2
+DEFAULT_DEPTH = 0.6
+DEFAULT_HEIGHT = 0.75
 
-TOP_THICKNESS_DEFAULT = 0.25
-LEG_THICKNESS_DEFAULT = 0.4
-CLEARANCE_DEPTH_DEFAULT = 6.0
-CLEARANCE_HEIGHT_DEFAULT = 7.0
+TOP_THICKNESS_DEFAULT = 0.025
+LEG_THICKNESS_DEFAULT = 0.04
+CLEARANCE_DEPTH_DEFAULT = 0.6
+CLEARANCE_HEIGHT_DEFAULT = 0.7
 
 CLEARANCE_COLOR = (0.2, 0.8, 1.0, 0.22)
 
@@ -34,8 +34,8 @@ def _chair_zone_local(width, depth, clearance_depth, clearance_height):
 
     Front / sitting side is y_min (local y = 0). Clearance extends in −Y.
     """
-    depth = max(float(clearance_depth), 0.1)
-    height = max(float(clearance_height), 0.1)
+    depth = max(float(clearance_depth), 0.01)
+    height = max(float(clearance_height), 0.01)
     return [0.0, -depth, 0.0], [float(width), depth, height]
 
 
@@ -49,11 +49,11 @@ def generate(params, api):
     height = _clamp(params.get("height", DEFAULT_HEIGHT), MIN_HEIGHT, DEFAULT_HEIGHT)
 
     top_thickness = min(
-        _clamp(params.get("top_thickness", TOP_THICKNESS_DEFAULT), 0.08, TOP_THICKNESS_DEFAULT),
+        _clamp(params.get("top_thickness", TOP_THICKNESS_DEFAULT), 0.008, TOP_THICKNESS_DEFAULT),
         height * 0.2,
     )
     leg_thickness = min(
-        _clamp(params.get("leg_thickness", LEG_THICKNESS_DEFAULT), 0.15, LEG_THICKNESS_DEFAULT),
+        _clamp(params.get("leg_thickness", LEG_THICKNESS_DEFAULT), 0.015, LEG_THICKNESS_DEFAULT),
         width * 0.15,
         depth * 0.15,
     )
@@ -62,7 +62,7 @@ def generate(params, api):
     clearance_depth = _clamp(params.get("clearance_depth", CLEARANCE_DEPTH_DEFAULT), 0.0, CLEARANCE_DEPTH_DEFAULT)
     clearance_height = _clamp(
         params.get("clearance_height", CLEARANCE_HEIGHT_DEFAULT),
-        0.1,
+        0.01,
         CLEARANCE_HEIGHT_DEFAULT,
     )
     clearance_requirement = params.get("clearance_requirement", "required")
@@ -77,7 +77,7 @@ def generate(params, api):
     bp = api["begin_part"]
     ep = api["end_part"]
 
-    leg_height = max(height - top_thickness, 0.1)
+    leg_height = max(height - top_thickness, 0.01)
 
     bp("body", main=True, role="desk_body")
     cb(
@@ -128,9 +128,10 @@ def generate(params, api):
     bp("label", role="label")
     cl(
         f"{name}__label",
-        [x + width / 2, y + depth / 2, z + height + 0.5],
+        [x + width / 2, y + depth / 2, z + height + 0.05],
         name,
         collection,
+        0.035,
     )
     ep()
 

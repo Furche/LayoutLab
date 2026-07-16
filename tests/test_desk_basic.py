@@ -19,13 +19,13 @@ class TestDeskChairZone(unittest.TestCase):
         self.desk_mod = _load_desk_basic()
 
     def test_chair_zone_at_front(self):
-        loc, dims = self.desk_mod._chair_zone_local(12.0, 6.0, 6.0, 7.0)
-        self.assertEqual(loc, [0.0, -6.0, 0.0])
-        self.assertEqual(dims, [12.0, 6.0, 7.0])
+        loc, dims = self.desk_mod._chair_zone_local(1.2, 0.6, 0.6, 0.7)
+        self.assertEqual(loc, [0.0, -0.6, 0.0])
+        self.assertEqual(dims, [1.2, 0.6, 0.7])
 
     def test_chair_zone_minimum_depth(self):
         _, dims = self.desk_mod._chair_zone_local(10.0, 5.0, 0.0, 7.0)
-        self.assertEqual(dims[1], 0.1)
+        self.assertEqual(dims[1], 0.01)
 
 
 class TestReferenceKidsRoomFixture(unittest.TestCase):

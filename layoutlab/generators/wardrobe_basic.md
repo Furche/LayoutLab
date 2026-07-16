@@ -36,7 +36,7 @@ Use **`front_side: y_max`** when the back sits on the south wall (`y_min`): door
 - `height` extends along +Z.
 - Doors are placed on the front side at `y_min`.
 
-In Alexander's reference room convention, `1 unit ≈ 10 cm`.
+Sizes are Blender scene units (Metric default: 1 unit = 1 meter).
 
 ## Component Roles (build meshes)
 

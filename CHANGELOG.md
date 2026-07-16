@@ -8,13 +8,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-### Added
-
-- **Scene-unit adaptation:** JSON/generators stay in LayoutLab units (1 = 10 cm); `create_box` / walls / labels / `move` convert via `scene.unit_settings.scale_length`; export converts back (`scale_convention`, `bu_per_ll_unit`)
-
 ### Changed
 
-- Plugin version **0.9.3**
+- **Native Blender units (v0.10.0, breaking):** JSON/generators use scene Blender units directly (Metric default: 1 unit = 1 m). Removed 10 cm convention and the v0.9.3 conversion layer.
+- Generator defaults scaled to meters: `bed_basic` 0.7.0, `wardrobe_basic` 0.7.0, `desk_basic` 0.2.0
+- Room shell / reference fixtures updated to meter sizes
+
+### Changed (prior)
+
+- Plugin version **0.9.3** — temporary LL↔BU conversion (superseded by 0.10.0)
 
 ### Fixed (prior)
 

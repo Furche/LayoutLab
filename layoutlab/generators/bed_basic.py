@@ -2,18 +2,18 @@
 GENERATOR_NAME = "bed_basic"
 GENERATOR_CATEGORY = "Beds"
 GENERATOR_DESCRIPTION = "Parametric low bed: posts, raised frame loop, headboard rise, mattress, pillows."
-GENERATOR_VERSION = "0.6.0"
+GENERATOR_VERSION = "0.7.0"
 GENERATOR_ICON = "BED"
 
-# Fallback thresholds (Blender units; 1 unit ≈ 10 cm in reference room)
-MIN_BED_DIMENSION = 3
-PILLOW_COUNT_WIDTH_THRESHOLD = 13  # width >= 13 → two pillows
-PILLOW_HEIGHT = 0.45
-PILLOW_GAP = 0.2
+# Thresholds in Blender units (Metric default: 1 unit = 1 meter)
+MIN_BED_DIMENSION = 0.3
+PILLOW_COUNT_WIDTH_THRESHOLD = 1.3  # width >= 1.3 → two pillows
+PILLOW_HEIGHT = 0.045
+PILLOW_GAP = 0.02
 MATTRESS_Z_INSET_FACTOR = 0.55  # mattress sits above lower rail within frame
 
-DEFAULT_HEADBOARD_RISE = 3.2  # decorative panel height above frame top
-DEFAULT_ENTRY_CLEARANCE_DEPTH = 6.0
+DEFAULT_HEADBOARD_RISE = 0.32  # decorative panel height above frame top
+DEFAULT_ENTRY_CLEARANCE_DEPTH = 0.6
 CLEARANCE_COLOR = (0.2, 0.8, 1.0, 0.22)
 
 
@@ -24,7 +24,7 @@ def _clearance_height(bed, mattress_height):
 def _zone_for_side(bed, side, depth, mattress_height):
     """Return (local_location, dimensions) for a bed_entry clearance in body local space."""
     h = _clearance_height(bed, mattress_height)
-    depth = max(float(depth), 0.1)
+    depth = max(float(depth), 0.01)
     length, width = bed.length, bed.width
     side = (side or "foot").strip().lower()
 
@@ -385,18 +385,18 @@ class BedConstruction:
     def pillow_anchor_y(self, pillow_depth):
         """Y position for pillow row at the head end (y-axis beds)."""
         if self.head_side == "y_max":
-            return self.y + self.width - self.rail - pillow_depth - 0.2
+            return self.y + self.width - self.rail - pillow_depth - 0.02
         if self.head_side == "y_min":
-            return self.y + self.rail + 0.2
-        return self.mattress_y + self.mattress_w - 2.0
+            return self.y + self.rail + 0.02
+        return self.mattress_y + self.mattress_w - 0.2
 
     def pillow_anchor_x(self, pillow_depth):
         """X position for pillow column at the head end (x-axis beds)."""
         if self.head_side == "x_max":
-            return self.mattress_x + self.mattress_l - pillow_depth - 0.2
+            return self.mattress_x + self.mattress_l - pillow_depth - 0.02
         if self.head_side == "x_min":
-            return self.mattress_x + 0.2
-        return self.mattress_x + 0.2
+            return self.mattress_x + 0.02
+        return self.mattress_x + 0.02
 
 
 def _headboard_rise_from_params(params):
@@ -411,15 +411,15 @@ def _headboard_rise_from_params(params):
 def generate(params, api):
     name = params.get("name", "BED_basic")
     x, y, z = params.get("location", [0, 0, 0])
-    length = max(params.get("length", 20), MIN_BED_DIMENSION)
-    width = max(params.get("width", 12), MIN_BED_DIMENSION)
+    length = max(params.get("length", 2.0), MIN_BED_DIMENSION)
+    width = max(params.get("width", 1.2), MIN_BED_DIMENSION)
     collection = params.get("collection", "layout_tests")
 
-    leg_height = params.get("leg_height", 2.5)
-    frame_height = params.get("frame_height", 1.0)
-    mattress_height = params.get("mattress_height", 2.0)
-    rail = min(params.get("rail_thickness", 0.35), width * 0.2, length * 0.2)
-    post = min(params.get("post_size", 0.45), width * 0.25, length * 0.25)
+    leg_height = params.get("leg_height", 0.25)
+    frame_height = params.get("frame_height", 0.1)
+    mattress_height = params.get("mattress_height", 0.2)
+    rail = min(params.get("rail_thickness", 0.035), width * 0.2, length * 0.2)
+    post = min(params.get("post_size", 0.045), width * 0.25, length * 0.25)
     head_side = params.get("head_side", "y_max")
     headboard_rise = _headboard_rise_from_params(params)
 
@@ -470,18 +470,18 @@ def generate(params, api):
     pillow_count = 2 if width >= PILLOW_COUNT_WIDTH_THRESHOLD else 1
     if head_side in ("y_max", "y_min"):
         pillow_span = bed.mattress_l
-        pillow_depth = min(1.8, bed.mattress_w * 0.35)
-        pillow_len = max((pillow_span - PILLOW_GAP * (pillow_count + 1)) / pillow_count, 0.8)
+        pillow_depth = min(0.18, bed.mattress_w * 0.35)
+        pillow_len = max((pillow_span - PILLOW_GAP * (pillow_count + 1)) / pillow_count, 0.08)
         for i in range(pillow_count):
             px = bed.mattress_x + PILLOW_GAP + i * (pillow_len + PILLOW_GAP)
             py = max(
-                min(bed.pillow_anchor_y(pillow_depth), bed.mattress_y + bed.mattress_w - pillow_depth - 0.2),
-                bed.mattress_y + 0.2,
+                min(bed.pillow_anchor_y(pillow_depth), bed.mattress_y + bed.mattress_w - pillow_depth - 0.02),
+                bed.mattress_y + 0.02,
             )
             bp(f"pillow_{i + 1}", role="bed_pillow")
             cb(
                 f"{name}__pillow_{i + 1}",
-                [px, py, bed.mattress_z + mattress_height + 0.05],
+                [px, py, bed.mattress_z + mattress_height + 0.005],
                 [pillow_len, pillow_depth, PILLOW_HEIGHT],
                 pillow_color,
                 collection,
@@ -491,15 +491,15 @@ def generate(params, api):
             ep()
     else:
         pillow_span = bed.mattress_w
-        pillow_depth = min(1.8, bed.mattress_l * 0.35)
-        pillow_len = max((pillow_span - PILLOW_GAP * (pillow_count + 1)) / pillow_count, 0.8)
+        pillow_depth = min(0.18, bed.mattress_l * 0.35)
+        pillow_len = max((pillow_span - PILLOW_GAP * (pillow_count + 1)) / pillow_count, 0.08)
         px = bed.pillow_anchor_x(pillow_depth)
         for i in range(pillow_count):
             py = bed.mattress_y + PILLOW_GAP + i * (pillow_len + PILLOW_GAP)
             bp(f"pillow_{i + 1}", role="bed_pillow")
             cb(
                 f"{name}__pillow_{i + 1}",
-                [px, py, bed.mattress_z + mattress_height + 0.05],
+                [px, py, bed.mattress_z + mattress_height + 0.005],
                 [pillow_depth, pillow_len, PILLOW_HEIGHT],
                 pillow_color,
                 collection,
@@ -511,9 +511,10 @@ def generate(params, api):
     bp("label", role="label")
     cl(
         f"{name}__label",
-        [x + length / 2, y + width / 2, bed.mattress_z + mattress_height + 0.7],
+        [x + length / 2, y + width / 2, bed.mattress_z + mattress_height + 0.07],
         name,
         collection,
+        0.035,
     )
     ep()
 

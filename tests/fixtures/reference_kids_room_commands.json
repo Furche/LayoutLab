@@ -1,11 +1,9 @@
 {
-  "description": "Reference children's room — bed + desk inside floor bounds; positions avoid IKEA bbox overlap (see reference_kids_room_room.json). No LayoutLab wardrobe here — real 'kleiderschrank' already in collection 'furniture'.",
+  "description": "Reference children's room — bed + desk (Blender units, Metric 1 unit = 1 m). Positions are illustrative; prefer room shell at origin for new layouts.",
   "collection": "reference_kids_room",
   "room_bounds_ref": "reference_kids_room_room.json",
   "layout_notes": [
-    "Bed west strip (x 66.5–78.5), clear of heizung (x max ~66.8).",
-    "Desk x 88–100, y 201–207 — clear of kleiderschrank (x min 103.4) and Tisch (y min 212.9).",
-    "Hide collection 'furniture' for a clean LayoutLab-only view."
+    "Sizes are meters (Blender native). Bed 1.2×2.0, desk 1.2×0.6×0.75."
   ],
   "commands": [
     {
@@ -17,27 +15,27 @@
       "generator": "bed_basic",
       "params": {
         "name": "BED_120x200",
-        "location": [66.5, 198.0, 0],
-        "length": 12,
-        "width": 20,
+        "location": [0.5, 0.2, 0],
+        "length": 1.2,
+        "width": 2.0,
         "head_side": "y_max",
         "clearances": [
           {
             "clearance_name": "bed_entry",
             "side": "foot",
-            "depth": 6.0,
+            "depth": 0.6,
             "requirement": "preferred"
           },
           {
             "clearance_name": "bed_entry",
             "side": "left",
-            "depth": 5.0,
+            "depth": 0.5,
             "requirement": "preferred"
           },
           {
             "clearance_name": "bed_entry",
             "side": "right",
-            "depth": 5.0,
+            "depth": 0.5,
             "requirement": "preferred"
           }
         ],
@@ -49,10 +47,10 @@
       "generator": "desk_basic",
       "params": {
         "name": "DESK_120x60",
-        "location": [88.0, 201.0, 0],
-        "width": 12,
-        "depth": 6,
-        "height": 7.5,
+        "location": [2.5, 0.5, 0],
+        "width": 1.2,
+        "depth": 0.6,
+        "height": 0.75,
         "show_clearance": true,
         "collection": "reference_kids_room"
       }

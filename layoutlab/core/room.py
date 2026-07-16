@@ -9,8 +9,8 @@ FOOTPRINT_KINDS = ("rectangle", "polygon")
 OPENING_KINDS = ("door", "window")
 FIXED_KINDS = ("radiator",)
 RECT_WALL_ORDER = ("south", "east", "north", "west")  # y_min, x_max, y_max, x_min
-DEFAULT_WALL_THICKNESS = 0.2
-DEFAULT_WALL_HEIGHT = 26.0
+DEFAULT_WALL_THICKNESS = 0.02
+DEFAULT_WALL_HEIGHT = 2.6
 
 
 def _new_id():
@@ -91,8 +91,8 @@ def create_room_model(params):
     if kind != "rectangle":
         raise ValueError("MVP supports footprint.kind 'rectangle' only")
 
-    width = _f(footprint_in.get("width", params.get("width", 10.0)), 10.0)
-    depth = _f(footprint_in.get("depth", params.get("depth", 10.0)), 10.0)
+    width = _f(footprint_in.get("width", params.get("width", 4.0)), 4.0)
+    depth = _f(footprint_in.get("depth", params.get("depth", 3.0)), 3.0)
     if width <= 0 or depth <= 0:
         raise ValueError("room width and depth must be > 0")
 
@@ -369,7 +369,7 @@ def _wall_slot_box(model, wall, offset, span, z0, height, depth, inward):
     width = _f(model["footprint"]["width"])
     room_depth = _f(model["footprint"]["depth"])
     side = wall.get("side")
-    d = max(_f(depth), 0.05)
+    d = max(_f(depth), 0.005)
 
     if side == "south":
         x = ox + offset
@@ -396,7 +396,7 @@ def _wall_slot_box(model, wall, offset, span, z0, height, depth, inward):
 
 def opening_world_box(model, opening):
     wall = find_wall(model, opening["wall_id"])
-    depth = max(_f(model.get("wall_thickness"), DEFAULT_WALL_THICKNESS) * 1.2, 0.25)
+    depth = max(_f(model.get("wall_thickness"), DEFAULT_WALL_THICKNESS) * 1.2, 0.025)
     return _wall_slot_box(
         model,
         wall,
@@ -478,7 +478,7 @@ def wall_display_box(model, wall):
     zs = [c[2] for c in corners]
     return (
         [min(xs), min(ys), min(zs)],
-        [max(xs) - min(xs) or 0.01, max(ys) - min(ys) or 0.01, max(zs) - min(zs) or 0.01],
+        [max(xs) - min(xs) or 0.001, max(ys) - min(ys) or 0.001, max(zs) - min(zs) or 0.001],
     )
 
 
@@ -486,7 +486,7 @@ def floor_display_box(model):
     ox, oy, oz = (_f(v) for v in model["origin"])
     width = _f(model["footprint"]["width"])
     depth = _f(model["footprint"]["depth"])
-    return [ox, oy, oz], [width, depth, 0.05]
+    return [ox, oy, oz], [width, depth, 0.005]
 
 
 def room_world_bounds(model):

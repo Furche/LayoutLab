@@ -182,8 +182,8 @@ def run_console_checks(context):
                 {
                     "name": bed_name,
                     "location": [1000, 1000, 0],
-                    "length": 12,
-                    "width": 20,
+                    "length": 1.2,
+                    "width": 2.0,
                     "head_side": "y_max",
                     "collection": DIAG_COLLECTION,
                 },
@@ -247,8 +247,8 @@ def run_console_checks(context):
                         "params": {
                             "name": bed_name,
                             "location": [1000, 1000, 0],
-                            "length": 14,
-                            "width": 20,
+                            "length": 1.4,
+                            "width": 2.0,
                             "head_side": "y_max",
                             "collection": DIAG_COLLECTION,
                         },
@@ -257,7 +257,7 @@ def run_console_checks(context):
                         "action": "create_clearance",
                         "name": f"{DIAG_PREFIX}CLEARANCE",
                         "location": [1000, 1000, 0],
-                        "dimensions": [14, 7, 0.1],
+                        "dimensions": [1.4, 0.7, 0.01],
                         "collection": DIAG_COLLECTION,
                     },
                 ]
@@ -302,7 +302,7 @@ def run_console_checks(context):
                     {
                         "action": "regenerate",
                         "object_id": object_id,
-                        "params": {"length": 16},
+                        "params": {"length": 1.6},
                     }
                 ]
             }
@@ -323,7 +323,7 @@ def run_console_checks(context):
             check.fail(f"dimensions unchanged: {before_dims}")
             return
         stored = json.loads(new_mattress.get("layoutlab_params", "{}"))
-        if stored.get("length") != 16:
+        if stored.get("length") != 1.6:
             check.fail(f"layoutlab_params length: {stored.get('length')}")
             return
         check.ok(
@@ -387,8 +387,8 @@ def run_console_checks(context):
                 {
                     "name": prefix,
                     "location": loc,
-                    "length": 12,
-                    "width": 20,
+                    "length": 1.2,
+                    "width": 2.0,
                     "head_side": "y_max",
                     "collection": DIAG_COLLECTION,
                 },
@@ -424,16 +424,16 @@ def run_console_checks(context):
             {
                 "name": f"{DIAG_PREFIX}BED_XFORM_ABS",
                 "location": loc,
-                "length": 12,
-                "width": 20,
+                "length": 1.2,
+                "width": 2.0,
                 "head_side": "y_max",
                 "collection": DIAG_COLLECTION,
             },
         )
         body = bpy.data.objects.get(f"{DIAG_PREFIX}BED_XFORM_ABS_body")
         mattress = bpy.data.objects.get(f"{DIAG_PREFIX}BED_XFORM_ABS_mattress")
-        rail = min(0.35, 20 * 0.2, 12 * 0.2)
-        expected = (loc[0] + rail, loc[1] + rail, loc[2] + 2.5 + 1.0 * 0.55)
+        rail = min(0.035, 2.0 * 0.2, 1.2 * 0.2)
+        expected = (loc[0] + rail, loc[1] + rail, loc[2] + 0.25 + 0.1 * 0.55)
         actual = mattress.matrix_world.translation
         actual_t = (float(actual.x), float(actual.y), float(actual.z))
         if not translations_close(actual_t, expected, tolerance=0.08):
@@ -462,8 +462,8 @@ def run_console_checks(context):
             {
                 "name": prefix,
                 "location": [100.0, 100.0, 0.0],
-                "length": 12,
-                "width": 20,
+                "length": 1.2,
+                "width": 2.0,
                 "head_side": "y_max",
                 "collection": DIAG_COLLECTION,
             },
@@ -514,9 +514,9 @@ def run_console_checks(context):
                 {
                     "name": prefix,
                     "location": loc,
-                    "width": 8,
-                    "depth": 4,
-                    "height": 15,
+                    "width": 0.8,
+                    "depth": 0.4,
+                    "height": 1.5,
                     "show_clearance": True,
                     "collection": DIAG_COLLECTION,
                 },
@@ -541,7 +541,7 @@ def run_console_checks(context):
             body_ymin, _ = _world_bbox_y_extents(body)
             _, clearance_ymax = _world_bbox_y_extents(clearance)
             gap = body_ymin - clearance_ymax
-            if gap < -0.5 or gap > 1.0:
+            if gap < -0.05 or gap > 0.1:
                 check.fail(f"clearance front gap unexpected at {loc}: gap={gap}")
                 return
             gaps.append(round(gap, 4))
@@ -583,9 +583,9 @@ def run_console_checks(context):
             {
                 "name": prefix,
                 "location": loc,
-                "width": 8,
-                "depth": 4,
-                "height": 15,
+                "width": 0.8,
+                "depth": 0.4,
+                "height": 1.5,
                 "show_clearance": True,
                 "collection": DIAG_COLLECTION,
             },
@@ -640,9 +640,9 @@ def run_console_checks(context):
             {
                 "name": prefix,
                 "location": [0, 0, 0],
-                "width": 8,
-                "depth": 4,
-                "height": 15,
+                "width": 0.8,
+                "depth": 0.4,
+                "height": 1.5,
                 "show_clearance": True,
                 "collection": DIAG_COLLECTION,
             },
@@ -679,9 +679,9 @@ def run_console_checks(context):
             {
                 "name": wardrobe_name,
                 "location": [0, 0, 0],
-                "width": 8,
-                "depth": 4,
-                "height": 15,
+                "width": 0.8,
+                "depth": 0.4,
+                "height": 1.5,
                 "show_clearance": True,
                 "collection": DIAG_COLLECTION,
             },
@@ -691,8 +691,8 @@ def run_console_checks(context):
             {
                 "name": f"{prefix}_BED",
                 "location": [0, -6, 0],
-                "length": 12,
-                "width": 20,
+                "length": 1.2,
+                "width": 2.0,
                 "head_side": "y_max",
                 "collection": DIAG_COLLECTION,
             },
@@ -745,8 +745,8 @@ def run_console_checks(context):
             {
                 "name": bed_name,
                 "location": [0, 0, 0],
-                "length": 12,
-                "width": 20,
+                "length": 1.2,
+                "width": 2.0,
                 "head_side": "y_max",
                 "collection": DIAG_COLLECTION,
                 "clearances": [
@@ -754,7 +754,7 @@ def run_console_checks(context):
                         "clearance_name": "bed_entry",
                         "side": "foot",
                         "requirement": "preferred",
-                        "depth": 6.0,
+                        "depth": 0.6,
                     }
                 ],
             },
@@ -786,8 +786,8 @@ def run_console_checks(context):
             {
                 "name": bed_name,
                 "location": [0, 0, 0],
-                "length": 12,
-                "width": 20,
+                "length": 1.2,
+                "width": 2.0,
                 "head_side": "y_max",
                 "collection": DIAG_COLLECTION,
                 "clearances": [
@@ -795,7 +795,7 @@ def run_console_checks(context):
                         "clearance_name": "bed_entry",
                         "side": "foot",
                         "requirement": "preferred",
-                        "depth": 6.0,
+                        "depth": 0.6,
                     }
                 ],
             },
@@ -809,7 +809,7 @@ def run_console_checks(context):
                             "action": "create_box",
                             "name": f"{DIAG_PREFIX}BED_ENTRY_OBSTACLE",
                             "location": [0, -4, 0],
-                            "dimensions": [12, 4, 4],
+                            "dimensions": [1.2, 0.4, 0.4],
                             "collection": DIAG_COLLECTION,
                         }
                     ]
@@ -855,9 +855,9 @@ def run_console_checks(context):
                 {
                     "name": prefix,
                     "location": loc,
-                    "width": 10,
-                    "depth": 5,
-                    "height": 7.5,
+                    "width": 1.0,
+                    "depth": 0.5,
+                    "height": 0.75,
                     "show_clearance": True,
                     "collection": DIAG_COLLECTION,
                 },
@@ -882,7 +882,7 @@ def run_console_checks(context):
             body_ymin, _ = _world_bbox_y_extents(body)
             _, clearance_ymax = _world_bbox_y_extents(clearance)
             gap = body_ymin - clearance_ymax
-            if gap < -0.5 or gap > 1.0:
+            if gap < -0.05 or gap > 0.1:
                 check.fail(f"clearance front gap unexpected at {loc}: gap={gap}")
                 return
             gaps.append(round(gap, 4))
@@ -906,9 +906,9 @@ def run_console_checks(context):
             {
                 "name": prefix,
                 "location": [0, 0, 0],
-                "width": 10,
-                "depth": 5,
-                "height": 7.5,
+"width": 1.0,
+                    "depth": 0.5,
+                "height": 0.75,
                 "show_clearance": True,
                 "collection": DIAG_COLLECTION,
             },
@@ -941,9 +941,9 @@ def run_console_checks(context):
             {
                 "name": desk_name,
                 "location": [0, 0, 0],
-                "width": 10,
-                "depth": 5,
-                "height": 7.5,
+"width": 1.0,
+                    "depth": 0.5,
+                "height": 0.75,
                 "show_clearance": True,
                 "collection": DIAG_COLLECTION,
             },
@@ -957,7 +957,7 @@ def run_console_checks(context):
                             "action": "create_box",
                             "name": f"{prefix}_OBSTACLE",
                             "location": [0, -4, 0],
-                            "dimensions": [10, 3, 5],
+                            "dimensions": [1.0, 0.3, 0.5],
                             "collection": DIAG_COLLECTION,
                         }
                     ]
@@ -1014,10 +1014,10 @@ def run_console_checks(context):
                             "params": {
                                 "name": prefix,
                                 "location": [0, 0, 0],
-                                "width": 20,
-                                "depth": 12,
-                                "height": 25,
-                                "wall_thickness": 0.2,
+                                "width": 4.0,
+                                "depth": 2.5,
+                                "height": 2.5,
+                                "wall_thickness": 0.02,
                                 "collection": DIAG_COLLECTION,
                             },
                         },
@@ -1028,9 +1028,9 @@ def run_console_checks(context):
                                 "opening_name": "door_east",
                                 "kind": "door",
                                 "wall_side": "east",
-                                "offset": 2,
-                                "width": 9,
-                                "height": 20,
+                                "offset": 0.2,
+                                "width": 0.9,
+                                "height": 2.0,
                             },
                         },
                         {
@@ -1040,10 +1040,10 @@ def run_console_checks(context):
                                 "opening_name": "window_west",
                                 "kind": "window",
                                 "wall_side": "west",
-                                "offset": 3,
-                                "width": 8,
-                                "height": 12,
-                                "sill_height": 8,
+                                "offset": 0.3,
+                                "width": 0.8,
+                                "height": 1.2,
+                                "sill_height": 0.8,
                             },
                         },
                         {
@@ -1053,10 +1053,10 @@ def run_console_checks(context):
                                 "fixed_name": "heizung",
                                 "kind": "radiator",
                                 "wall_side": "west",
-                                "offset": 4,
-                                "width": 6,
-                                "depth": 1,
-                                "height": 7,
+                                "offset": 0.4,
+                                "width": 0.6,
+                                "depth": 0.1,
+                                "height": 0.7,
                             },
                         },
                     ]

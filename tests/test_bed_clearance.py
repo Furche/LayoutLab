@@ -22,34 +22,34 @@ class TestBedClearanceZones(unittest.TestCase):
             x=0,
             y=0,
             floor_z=0,
-            length=12,
-            width=20,
-            leg_height=2.5,
-            frame_height=1.0,
-            rail=0.35,
-            post=0.45,
-            headboard_rise=3.2,
+            length=1.2,
+            width=2.0,
+            leg_height=0.25,
+            frame_height=0.1,
+            rail=0.035,
+            post=0.045,
+            headboard_rise=0.32,
             head_side=head_side,
         )
 
     def test_foot_entry_y_max(self):
         bed = self._bed("y_max")
-        loc, dims = self.bed_mod._zone_for_side(bed, "foot", 6.0, 2.0)
-        self.assertEqual(loc, [0.0, -6.0, 0.0])
-        self.assertEqual(dims[0], 12.0)
-        self.assertEqual(dims[1], 6.0)
+        loc, dims = self.bed_mod._zone_for_side(bed, "foot", 0.6, 0.2)
+        self.assertEqual(loc, [0.0, -0.6, 0.0])
+        self.assertEqual(dims[0], 1.2)
+        self.assertEqual(dims[1], 0.6)
 
     def test_left_entry_y_max(self):
         bed = self._bed("y_max")
-        loc, dims = self.bed_mod._zone_for_side(bed, "left", 5.0, 2.0)
-        self.assertEqual(loc, [-5.0, 0.0, 0.0])
-        self.assertEqual(dims[0], 5.0)
-        self.assertEqual(dims[1], 20.0)
+        loc, dims = self.bed_mod._zone_for_side(bed, "left", 0.5, 0.2)
+        self.assertEqual(loc, [-0.5, 0.0, 0.0])
+        self.assertEqual(dims[0], 0.5)
+        self.assertEqual(dims[1], 2.0)
 
     def test_unknown_side_raises(self):
         bed = self._bed("y_max")
         with self.assertRaises(ValueError):
-            self.bed_mod._zone_for_side(bed, "diagonal", 6.0, 2.0)
+            self.bed_mod._zone_for_side(bed, "diagonal", 0.6, 0.2)
 
     def test_iter_clearance_specs_empty(self):
         self.assertEqual(self.bed_mod._iter_clearance_specs({}), [])

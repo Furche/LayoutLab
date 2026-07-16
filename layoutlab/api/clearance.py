@@ -6,7 +6,6 @@ import uuid
 from ..util import resolve_clearance_locations, validate_clearance_requirement
 from .geometry import create_box
 from .parts import get_active_session
-from .units import from_bu_vec
 
 DEFAULT_CLEARANCE_COLOR = (0.2, 0.8, 1.0, 0.22)
 
@@ -73,13 +72,10 @@ def create_clearance(
 
     requirement = validate_clearance_requirement(requirement)
     dims = tuple(float(v) for v in dimensions)
-    # Main part is already in Blender units; clearance inputs are LayoutLab units.
-    main_bu = _main_part_location()
-    main_ll = from_bu_vec(main_bu) if main_bu is not None else None
     world, local = resolve_clearance_locations(
         local_location=local_location,
         world_location=location,
-        main_location=main_ll,
+        main_location=_main_part_location(),
     )
     clearance_id = str(uuid.uuid4())
 

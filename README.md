@@ -125,7 +125,7 @@ Adjust Blender version path as needed.
 }
 ```
 
-> **Units:** coordinates are Blender scene units. In the reference room scene, **1 unit ≈ 10 cm** — see [docs/units_and_coordinates.md](docs/units_and_coordinates.md).
+> **Units:** coordinates are Blender scene units natively (Metric default: **1 unit = 1 meter**) — see [docs/units_and_coordinates.md](docs/units_and_coordinates.md).
 
 ------------------------------------------------------------------------
 

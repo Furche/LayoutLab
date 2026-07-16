@@ -1,6 +1,6 @@
 # Room Model (DD-010)
 
-**Status:** Accepted · Plugin **0.9.3**  
+**Status:** Accepted · Plugin **0.10.0**  
 **Source of truth:** editable Room Model — not a furniture generator.
 
 Related: [DD-010](design_decisions/DD-010-room-model.md) · [json_protocol.md](json_protocol.md) · [object_model.md](object_model.md)

@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-17 (v0.9.3 scene-unit adaptation)  
-**Plugin version:** 0.9.3 · **Branch:** `main`
+**Last updated:** 2026-07-17 (v0.10.0 native Blender units)  
+**Plugin version:** 0.10.0 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution Layer).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.9.3.
+Branch: main. Plugin v0.10.0.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-16):
@@ -59,7 +59,7 @@ User Intent → Generator (rules) → Parts API → Blender scene
 **Install:** `dist/layoutlab-<version>.zip` → Blender Preferences → Add-ons.  
 **Generators sync** on register: bundled → `layoutlab_generators/` when bundled version is newer.
 
-**Units:** LayoutLab units in JSON (1 ≈ 10 cm); plugin converts to/from scene BU via `scale_length`. See `docs/units_and_coordinates.md`.  
+**Units:** Blender scene units natively (Metric default: 1 unit = 1 m). See `docs/units_and_coordinates.md`.  
 **Reference room position (examples):** `[68.3, 197.7, 0]`. Quick Test default: `(0, 0, 0)`.
 
 ------------------------------------------------------------------------
@@ -86,12 +86,12 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 | Component | Version |
 |---|---|
-| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.9.3** |
-| `bed_basic` | **0.6.0** — raised frame construction (`BedConstruction`) + optional `bed_entry` clearances |
-| `wardrobe_basic` | **0.6.0** — `front_side` (`y_min` \| `y_max`), `create_clearance`, part `clearance_front_access` |
-| `desk_basic` | **0.1.0** — tabletop + legs, optional `chair_access` clearance (`required`) |
+| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.10.0** |
+| `bed_basic` | **0.7.0** — raised frame construction (`BedConstruction`) + optional `bed_entry` clearances; sizes in meters |
+| `wardrobe_basic` | **0.7.0** — `front_side` (`y_min` \| `y_max`), `create_clearance`, part `clearance_front_access`; sizes in meters |
+| `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance (`required`); sizes in meters |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.9.3.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.0.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
