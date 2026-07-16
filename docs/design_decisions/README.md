@@ -19,10 +19,12 @@ New decisions use the next sequential number: `DD-006`, `DD-007`, …
 | [DD-007](DD-007-clearance-zones.md) | Clearance zones (descriptive usage volumes) | Accepted | 2026-07-10 |
 | [DD-008](DD-008-constraints-and-layout-analysis.md) | Constraints and layout analysis | Accepted | 2026-07-12 |
 | [DD-009](DD-009-ai-execution-boundary.md) | AI execution boundary; plugin responsibility | Accepted | 2026-07-12 |
+| [DD-010](DD-010-room-model.md) | Room Model (single space) — editable space, not room generator | **Proposed** | 2026-07-16 |
 
 When implementing anything that touches APIs, JSON protocol, generator behaviour,
 or UI patterns — check this index first.
 
-**Reserved (not created):** Future_Ideas §19 may later use DD-010 … DD-014 for
-Project/Spatial Model, Variants, Integrated AI, Capture Pipeline, Standalone Runtime.
-Do not invent files for those IDs until an actual proposal is written.
+**Reserved (not created):** Future_Ideas §19 may later use DD-011 … DD-014 for
+Variants, Integrated AI, Capture Pipeline, Standalone Runtime / full Spatial Project.
+**DD-010** is now the Room Model proposal (narrower than “full Property/Building”).
+Do not invent files for reserved IDs until an actual proposal is written.

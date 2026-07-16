@@ -153,8 +153,10 @@ deterministic execution. Scanner/import sources must not write unchecked data in
 authoritative project state; data should support a **validation / confirmation** status
 ([Future_Ideas.md](Future_Ideas.md) §15).
 
-Concrete Project / Spatial / Variant schemas require a dedicated DD **before**
-implementation (reserved: DD-010 … DD-014 in Future_Ideas §19 — **not created**).
+Concrete Project / Spatial / Variant schemas beyond a single room require dedicated DDs
+**before** implementation. **DD-010** ([Room Model](design_decisions/DD-010-room-model.md))
+is **Proposed** for one editable space. Further reservations: DD-011 … DD-014 in
+Future_Ideas §19 — **not created**.
 
 Do **not** present today’s `[IMPLEMENTED]` architecture as already standalone-capable.
 

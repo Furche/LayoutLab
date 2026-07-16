@@ -4,6 +4,20 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-16 — DD-010 Proposed (Room Model)
+
+**Question:** Room as `room_basic` generator vs editable Room Model?
+
+**Answer (proposal):** Room Model (B). Rooms become complex; MVP starts with rectangle
+footprint but uses typed `footprint.kind`, first-class walls/openings/fixed elements so
+polygons and richer fabric can land later without a second architecture.
+
+**Not implemented:** No code until Accepted. No standalone/scanner. No multi-floor.
+
+**Next:** Alexander reviews DD-010 open questions / proposed defaults.
+
+------------------------------------------------------------------------
+
 ## 2026-07-16 — Standalone / Spatial / Capture vision (docs only)
 
 **Why:** End-user product vision needed a coherent story beyond “Blender + JSON clipboard”

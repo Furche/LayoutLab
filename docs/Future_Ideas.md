@@ -640,9 +640,10 @@ Integrated AI behaviour: §7. Spatial hierarchy: §13. Capture paths: §14.
 
 # 13. Spatial Project Model
 
-**Status:** Future Vision — **not** a binding schema; possible later **DD-010**
+**Status:** Future Vision — **not** a binding schema; single-space Room Model → [DD-010](design_decisions/DD-010-room-model.md) (**Proposed**)
 
-LayoutLab must not assume a project is always exactly one room.
+LayoutLab must not assume a project is always exactly one room. **DD-010** starts with
+**one editable space** (Room Model). The hierarchy below remains the longer-term target.
 
 Conceptual hierarchy (illustrative only):
 
@@ -775,7 +776,7 @@ Related: §5 Planning and Evaluation.
 
 | Stage | Scope (illustrative) |
 |---|---|
-| **1 — Room Builder** | Single rectangular/polygonal room; height; walls; doors; windows; radiators; fixed obstacles; measures and simple edit |
+| **1 — Room Builder** | Single rectangular/polygonal room; height; walls; doors; windows; radiators; fixed obstacles; measures and simple edit — **DD-010 Proposed** (Room Model, not room generator) |
 | **2 — Apartment Model** | Connected rooms; shared walls; passages; corridors; variants per room or whole apartment; furniture redistributable across rooms |
 | **3 — Building Model** | Multiple floors; stairs; storey heights; shafts; roof slopes; fixed/changeable fabric; outdoor areas later optional |
 
@@ -805,13 +806,13 @@ Do **not** implement from this vision until separate DDs and explicit product ne
 
 | ID | Title | Status |
 |---|---|---|
-| DD-010 | Project and Spatial Model | **Not created** — reserve when implementing §13 |
+| [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Proposed** (2026-07-16) — review before implementation |
 | DD-011 | Layout Variants and Comparison | **Not created** — reserve when implementing §16 |
 | DD-012 | Integrated AI Product Experience | **Not created** — reserve when implementing §7 / §12 |
 | DD-013 | Capture and Reconstruction Pipeline | **Not created** — reserve when implementing §14–§15 |
-| DD-014 | Standalone Runtime and Authoring Model | **Not created** — reserve when implementing §11 write path |
+| DD-014 | Standalone Runtime / multi-space Spatial Project | **Not created** — apartment/building beyond DD-010; §11 write path |
 
-Align numbering with [design_decisions/README.md](design_decisions/README.md) when filing. Do not auto-create or Accept.
+Align numbering with [design_decisions/README.md](design_decisions/README.md) when filing. Do not auto-Accept.
 
 ------------------------------------------------------------------------
 

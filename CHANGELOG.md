@@ -8,13 +8,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **DD-010 Proposed:** Room Model (single space) — editable space fabric over room generator; scalable footprint; MVP for reference room replacement ([DD-010](docs/design_decisions/DD-010-room-model.md))
+
 ### Changed
 
 - **Product vision (docs only):** Standalone end-to-end experience, Spatial Project Model, mobile capture/LiDAR, confidence principles, variants as first-class objects — `Future_Ideas.md` §12–§19; light sync MDD/Manifest/AI_CONTEXT/ARCHITECTURE/HANDOFF; **no implementation**, **no roadmap course change**
-
-### Added
-
-- **`wardrobe_basic` v0.6.0:** `front_side` (`y_min` | `y_max`) — doors/clearance flip for wall placement
+- Future_Ideas §19: DD-010 narrowed to Room Model proposal (apartment/building → later DDs)
 
 ### Changed (prior)
 

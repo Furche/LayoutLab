@@ -269,10 +269,12 @@ DD-004 UI orientiert sich am Asset Browser.
 
 DD-005 Generatoren besitzen Metadaten.
 
-DD-009 KI plant — LayoutLab führt über stabile API aus (Plugin bleibt Pfad). **Accepted** 2026-07-12.
+**Reserviert / in Arbeit:**
 
-**Reserviert (noch nicht angelegt):** DD-010 … DD-014 — Spatial Project, Variants,
-Integrated AI, Capture Pipeline, Standalone Runtime — siehe `docs/Future_Ideas.md` §19.
+- [DD-010](design_decisions/DD-010-room-model.md) Room Model (single space) — **Proposed** 2026-07-16
+- DD-011 … DD-014 — Variants, Integrated AI, Capture, Standalone/multi-space — siehe `docs/Future_Ideas.md` §19
+
+DD-009 KI plant — LayoutLab führt über stabile API aus (Plugin bleibt Pfad). **Accepted** 2026-07-12.
 
 ------------------------------------------------------------------------
 
