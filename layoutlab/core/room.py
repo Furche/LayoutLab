@@ -360,37 +360,37 @@ def remove_fixed_element(model, params):
 
 
 def _wall_slot_box(model, wall, offset, span, z0, height, depth, inward):
-    """AABB along a wall.
+    """AABB along a wall plane (zero-thickness fabric).
 
     Offset/span: south/north from west along +X; west/east from south along +Y.
+    ``inward=True`` grows into the room from the wall plane.
     """
     ox, oy, oz = (_f(v) for v in model["origin"])
     width = _f(model["footprint"]["width"])
     room_depth = _f(model["footprint"]["depth"])
-    thickness = _f(model.get("wall_thickness"), DEFAULT_WALL_THICKNESS)
     side = wall.get("side")
-    d = _f(depth)
+    d = max(_f(depth), 0.05)
 
     if side == "south":
         x = ox + offset
         if inward:
-            return [x, oy + thickness, oz + z0], [span, d, height]
-        return [x, oy - d * 0.5, oz + z0], [span, d, height]
+            return [x, oy, oz + z0], [span, d, height]
+        return [x, oy - d, oz + z0], [span, d, height]
     if side == "north":
         x = ox + offset
         if inward:
-            return [x, oy + room_depth - thickness - d, oz + z0], [span, d, height]
-        return [x, oy + room_depth - d * 0.5, oz + z0], [span, d, height]
+            return [x, oy + room_depth - d, oz + z0], [span, d, height]
+        return [x, oy + room_depth, oz + z0], [span, d, height]
     if side == "west":
         y = oy + offset
         if inward:
-            return [ox + thickness, y, oz + z0], [d, span, height]
-        return [ox - d * 0.5, y, oz + z0], [d, span, height]
+            return [ox, y, oz + z0], [d, span, height]
+        return [ox - d, y, oz + z0], [d, span, height]
     if side == "east":
         y = oy + offset
         if inward:
-            return [ox + width - thickness - d, y, oz + z0], [d, span, height]
-        return [ox + width - d * 0.5, y, oz + z0], [d, span, height]
+            return [ox + width - d, y, oz + z0], [d, span, height]
+        return [ox + width, y, oz + z0], [d, span, height]
     raise ValueError(f"unknown wall side {side!r}")
 
 
@@ -423,22 +423,63 @@ def fixed_element_world_box(model, fixed):
     )
 
 
-def wall_display_box(model, wall):
+def wall_plane_corners(model, wall):
+    """Four world-space corners of an inward-facing wall plane.
+
+    Winding yields a geometric normal pointing into the room (right-hand rule).
+    With material backface culling, walls are opaque from inside and see-through
+    from outside.
+    """
     ox, oy, oz = (_f(v) for v in model["origin"])
     width = _f(model["footprint"]["width"])
     depth = _f(model["footprint"]["depth"])
     height = _f(wall.get("height", model["height"]))
-    t = _f(wall.get("thickness", model.get("wall_thickness", DEFAULT_WALL_THICKNESS)))
     side = wall.get("side")
     if side == "south":
-        return [ox, oy - t, oz], [width, t, height]
+        # inward +Y
+        return [
+            [ox, oy, oz],
+            [ox, oy, oz + height],
+            [ox + width, oy, oz + height],
+            [ox + width, oy, oz],
+        ]
     if side == "north":
-        return [ox, oy + depth, oz], [width, t, height]
+        # inward -Y
+        return [
+            [ox, oy + depth, oz],
+            [ox + width, oy + depth, oz],
+            [ox + width, oy + depth, oz + height],
+            [ox, oy + depth, oz + height],
+        ]
     if side == "west":
-        return [ox - t, oy, oz], [t, depth, height]
+        # inward +X
+        return [
+            [ox, oy, oz],
+            [ox, oy + depth, oz],
+            [ox, oy + depth, oz + height],
+            [ox, oy, oz + height],
+        ]
     if side == "east":
-        return [ox + width, oy, oz], [t, depth, height]
+        # inward -X
+        return [
+            [ox + width, oy, oz],
+            [ox + width, oy, oz + height],
+            [ox + width, oy + depth, oz + height],
+            [ox + width, oy + depth, oz],
+        ]
     raise ValueError(f"unknown wall side {side!r}")
+
+
+def wall_display_box(model, wall):
+    """Thin AABB for export/debug around an inward wall plane (zero thickness)."""
+    corners = wall_plane_corners(model, wall)
+    xs = [c[0] for c in corners]
+    ys = [c[1] for c in corners]
+    zs = [c[2] for c in corners]
+    return (
+        [min(xs), min(ys), min(zs)],
+        [max(xs) - min(xs) or 0.01, max(ys) - min(ys) or 0.01, max(zs) - min(zs) or 0.01],
+    )
 
 
 def floor_display_box(model):
@@ -453,10 +494,9 @@ def room_world_bounds(model):
     width = _f(model["footprint"]["width"])
     depth = _f(model["footprint"]["depth"])
     height = _f(model["height"])
-    t = _f(model.get("wall_thickness"), DEFAULT_WALL_THICKNESS)
     return {
-        "min": [ox - t, oy - t, oz],
-        "max": [ox + width + t, oy + depth + t, oz + height],
+        "min": [ox, oy, oz],
+        "max": [ox + width, oy + depth, oz + height],
     }
 
 

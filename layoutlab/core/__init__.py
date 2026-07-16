@@ -16,6 +16,7 @@ from .room import (
     update_opening,
     update_room_model,
     wall_display_box,
+    wall_plane_corners,
 )
 
 __all__ = [
@@ -34,4 +35,5 @@ __all__ = [
     "update_opening",
     "update_room_model",
     "wall_display_box",
+    "wall_plane_corners",
 ]

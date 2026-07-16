@@ -107,6 +107,33 @@ class TestRoomModelRectangle(unittest.TestCase):
         self.assertAlmostEqual(dims[1], 10.0)
         self.assertAlmostEqual(loc[2], 8.0)
 
+    def test_default_origin_zero(self):
+        model = self.room_core.create_room_model({"name": "R", "width": 10, "depth": 8, "height": 25})
+        self.assertEqual(model["origin"], [0.0, 0.0, 0.0])
+
+    def test_inward_wall_normals(self):
+        model = self.room_core.create_room_model({"name": "R", "width": 10, "depth": 8, "height": 25})
+        expected = {
+            "south": (0.0, 1.0, 0.0),
+            "north": (0.0, -1.0, 0.0),
+            "west": (1.0, 0.0, 0.0),
+            "east": (-1.0, 0.0, 0.0),
+        }
+        for wall in model["walls"]:
+            c = self.room_core.wall_plane_corners(model, wall)
+            u = [c[1][i] - c[0][i] for i in range(3)]
+            v = [c[3][i] - c[0][i] for i in range(3)]
+            n = (
+                u[1] * v[2] - u[2] * v[1],
+                u[2] * v[0] - u[0] * v[2],
+                u[0] * v[1] - u[1] * v[0],
+            )
+            length = (n[0] ** 2 + n[1] ** 2 + n[2] ** 2) ** 0.5
+            n = tuple(x / length for x in n)
+            exp = expected[wall["side"]]
+            for a, b in zip(n, exp):
+                self.assertAlmostEqual(a, b, places=5, msg=wall["side"])
+
 
 if __name__ == "__main__":
     unittest.main()

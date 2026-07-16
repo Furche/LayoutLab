@@ -8,7 +8,7 @@ import bpy
 
 from ..core import room as room_core
 from .collections import delete_by_object_id, get_or_create_collection
-from .geometry import create_box
+from .geometry import create_box, create_quad
 
 ROOM_JSON_PROP = "layoutlab_room_json"
 FLOOR_COLOR = (0.72, 0.62, 0.48, 1.0)
@@ -104,14 +104,14 @@ def sync_room_to_scene(model):
     _stamp_room_object(floor, model, role="room_floor", entity_kind="floor")
 
     for wall in model.get("walls", []):
-        loc, dims = room_core.wall_display_box(model, wall)
-        obj = create_box(
+        corners = room_core.wall_plane_corners(model, wall)
+        obj = create_quad(
             f"{prefix}wall_{wall['side']}",
-            loc,
-            dims,
+            corners,
             color=WALL_COLOR,
             collection=collection,
             role="room_wall",
+            backface_culling=True,
         )
         _stamp_room_object(
             obj,
@@ -121,6 +121,7 @@ def sync_room_to_scene(model):
             entity_kind="wall",
         )
         obj["layoutlab_wall_side"] = wall["side"]
+        obj["layoutlab_wall_facing"] = "inward"
 
     for opening in model.get("openings", []):
         loc, dims = room_core.opening_world_box(model, opening)

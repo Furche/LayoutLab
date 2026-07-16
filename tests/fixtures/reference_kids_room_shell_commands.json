@@ -1,5 +1,5 @@
 {
-  "description": "DD-010 Room Model shell matching Alexander's kids room footprint (1 unit ≈ 10 cm). Replaces hand-modelled floor/walls/door/window/heizung for LayoutLab planning.",
+  "description": "DD-010 Room Model shell — kids room footprint at origin (1 unit ≈ 10 cm). Inward-facing wall planes.",
   "collection": "layoutlab_room",
   "commands": [
     {
@@ -10,7 +10,7 @@
       "action": "create_room",
       "params": {
         "name": "KIDS_ROOM",
-        "location": [65.3444, 196.8293, 0],
+        "location": [0, 0, 0],
         "width": 42.0,
         "depth": 21.8,
         "height": 26.0,

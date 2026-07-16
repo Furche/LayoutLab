@@ -456,7 +456,7 @@ Editable **Room Model** — not a furniture generator. See [room_model.md](room_
   "action": "create_room",
   "params": {
     "name": "KIDS_ROOM",
-    "location": [65.3444, 196.8293, 0],
+    "location": [0, 0, 0],
     "width": 42,
     "depth": 21.8,
     "height": 26,
@@ -466,7 +466,7 @@ Editable **Room Model** — not a furniture generator. See [room_model.md](room_
 }
 ```
 
-Creates rectangle footprint (`footprint.kind: "rectangle"`), four walls with stable ids, floor + wall meshes.
+Creates rectangle footprint (`footprint.kind: "rectangle"`), four walls with stable ids, floor + **inward-facing wall planes** (see-through from outside). Default origin `[0, 0, 0]` if `location` omitted.
 
 ### `add_opening` / `add_fixed_element`
 
