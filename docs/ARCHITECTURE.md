@@ -117,18 +117,20 @@ Full decision: [DD-009](design_decisions/DD-009-ai-execution-boundary.md). Trans
 ## 2.2 LayoutLab Core vs Blender Runtime `[FUTURE VISION]`
 
 Blender is the **first runtime adapter**, not the permanent centre of the product. See
-[Future_Ideas.md](Future_Ideas.md) §11.
+[Future_Ideas.md](Future_Ideas.md) §11–§14.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  LayoutLab Core (domain)                                │
 │  Object model, generators, parts, clearances,           │
 │  constraints, analysis rules, protocols, stable IDs     │
+│  Future: Spatial Project / variants / capture validation│
 │  Prefer: pure Python + neutral JSON/data                │
 ├─────────────────────────────────────────────────────────┤
-│  Runtime adapter(s)                                     │
+│  Runtime / client adapter(s)                            │
 │  [IMPLEMENTED] Blender — bpy meshes, UI, undo, export   │
-│  [FUTURE VISION] Read-only viewer / other editor host    │
+│  [FUTURE VISION] Standalone editor / mobile capture /   │
+│                  read-only viewer (existing 3D stack)   │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -136,7 +138,25 @@ Blender is the **first runtime adapter**, not the permanent centre of the produc
 `bpy` unless it is explicitly runtime glue. No second runtime until a DD says otherwise.
 
 **Today:** Blender remains the **primary, fully supported** development platform and frontend.
-No replacement, no viewer prototype in current roadmap.
+No replacement, no viewer/scanner/standalone prototype in current roadmap.
+
+### Spatial Core guardrails `[FUTURE VISION]` (2026-07-16)
+
+Do **not** hard-wire Core logic to these assumptions:
+
+- one Blender scene ≡ one LayoutLab project or one room
+- a project always has a single floor / single plane
+- layout variants are only full duplicated Blender scenes
+
+Capture, AI, and viewer clients are possible **adapters** of Core — they do not replace
+deterministic execution. Scanner/import sources must not write unchecked data into the
+authoritative project state; data should support a **validation / confirmation** status
+([Future_Ideas.md](Future_Ideas.md) §15).
+
+Concrete Project / Spatial / Variant schemas require a dedicated DD **before**
+implementation (reserved: DD-010 … DD-014 in Future_Ideas §19 — **not created**).
+
+Do **not** present today’s `[IMPLEMENTED]` architecture as already standalone-capable.
 
 ### Runtime coupling inventory `[AS-BUILT]` (2026-07-12)
 
@@ -658,5 +678,6 @@ Full vocabulary: `AI_CONTEXT.md`
 
 | Version | Date | Changes |
 |---|---|---|
-| 0.5.0 | 2026-07-09 | Initial architecture document (as-built + target + migration) |
+| 0.5.2 | 2026-07-16 | §2.2 Spatial Core guardrails; multi-client Future Vision (docs only) |
 | 0.5.1 | 2026-07-09 | Phase A.4–A.5 complete: design decisions + units documented |
+| 0.5.0 | 2026-07-09 | Initial architecture document (as-built + target + migration) |

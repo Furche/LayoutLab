@@ -1,7 +1,7 @@
 # Future Ideas
 
 > Living document. Ideas only — not commitments.  
-> **Last reorganized:** 2026-07-12 (runtime independence note added)
+> **Last reorganized:** 2026-07-16 (standalone end-to-end product experience, spatial project model, mobile capture)
 
 ## Purpose
 
@@ -34,7 +34,7 @@ LayoutLab is evolving quickly. Cursor can implement ideas faster than we fully u
 
 # 1. Product Vision
 
-**Status:** Future Vision (sharpened 2026-07-12)
+**Status:** Future Vision (sharpened 2026-07-12; end-user product experience 2026-07-16)
 
 LayoutLab is **not** primarily a furniture generator or furniture placer.
 
@@ -62,9 +62,28 @@ The user should not have to think in technical operations or furniture types. Th
 
 Furniture, room layout, and custom constructions are different *means* to reach that goal.
 
+### Standalone product experience (long-term)
+
+**Status:** Future Vision — **not** current implementation
+
+Long-term, LayoutLab should be usable as a **standalone application**. The end user should need neither Blender expertise nor copying JSON between tools.
+
+From the user’s perspective, LayoutLab is one coherent surface:
+
+- integrated conversation with an AI
+- own 2D/3D viewport
+- project and space management
+- requirements and human needs
+- existing furniture
+- layout variants
+- analysis and explanations
+- apply, discard, and compare solutions
+
+**Blender remains the fully supported reference runtime today.** The standalone app is product vision, not an implementation task. Details: §12–§18. Runtime adapters: §11.
+
 ### Relationship to today
 
-Today the product still speaks largely in generators and JSON commands — that is correct for the current phase. This vision describes **where the product is heading**, not what to build next.
+Today the product still speaks largely in generators and JSON commands inside Blender — that is correct for the current phase (Execution Layer). This vision describes **where the product is heading**, not what to build next.
 
 ------------------------------------------------------------------------
 
@@ -185,7 +204,7 @@ These may become constraints, evaluation goals, or user-profile inputs — via f
 
 # 5. Planning and Evaluation
 
-**Status:** Future Vision (partial foundations: DD-008 Planned)
+**Status:** Future Vision (partial foundations: DD-008 **Implemented**)
 
 ### Variant generation and comparison
 
@@ -197,7 +216,9 @@ Beyond placing one layout, LayoutLab could:
 - score and rank them
 - explain trade-offs (“more play area, less storage”)
 
-Depends on: stable `analyze_layout` (DD-008), richer evaluation rules, Intent/Planning layers (§9).
+Depends on: stable `analyze_layout` (DD-008 **Implemented**), richer evaluation rules, Intent/Planning layers (§9).
+
+Variants should become **first-class objects** of the Spatial Project Model — not accidental full-scene copies. See §16 and possible later **DD-011**.
 
 ### Evaluation Engine
 
@@ -243,7 +264,7 @@ Workflow for AI-driven layout iteration:
 3. **Revise** — AI adjusts plan from findings
 4. **Commit** or **Discard** — user or policy confirms
 
-**Depends on:** stable `analyze_layout` (DD-008 Planned), bridge MVP (§7), undo transaction support in plugin.
+**Depends on:** stable `analyze_layout` (DD-008 **Implemented**), bridge MVP (§7), undo transaction support in plugin.
 
 ------------------------------------------------------------------------
 
@@ -292,21 +313,48 @@ Generators become rule systems rather than raw geometry builders. Today: Parts m
 
 # 7. AI / Plugin Communication
 
-**Status:** Mix — JSON **Implemented** (DD-003); bridge **Future Vision**
+**Status:** Mix — JSON **Implemented** (DD-003); bridge **Future Vision**; integrated AI product UI **Future Vision**
 
 ### Intent, Planning, Execution (layer separation)
 
-**Status:** Future Vision — architecture direction, not implemented
+**Status:** Future Vision — architecture direction, not implemented as product layers
 
 | Layer | Responsibility | Today |
 |---|---|---|
 | **Intent** | User goals, natural language, requirements | AI / user (outside plugin) |
-| **Planning** | Generate variants, evaluate, discard, improve | Future — not in plugin v0.7 |
+| **Planning** | Generate variants, evaluate, discard, improve | Future — not in plugin |
 | **Execution** | Deterministic LayoutLab operations | Plugin + JSON protocol **Implemented** |
 
-The current JSON API belongs to the **Execution Layer** only. A future AI bridge must **not** merge these layers — it forwards defined operations; it does not replace planning logic inside the addon without a DD.
+The current JSON API belongs to the **Execution Layer** only. A future AI bridge or in-app AI must **not** merge these layers — it forwards defined operations; it does not replace planning logic inside the addon without a DD.
 
 See [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (**Accepted**): AI plans WHAT; plugin executes HOW.
+
+### Integrated AI conversation (product experience)
+
+**Status:** Future Vision — possible later **DD-012**
+
+In a future standalone LayoutLab app, the user talks to an AI **inside** the product — not in an external chat that pastes JSON into Blender.
+
+Example intent:
+
+> “This children’s room must work for two children. The existing wardrobe stays. Keep as much play area as possible. An adult must be able to sit for bedtime.”
+
+The AI should then:
+
+1. Derive requirements  
+2. Ask for missing information  
+3. Analyse room and existing furniture  
+4. Develop several layout variants  
+5. Have LayoutLab Core **check** those variants (execution + analysis APIs)  
+6. Correct errors using analysis findings  
+7. Present best results in the viewport  
+8. Explain trade-offs in plain language  
+
+**Hard boundary (unchanged from DD-009):** the AI is **not** a free Blender-Python agent. Deterministic execution stays LayoutLab property.
+
+**Provider policy (undecided):** AI provider should be **swappable**; LayoutLab must not be locked to one vendor or model. Auth, API keys, local models, subscriptions, privacy, and cloud vs local processing need **separate future decisions** — do not invent them here.
+
+End-to-end empty-app journey: §12.
 
 ### AI–Plugin Direct Communication
 
@@ -314,7 +362,7 @@ See [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (**Accepted**): A
 
 Today the user copies JSON between chat and Blender.
 
-Future: a **local LayoutLab Bridge** so the AI calls defined operations without clipboard.
+Future: a **local LayoutLab Bridge** so the AI (or in-app agent) calls defined operations without clipboard.
 
 **Requirements:**
 
@@ -331,9 +379,9 @@ A small local process or in-addon listener that exposes:
 - `get_scene`
 - `list_generators` / `get_generator_schema`
 - `preview_operations` / `commit_preview` / `discard_preview`
-- `analyze_layout` (after DD-008)
+- `analyze_layout` (**Implemented** in plugin; bridge still Future Vision)
 
-The bridge forwards to the addon; it does not reimplement generator logic.
+The bridge forwards to the addon / Core; it does not reimplement generator logic.
 
 See DD-009 for architecture sketch and security open questions. **Do not implement** without separate bridge DD.
 
@@ -375,7 +423,7 @@ The mesh is only one representation of the object.
 
 ### Clearance System
 
-**Status:** **Implemented** (DD-007 Accepted) — evaluation still Planned (DD-008)
+**Status:** **Implemented** (DD-007 Accepted)
 
 Objects generate invisible usage volumes.
 
@@ -387,8 +435,6 @@ Objects generate invisible usage volumes.
 - Desk → chair movement area
 
 These are not collisions. They describe how an object is used.
-
-Constraint *evaluation* → DD-008 (**Planned**).
 
 ### Constraint System
 
@@ -404,7 +450,7 @@ Objects expose semantic rules evaluated at analysis time.
 - safety distances
 - accessibility
 
-Analysis reads clearances; does not create them (DD-009 execution boundary).
+Analysis reads clearances; does not create them (DD-009 execution boundary). Room-as-blocker and tiered multi-zone access groups remain future extensions (not standalone product work).
 
 ------------------------------------------------------------------------
 
@@ -435,10 +481,11 @@ All of the following stay required regardless of Layer 2/3:
 ```
 Today:     Generator → Mesh (with semantic metadata)
 Near:      Knowledge → Rules → Generator → Parts → Clearances → Analysis
-Long-term: Intent → Planning → Execution → spatial solutions for human needs
+Long-term: Intent → Requirements → Spatial Project → Planning → Variants
+           → Execution → Analysis → Solution
 ```
 
-Knowledge becomes the highest abstraction; furniture commands become one output format among many.
+Knowledge becomes the highest abstraction; furniture commands become one output format among many. Spatial Project / Property / Building concepts: §13 (Future Vision only).
 
 ------------------------------------------------------------------------
 
@@ -454,19 +501,21 @@ Long-term target shape:
 
 ```
 LayoutLab Core
-    ├── Blender Runtime / Adapter     ← today (primary, fully supported)
-    └── future Viewer or Editor       ← optional; existing 3D framework, not custom engine
+    ├── Desktop / Web Standalone Editor   ← Future Vision (authoring + AI + variants)
+    ├── Mobile Capture Client             ← Future Vision (scan / confirm; not full editor)
+    ├── Blender Runtime / Adapter         ← today (primary, fully supported)
+    └── optional Read-only Viewer         ← early experiment possible; existing 3D framework
 ```
 
 ### LayoutLab Core (domain logic)
 
 Furniture and layout knowledge that should survive a runtime change:
 
-- Project / room / object models (semantic)
+- Project / room / object models (semantic) — see §13
 - Generators, Parts, parameters, stable `object_id`
 - Clearances, constraints, layout analysis rules
 - Protocols and data models (JSON export schema, command contract)
-- Variant and planning logic (future)
+- Variant and planning logic (future — §16)
 
 ### Blender Runtime (adapter today)
 
@@ -499,18 +548,12 @@ Generators should eventually be able to emit a **runtime-neutral description** (
 
 **Not implementing now.** Current export JSON (`layoutlab` blocks, bounds) is the first neutral artifact; generators still call `api["create_box"]` directly.
 
-### Future viewport (read-only first)
+### Future viewport (standalone authoring, not only viewer)
 
-A later **external read-only viewer** could:
+A later **own viewport** would use an **existing 3D technology** — **not** a custom GPU render engine from scratch. Concrete stack remains open.
 
-- Load LayoutLab scene export JSON
-- Draw room + furniture + clearance volumes
-- Offer camera, picking, variant comparison (read-only)
-- Display AI planning output alongside the scene
-
-Rendering via an **existing framework** (e.g. Three.js, Babylon.js, Godot as host) — **not** a custom GPU pipeline from scratch.
-
-**First sensible experiment:** read-only viewer of current export format — no write path, no generator execution in browser.
+- **Early experiment:** read-only viewer of current export format (share layouts without Blender).
+- **Long-term product:** full LayoutLab application with authoring, integrated AI, variants, and analysis — not “viewer only”.
 
 ### Explicitly out of scope now
 
@@ -519,15 +562,19 @@ Rendering via an **existing framework** (e.g. Three.js, Babylon.js, Godot as hos
 - Replacing Blender as dev platform or primary runtime
 - Custom render engine
 - Large refactor for abstraction alone
+- Standalone desktop/web app, mobile scanner, cloud sync (see §18)
 
 ### When a formal DD becomes necessary
 
-Promote to **DD-010+** when starting either:
+| Topic | Possible later DD |
+|---|---|
+| Project / multi-room / multi-floor model | **DD-010** — Project and Spatial Model |
+| Variants as first-class objects | **DD-011** — Layout Variants and Comparison |
+| In-app AI product experience | **DD-012** — Integrated AI Product Experience |
+| Capture / reconstruction pipeline | **DD-013** — Capture and Reconstruction Pipeline |
+| Neutral authoring model + second write runtime | **DD-014** — Standalone Runtime and Authoring Model |
 
-- a **neutral intermediate scene model** (not just export JSON), or
-- a **second runtime** with write support (not read-only viewer).
-
-Until then: document here + `ARCHITECTURE.md` §2.2.
+Do **not** create or accept these DDs until implementation is actually planned. Until then: document here + `ARCHITECTURE.md` §2.2.
 
 ------------------------------------------------------------------------
 
@@ -544,7 +591,7 @@ Ideas captured for later discussion. No DD, no roadmap slot.
 | Asset preview thumbnails | UI polish, not planning core |
 | Scoring (“73% good layout”) | After findings engine (DD-008+) |
 | Automatic layout repair | AI + planning layer, not execution |
-| Room boundary / wall detection | Unless explicit room mesh in scene |
+| Room boundary / wall detection | Unless explicit room mesh in scene; related to §13–§14 |
 | Physics collision | Rejected for v1 analyzer — semantic AABB sufficient (DD-008) |
 | **Read-only export viewer** | See §11 — after export schema frozen; Three.js/Babylon/Godot host |
 
@@ -558,12 +605,223 @@ Promising ideas should be documented here first.
 
 ------------------------------------------------------------------------
 
+# 12. Standalone Product Experience and End-to-End User Journey
+
+**Status:** Future Vision — no implementation
+
+### Goal
+
+The user does **not** build a Blender scene. They describe a property, what already exists, and a spatial problem. LayoutLab returns checkable solutions.
+
+### Possible conversation from an empty app
+
+AI: “Do you want to plan a single room, an apartment, or a whole building?”
+
+User: “A children’s room for my eight-year-old. Full re-furnishing.”
+
+AI: “Do you already have a digital room model, a floor plan, or shall we capture the room together?”
+
+User: “I have a photo of the floor plan.”
+
+AI: “I recognise a room with these dimensions, one door and two windows. Two measurements are ambiguous — please confirm the marked places.”
+
+After confirmation, LayoutLab creates the spatial foundation. The AI then asks, among other things:
+
+- Who uses the space?
+- What must the room achieve?
+- Which furniture exists / must stay?
+- Priorities and constraints?
+- Budget, material, or safety limits?
+- One variant or several?
+
+Integrated AI behaviour: §7. Spatial hierarchy: §13. Capture paths: §14.
+
+------------------------------------------------------------------------
+
+# 13. Spatial Project Model
+
+**Status:** Future Vision — **not** a binding schema; possible later **DD-010**
+
+LayoutLab must not assume a project is always exactly one room.
+
+Conceptual hierarchy (illustrative only):
+
+```
+Project
+└── Property
+    ├── Building
+    │   ├── Floor
+    │   │   ├── Space / Room
+    │   │   │   ├── Walls
+    │   │   │   ├── Openings (Doors, Windows)
+    │   │   │   ├── Fixed Elements (Radiators, Columns, Shafts, Built-ins)
+    │   │   │   ├── Furniture
+    │   │   │   └── Layout Variants
+    │   │   ├── Corridors / Circulation
+    │   │   └── Stairs
+    │   └── additional floors
+    └── optional outdoor areas later
+```
+
+### Architecture guardrails (for Core design)
+
+New Core logic should **not** deeply assume:
+
+- one Blender scene ≡ one LayoutLab project
+- a project always has exactly one room
+- all objects live on a single plane
+- variants are only full duplicated Blender scenes
+
+A formal DD is required **before** implementing this model. Current implemented contract remains [object_model.md](object_model.md) (Furniture → Parts in a Blender scene).
+
+------------------------------------------------------------------------
+
+# 14. Capture Paths and Mobile Reconstruction
+
+**Status:** Future Vision — possible later **DD-013**
+
+### Import paths into one common Spatial Model
+
+All paths should eventually feed the same internal Spatial Model (§13):
+
+1. Draw the room manually  
+2. State measurements in conversation  
+3. Guided wall-by-wall input  
+4. Photo or scan of a floor plan  
+5. PDF floor plan  
+6. CAD / IFC / other plan import  
+7. Classify an existing Blender model  
+8. Smartphone video  
+9. Smartphone depth / LiDAR  
+10. Combination of several sources  
+
+### Mobile video and LiDAR capture
+
+Possible workflow:
+
+1. User starts a guided scan in LayoutLab.  
+2. App asks them to walk slowly through rooms and connections.  
+3. Video, camera poses, and depth (if available) are recorded.  
+4. Spatial reconstruction is produced.  
+5. Semantic elements are proposed: walls, floor/ceiling, doors, windows, radiators, stairs, built-ins, coarse furniture.  
+6. Rooms and floors are linked into one project model.  
+7. Uncertain regions are marked.  
+8. AI asks for extra takes or manual confirmation.  
+9. Only **confirmed** data becomes the trusted planning basis.
+
+Example:
+
+> “The corner behind the wardrobe is not fully visible — please film it again.”  
+> “I think this is an 82 cm door — please confirm.”  
+> “These two hallway takes do not connect yet — show the living-room transition again.”
+
+### Mobile Capture Client vs full editor
+
+```
+LayoutLab Core
+├── Desktop / Web Standalone Editor
+├── Mobile Capture Client     ← may only: create/select project, scan, photos, measures, sync
+└── Blender Runtime / Expert Frontend
+```
+
+No platform or stack is chosen here. Confidence rules: §15.
+
+------------------------------------------------------------------------
+
+# 15. Confidence, Verification and Measurement Trust
+
+**Status:** Future Vision — principles only
+
+- Reconstructed facts may carry a **confidence** value.  
+- Clear vs uncertain data must be distinguishable.  
+- Critical measures should be confirmable or manually correctable.  
+- Uncertainty must be shown transparently.  
+- AI / scanners must not invent non-visible structure as certain.  
+- Furniture recognition is a **proposal**, not unchecked fact.  
+- A recognised product (e.g. a specific shelf model) needs user confirmation before exact product data is adopted.  
+- Auto-measures help planning; they are **not** automatically valid for construction, statics, or safety-critical work.  
+- Professional survey and technical review remain required where those uses apply.
+
+Capture and import must write into a **validation / confirmation** state — not silently into the authoritative project state (see ARCHITECTURE §2.2).
+
+------------------------------------------------------------------------
+
+# 16. Layout Variants as First-Class Objects
+
+**Status:** Future Vision — possible later **DD-011**
+
+The user should be able to ask: “Show me several sensible solutions.”
+
+A variant may describe, among other things:
+
+- included objects and transforms  
+- generator parameters  
+- solution strategy used  
+- analysis results  
+- requirements met or violated  
+- scores and trade-offs  
+- relation to a base variant  
+- user comments / favourites  
+
+**Conceptually:** shared base space + different layout states — not random full Blender scene clones. Temporary side-by-side display in a viewport is fine for UX.
+
+Related: §5 Planning and Evaluation.
+
+------------------------------------------------------------------------
+
+# 17. Room / Apartment / Building Product Stages
+
+**Status:** Future Vision — possible expansion of the Spatial Model; **not** a binding roadmap
+
+| Stage | Scope (illustrative) |
+|---|---|
+| **1 — Room Builder** | Single rectangular/polygonal room; height; walls; doors; windows; radiators; fixed obstacles; measures and simple edit |
+| **2 — Apartment Model** | Connected rooms; shared walls; passages; corridors; variants per room or whole apartment; furniture redistributable across rooms |
+| **3 — Building Model** | Multiple floors; stairs; storey heights; shafts; roof slopes; fixed/changeable fabric; outdoor areas later optional |
+
+These stages describe **how far** the Spatial Model might grow. They do **not** replace the current Execution Layer roadmap.
+
+------------------------------------------------------------------------
+
+# 18. Explicitly Not Building Now
+
+**Status:** Binding for current phase — documentation only
+
+Do **not** implement from this vision until separate DDs and explicit product need:
+
+- Standalone desktop or web app  
+- Mobile scanner / video reconstruction / LiDAR / photogrammetry / floor-plan OCR  
+- Building editor / multi-floor model  
+- In-plugin KI chat / provider login  
+- Variant system / neutral scene authoring model  
+- Sync service / cloud backend  
+- Custom render engine  
+
+**Current focus remains:** Blender as primary Execution Runtime — generators, clearances, analysis, JSON protocol.
+
+------------------------------------------------------------------------
+
+# 19. Possible Future Design Decisions (reservation only)
+
+| ID | Title | Status |
+|---|---|---|
+| DD-010 | Project and Spatial Model | **Not created** — reserve when implementing §13 |
+| DD-011 | Layout Variants and Comparison | **Not created** — reserve when implementing §16 |
+| DD-012 | Integrated AI Product Experience | **Not created** — reserve when implementing §7 / §12 |
+| DD-013 | Capture and Reconstruction Pipeline | **Not created** — reserve when implementing §14–§15 |
+| DD-014 | Standalone Runtime and Authoring Model | **Not created** — reserve when implementing §11 write path |
+
+Align numbering with [design_decisions/README.md](design_decisions/README.md) when filing. Do not auto-create or Accept.
+
+------------------------------------------------------------------------
+
 # Document maintenance
 
 - **Single backlog file** — do not split into multiple Future-Idea documents.
 - Update this file when a vision concept matures toward a DD.
 - When a DD is Accepted, move factual contract to ARCHITECTURE / json_protocol / object_model; keep only vision summary here.
 - Cross-link: [LayoutLab_Manifest.md](../LayoutLab_Manifest.md), [AI_CONTEXT.md](../AI_CONTEXT.md), [ARCHITECTURE.md](ARCHITECTURE.md).
+- Capture / Standalone / Spatial vision lives **here**; MDD holds only the product-level summary; ARCHITECTURE holds Core/adapter guardrails.
 
 ------------------------------------------------------------------------
 
@@ -571,4 +829,4 @@ Promising ideas should be documented here first.
 
 The goal of this document is not to collect features.
 
-The goal is to protect the architecture while giving ideas — especially **problem-first, human-centred spatial planning** — room to mature.
+The goal is to protect the architecture while giving ideas — especially **problem-first, human-centred spatial planning** and a future **standalone, AI-assisted product experience** — room to mature.

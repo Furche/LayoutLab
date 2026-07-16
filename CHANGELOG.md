@@ -8,11 +8,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Product vision (docs only):** Standalone end-to-end experience, Spatial Project Model, mobile capture/LiDAR, confidence principles, variants as first-class objects — `Future_Ideas.md` §12–§19; light sync MDD/Manifest/AI_CONTEXT/ARCHITECTURE/HANDOFF; **no implementation**, **no roadmap course change**
+
 ### Added
 
 - **`wardrobe_basic` v0.6.0:** `front_side` (`y_min` | `y_max`) — doors/clearance flip for wall placement
 
-### Changed
+### Changed (prior)
 
 - **Reference fixture:** bed + desk only in real kids room (no duplicate wardrobe — IKEA `kleiderschrank` exists); desk clear of kleiderschrank bbox
 - Plugin version **0.8.2**
@@ -22,7 +26,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - **Fixture:** `tests/fixtures/reference_kids_room_commands.json` — bed + wardrobe + desk reference layout
 - **Unit tests:** `tests/test_desk_basic.py` — chair zone geometry + fixture validation
 
-### Changed
+### Changed (prior)
 
 - Plugin version **0.8.1**
 

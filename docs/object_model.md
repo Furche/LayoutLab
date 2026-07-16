@@ -8,6 +8,11 @@ Related: `AI_CONTEXT.md`, `docs/generator_api.md`, `docs/design_decisions/DD-006
 
 **Status markers:** `[IMPLEMENTED]` · `[PLANNED]`
 
+**Scope:** This document is the **current implemented** object contract (Furniture → Parts
+in a Blender scene). A future multi-room / Property / Building model is **Future Vision**
+only — see [docs/Future_Ideas.md](Future_Ideas.md) §13. Do not treat that hierarchy as
+accepted schema here.
+
 ------------------------------------------------------------------------
 
 # 1. Conceptual Model

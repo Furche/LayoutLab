@@ -31,13 +31,20 @@ Traditional CAD:
 
 User → Mesh → Edit Mesh
 
-LayoutLab:
+LayoutLab (long-term):
 
-User → Intent (problems, goals) → Requirements → Solution space →
+User → Intent → Requirements → Spatial Project → Planning →
+Variants → Execution → Analysis → Solution
+
+Object knowledge still sits under execution:
+
 Object Knowledge → Generator → Components → Geometry → Mesh
 
-**Today** most interaction still flows through generators and JSON — that is correct
-for the current phase. **Long-term**, intent and planning layers sit above execution.
+**Today** most interaction still flows through generators and JSON in Blender —
+that is correct for the current phase. **Long-term**, intent, spatial project,
+and planning layers sit above execution. Spatial Project / Property / Building
+vocabulary is **Future Vision** — not yet implemented or binding (see
+[docs/Future_Ideas.md](docs/Future_Ideas.md) §13).
 
 Geometry is the final step, not the first.
 
@@ -115,6 +122,29 @@ zones.
 
 ------------------------------------------------------------------------
 
+# Future Vocabulary (not implemented)
+
+> These terms appear in the long-term product vision
+> ([docs/Future_Ideas.md](docs/Future_Ideas.md) §12–§17).
+> They are **not** binding schemas and are **not** all present in code.
+
+| Term | Rough meaning |
+|---|---|
+| **Project** | Top-level planning container |
+| **Property** | Site / dwelling / building context |
+| **Building** | Structure with one or more floors |
+| **Floor** | Storey within a building |
+| **Space / Room** | Occupiable area with function |
+| **Opening** | Door, window, or passage |
+| **Fixed Element** | Radiator, column, shaft, built-in — not freely moved |
+| **Requirement** | Derived need or constraint from user intent |
+| **Capability** | What an object or layout provides (e.g. sleeping place) |
+| **Variant** | First-class alternative layout state |
+| **Capture Source** | Photo, scan, CAD, conversation measures, … |
+| **Confidence** | Trust / certainty attached to reconstructed facts |
+
+------------------------------------------------------------------------
+
 # What Makes LayoutLab Different?
 
 Most tools describe geometry.
@@ -187,7 +217,8 @@ Generator → Mesh
 
 Future
 
-Intent → Planning → Execution → spatial solutions for human needs
+Intent → Requirements → Spatial Project → Planning → Variants →
+Execution → Analysis → Solution
 
 Knowledge → Rules → Generator → Components → Constraints → Geometry → Mesh
 

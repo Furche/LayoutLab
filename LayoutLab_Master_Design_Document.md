@@ -14,12 +14,14 @@ Version: 0.9 (Living Document)
 LayoutLab ist **kein Blender-Addon zum Platzieren von Möbeln**.
 
 LayoutLab ist eine **parametrische Raumplanungsplattform**, die langfristig
-**menschliche Anforderungen an einen Raum in räumliche Lösungen übersetzt**.
+**menschliche Anforderungen an einen Raum in räumliche Lösungen übersetzt** —
+und als eigenständige, KI-begleitete Anwendung erlebbar werden kann.
 
 Objekte besitzen eigene Logik; eine KI kann auf semantischer Ebene planen;
 das Plugin führt deterministisch aus (DD-009 Accepted).
 
 **Heute (Execution Layer):** Generatoren, JSON, Clearances, Analyse — siehe Roadmap §17.
+**Blender** ist die aktuelle Referenz-Runtime.
 
 **Langfristig (Problem-first):** Nutzer beschreibt Ziele, nicht zwingend Möbeltypen.
 
@@ -42,6 +44,9 @@ Visionsdetails: [docs/Future_Ideas.md](docs/Future_Ideas.md) — **keine Kursän
 Das System soll irgendwann in der Lage sein,
 
 -   Nutzeranforderungen in natürlicher Sprache zu verstehen (Problem-first)
+-   Räume, Wohnungen oder Immobilien in LayoutLab zu erfassen oder rekonstruieren zu lassen
+-   Projekte vom einzelnen Raum bis zum mehrgeschossigen Gebäude zu unterstützen
+-   eine integrierte KI für Erfassung, Anforderungen, Varianten und Planung einzubetten
 -   komplette Räume zu analysieren
 -   Lösungsvarianten zu entwickeln und zu bewerten
 -   Möblierung vorzuschlagen — oder vorhandene Möbel umzustellen
@@ -54,10 +59,15 @@ Das System soll irgendwann in der Lage sein,
 **Leitsatz:** LayoutLab optimiert räumliche Lösungen für menschliche Bedürfnisse —
 nicht Möbel um ihrer selbst willen.
 
-Blender ist zunächst nur das Frontend. Die aktuelle Entwicklung (Phase E: Clearances,
-Constraints, `analyze_layout`) bleibt die richtige Basisebene — siehe §17 Roadmap (unverändert).
+**Standalone (Future Vision):** LayoutLab soll langfristig als eigenständige Anwendung
+nutzbar sein können — ohne Blender-Kenntnisse und ohne JSON-Copy-Paste. Blender bleibt
+**aktuell** die erste, vollständig unterstützte Runtime.
 
-Ausführlich: [docs/Future_Ideas.md](docs/Future_Ideas.md).
+Die aktuelle Entwicklung (Phase E: Clearances, Constraints, `analyze_layout` und
+Execution-Layer-Arbeit) bleibt die richtige Basisebene — siehe §17 Roadmap (**unverändert**).
+
+Ausführlich: [docs/Future_Ideas.md](docs/Future_Ideas.md) (§1, §11–§19). Keine Schemas und
+keine Implementierung in diesem Dokument.
 
 ------------------------------------------------------------------------
 
@@ -84,8 +94,9 @@ LayoutLab besteht aus fünf Ebenen (heutige Blender-Runtime):
 5.  Szene
 
 Langfristig (Future Vision, keine Implementierung): **LayoutLab Core** + **Runtime-Adapter**
-— Blender bleibt erste Runtime, kein Ersatz geplant. Siehe
-[docs/Future_Ideas.md](docs/Future_Ideas.md) §11, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §2.2.
+(Blender; später optional Standalone-Editor, Capture-Client, Viewer). Blender bleibt
+**aktuell** erste Runtime. Siehe [docs/Future_Ideas.md](docs/Future_Ideas.md) §11–§13,
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §2.2.
 
 Das Hauptplugin kennt keine Möbellogik.
 
@@ -259,6 +270,9 @@ DD-004 UI orientiert sich am Asset Browser.
 DD-005 Generatoren besitzen Metadaten.
 
 DD-009 KI plant — LayoutLab führt über stabile API aus (Plugin bleibt Pfad). **Accepted** 2026-07-12.
+
+**Reserviert (noch nicht angelegt):** DD-010 … DD-014 — Spatial Project, Variants,
+Integrated AI, Capture Pipeline, Standalone Runtime — siehe `docs/Future_Ideas.md` §19.
 
 ------------------------------------------------------------------------
 

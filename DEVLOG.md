@@ -4,6 +4,21 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-16 — Standalone / Spatial / Capture vision (docs only)
+
+**Why:** End-user product vision needed a coherent story beyond “Blender + JSON clipboard”
+without derailing Execution Layer work.
+
+**Changed:** `Future_Ideas.md` §1, §7, §11–§19 (standalone UI, integrated AI journey,
+Spatial Project Model, capture/LiDAR, confidence, variants, room→building stages,
+explicit non-goals, reserved DD-010…014). Light sync: MDD, Manifest, AI_CONTEXT,
+ARCHITECTURE §2.2, documentation_map, object_model scope note, README, HANDOFF.
+
+**Not changed:** Roadmap phases, code, json_protocol, generator_api, clearance DDs.
+No DDs created. No standalone/scanner/variant implementation.
+
+------------------------------------------------------------------------
+
 ## 2026-07-12 — desk_basic v0.1.0 (generator #3)
 
 **Shipped:** `desk_basic` with `chair_access` clearance (`required` → analyze `error` when blocked).

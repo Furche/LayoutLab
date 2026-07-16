@@ -4,11 +4,11 @@
 
 LayoutLab is not a furniture placement addon. It is an engine where objects understand what they are — beds know where legs belong, wardrobes know when they need another door — and geometry is generated from rules, not blind mesh scaling. **Furniture is a means to satisfy requirements, not the primary goal.**
 
-Blender 4.0+ is the current editor. The long-term goal: describe problems and goals in natural language; LayoutLab proposes spatial solutions — without manually editing hundreds of meshes.
+Blender 4.0+ is the current editor and primary runtime. Long-term, LayoutLab may become a standalone AI-assisted spatial planning application — without requiring Blender or JSON copy-paste (see [docs/Future_Ideas.md](docs/Future_Ideas.md)). The long-term goal: describe problems and goals in natural language; LayoutLab proposes spatial solutions — without manually editing hundreds of meshes.
 
 > *"LayoutLab does not create meshes. LayoutLab describes objects — and, long-term, spatial solutions for human needs."*
 
-**Status:** v0.8.0 — `analyze_layout` constraint analysis (DD-008). Clearance export (DD-007). Product vision: [docs/Future_Ideas.md](docs/Future_Ideas.md).
+**Status:** v0.8.2 — `desk_basic`, wardrobe `front_side`, `analyze_layout` (DD-008). Product vision: [docs/Future_Ideas.md](docs/Future_Ideas.md).
 
 Repository: https://github.com/Furche/LayoutLab
 

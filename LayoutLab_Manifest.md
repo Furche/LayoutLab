@@ -113,11 +113,16 @@ One day LayoutLab should answer questions like:
 -   Can a wheelchair user move safely here?
 -   Are paths clear for someone with visual impairment?
 
+The user should be able to create or capture a room, apartment, or home,
+describe what it needs to achieve, and receive understandable spatial
+solutions without requiring professional 3D-software knowledge.
+
 **Guiding principle (long-term):** LayoutLab optimizes spatial solutions for human
 needs — not furniture for its own sake.
 
 Details and status markers: [docs/Future_Ideas.md](docs/Future_Ideas.md) §1 Product Vision.
 Current implementation remains the Execution Layer (generators, JSON, analysis).
+Blender remains the current runtime.
 
 ------------------------------------------------------------------------
 
