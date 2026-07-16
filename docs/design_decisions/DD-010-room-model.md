@@ -213,7 +213,7 @@ DD-008 v1 stays valid (furniture vs furniture).
 A JSON command batch creates a room equivalent (for planning purposes) to the
 current hand-modelled reference kids room:
 
-- footprint and height match convention (1 unit ≈ 10 cm)
+- footprint and height match Blender units (Metric: 1 unit = 1 m)
 - door on east wall, window on west wall, radiator on west wall
 - furniture fixtures (`bed_basic`, `desk_basic`, …) still use existing generators
 - no requirement for the old anonymous `walls` / `floor` meshes
