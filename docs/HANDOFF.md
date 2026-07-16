@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-16 (v0.9.1 inward wall planes + origin at 0)  
-**Plugin version:** 0.9.1 · **Branch:** `main`
+**Last updated:** 2026-07-16 (v0.9.2 fix create_quad for Blender 4)  
+**Plugin version:** 0.9.2 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution Layer).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.9.1.
+Branch: main. Plugin v0.9.2.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-16):
@@ -86,12 +86,12 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 | Component | Version |
 |---|---|
-| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.9.1** |
+| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.9.2** |
 | `bed_basic` | **0.6.0** — raised frame construction (`BedConstruction`) + optional `bed_entry` clearances |
 | `wardrobe_basic` | **0.6.0** — `front_side` (`y_min` \| `y_max`), `create_clearance`, part `clearance_front_access` |
 | `desk_basic` | **0.1.0** — tabletop + legs, optional `chair_access` clearance (`required`) |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.9.1.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.9.2.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 

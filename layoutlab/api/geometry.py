@@ -51,7 +51,6 @@ def create_quad(name, corners, color=(0.8, 0.8, 0.8, 1), collection="layout_test
     mesh = bpy.data.meshes.new(name + "_mesh")
     mesh.from_pydata(local, [], [(0, 1, 2, 3)])
     mesh.update()
-    mesh.calc_normals()
     obj = bpy.data.objects.new(name, mesh)
     obj.location = origin
     if color:

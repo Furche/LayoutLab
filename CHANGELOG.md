@@ -8,12 +8,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-### Added
+### Fixed
+
+- **`create_quad` / room walls:** removed `Mesh.calc_normals()` (removed in Blender 4.x) — walls/openings failed after floor only
+
+### Changed
+
+- Plugin version **0.9.2**
+
+### Added (prior)
 
 - **Room walls:** inward-facing single-sided planes (backface culling) — see-through from outside
 - Default room origin **`[0, 0, 0]`**; kids-room shell fixture updated
 
-### Changed
+### Changed (prior)
 
 - Plugin version **0.9.1**
 
