@@ -1074,8 +1074,16 @@ def run_console_checks(context):
             check.fail(f"floor role: {floor.get('layoutlab_role')}")
             return
         walls = [o for o in bpy.data.objects if o.name.startswith(f"{prefix}_wall_")]
-        if len(walls) != 4:
-            check.fail(f"expected 4 walls, got {len(walls)}")
+        if len(walls) < 4:
+            check.fail(f"expected >= 4 wall panels, got {len(walls)}")
+            return
+        sides = {o.get("layoutlab_wall_side") for o in walls}
+        if sides != {"south", "east", "north", "west"}:
+            check.fail(f"wall sides incomplete: {sides}")
+            return
+        # Openings cut panels: east door + west window → more than 4 panels
+        if len(walls) <= 4:
+            check.fail(f"expected constructive opening cuts (>4 panels), got {len(walls)}")
             return
         export = json.loads(layout_export_json(context))
         rooms = export.get("rooms") or []

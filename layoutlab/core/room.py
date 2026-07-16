@@ -219,10 +219,10 @@ def add_opening(model, params):
     if kind not in OPENING_KINDS:
         raise ValueError(f"unsupported opening kind {kind!r}")
     wall = find_wall(model, params.get("wall_id") or params.get("wall") or params.get("wall_side"))
-    width = _f(params.get("width"), 9.0 if kind == "door" else 10.0)
-    height = _f(params.get("height"), 20.0 if kind == "door" else 14.0)
+    width = _f(params.get("width"), 0.9 if kind == "door" else 1.0)
+    height = _f(params.get("height"), 2.0 if kind == "door" else 1.4)
     offset = _f(params.get("offset"), 0.0)
-    sill = _f(params.get("sill_height") or params.get("sill"), 0.0 if kind == "door" else 8.0)
+    sill = _f(params.get("sill_height") or params.get("sill"), 0.0 if kind == "door" else 0.8)
     if height <= 0:
         raise ValueError("opening height must be > 0")
     _fit_on_wall(wall, offset, width, "opening")
@@ -295,9 +295,9 @@ def add_fixed_element(model, params):
     if kind not in FIXED_KINDS:
         raise ValueError(f"unsupported fixed element kind {kind!r}")
     wall = find_wall(model, params.get("wall_id") or params.get("wall") or params.get("wall_side"))
-    width = _f(params.get("width"), 11.0)
-    depth = _f(params.get("depth"), 1.0)
-    height = _f(params.get("height"), 7.5)
+    width = _f(params.get("width"), 1.1)
+    depth = _f(params.get("depth"), 0.1)
+    height = _f(params.get("height"), 0.75)
     offset = _f(params.get("offset"), 0.0)
     if depth <= 0 or height <= 0:
         raise ValueError("fixed element dimensions must be > 0")
@@ -430,44 +430,129 @@ def wall_plane_corners(model, wall):
     With material backface culling, walls are opaque from inside and see-through
     from outside.
     """
+    wall_h = _f(wall.get("height", model["height"]))
+    return wall_panel_corners(model, wall, 0.0, wall["length"], 0.0, wall_h)
+
+
+def openings_for_wall(model, wall):
+    wall_id = wall.get("wall_id")
+    return [o for o in model.get("openings", []) if o.get("wall_id") == wall_id]
+
+
+def wall_local_opening_rect(opening, wall_height):
+    """Return (u0, u1, v0, v1) in wall-local space for an opening hole."""
+    u0 = _f(opening.get("offset"))
+    u1 = u0 + _f(opening.get("width"))
+    v0 = max(0.0, _f(opening.get("sill_height")))
+    v1 = min(_f(wall_height), v0 + _f(opening.get("height")))
+    if u1 <= u0 or v1 <= v0:
+        raise ValueError(f"opening {opening.get('name')!r} has empty wall footprint")
+    return (u0, u1, v0, v1)
+
+
+def _rects_overlap(a, b, eps=1e-9):
+    return a[0] < b[1] - eps and a[1] > b[0] + eps and a[2] < b[3] - eps and a[3] > b[2] + eps
+
+
+def _subtract_one_rect(outer, hole, eps=1e-9):
+    """Subtract axis-aligned ``hole`` from ``outer``; return remaining rects."""
+    ou0, ou1, ov0, ov1 = outer
+    hu0, hu1, hv0, hv1 = hole
+    cu0 = max(ou0, hu0)
+    cu1 = min(ou1, hu1)
+    cv0 = max(ov0, hv0)
+    cv1 = min(ov1, hv1)
+    if cu1 - cu0 <= eps or cv1 - cv0 <= eps:
+        return [outer]
+    parts = []
+    if cu0 - ou0 > eps:
+        parts.append((ou0, cu0, ov0, ov1))
+    if ou1 - cu1 > eps:
+        parts.append((cu1, ou1, ov0, ov1))
+    if cv0 - ov0 > eps:
+        parts.append((cu0, cu1, ov0, cv0))
+    if ov1 - cv1 > eps:
+        parts.append((cu0, cu1, cv1, ov1))
+    return parts
+
+
+def subtract_rects(outer, holes, eps=1e-9):
+    """Subtract all ``holes`` from ``outer``; holes must not overlap each other."""
+    holes = list(holes)
+    for i, a in enumerate(holes):
+        for b in holes[i + 1 :]:
+            if _rects_overlap(a, b, eps=eps):
+                raise ValueError("openings overlap on the same wall")
+    remaining = [outer]
+    for hole in holes:
+        next_remaining = []
+        for rect in remaining:
+            next_remaining.extend(_subtract_one_rect(rect, hole, eps=eps))
+        remaining = next_remaining
+    return remaining
+
+
+def wall_panel_corners(model, wall, u0, u1, v0, v1):
+    """Four world corners for a wall sub-panel in local (u along wall, v up)."""
     ox, oy, oz = (_f(v) for v in model["origin"])
     width = _f(model["footprint"]["width"])
     depth = _f(model["footprint"]["depth"])
-    height = _f(wall.get("height", model["height"]))
     side = wall.get("side")
+    u0, u1, v0, v1 = _f(u0), _f(u1), _f(v0), _f(v1)
     if side == "south":
-        # inward +Y
         return [
-            [ox, oy, oz],
-            [ox, oy, oz + height],
-            [ox + width, oy, oz + height],
-            [ox + width, oy, oz],
+            [ox + u0, oy, oz + v0],
+            [ox + u0, oy, oz + v1],
+            [ox + u1, oy, oz + v1],
+            [ox + u1, oy, oz + v0],
         ]
     if side == "north":
-        # inward -Y
         return [
-            [ox, oy + depth, oz],
-            [ox + width, oy + depth, oz],
-            [ox + width, oy + depth, oz + height],
-            [ox, oy + depth, oz + height],
+            [ox + u0, oy + depth, oz + v0],
+            [ox + u1, oy + depth, oz + v0],
+            [ox + u1, oy + depth, oz + v1],
+            [ox + u0, oy + depth, oz + v1],
         ]
     if side == "west":
-        # inward +X
         return [
-            [ox, oy, oz],
-            [ox, oy + depth, oz],
-            [ox, oy + depth, oz + height],
-            [ox, oy, oz + height],
+            [ox, oy + u0, oz + v0],
+            [ox, oy + u1, oz + v0],
+            [ox, oy + u1, oz + v1],
+            [ox, oy + u0, oz + v1],
         ]
     if side == "east":
-        # inward -X
         return [
-            [ox + width, oy, oz],
-            [ox + width, oy, oz + height],
-            [ox + width, oy + depth, oz + height],
-            [ox + width, oy + depth, oz],
+            [ox + width, oy + u0, oz + v0],
+            [ox + width, oy + u0, oz + v1],
+            [ox + width, oy + u1, oz + v1],
+            [ox + width, oy + u1, oz + v0],
         ]
     raise ValueError(f"unknown wall side {side!r}")
+
+
+def wall_display_panels(model, wall):
+    """List of inward-facing wall panel dicts after cutting openings.
+
+    Each item: ``{"corners": [...], "u0", "u1", "v0", "v1"}``.
+    """
+    wall_h = _f(wall.get("height", model["height"]))
+    wall_len = _f(wall.get("length"))
+    outer = (0.0, wall_len, 0.0, wall_h)
+    holes = []
+    for opening in openings_for_wall(model, wall):
+        holes.append(wall_local_opening_rect(opening, wall_h))
+    panels = []
+    for u0, u1, v0, v1 in subtract_rects(outer, holes):
+        panels.append(
+            {
+                "corners": wall_panel_corners(model, wall, u0, u1, v0, v1),
+                "u0": u0,
+                "u1": u1,
+                "v0": v0,
+                "v1": v1,
+            }
+        )
+    return panels
 
 
 def wall_display_box(model, wall):

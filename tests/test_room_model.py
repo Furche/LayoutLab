@@ -134,6 +134,71 @@ class TestRoomModelRectangle(unittest.TestCase):
             for a, b in zip(n, exp):
                 self.assertAlmostEqual(a, b, places=5, msg=wall["side"])
 
+    def test_window_cuts_four_panels(self):
+        model = self.room_core.create_room_model({"name": "R", "width": 4.0, "depth": 3.0, "height": 2.5})
+        self.room_core.add_opening(
+            model,
+            {"kind": "window", "wall_side": "south", "offset": 1.0, "width": 1.2, "height": 1.0, "sill": 0.9},
+        )
+        south = self.room_core.find_wall(model, "south")
+        panels = self.room_core.wall_display_panels(model, south)
+        self.assertEqual(len(panels), 4)
+        # Hole must not be covered: no panel intersects (1.0–2.2) × (0.9–1.9) interior
+        for p in panels:
+            overlaps_u = p["u0"] < 2.2 - 1e-9 and p["u1"] > 1.0 + 1e-9
+            overlaps_v = p["v0"] < 1.9 - 1e-9 and p["v1"] > 0.9 + 1e-9
+            self.assertFalse(overlaps_u and overlaps_v)
+
+    def test_door_has_no_panel_below(self):
+        model = self.room_core.create_room_model({"name": "R", "width": 4.0, "depth": 3.0, "height": 2.5})
+        self.room_core.add_opening(
+            model,
+            {"kind": "door", "wall_side": "east", "offset": 0.5, "width": 0.9, "height": 2.0, "sill": 0.0},
+        )
+        east = self.room_core.find_wall(model, "east")
+        panels = self.room_core.wall_display_panels(model, east)
+        self.assertGreaterEqual(len(panels), 3)
+        for p in panels:
+            overlaps_u = p["u0"] < 1.4 - 1e-9 and p["u1"] > 0.5 + 1e-9
+            overlaps_v = p["v0"] < 2.0 - 1e-9 and p["v1"] > 0.0 + 1e-9
+            self.assertFalse(overlaps_u and overlaps_v, msg=p)
+        # No sill strip under the door in the opening column
+        under = [p for p in panels if p["u0"] >= 0.5 - 1e-9 and p["u1"] <= 1.4 + 1e-9 and p["v1"] <= 0.0 + 1e-9]
+        self.assertEqual(under, [])
+
+    def test_overlapping_openings_raise(self):
+        model = self.room_core.create_room_model({"name": "R", "width": 4.0, "depth": 3.0, "height": 2.5})
+        self.room_core.add_opening(
+            model, {"kind": "window", "wall_side": "north", "offset": 0.5, "width": 1.0, "height": 1.0, "sill": 0.8}
+        )
+        self.room_core.add_opening(
+            model, {"kind": "window", "wall_side": "north", "offset": 1.2, "width": 1.0, "height": 1.0, "sill": 0.8}
+        )
+        north = self.room_core.find_wall(model, "north")
+        with self.assertRaises(ValueError):
+            self.room_core.wall_display_panels(model, north)
+
+    def test_panel_normals_match_full_wall(self):
+        model = self.room_core.create_room_model({"name": "R", "width": 4.0, "depth": 3.0, "height": 2.5})
+        self.room_core.add_opening(
+            model, {"kind": "window", "wall_side": "west", "offset": 0.5, "width": 1.0, "height": 1.0, "sill": 0.8}
+        )
+        west = self.room_core.find_wall(model, "west")
+        for panel in self.room_core.wall_display_panels(model, west):
+            c = panel["corners"]
+            u = [c[1][i] - c[0][i] for i in range(3)]
+            v = [c[3][i] - c[0][i] for i in range(3)]
+            n = (
+                u[1] * v[2] - u[2] * v[1],
+                u[2] * v[0] - u[0] * v[2],
+                u[0] * v[1] - u[1] * v[0],
+            )
+            length = (n[0] ** 2 + n[1] ** 2 + n[2] ** 2) ** 0.5
+            n = tuple(x / length for x in n)
+            self.assertAlmostEqual(n[0], 1.0, places=5)
+            self.assertAlmostEqual(n[1], 0.0, places=5)
+            self.assertAlmostEqual(n[2], 0.0, places=5)
+
 
 if __name__ == "__main__":
     unittest.main()

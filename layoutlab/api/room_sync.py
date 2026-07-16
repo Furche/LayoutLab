@@ -104,24 +104,27 @@ def sync_room_to_scene(model):
     _stamp_room_object(floor, model, role="room_floor", entity_kind="floor")
 
     for wall in model.get("walls", []):
-        corners = room_core.wall_plane_corners(model, wall)
-        obj = create_quad(
-            f"{prefix}wall_{wall['side']}",
-            corners,
-            color=WALL_COLOR,
-            collection=collection,
-            role="room_wall",
-            backface_culling=True,
-        )
-        _stamp_room_object(
-            obj,
-            model,
-            role="room_wall",
-            entity_id=wall["wall_id"],
-            entity_kind="wall",
-        )
-        obj["layoutlab_wall_side"] = wall["side"]
-        obj["layoutlab_wall_facing"] = "inward"
+        panels = room_core.wall_display_panels(model, wall)
+        for index, panel in enumerate(panels):
+            name = f"{prefix}wall_{wall['side']}" if len(panels) == 1 else f"{prefix}wall_{wall['side']}_p{index}"
+            obj = create_quad(
+                name,
+                panel["corners"],
+                color=WALL_COLOR,
+                collection=collection,
+                role="room_wall",
+                backface_culling=True,
+            )
+            _stamp_room_object(
+                obj,
+                model,
+                role="room_wall",
+                entity_id=wall["wall_id"],
+                entity_kind="wall",
+            )
+            obj["layoutlab_wall_side"] = wall["side"]
+            obj["layoutlab_wall_facing"] = "inward"
+            obj["layoutlab_wall_panel_index"] = index
 
     for opening in model.get("openings", []):
         loc, dims = room_core.opening_world_box(model, opening)
@@ -168,6 +171,9 @@ def sync_room_to_scene(model):
         "footprint": model["footprint"],
         "height": model["height"],
         "wall_count": len(model.get("walls", [])),
+        "wall_panel_count": sum(
+            len(room_core.wall_display_panels(model, wall)) for wall in model.get("walls", [])
+        ),
         "opening_count": len(model.get("openings", [])),
         "fixed_element_count": len(model.get("fixed_elements", [])),
         "collection": collection,

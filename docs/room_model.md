@@ -1,6 +1,6 @@
 # Room Model (DD-010)
 
-**Status:** Accepted · Plugin **0.10.0**  
+**Status:** Accepted · Plugin **0.10.1**  
 **Source of truth:** editable Room Model — not a furniture generator.
 
 Related: [DD-010](design_decisions/DD-010-room-model.md) · [json_protocol.md](json_protocol.md) · [object_model.md](object_model.md)
@@ -19,9 +19,10 @@ Room Model (Core JSON)
 Blender meshes (adapter)
 ```
 
-- Floor; **inward-facing wall planes** (opaque from inside, see-through from outside via backface culling)
-- Opening placeholders; fixed boxes
-- Default room origin **`[0, 0, 0]`**
+- Floor; **inward-facing wall panels** (opaque from inside, see-through from outside via backface culling)
+- **Constructive openings:** wall quads are split around doors/windows (no Boolean) — portable to standalone later
+- Opening wire placeholders (semantic markers); fixed boxes
+- Default room origin **`[0, 0, 0]`**; sizes in Blender units (Metric: 1 = 1 m)
 
 ------------------------------------------------------------------------
 
@@ -32,12 +33,13 @@ Blender meshes (adapter)
 | `create_room` | Rectangle room + four walls |
 | `update_room` | Size / height / origin (wall ids preserved) |
 | `delete_room` | Remove all meshes for `room_id` |
-| `add_opening` / `update_opening` / `remove_opening` | Door or window |
+| `add_opening` / `update_opening` / `remove_opening` | Door or window (cuts wall panels) |
 | `add_fixed_element` / `update_fixed_element` / `remove_fixed_element` | e.g. radiator |
 
 Wall reference: `wall_side` (`south`\|`east`\|`north`\|`west`) or `wall_id`.  
 Room reference on mutate: `room` / `room_id` (not the opening name).
 
+Overlapping openings on the same wall raise an error at sync/panel build.
 ------------------------------------------------------------------------
 
 ## Reference kids room shell
@@ -54,4 +56,5 @@ Scene export includes top-level `rooms[]` with `layoutlab.room`-equivalent field
 
 ## Not in MVP
 
-Polygon footprints, free `add_wall`/`move_wall`, boolean door cuts, multi-room, analyze room-as-blocker (follow-up).
+Polygon footprints, free `add_wall`/`move_wall`, multi-room, analyze room-as-blocker (follow-up).
+Boolean modifiers are intentionally unused — openings use constructive panel splits.

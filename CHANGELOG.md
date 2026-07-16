@@ -8,7 +8,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **Constructive wall openings (v0.10.1):** walls split into inward panels around doors/windows (no Boolean); opening wires kept as markers
+
 ### Changed
+
+- Plugin version **0.10.1**
+- Opening/fixed defaults in meters (`door` 0.9×2.0, `window` sill 0.8, radiator 0.75)
+
+### Changed (prior)
 
 - **Native Blender units (v0.10.0, breaking):** JSON/generators use scene Blender units directly (Metric default: 1 unit = 1 m). Removed 10 cm convention and the v0.9.3 conversion layer.
 - Generator defaults scaled to meters: `bed_basic` 0.7.0, `wardrobe_basic` 0.7.0, `desk_basic` 0.2.0
