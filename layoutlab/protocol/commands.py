@@ -7,6 +7,7 @@ import bpy
 from ..api.clearance import create_clearance
 from ..api.collections import delete_collection_objects, delete_prefix, delete_by_object_id, find_objects_by_object_id
 from ..api.geometry import create_box
+from ..api import room_sync
 from ..engine.executor import execute_generator
 from ..engine.registry import generator_path, save_generator_code
 from ..protocol.semantic import merge_generator_params
@@ -121,6 +122,25 @@ def apply_single_command(context, cmd):
         from .layout_analysis import analyze_layout
 
         return analyze_layout(context, cmd)
+
+    if action == "create_room":
+        return room_sync.create_room(cmd.get("params") or cmd)
+    if action == "update_room":
+        return room_sync.update_room(cmd.get("params") or cmd)
+    if action == "delete_room":
+        return room_sync.delete_room(cmd.get("params") or cmd)
+    if action == "add_opening":
+        return room_sync.add_opening(cmd.get("params") or cmd)
+    if action == "update_opening":
+        return room_sync.update_opening(cmd.get("params") or cmd)
+    if action == "remove_opening":
+        return room_sync.remove_opening(cmd.get("params") or cmd)
+    if action == "add_fixed_element":
+        return room_sync.add_fixed_element(cmd.get("params") or cmd)
+    if action == "update_fixed_element":
+        return room_sync.update_fixed_element(cmd.get("params") or cmd)
+    if action == "remove_fixed_element":
+        return room_sync.remove_fixed_element(cmd.get("params") or cmd)
 
     obj = bpy.data.objects.get(name) if name else None
     if action == "move":

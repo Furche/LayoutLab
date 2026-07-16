@@ -4,6 +4,19 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-16 — DD-010 Accepted + Room Model MVP (v0.9.0)
+
+**Shipped:** Editable single-space Room Model (not a room generator). Rectangle footprint,
+derived walls with stable ids, openings (door/window), radiator fixed element, Blender
+mesh sync, export `rooms[]`, diagnostic + kids-room shell fixture.
+
+**Why:** Hand-modelled Blender rooms cannot be the long-term spatial foundation; capture
+and planning need a Core model. Started simple, schema typed for polygon later.
+
+**Not shipped:** polygon footprints, multi-room, analyze room-as-blocker, standalone/scanner.
+
+------------------------------------------------------------------------
+
 ## 2026-07-16 — DD-010 Proposed (Room Model)
 
 **Question:** Room as `room_basic` generator vs editable Room Model?

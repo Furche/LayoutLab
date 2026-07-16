@@ -9,16 +9,16 @@ Related: `AI_CONTEXT.md`, `docs/generator_api.md`, `docs/design_decisions/DD-006
 **Status markers:** `[IMPLEMENTED]` · `[PLANNED]`
 
 **Scope:** This document is the **current implemented** object contract (Furniture → Parts
-in a Blender scene). A future multi-room / Property / Building model is **Future Vision**
-only — see [docs/Future_Ideas.md](Future_Ideas.md) §13. Do not treat that hierarchy as
-accepted schema here.
+in a Blender scene, plus **Room Model** DD-010). Multi-room / Property / Building remains
+**Future Vision** — see [Future_Ideas.md](Future_Ideas.md) §13. Room authoring contract:
+[room_model.md](room_model.md).
 
 ------------------------------------------------------------------------
 
 # 1. Conceptual Model
 
 ```
-Room
+Room (DD-010 Room Model)          ← editable space fabric
 └── Layout
     └── Furniture Object          (one bed, one wardrobe — logical unit)
         ├── Generator + params
@@ -26,6 +26,7 @@ Room
             └── Meshes            (build-time only — joined per Part)
 ```
 
+A **Room** is footprint + walls + openings + fixed elements (`room_id`).  
 A **Furniture Object** is **generator + parameters + finalized Part objects**.
 
 During a generator run, authors think in **many meshes** (posts, rails, shelves).  

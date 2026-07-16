@@ -806,7 +806,7 @@ Do **not** implement from this vision until separate DDs and explicit product ne
 
 | ID | Title | Status |
 |---|---|---|
-| [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Proposed** (2026-07-16) — review before implementation |
+| [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Accepted** (2026-07-16) — MVP in plugin v0.9.0 |
 | DD-011 | Layout Variants and Comparison | **Not created** — reserve when implementing §16 |
 | DD-012 | Integrated AI Product Experience | **Not created** — reserve when implementing §7 / §12 |
 | DD-013 | Capture and Reconstruction Pipeline | **Not created** — reserve when implementing §14–§15 |

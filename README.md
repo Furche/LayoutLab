@@ -8,7 +8,7 @@ Blender 4.0+ is the current editor and primary runtime. Long-term, LayoutLab may
 
 > *"LayoutLab does not create meshes. LayoutLab describes objects — and, long-term, spatial solutions for human needs."*
 
-**Status:** v0.8.2 — `desk_basic`, wardrobe `front_side`, `analyze_layout` (DD-008). Product vision: [docs/Future_Ideas.md](docs/Future_Ideas.md).
+**Status:** v0.9.0 — Room Model MVP (DD-010). `desk_basic`, wardrobe `front_side`, `analyze_layout` (DD-008). Product vision: [docs/Future_Ideas.md](docs/Future_Ideas.md).
 
 Repository: https://github.com/Furche/LayoutLab
 

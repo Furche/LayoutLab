@@ -1,12 +1,19 @@
 # DD-010 — Room Model (Single Space)
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-07-16  
-**Version:** 0.1 (proposal)  
-**Related:** [DD-003](DD-003-json-only-communication.md) · [DD-006](DD-006-parts-and-finalization.md) · [DD-007](DD-007-clearance-zones.md) · [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [Future_Ideas.md](../Future_Ideas.md) §13 / §17
+**Accepted:** 2026-07-16
+**Version:** 1.0  
+**Related:** [DD-003](DD-003-json-only-communication.md) · [DD-006](DD-006-parts-and-finalization.md) · [DD-007](DD-007-clearance-zones.md) · [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [Future_Ideas.md](../Future_Ideas.md) §13 / §17 · [room_model.md](../room_model.md)
 
-> **Review gate:** Do not implement until this DD is **Accepted**.  
-> Cross-docs may reference DD-010 as **Proposed** only.
+------------------------------------------------------------------------
+
+## Acceptance note
+
+**Accepted 2026-07-16** (Alexander — proceed to implementation).
+
+Binding: Room Model (B), not Room Generator; typed scalable footprint; MVP rectangle;
+first-class walls/openings/fixed; proposed defaults locked. MVP shipped in plugin **v0.9.0**.
 
 ------------------------------------------------------------------------
 
@@ -282,13 +289,14 @@ current hand-modelled reference kids room:
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-07-16 | Initial proposal — Room Model (B) over Room Generator (A); scalable footprint; MVP for reference room |
+| 1.0 | 2026-07-16 | **Accepted** — defaults locked; implementation started |
 
 ------------------------------------------------------------------------
 
 ## Review checklist
 
-- [ ] Accept Room Model (B), reject Room Generator as source of truth
-- [ ] Accept scalability rule: typed footprint, first-class walls/openings/fixed
-- [ ] Accept MVP = rectangle + openings + radiator, no multi-room
-- [ ] Agree open-question defaults or revise
-- [ ] Status → **Accepted** before any implementation
+- [x] Accept Room Model (B), reject Room Generator as source of truth
+- [x] Accept scalability rule: typed footprint, first-class walls/openings/fixed
+- [x] Accept MVP = rectangle + openings + radiator, no multi-room
+- [x] Agree open-question defaults or revise
+- [x] Status → **Accepted** before any implementation

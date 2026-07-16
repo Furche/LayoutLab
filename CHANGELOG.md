@@ -10,10 +10,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **DD-010 Accepted + Room Model MVP (v0.9.0):** Core `layoutlab/core/room.py`, Blender sync, JSON commands (`create_room`, openings, fixed elements), export `rooms[]`, diagnostics `room_model_create`, fixture `reference_kids_room_shell_commands.json`
+- **Docs:** `docs/room_model.md`, json_protocol §5.14, object_model Room branch
+
+### Added (prior)
+
 - **DD-010 Proposed:** Room Model (single space) — editable space fabric over room generator; scalable footprint; MVP for reference room replacement ([DD-010](docs/design_decisions/DD-010-room-model.md))
 
 ### Changed
 
+- Plugin version **0.9.0**
 - **Product vision (docs only):** Standalone end-to-end experience, Spatial Project Model, mobile capture/LiDAR, confidence principles, variants as first-class objects — `Future_Ideas.md` §12–§19; light sync MDD/Manifest/AI_CONTEXT/ARCHITECTURE/HANDOFF; **no implementation**, **no roadmap course change**
 - Future_Ideas §19: DD-010 narrowed to Room Model proposal (apartment/building → later DDs)
 

@@ -42,6 +42,10 @@ def layout_export_json(context, selected_only=False):
     scene = context.scene
     objs = context.selected_objects if selected_only else scene.objects
     version = ".".join(str(v) for v in bl_info["version"])
+    from ..api.room_sync import list_room_models
+    from ..core.room import export_room_block
+
+    rooms = [export_room_block(m) for m in list_room_models()]
     data = {
         "layoutlab_version": version,
         "unit": scene.unit_settings.system,
@@ -50,6 +54,7 @@ def layout_export_json(context, selected_only=False):
         "generator_dir": str(addon_user_dir()),
         "generators": list_generators_meta(),
         "note": "Coordinates/dimensions are Blender units. In Alexander's room: 1 unit ≈ 10 cm.",
+        "rooms": rooms,
         "objects": [object_to_dict(o) for o in objs if o.type in {"MESH", "EMPTY", "CURVE", "FONT"}],
     }
     return json.dumps(data, indent=2, ensure_ascii=False)

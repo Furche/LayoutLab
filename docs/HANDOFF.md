@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-16 (DD-010 Room Model Proposed)  
-**Plugin version:** 0.8.2 · **Branch:** `main` (synced with `origin/main`)
+**Last updated:** 2026-07-16 (v0.9.0 Room Model MVP — DD-010 Accepted)  
+**Plugin version:** 0.9.0 · **Branch:** `main` (synced with `origin/main`)
 
 ------------------------------------------------------------------------
 
@@ -24,19 +24,18 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution Layer).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main, synced mit origin. Plugin v0.8.2.
+Branch: main, synced mit origin. Plugin v0.9.0.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-16):
-- DD-008/009 Accepted; Execution Layer in Blender bleibt Fokus
-- Generatoren: bed_basic, wardrobe_basic (front_side), desk_basic
-- Future Vision erweitert (Standalone, Spatial Project, Capture) — nur Docs
-- **DD-010 Proposed:** Room Model (editierbarer Raum, kein Room-Generator) — Review vor Code
-- Keine Standalone-/Scanner-Implementierung; Room Model erst nach DD-010 Accepted
-- Weitere reservierte DDs: 011–014 — Future_Ideas §19
+- DD-010 Accepted: Room Model MVP (create_room, openings, fixed elements, export rooms[])
+- DD-008/009 Accepted; Execution Layer in Blender
+- Generatoren: bed_basic, wardrobe_basic, desk_basic
+- Fixture: tests/fixtures/reference_kids_room_shell_commands.json
+- Docs: docs/room_model.md
 
 Bitte auf Deutsch antworten. Keine vollen Diagnostic-Reports inline — nur fehlgeschlagene Checks oder Dateireferenz.
-Commits/PRs nur auf explizite Anfrage. Lies docs/HANDOFF.md für Details.
+Lies docs/HANDOFF.md für Details.
 
 [Nächste Aufgabe hier einfügen]
 ```
@@ -87,11 +86,12 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 | Component | Version |
 |---|---|
-| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.8.2** |
+| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.9.0** |
 | `bed_basic` | **0.6.0** — raised frame construction (`BedConstruction`) + optional `bed_entry` clearances |
 | `wardrobe_basic` | **0.6.0** — `front_side` (`y_min` \| `y_max`), `create_clearance`, part `clearance_front_access` |
 | `desk_basic` | **0.1.0** — tabletop + legs, optional `chair_access` clearance (`required`) |
-| Latest zip | `dist/layoutlab-0.8.2.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
+| Latest zip | `dist/layoutlab-0.9.0.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -117,7 +117,7 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | [DD-007](design_decisions/DD-007-clearance-zones.md) | Clearance zones | **Accepted** — impl. steps 1–6 done |
 | [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | **Accepted** — v1 shipped |
 | [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary | **Accepted** |
-| [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Proposed** — review before code |
+| [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Accepted** — MVP shipped v0.9.0 |
 
 ### DD-007 (key points)
 
@@ -160,12 +160,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. **Review DD-010** (Room Model — Proposed) — then implement after Accept  
-2. **Not now:** DD-008 v2 alone, bridge, expert bpy, viewer, standalone, capture  
+1. Blender QA: Room Model diagnostics + kids room shell fixture  
+2. Optional: wire furniture fixtures into LayoutLab room; room-as-blocker in `analyze_layout`  
+3. **Not now:** polygon walls, multi-room, standalone, capture  
 
-Future Vision (2026-07-16) in `docs/Future_Ideas.md` §12–§19 — docs only where not covered by DD-010.
-
-`desk_basic` + reference fixture ✅ · wardrobe `front_side` ✅ · **DD-010 Proposed** (2026-07-16)
+`desk_basic` ✅ · wardrobe `front_side` ✅ · **DD-010 Room Model MVP ✅ (v0.9.0)**
 
 ------------------------------------------------------------------------
 
@@ -246,7 +245,7 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 3. 🔄 Constraints + analyze_layout (DD-008) — **v0.8.0 shipped**  
 4. ✅ `bed_basic` multi-zone clearances — **v0.6.0 shipped**  
 5. ✅ New generators after constraint track — **desk_basic v0.1.0 shipped**  
-6. 🔄 **DD-010 Room Model** — **Proposed** (review → Accept → implement)  
+6. ✅ **DD-010 Room Model** — **Accepted + MVP v0.9.0**  
 7. ⏳ Room-aware analyze / tiered clearances (after room export)  
 8. 📋 Bridge / standalone / capture (Future — separate DDs)
 

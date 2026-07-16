@@ -999,6 +999,110 @@ def run_console_checks(context):
             f"summary: {result.get('summary')}",
         )
 
+    def check_room_model_create(check):
+        from .protocol.export import layout_export_json
+
+        prefix = f"{DIAG_PREFIX}ROOM"
+        delete_prefix(prefix)
+        results, errors = apply_commands_json(
+            context,
+            json.dumps(
+                {
+                    "commands": [
+                        {
+                            "action": "create_room",
+                            "params": {
+                                "name": prefix,
+                                "location": [0, 0, 0],
+                                "width": 20,
+                                "depth": 12,
+                                "height": 25,
+                                "wall_thickness": 0.2,
+                                "collection": DIAG_COLLECTION,
+                            },
+                        },
+                        {
+                            "action": "add_opening",
+                            "params": {
+                                "room": prefix,
+                                "opening_name": "door_east",
+                                "kind": "door",
+                                "wall_side": "east",
+                                "offset": 2,
+                                "width": 9,
+                                "height": 20,
+                            },
+                        },
+                        {
+                            "action": "add_opening",
+                            "params": {
+                                "room": prefix,
+                                "opening_name": "window_west",
+                                "kind": "window",
+                                "wall_side": "west",
+                                "offset": 3,
+                                "width": 8,
+                                "height": 12,
+                                "sill_height": 8,
+                            },
+                        },
+                        {
+                            "action": "add_fixed_element",
+                            "params": {
+                                "room": prefix,
+                                "fixed_name": "heizung",
+                                "kind": "radiator",
+                                "wall_side": "west",
+                                "offset": 4,
+                                "width": 6,
+                                "depth": 1,
+                                "height": 7,
+                            },
+                        },
+                    ]
+                }
+            ),
+        )
+        if errors:
+            check.fail(f"command errors: {errors[0][:200]}")
+            return
+        floor = bpy.data.objects.get(f"{prefix}_floor")
+        if not floor:
+            check.fail("room floor missing")
+            return
+        if floor.get("layoutlab_role") != "room_floor":
+            check.fail(f"floor role: {floor.get('layoutlab_role')}")
+            return
+        walls = [o for o in bpy.data.objects if o.name.startswith(f"{prefix}_wall_")]
+        if len(walls) != 4:
+            check.fail(f"expected 4 walls, got {len(walls)}")
+            return
+        export = json.loads(layout_export_json(context))
+        rooms = export.get("rooms") or []
+        room = next((r for r in rooms if r.get("name") == prefix), None)
+        if not room:
+            check.fail(f"room missing from export rooms[]: {[r.get('name') for r in rooms]}")
+            return
+        if room.get("footprint", {}).get("kind") != "rectangle":
+            check.fail(f"footprint: {room.get('footprint')}")
+            return
+        if len(room.get("walls", [])) != 4:
+            check.fail(f"export walls: {len(room.get('walls', []))}")
+            return
+        if len(room.get("openings", [])) != 2:
+            check.fail(f"export openings: {room.get('openings')}")
+            return
+        if len(room.get("fixed_elements", [])) != 1:
+            check.fail(f"export fixed: {room.get('fixed_elements')}")
+            return
+        check.ok(
+            f"room_id: {str(room.get('room_id', ''))[:8]}…",
+            f"walls: {len(room.get('walls', []))}",
+            f"openings: {len(room.get('openings', []))}",
+            f"fixed_elements: {len(room.get('fixed_elements', []))}",
+            f"command_results: {len(results)}",
+        )
+
     def check_cleanup(check):
         apply_commands_json(
             context,
@@ -1029,6 +1133,7 @@ def run_console_checks(context):
             _run_check("desk_clearance_layout", check_desk_clearance_layout),
             _run_check("analyze_layout_desk_clear", check_analyze_layout_desk_clear),
             _run_check("analyze_layout_desk_blocked", check_analyze_layout_desk_blocked),
+            _run_check("room_model_create", check_room_model_create),
             _run_check("apply_commands_json", check_apply_commands_json),
             _run_check("regenerate", check_regenerate),
             _run_check("regenerate_layout_policy", check_regenerate_layout_policy),

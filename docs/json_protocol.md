@@ -445,7 +445,59 @@ Each finding references `clearance_ref` + `overlaps[]`. Severity derives from cl
 
 ------------------------------------------------------------------------
 
-## 5.14 Other Planned Commands
+## 5.14 Room Model commands `[IMPLEMENTED]` (DD-010)
+
+Editable **Room Model** — not a furniture generator. See [room_model.md](room_model.md).
+
+### `create_room`
+
+```json
+{
+  "action": "create_room",
+  "params": {
+    "name": "KIDS_ROOM",
+    "location": [65.3444, 196.8293, 0],
+    "width": 42,
+    "depth": 21.8,
+    "height": 26,
+    "wall_thickness": 0.2,
+    "collection": "layoutlab_room"
+  }
+}
+```
+
+Creates rectangle footprint (`footprint.kind: "rectangle"`), four walls with stable ids, floor + wall meshes.
+
+### `add_opening` / `add_fixed_element`
+
+```json
+{
+  "action": "add_opening",
+  "params": {
+    "room": "KIDS_ROOM",
+    "opening_name": "door_east",
+    "kind": "door",
+    "wall_side": "east",
+    "offset": 2.5,
+    "width": 7.08,
+    "height": 18.45
+  }
+}
+```
+
+| Field | Notes |
+|---|---|
+| `room` / `room_id` | Room reference |
+| `wall_side` | `south` \| `east` \| `north` \| `west` (or `wall_id`) |
+| `offset` | Along wall from SW-biased start (south/north: from west; west/east: from south) |
+
+Also: `update_room`, `delete_room`, `update_opening`, `remove_opening`, `update_fixed_element`, `remove_fixed_element`.
+
+**Export:** top-level `rooms[]` array on scene export.
+
+------------------------------------------------------------------------
+
+## 5.15 Other Planned Commands
 
 | Action | Purpose |
 |---|---|

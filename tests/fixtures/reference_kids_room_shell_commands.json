@@ -1,0 +1,60 @@
+{
+  "description": "DD-010 Room Model shell matching Alexander's kids room footprint (1 unit ≈ 10 cm). Replaces hand-modelled floor/walls/door/window/heizung for LayoutLab planning.",
+  "collection": "layoutlab_room",
+  "commands": [
+    {
+      "action": "delete_collection_objects",
+      "collection": "layoutlab_room"
+    },
+    {
+      "action": "create_room",
+      "params": {
+        "name": "KIDS_ROOM",
+        "location": [65.3444, 196.8293, 0],
+        "width": 42.0,
+        "depth": 21.8,
+        "height": 26.0,
+        "wall_thickness": 0.2,
+        "collection": "layoutlab_room"
+      }
+    },
+    {
+      "action": "add_opening",
+      "params": {
+        "room": "KIDS_ROOM",
+        "opening_name": "window_west",
+        "kind": "window",
+        "wall_side": "west",
+        "offset": 4.8054,
+        "width": 12.2946,
+        "height": 14.7,
+        "sill_height": 8.8
+      }
+    },
+    {
+      "action": "add_opening",
+      "params": {
+        "room": "KIDS_ROOM",
+        "opening_name": "door_east",
+        "kind": "door",
+        "wall_side": "east",
+        "offset": 2.4866,
+        "width": 7.0801,
+        "height": 18.4453
+      }
+    },
+    {
+      "action": "add_fixed_element",
+      "params": {
+        "room": "KIDS_ROOM",
+        "fixed_name": "heizung",
+        "kind": "radiator",
+        "wall_side": "west",
+        "offset": 5.6494,
+        "width": 11.0,
+        "depth": 1.0,
+        "height": 7.5
+      }
+    }
+  ]
+}
