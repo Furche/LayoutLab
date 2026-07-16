@@ -8,14 +8,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-### Added
+### Fixed
 
-- **`analyze_layout` room-aware (v0.10.2):** `room_wall` / `room_fixed` count as blockers; `room_floor` / `room_opening` excluded; overlap entries include `role`; diagnostic `analyze_layout_room_wall`
+- **`analyze_layout` summary:** count `error`/`warning` into `errors`/`warnings` (was stuck at 0)
 
 ### Changed
 
-- Plugin version **0.10.2**
-- Diagnostics: meter-scale obstacle positions for bed/desk blocked checks
+- Plugin version **0.10.3**
+
+### Added (prior)
+
+- **`analyze_layout` room-aware (v0.10.2):** `room_wall` / `room_fixed` count as blockers; `room_floor` / `room_opening` excluded; overlap entries include `role`; diagnostic `analyze_layout_room_wall`
 
 ### Added (prior)
 

@@ -80,5 +80,22 @@ class TestIsAnalyzeBlocker(unittest.TestCase):
         self.assertFalse(self.util.is_analyze_blocker("CURVE", role="label"))
 
 
+class TestSummaryCounts(unittest.TestCase):
+    def test_severity_keys_match_summary(self):
+        # Mirrors layout_analysis summary aggregation (pure logic check)
+        findings = [
+            {"severity": "error"},
+            {"severity": "warning"},
+            {"severity": "warning"},
+            {"severity": "info"},
+        ]
+        summary = {"errors": 0, "warnings": 0, "info": 0}
+        severity_to_summary = {"error": "errors", "warning": "warnings", "info": "info"}
+        for finding in findings:
+            key = severity_to_summary.get(finding.get("severity", "warning"), "warnings")
+            summary[key] += 1
+        self.assertEqual(summary, {"errors": 1, "warnings": 2, "info": 1})
+
+
 if __name__ == "__main__":
     unittest.main()

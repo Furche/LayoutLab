@@ -133,10 +133,10 @@ def analyze_layout(context, cmd):
             )
 
     summary = {"errors": 0, "warnings": 0, "info": 0}
+    severity_to_summary = {"error": "errors", "warning": "warnings", "info": "info"}
     for finding in findings:
-        sev = finding.get("severity", "warning")
-        if sev in summary:
-            summary[sev] += 1
+        key = severity_to_summary.get(finding.get("severity", "warning"), "warnings")
+        summary[key] += 1
 
     return {
         "analyzed": True,
