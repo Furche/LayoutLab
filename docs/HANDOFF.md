@@ -118,6 +118,7 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | **Accepted** — v1 shipped |
 | [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary | **Accepted** |
 | [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Accepted** — MVP shipped v0.9.0 |
+| [DD-014](design_decisions/DD-014-standalone-runtime-path.md) | Standalone runtime path | **Proposed** — viewer first, then write adapter |
 
 ### DD-007 (key points)
 
