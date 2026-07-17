@@ -51,6 +51,60 @@ class LAYOUTLAB_OT_apply_commands(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class LAYOUTLAB_OT_create_empty_test_room(bpy.types.Operator):
+    bl_idname = "layoutlab.create_empty_test_room"
+    bl_label = "Empty Test Room"
+    bl_description = "Replace layoutlab_room with the kids-room shell (walls, window, door, radiator)"
+
+    def execute(self, context):
+        from .test_rooms import empty_test_room_commands
+
+        try:
+            payload = json.dumps(empty_test_room_commands())
+            results, errors = apply_commands_json(context, payload)
+            if errors:
+                print("LayoutLab errors:")
+                for e in errors:
+                    print(e)
+                self.report({"WARNING"}, "Test room created with errors. See console.")
+            else:
+                self.report({"INFO"}, "Empty test room created (KIDS_ROOM).")
+            if results:
+                print("LayoutLab results:")
+                print(json.dumps(results, indent=2, ensure_ascii=False, default=str))
+        except Exception as e:
+            self.report({"ERROR"}, str(e))
+            return {"CANCELLED"}
+        return {"FINISHED"}
+
+
+class LAYOUTLAB_OT_create_furnished_test_room(bpy.types.Operator):
+    bl_idname = "layoutlab.create_furnished_test_room"
+    bl_label = "Furnished Test Room"
+    bl_description = "Replace layoutlab_room with kids-room shell + bed + desk"
+
+    def execute(self, context):
+        from .test_rooms import furnished_test_room_commands
+
+        try:
+            payload = json.dumps(furnished_test_room_commands())
+            results, errors = apply_commands_json(context, payload)
+            if errors:
+                print("LayoutLab errors:")
+                for e in errors:
+                    print(e)
+                self.report({"WARNING"}, "Furnished test room created with errors. See console.")
+            else:
+                self.report({"INFO"}, "Furnished test room created (KIDS_ROOM + bed + desk).")
+            if results:
+                print("LayoutLab results:")
+                print(json.dumps(results, indent=2, ensure_ascii=False, default=str))
+        except Exception as e:
+            self.report({"ERROR"}, str(e))
+            return {"CANCELLED"}
+        return {"FINISHED"}
+
+
 class LAYOUTLAB_OT_create_command_text_block(bpy.types.Operator):
     bl_idname = "layoutlab.create_command_text_block"
     bl_label = "Create Command Text"
@@ -286,6 +340,8 @@ class LAYOUTLAB_OT_run_diagnostics(bpy.types.Operator):
 operator_classes = (
     LAYOUTLAB_OT_copy_scene,
     LAYOUTLAB_OT_apply_commands,
+    LAYOUTLAB_OT_create_empty_test_room,
+    LAYOUTLAB_OT_create_furnished_test_room,
     LAYOUTLAB_OT_create_command_text_block,
     LAYOUTLAB_OT_install_default_generator,
     LAYOUTLAB_OT_paste_generator,

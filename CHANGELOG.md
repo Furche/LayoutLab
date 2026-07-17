@@ -29,6 +29,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 - **Viewer placement / desk mesh (v0.10.6):** paste used object `location` as AABB corner (wrong for parented Parts / non-corner origins). Now uses `world_bbox_corners`; furniture exports `viewer.mesh` so desk legs/top match Blender. Labels skipped. `viewer_schema` → `0.1.1`.
 
+### Added
+
+- **Test room buttons (v0.10.7):** Sidebar → Empty / Furnished kids-room (clears `layoutlab_room`, builds reference shell ± bed/desk)
+
 ### Fixed (prior)
 
 - **`analyze_layout` summary:** count `error`/`warning` into `errors`/`warnings` (was stuck at 0)
