@@ -23,8 +23,9 @@ Listens on `http://127.0.0.1:8765` by default.
 
 | Method | Path | Body | Response |
 |---|---|---|---|
-| `GET` | `/health` | — | `{ "ok": true, ... }` |
+| `GET` | `/health` | — | `{ "ok": true, "chat": "demo"|"llm", ... }` |
 | `POST` | `/v1/commands` | `{ "commands": [ ... ] }` | `{ "ok", "results", "export" }` |
+| `POST` | `/v1/chat` | `{ "message": "…", "scene"?: {…} }` | `{ "ok", "reply", "commands" }` proposal |
 
 CORS is enabled for the Vite viewer (`http://localhost:5173`).
 
