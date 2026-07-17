@@ -1,11 +1,22 @@
-"""Layout constraint analysis (DD-008) — reads clearances, emits findings."""
+"""Layout constraint analysis (DD-008) — Blender adapter + shared core."""
 
-import json
-
-from ..util import aabb_intersects, is_analyze_blocker, requirement_to_severity
+from ..core.analyze import (
+    CONSTRAINT_TYPE_ZONE_MUST_BE_CLEAR,
+    analyze_clearance_objects,
+    blocker_overlap_entry,
+    furniture_name_for_clearance,
+    is_blocker_mesh,
+    is_clearance_object,
+    violation_message,
+)
 from .clearance_export import world_bounds_from_object
 
-CONSTRAINT_TYPE_ZONE_MUST_BE_CLEAR = "zone_must_be_clear"
+# Re-export helpers used by tests / callers
+_furniture_name_for_clearance = furniture_name_for_clearance
+_violation_message = violation_message
+_is_clearance_object = is_clearance_object
+_is_blocker_mesh = is_blocker_mesh
+_blocker_overlap_entry = blocker_overlap_entry
 
 
 def _objects_in_collection_recursive(coll):
@@ -30,58 +41,6 @@ def collect_objects_for_scope(context, scope, collection_name=None):
     raise ValueError(f"Unknown analyze_layout scope: {scope!r}")
 
 
-def _furniture_name_for_clearance(clearance_obj):
-    parent = clearance_obj.parent
-    if parent:
-        raw_params = parent.get("layoutlab_params")
-        if raw_params:
-            try:
-                params = json.loads(raw_params)
-                name = params.get("name")
-                if name:
-                    return str(name)
-            except (TypeError, json.JSONDecodeError):
-                pass
-        if parent.name.endswith("_body"):
-            return parent.name[: -len("_body")]
-        return parent.name
-    if clearance_obj.name.endswith("_clearance_front_access"):
-        return clearance_obj.name[: -len("_clearance_front_access")]
-    return clearance_obj.name
-
-
-def _violation_message(requirement, clearance_name, furniture_name):
-    labels = {
-        "required": "Required",
-        "preferred": "Preferred",
-        "informational": "Informational",
-    }
-    req = (requirement or "preferred").strip().lower()
-    label = labels.get(req, "Clearance")
-    return f"{label} clearance '{clearance_name}' on {furniture_name} is blocked"
-
-
-def _is_clearance_object(obj):
-    return bool(obj.get("layoutlab_clearance_name"))
-
-
-def _is_blocker_mesh(obj):
-    return is_analyze_blocker(
-        getattr(obj, "type", None),
-        role=obj.get("layoutlab_role", "") or "",
-        has_clearance_name=bool(obj.get("layoutlab_clearance_name")),
-    )
-
-
-def _blocker_overlap_entry(obj):
-    return {
-        "object_name": obj.name,
-        "object_id": obj.get("layoutlab_object_id", ""),
-        "part": obj.get("layoutlab_part", ""),
-        "role": obj.get("layoutlab_role", ""),
-    }
-
-
 def analyze_layout(context, cmd):
     """Run zone_must_be_clear checks for clearances in scope (DD-008 v1)."""
     scope = cmd.get("scope", "scene")
@@ -93,56 +52,8 @@ def analyze_layout(context, cmd):
     objects = collect_objects_for_scope(context, scope, collection_name)
     context.view_layer.update()
 
-    clearances = [obj for obj in objects if _is_clearance_object(obj)]
-    blockers = [obj for obj in objects if _is_blocker_mesh(obj)]
-
-    findings = []
-    for clearance in clearances:
-        clearance_bounds = world_bounds_from_object(clearance)
-        owner_id = clearance.get("layoutlab_object_id", "")
-        clearance_name = clearance.get("layoutlab_clearance_name", "")
-        requirement = clearance.get("layoutlab_clearance_requirement", "preferred")
-        furniture_name = _furniture_name_for_clearance(clearance)
-
-        overlaps = []
-        for blocker in blockers:
-            if blocker == clearance:
-                continue
-            blocker_id = blocker.get("layoutlab_object_id", "")
-            if owner_id and blocker_id and blocker_id == owner_id:
-                continue
-            blocker_bounds = world_bounds_from_object(blocker)
-            if aabb_intersects(clearance_bounds, blocker_bounds):
-                overlaps.append(_blocker_overlap_entry(blocker))
-
-        if overlaps:
-            severity = requirement_to_severity(requirement)
-            findings.append(
-                {
-                    "severity": severity,
-                    "constraint_type": CONSTRAINT_TYPE_ZONE_MUST_BE_CLEAR,
-                    "message": _violation_message(requirement, clearance_name, furniture_name),
-                    "clearance_ref": {
-                        "object_id": owner_id,
-                        "clearance_id": clearance.get("layoutlab_clearance_id", ""),
-                        "clearance_name": clearance_name,
-                        "furniture_name": furniture_name,
-                    },
-                    "overlaps": overlaps,
-                }
-            )
-
-    summary = {"errors": 0, "warnings": 0, "info": 0}
-    severity_to_summary = {"error": "errors", "warning": "warnings", "info": "info"}
-    for finding in findings:
-        key = severity_to_summary.get(finding.get("severity", "warning"), "warnings")
-        summary[key] += 1
-
-    return {
-        "analyzed": True,
-        "scope": scope,
-        "object_count": len(objects),
-        "clearance_count": len(clearances),
-        "summary": summary,
-        "findings": findings,
-    }
+    return analyze_clearance_objects(
+        objects,
+        get_world_bounds=world_bounds_from_object,
+        scope=scope,
+    )

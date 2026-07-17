@@ -66,9 +66,11 @@ class TestRuntimeSession(unittest.TestCase):
         self.assertIn("room_fixed", roles)
         _assert_no_bpy()
 
-    def test_analyze_layout_rejected(self):
-        with self.assertRaises(ValueError):
-            self.session.apply_command({"action": "analyze_layout", "scope": "scene"})
+    def test_analyze_layout_empty_scene(self):
+        result = self.session.apply_command({"action": "analyze_layout", "scope": "scene"})
+        self.assertTrue(result["analyzed"])
+        self.assertEqual(result["summary"]["errors"], 0)
+        self.assertEqual(result["findings"], [])
 
 
 class TestHeadlessGenerators(unittest.TestCase):
@@ -132,6 +134,53 @@ class TestHeadlessGenerators(unittest.TestCase):
         self.assertTrue(any("DESK" in n for n in names))
         meshes = [o for o in export["objects"] if (o.get("viewer") or {}).get("primitive") == "mesh"]
         self.assertGreaterEqual(len(meshes), 2)
+        analysis = export.get("analysis") or {}
+        self.assertTrue(analysis.get("analyzed"))
+        _assert_no_bpy()
+
+    def test_analyze_detects_blocked_clearance(self):
+        """Desk chair zone overlapping a wall should yield a finding."""
+        session = self.RoomSession()
+        # Narrow room; desk with chair clearance extending past south wall into… wall itself
+        result = session.apply_commands(
+            [
+                {
+                    "action": "create_room",
+                    "params": {
+                        "name": "TINY",
+                        "location": [0, 0, 0],
+                        "width": 1.5,
+                        "depth": 1.0,
+                        "height": 2.6,
+                        "collection": "layoutlab_room",
+                    },
+                },
+                {
+                    "action": "run_generator",
+                    "generator": "desk_basic",
+                    "params": {
+                        "name": "DESK",
+                        "location": [0.1, 0.05, 0],
+                        "width": 1.2,
+                        "depth": 0.6,
+                        "height": 0.75,
+                        "show_clearance": True,
+                        "clearance_depth": 0.5,
+                        "collection": "layoutlab_room",
+                    },
+                },
+                {"action": "analyze_layout", "scope": "scene"},
+            ]
+        )
+        self.assertTrue(result["ok"], result.get("errors"))
+        analysis = result["results"][-1]["result"]
+        self.assertTrue(analysis["analyzed"])
+        # Chair clearance at y=-0.5..0 overlaps south wall at y=0
+        self.assertGreaterEqual(analysis["summary"]["errors"] + analysis["summary"]["warnings"], 1)
+        self.assertTrue(analysis["findings"])
+        export = result["export"]
+        self.assertTrue(export["analysis"]["analyzed"])
+        self.assertGreaterEqual(len(export["analysis"]["findings"]), 1)
         _assert_no_bpy()
 
 

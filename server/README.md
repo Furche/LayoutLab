@@ -31,9 +31,10 @@ CORS is enabled for the Vite viewer (`http://localhost:5173`).
 ## Room + generator write slice (Phase B / B2)
 
 Supported actions: `create_room`, openings, fixed elements, `delete_collection_objects`,
-`delete_prefix`, `run_generator` (bundled generators: `bed_basic`, `desk_basic`, `wardrobe_basic`).
+`delete_prefix`, `run_generator` (bundled generators: `bed_basic`, `desk_basic`, `wardrobe_basic`),
+`analyze_layout`.
 
-Not yet: `analyze_layout`, undo, `regenerate`.
+Export always includes live `analysis` (clearance overlaps). Not yet: undo, `regenerate`.
 
 ## Example
 

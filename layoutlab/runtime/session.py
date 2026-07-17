@@ -13,6 +13,7 @@ from ..protocol.viewer_export import (
     round_corner,
     viewer_block_for_role,
 )
+from .analyze import analyze_session
 from .headless_api import execute_generator_headless
 from .mesh_store import MeshStore, triangulate_faces
 
@@ -33,6 +34,7 @@ SESSION_ACTIONS = frozenset(
         "delete_collection_objects",
         "delete_prefix",
         "run_generator",
+        "analyze_layout",
     }
 )
 
@@ -276,17 +278,12 @@ def export_viewer_scene(session: "RoomSession") -> dict:
         "note": (
             "Coordinates/dimensions are LayoutLab scene units (native). "
             "With Metric and unit_scale=1.0, 1 unit = 1 meter. "
-            "Headless Room Model + generator export (DD-014 Phase B2)."
+            "Headless Room Model + generator export (DD-014 Phase B2). "
+            "analysis is from analyze_layout at export time."
         ),
         "rooms": rooms,
         "objects": objects,
-        "analysis": {
-            "analyzed": False,
-            "scope": "scene",
-            "summary": {"errors": 0, "warnings": 0, "info": 0},
-            "findings": [],
-            "note": "analyze_layout not available on headless session in this slice",
-        },
+        "analysis": analyze_session(session, {"scope": "scene", "include": ["clearances"]}),
     }
 
 
@@ -387,6 +384,9 @@ class RoomSession:
                 raise ValueError("run_generator requires generator")
             params = dict(cmd.get("params") or {})
             return execute_generator_headless(generator, params, store=self.mesh_store)
+
+        if action == "analyze_layout":
+            return analyze_session(self, cmd)
 
         if action == "create_room":
             params = cmd.get("params") or cmd

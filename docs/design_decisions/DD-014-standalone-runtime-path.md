@@ -39,7 +39,7 @@
 | `run_generator` | Headless via pure Python mesh store + same generator scripts |
 | First generators | Bundled `desk_basic`, `bed_basic`, `wardrobe_basic` |
 | Geometry | Join/parent in Python; export `viewer.mesh` + wire clearances |
-| Not in B2 | `analyze_layout`, undo, `regenerate`, in-app AI |
+| Not in B2 | undo, `regenerate`, in-app AI (analyze now shipped headless) |
 | Blender | Still reference QA for generator visuals |
 
 ------------------------------------------------------------------------
@@ -151,4 +151,5 @@ DD-009 still holds: AI plans WHAT; Core/adapters execute HOW.
 2. ~~Phase B Accept (room write)~~ ✅  
 3. ~~Headless room session + `server/` + viewer Core buttons~~ ✅  
 4. ~~Phase B2: generators without Blender~~ ✅  
-5. Later: headless analyze / DD-012 AI product UX  
+5. ~~Headless analyze_layout~~ ✅  
+6. Later: DD-012 AI product UX  

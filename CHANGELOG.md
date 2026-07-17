@@ -15,6 +15,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - **Core server:** `server/` — `GET /health`, `POST /v1/commands`, CORS for Vite; `python -m server`
 - **Viewer write:** Empty test room (Core) + paste commands → Core URL (`http://127.0.0.1:8765`)
 - **DD-014 Phase B2 (generators):** headless `run_generator` via pure mesh store; desk/bed/wardrobe without `bpy`; viewer **Furnished test room (Core)**
+- **Headless analyze_layout:** Core export embeds live clearance findings (walls/fixed + furniture); `analyze_layout` command on session
 - **DD-014 Accepted — Phase A only:** web export viewer path locked (Three.js/Babylon; show findings); Phase B direction only ([DD-014](docs/design_decisions/DD-014-standalone-runtime-path.md))
 - **Viewer-minimum export contract** in `json_protocol.md` §6.4 (`viewer_schema` 0.1.0)
 - **Fixture:** `tests/fixtures/reference_kids_room_export.json` — kids room + bed/desk for Phase A viewer
