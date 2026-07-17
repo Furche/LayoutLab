@@ -20,9 +20,10 @@ AGENT_SYSTEM_PROMPT = """You are LayoutLab's planning agent (DD-009 / agent_tool
 AI decides WHAT; LayoutLab Core executes HOW. You invent no meshes, bpy, or free Python.
 
 Workflow:
-1. Call tools to understand the scene (start with get_scene_summary when unsure).
-2. Ask clarifying questions in the final JSON if critical info is missing.
-3. Finish with ONLY a JSON object (no markdown fences):
+1. Use at most a few tools (prefer get_scene_summary, then get_room / list_objects only if needed).
+2. Do NOT keep calling tools in a loop. After you understand the room, STOP tools and output the final JSON.
+3. Ask clarifying questions in the final JSON if critical info is missing.
+4. Finish with ONLY a JSON object (no markdown fences):
 {
   "reply": "short explanation in the user's language",
   "questions": ["optional clarifying questions"],
@@ -41,12 +42,50 @@ Rules:
 - Prefer Metric meters (1 unit = 1 m).
 - Commands: only allowlisted actions (use list_supported_actions if needed).
 - Generators: bed_basic, desk_basic, wardrobe_basic.
-- For a fresh kids room, delete_collection_objects on layoutlab_room first, then create_room.
+- For a fresh room, delete_collection_objects on layoutlab_room first, then create_room, then openings/furniture.
+- Place furniture with location in meters relative to room origin; door on a wall_side means keep clearance away from that opening.
 - Do not claim you applied changes — the user must Apply.
 - If you only need questions, set proposal.commands to [].
 """
 
-MAX_TOOL_ROUNDS = 6
+MAX_TOOL_ROUNDS = 5
+
+
+def _finalize_proposal_from_messages(settings: dict, messages: list, tool_trace: list) -> dict:
+    """Force one JSON-only completion after tools (or when the model loops)."""
+    force_msgs = list(messages)
+    force_msgs.append(
+        {
+            "role": "user",
+            "content": (
+                "Stop calling tools. Using the tool results already available, "
+                "return ONLY the final JSON proposal object now (no markdown, no tools)."
+            ),
+        }
+    )
+    raw = _chat_completions(settings, force_msgs, tools=None)
+    content = (((raw.get("choices") or [{}])[0].get("message") or {}).get("content")) or ""
+    parsed = _extract_json_object(content)
+    normalized = _normalize_proposal(parsed)
+    return {
+        "ok": True,
+        "mode": "agent",
+        "model": settings["model"],
+        "reply": normalized["reply"],
+        "questions": normalized["questions"],
+        "proposal": normalized["proposal"],
+        "suggested_next_tools": normalized["suggested_next_tools"],
+        "commands": normalized["proposal"]["commands"],
+        "tool_trace": tool_trace,
+    }
+
+
+def _tool_call_fingerprint(tool_calls: list) -> str:
+    parts = []
+    for call in tool_calls:
+        fn = call.get("function") or {}
+        parts.append(f"{fn.get('name')}:{(fn.get('arguments') or '').strip()}")
+    return "|".join(parts)
 
 
 def _extract_json_object(text: str) -> dict:
@@ -195,14 +234,28 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
     messages.append({"role": "user", "content": message})
 
     tool_trace = []
+    seen_tool_fps = set()
     try:
-        for _ in range(MAX_TOOL_ROUNDS):
-            raw = _chat_completions(settings, messages, tools=tools, tool_choice="auto")
+        for round_i in range(MAX_TOOL_ROUNDS):
+            # Last round: disallow tools so the model must answer.
+            use_tools = tools if round_i < MAX_TOOL_ROUNDS - 1 else None
+            raw = _chat_completions(
+                settings,
+                messages,
+                tools=use_tools,
+                tool_choice="auto" if use_tools else None,
+            )
             choice = (raw.get("choices") or [{}])[0]
             msg = choice.get("message") or {}
             tool_calls = msg.get("tool_calls") or []
 
-            if tool_calls:
+            if tool_calls and use_tools:
+                fp = _tool_call_fingerprint(tool_calls)
+                if fp in seen_tool_fps:
+                    # Model is looping the same tools — finalize.
+                    return _finalize_proposal_from_messages(settings, messages, tool_trace)
+                seen_tool_fps.add(fp)
+
                 messages.append(
                     {
                         "role": "assistant",
@@ -235,22 +288,12 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                     )
                 continue
 
-            # No tool calls — force JSON proposal
+            # No tool calls — parse JSON proposal
             content = msg.get("content") or ""
             try:
                 parsed = _extract_json_object(content)
             except Exception:
-                # One more turn asking for JSON only
-                messages.append({"role": "assistant", "content": content})
-                messages.append(
-                    {
-                        "role": "user",
-                        "content": "Return ONLY the final JSON proposal object now (no tools, no markdown).",
-                    }
-                )
-                raw2 = _chat_completions(settings, messages, tools=None)
-                content2 = (((raw2.get("choices") or [{}])[0].get("message") or {}).get("content")) or ""
-                parsed = _extract_json_object(content2)
+                return _finalize_proposal_from_messages(settings, messages, tool_trace)
 
             normalized = _normalize_proposal(parsed)
             return {
@@ -265,23 +308,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 "tool_trace": tool_trace,
             }
 
-        return {
-            "ok": False,
-            "mode": "agent",
-            "error": "tool round limit exceeded",
-            "reply": "Zu viele Tool-Runden — bitte Prompt eingrenzen oder Apply mit kleinerem Ziel.",
-            "questions": [],
-            "proposal": {
-                "proposal_id": str(uuid.uuid4()),
-                "title": "",
-                "rationale": "",
-                "assumes": [],
-                "commands": [],
-                "expected_risks": [],
-            },
-            "commands": [],
-            "tool_trace": tool_trace,
-        }
+        # Exhausted rounds while still tool-calling — force proposal from context.
+        return _finalize_proposal_from_messages(settings, messages, tool_trace)
     except Exception as exc:
         demo = _demo_as_agent_result(message)
         if demo:
