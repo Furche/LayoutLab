@@ -542,6 +542,7 @@ Also: `update_room`, `delete_room`, `update_opening`, `remove_opening`, `update_
 | `note` | string | Unit hint for this project |
 | `rooms` | array | Room Model blocks when present |
 | `objects` | array | Exported objects (see §6.3); may include `viewer` hints (§6.4) |
+| `analysis` | object | Live `analyze_layout` snapshot at export time `[IMPLEMENTED]` v0.10.8 |
 
 ## 6.2 Generator Metadata Entry `[IMPLEMENTED]`
 
@@ -646,7 +647,7 @@ Read-only standalone viewers consume a **subset** of the scene export. Blender m
 | `objects[].viewer.corners` | for quads | Inward wall panel corners |
 | `objects[].viewer.vertices` / `faces` | for mesh | World-space triangulated mesh (furniture) |
 | `objects[].viewer.display` | optional | `wire` for openings / clearances |
-| `analysis` | optional | When present, Phase A **shows findings** (DD-014) |
+| `analysis` | optional | When present, Phase A **shows findings** (DD-014). Blender **Copy Scene** embeds a live `analyze_layout` result (v0.10.8+) |
 
 **Render defaults for Phase A:** real `viewer.mesh` when present; else AABB from `world_bbox_corners`; inward quads for wall panels; wire for openings/clearances; findings from `analysis.findings` when non-empty.
 

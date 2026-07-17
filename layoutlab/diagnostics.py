@@ -335,13 +335,20 @@ def run_console_checks(context):
 
     def check_scene_export(check):
         export = json.loads(layout_export_json(context, selected_only=False))
-        required = {"layoutlab_version", "viewer_schema", "generators", "objects", "generator_dir", "note"}
+        required = {"layoutlab_version", "viewer_schema", "generators", "objects", "generator_dir", "note", "analysis"}
         missing = required - set(export.keys())
         if missing:
             check.fail(f"missing_keys: {sorted(missing)}")
             return
         if export.get("viewer_schema") not in {"0.1.0", "0.1.1"}:
             check.fail(f"viewer_schema: {export.get('viewer_schema')}")
+            return
+        analysis = export.get("analysis") or {}
+        if not analysis.get("analyzed"):
+            check.fail(f"analysis not analyzed: {analysis}")
+            return
+        if "summary" not in analysis or "findings" not in analysis:
+            check.fail("analysis missing summary/findings")
             return
         wall_objs = [
             o
@@ -380,6 +387,8 @@ def run_console_checks(context):
         check.ok(
             f"layoutlab_version: {export['layoutlab_version']}",
             f"viewer_schema: {export.get('viewer_schema')}",
+            f"analysis_clearances: {analysis.get('clearance_count')}",
+            f"analysis_findings: {len(analysis.get('findings') or [])}",
             f"generator_count: {len(export.get('generators', []))}",
             f"bed_basic_listed: {'bed_basic' in gen_names}",
             f"diag_object_count_in_export: {len(diag_objects)}",

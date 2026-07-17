@@ -33,6 +33,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 - **Test room buttons (v0.10.7):** Sidebar → Empty / Furnished kids-room (clears `layoutlab_room`, builds reference shell ± bed/desk)
 
+### Added
+
+- **Export embeds analysis (v0.10.8):** `Copy Scene` / `Copy Selected` include live `analyze_layout` under `analysis` for the Phase A viewer
+
 ### Fixed (prior)
 
 - **`analyze_layout` summary:** count `error`/`warning` into `errors`/`warnings` (was stuck at 0)

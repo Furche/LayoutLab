@@ -102,6 +102,33 @@ def object_to_dict(obj):
     return data
 
 
+def analysis_for_export(context, selected_only=False):
+    """Run analyze_layout and return a JSON-serializable analysis block for export."""
+    from .layout_analysis import analyze_layout
+
+    cmd = {
+        "action": "analyze_layout",
+        "scope": "selection" if selected_only else "scene",
+        "include": ["clearances"],
+    }
+    try:
+        result = analyze_layout(context, cmd)
+        # Alias for viewers that expect overlaps[].name
+        for finding in result.get("findings") or []:
+            for overlap in finding.get("overlaps") or []:
+                if "name" not in overlap and overlap.get("object_name"):
+                    overlap["name"] = overlap["object_name"]
+        return result
+    except Exception as exc:
+        return {
+            "analyzed": False,
+            "scope": cmd["scope"],
+            "summary": {"errors": 0, "warnings": 0, "info": 0},
+            "findings": [],
+            "error": str(exc),
+        }
+
+
 def layout_export_json(context, selected_only=False):
     scene = context.scene
     objs = context.selected_objects if selected_only else scene.objects
@@ -121,7 +148,8 @@ def layout_export_json(context, selected_only=False):
         "note": (
             "Coordinates/dimensions are Blender scene units (native). "
             "With Metric and unit_scale=1.0, 1 unit = 1 meter. "
-            "location/rotation are world-space; prefer world_bbox_corners / viewer.mesh for display."
+            "location/rotation are world-space; prefer world_bbox_corners / viewer.mesh for display. "
+            "analysis is from analyze_layout at export time."
         ),
         "rooms": rooms,
         "objects": [
@@ -130,5 +158,6 @@ def layout_export_json(context, selected_only=False):
             if o.type in {"MESH", "EMPTY", "CURVE", "FONT"}
             and (o.get("layoutlab_role") or "") not in SKIP_VIEWER_ROLES
         ],
+        "analysis": analysis_for_export(context, selected_only=selected_only),
     }
     return json.dumps(data, indent=2, ensure_ascii=False)

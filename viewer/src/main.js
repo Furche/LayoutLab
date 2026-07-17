@@ -98,7 +98,7 @@ function renderAnalysis(data) {
   for (const f of findings) {
     const sev = f.severity || "warning";
     const overlaps = (f.overlaps || [])
-      .map((o) => o.name || o.role || o.object_id)
+      .map((o) => o.name || o.object_name || o.role || o.object_id)
       .filter(Boolean);
     const li = document.createElement("li");
     li.innerHTML = `
