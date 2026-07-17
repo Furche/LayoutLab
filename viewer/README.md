@@ -14,7 +14,7 @@ npm run dev
 
 Open the printed local URL (default `http://localhost:5173`).
 
-On start the viewer loads `tests/fixtures/reference_kids_room_export.json`. Use **Open export…** for any other export that satisfies the viewer-minimum contract.
+On start the viewer loads `tests/fixtures/reference_kids_room_export.json`. Use **Kids room (findings)** for the intentional violations demo, or **Open export…** for any other export that satisfies the viewer-minimum contract.
 
 ## What it shows
 

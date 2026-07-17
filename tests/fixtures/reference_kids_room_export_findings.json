@@ -3,8 +3,8 @@
   "viewer_schema": "0.1.0",
   "unit": "METRIC",
   "unit_scale": 1.0,
-  "scene": "KidsRoomReference",
-  "note": "Coordinates/dimensions are Blender scene units (native). With Metric and unit_scale=1.0, 1 unit = 1 meter. Fixture for DD-014 Phase A viewer (synthesized from Room Model + reference layout).",
+  "scene": "KidsRoomFindingsDemo",
+  "note": "Demo export with intentional clearance violations for Phase A findings UI. Coordinates are Blender scene units (Metric, 1 unit = 1 m).",
   "rooms": [
     {
       "room_id": "kids-room-ref-0001",
@@ -1437,8 +1437,8 @@
       "type": "MESH",
       "collection": "layoutlab_room",
       "location": [
-        2.7,
-        1.58,
+        1.4,
+        0.4,
         0.0
       ],
       "rotation_euler_deg": [
@@ -1459,43 +1459,43 @@
       "visible": true,
       "world_bbox_corners": [
         [
-          2.7,
-          1.58,
+          1.4,
+          0.4,
           0.0
         ],
         [
-          3.9,
-          1.58,
+          2.6,
+          0.4,
           0.0
         ],
         [
-          3.9,
-          2.18,
+          2.6,
+          1.0,
           0.0
         ],
         [
-          2.7,
-          2.18,
+          1.4,
+          1.0,
           0.0
         ],
         [
-          2.7,
-          1.58,
+          1.4,
+          0.4,
           0.75
         ],
         [
-          3.9,
-          1.58,
+          2.6,
+          0.4,
           0.75
         ],
         [
-          3.9,
-          2.18,
+          2.6,
+          1.0,
           0.75
         ],
         [
-          2.7,
-          2.18,
+          1.4,
+          1.0,
           0.75
         ]
       ],
@@ -1510,8 +1510,8 @@
         "params": {
           "name": "DESK_120x60",
           "location": [
-            2.7,
-            1.58,
+            1.4,
+            0.4,
             0
           ],
           "width": 1.2,
@@ -1531,8 +1531,8 @@
       "type": "MESH",
       "collection": "layoutlab_room",
       "location": [
-        2.7,
-        0.98,
+        1.4,
+        -0.05,
         0.0
       ],
       "rotation_euler_deg": [
@@ -1553,43 +1553,43 @@
       "visible": true,
       "world_bbox_corners": [
         [
-          2.7,
-          0.98,
+          1.4,
+          -0.05,
           0.0
         ],
         [
-          3.9,
-          0.98,
+          2.6,
+          -0.05,
           0.0
         ],
         [
-          3.9,
-          1.58,
+          2.6,
+          0.55,
           0.0
         ],
         [
-          2.7,
-          1.58,
+          1.4,
+          0.55,
           0.0
         ],
         [
-          2.7,
-          0.98,
+          1.4,
+          -0.05,
           0.7
         ],
         [
-          3.9,
-          0.98,
+          2.6,
+          -0.05,
           0.7
         ],
         [
-          3.9,
-          1.58,
+          2.6,
+          0.55,
           0.7
         ],
         [
-          2.7,
-          1.58,
+          1.4,
+          0.55,
           0.7
         ]
       ],
@@ -1608,13 +1608,13 @@
           "requirement": "required",
           "world_bounds": {
             "min": [
-              2.7,
-              0.98,
+              1.4,
+              -0.05,
               0.0
             ],
             "max": [
-              3.9,
-              1.58,
+              2.6,
+              0.55,
               0.7
             ]
           }
@@ -1632,10 +1632,47 @@
     "collection": "layoutlab_room",
     "clearance_count": 2,
     "summary": {
-      "errors": 0,
-      "warnings": 0,
+      "errors": 1,
+      "warnings": 1,
       "info": 0
     },
-    "findings": []
+    "findings": [
+      {
+        "severity": "warning",
+        "constraint_type": "zone_must_be_clear",
+        "message": "Preferred clearance 'bed_entry' on BED_120x200 overlaps other objects",
+        "clearance_ref": {
+          "object_id": "bed-fixture-0001",
+          "clearance_id": "",
+          "clearance_name": "bed_entry",
+          "furniture_name": "BED_120x200"
+        },
+        "overlaps": [
+          {
+            "name": "DESK_120x60_body",
+            "object_id": "desk-fixture-0001",
+            "role": "desk_body"
+          }
+        ]
+      },
+      {
+        "severity": "error",
+        "constraint_type": "zone_must_be_clear",
+        "message": "Required clearance 'chair_access' on DESK_120x60 overlaps other objects",
+        "clearance_ref": {
+          "object_id": "desk-fixture-0001",
+          "clearance_id": "",
+          "clearance_name": "chair_access",
+          "furniture_name": "DESK_120x60"
+        },
+        "overlaps": [
+          {
+            "name": "KIDS_ROOM_wall_south",
+            "object_id": "kids-room-ref-0001",
+            "role": "room_wall"
+          }
+        ]
+      }
+    ]
   }
 }

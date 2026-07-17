@@ -15,6 +15,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - **Fixture:** `tests/fixtures/reference_kids_room_export.json` — kids room + bed/desk for Phase A viewer
 - **Phase A viewer scaffold:** `viewer/` — Vite + Three.js read-only export viewer (fixture + file open, clearances/openings, analysis panel)
 
+### Added
+
+- **Plugin 0.10.4:** scene export emits `viewer_schema` + per-object `viewer` hints (wall quads / clearance wires); walls stamp `layoutlab_viewer_corners`
+- **Findings demo fixture:** `tests/fixtures/reference_kids_room_export_findings.json` (1 error + 1 warning) — loadable in viewer
+
 ### Fixed (prior)
 
 - **`analyze_layout` summary:** count `error`/`warning` into `errors`/`warnings` (was stuck at 0)

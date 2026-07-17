@@ -6,10 +6,32 @@ from mathutils import Vector
 from .. import bl_info
 from ..engine.registry import addon_user_dir, list_generators_meta
 from .semantic import layoutlab_block_from_object
+from .viewer_export import VIEWER_SCHEMA, parse_corners_json, viewer_block_for_role
 
 
 def v3(values):
     return [round(float(values[0]), 4), round(float(values[1]), 4), round(float(values[2]), 4)]
+
+
+def mesh_world_quad_corners(obj):
+    """World-space corners for a single quad mesh (face vertex order)."""
+    if obj.type != "MESH" or not obj.data or len(obj.data.vertices) < 4:
+        return None
+    mesh = obj.data
+    if len(mesh.polygons) == 1 and len(mesh.polygons[0].vertices) >= 4:
+        idxs = list(mesh.polygons[0].vertices)[:4]
+    else:
+        idxs = list(range(4))
+    return [v3(obj.matrix_world @ mesh.vertices[i].co) for i in idxs]
+
+
+def viewer_block_from_object(obj):
+    role = obj.get("layoutlab_role") or ""
+    corners = parse_corners_json(obj.get("layoutlab_viewer_corners"))
+    if corners is None and role == "room_wall":
+        corners = mesh_world_quad_corners(obj)
+    display_type = getattr(obj, "display_type", None)
+    return viewer_block_for_role(role, corners=corners, display_type=display_type)
 
 
 def object_to_dict(obj):
@@ -35,6 +57,9 @@ def object_to_dict(obj):
     layoutlab = layoutlab_block_from_object(obj)
     if layoutlab:
         data["layoutlab"] = layoutlab
+    viewer = viewer_block_from_object(obj)
+    if viewer:
+        data["viewer"] = viewer
     return data
 
 
@@ -48,6 +73,7 @@ def layout_export_json(context, selected_only=False):
     rooms = [export_room_block(m) for m in list_room_models()]
     data = {
         "layoutlab_version": version,
+        "viewer_schema": VIEWER_SCHEMA,
         "unit": scene.unit_settings.system,
         "unit_scale": scene.unit_settings.scale_length,
         "scene": scene.name,

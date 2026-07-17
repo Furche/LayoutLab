@@ -517,13 +517,15 @@ Also: `update_room`, `delete_room`, `update_opening`, `remove_opening`, `update_
 
 ```json
 {
-  "layoutlab_version": "0.10.0",
+  "layoutlab_version": "0.10.4",
+  "viewer_schema": "0.1.0",
   "unit": "METRIC",
   "unit_scale": 1.0,
   "scene": "Scene",
   "generator_dir": "/path/to/layoutlab_generators",
   "generators": [],
   "note": "Coordinates/dimensions are Blender scene units (native). With Metric and unit_scale=1.0, 1 unit = 1 meter.",
+  "rooms": [],
   "objects": []
 }
 ```
@@ -531,13 +533,15 @@ Also: `update_room`, `delete_room`, `update_opening`, `remove_opening`, `update_
 | Field | Type | Description |
 |---|---|---|
 | `layoutlab_version` | string | Plugin version |
+| `viewer_schema` | string | Viewer-minimum contract semver (`0.1.0`) — [DD-014](design_decisions/DD-014-standalone-runtime-path.md) / §6.4 `[IMPLEMENTED]` v0.10.4 |
 | `unit` | string | `METRIC`, `IMPERIAL`, or `NONE` |
 | `unit_scale` | number | Blender `scale_length` |
 | `scene` | string | Scene name |
 | `generator_dir` | string | Absolute path to runtime generator storage |
 | `generators` | array | Installed generator metadata (see §6.2) |
 | `note` | string | Unit hint for this project |
-| `objects` | array | Exported objects (see §6.3) |
+| `rooms` | array | Room Model blocks when present |
+| `objects` | array | Exported objects (see §6.3); may include `viewer` hints (§6.4) |
 
 ## 6.2 Generator Metadata Entry `[IMPLEMENTED]`
 
@@ -597,7 +601,7 @@ Read-only standalone viewers consume a **subset** of the scene export. Blender m
 
 ```json
 {
-  "layoutlab_version": "0.10.3",
+  "layoutlab_version": "0.10.4",
   "viewer_schema": "0.1.0",
   "unit": "METRIC",
   "unit_scale": 1.0,

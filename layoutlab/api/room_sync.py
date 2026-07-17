@@ -125,6 +125,13 @@ def sync_room_to_scene(model):
             obj["layoutlab_wall_side"] = wall["side"]
             obj["layoutlab_wall_facing"] = "inward"
             obj["layoutlab_wall_panel_index"] = index
+            obj["layoutlab_viewer_corners"] = json.dumps(
+                [
+                    [round(float(c[0]), 4), round(float(c[1]), 4), round(float(c[2]), 4)]
+                    for c in panel["corners"]
+                ],
+                separators=(",", ":"),
+            )
 
     for opening in model.get("openings", []):
         loc, dims = room_core.opening_world_box(model, opening)

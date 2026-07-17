@@ -161,11 +161,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. Polish Phase A viewer (real Blender export → `viewer_schema` fields; findings demo fixture optional)  
-2. Harden Blender scene export to emit viewer hints consistently  
+1. Optional: Blender export can embed live `analyze_layout` into export JSON  
+2. Polish Phase A viewer UX  
 3. **Not blocking standalone:** tiered clearances, more generators, polygon, multi-room; Phase B only after separate Accept  
 
-`desk_basic` ✅ · Room Model ✅ · constructive openings ✅ · native meters ✅ · room-aware analyze ✅ · **DD-014 Phase A Accepted** · viewer schema + kids export fixture ✅ · **`viewer/` Three.js scaffold ✅**
+`desk_basic` ✅ · Room Model ✅ · constructive openings ✅ · native meters ✅ · room-aware analyze ✅ · **DD-014 Phase A Accepted** · viewer schema + fixtures ✅ · **`viewer/` Three.js ✅** · **export viewer hints v0.10.4 ✅**
 
 ------------------------------------------------------------------------
 
@@ -189,7 +189,8 @@ viewer/                  # Phase A read-only web viewer (Vite + Three.js)
 tests/
 ├── fixtures/
 │   ├── reference_kids_room_commands.json
-│   └── reference_kids_room_export.json
+│   ├── reference_kids_room_export.json
+│   └── reference_kids_room_export_findings.json
 
 docs/
 ├── HANDOFF.md           # this file

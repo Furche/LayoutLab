@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { buildSceneFromExport, clearGroup, fitCameraToRoot } from "./scene.js";
 import kidsRoomFixture from "../../tests/fixtures/reference_kids_room_export.json";
+import kidsRoomFindings from "../../tests/fixtures/reference_kids_room_export_findings.json";
 
 const el = {
   viewport: document.getElementById("viewport"),
@@ -12,6 +13,7 @@ const el = {
   status: document.getElementById("status"),
   fileInput: document.getElementById("file-input"),
   btnFixture: document.getElementById("btn-fixture"),
+  btnFindings: document.getElementById("btn-findings"),
   toggleClearances: document.getElementById("toggle-clearances"),
   toggleOpenings: document.getElementById("toggle-openings"),
 };
@@ -91,10 +93,18 @@ function renderAnalysis(data) {
 
   for (const f of findings) {
     const sev = f.severity || "warning";
+    const overlaps = (f.overlaps || [])
+      .map((o) => o.name || o.role || o.object_id)
+      .filter(Boolean);
     const li = document.createElement("li");
     li.innerHTML = `
       <div class="sev ${escapeHtml(sev)}">${escapeHtml(sev)}</div>
       <div>${escapeHtml(f.message || f.constraint_type || "Finding")}</div>
+      ${
+        overlaps.length
+          ? `<div class="muted" style="margin-top:0.3rem">vs ${escapeHtml(overlaps.join(", "))}</div>`
+          : ""
+      }
     `;
     el.findings.appendChild(li);
   }
@@ -133,6 +143,11 @@ async function loadFixture() {
   loadExportData(kidsRoomFixture, "reference_kids_room_export.json");
 }
 
+async function loadFindingsFixture() {
+  setStatus("Loading findings demo…");
+  loadExportData(kidsRoomFindings, "reference_kids_room_export_findings.json");
+}
+
 async function loadFile(file) {
   const text = await file.text();
   const data = JSON.parse(text);
@@ -158,6 +173,9 @@ el.btnFixture.addEventListener("click", () => {
   loadFixture().catch((err) => setStatus(`Error: ${err.message}`));
 });
 
+el.btnFindings.addEventListener("click", () => {
+  loadFindingsFixture().catch((err) => setStatus(`Error: ${err.message}`));
+});
 el.fileInput.addEventListener("change", () => {
   const file = el.fileInput.files?.[0];
   if (!file) return;

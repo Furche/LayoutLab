@@ -335,11 +335,35 @@ def run_console_checks(context):
 
     def check_scene_export(check):
         export = json.loads(layout_export_json(context, selected_only=False))
-        required = {"layoutlab_version", "generators", "objects", "generator_dir", "note"}
+        required = {"layoutlab_version", "viewer_schema", "generators", "objects", "generator_dir", "note"}
         missing = required - set(export.keys())
         if missing:
             check.fail(f"missing_keys: {sorted(missing)}")
             return
+        if export.get("viewer_schema") != "0.1.0":
+            check.fail(f"viewer_schema: {export.get('viewer_schema')}")
+            return
+        wall_objs = [
+            o
+            for o in export.get("objects", [])
+            if (o.get("layoutlab") or {}).get("role") == "room_wall"
+            or o.get("custom_properties", {}).get("layoutlab_role") == "room_wall"
+        ]
+        for wall in wall_objs:
+            viewer = wall.get("viewer") or {}
+            if viewer.get("primitive") != "quad" or len(viewer.get("corners") or []) < 4:
+                check.fail(f"wall viewer.quad missing: {wall.get('name')}")
+                return
+        clearance_objs = [
+            o
+            for o in export.get("objects", [])
+            if (o.get("layoutlab") or {}).get("role") == "clearance"
+            or o.get("custom_properties", {}).get("layoutlab_role") == "clearance"
+        ]
+        for cl in clearance_objs:
+            if (cl.get("viewer") or {}).get("display") != "wire":
+                check.fail(f"clearance viewer.wire missing: {cl.get('name')}")
+                return
         gen_names = [g["name"] for g in export.get("generators", [])]
         diag_objects = [o for o in export.get("objects", []) if o["name"].startswith(DIAG_PREFIX)]
         mattress_export = next((o for o in export.get("objects", []) if o["name"] == f"{bed_name}_mattress"), None)
@@ -355,9 +379,11 @@ def run_console_checks(context):
             return
         check.ok(
             f"layoutlab_version: {export['layoutlab_version']}",
+            f"viewer_schema: {export.get('viewer_schema')}",
             f"generator_count: {len(export.get('generators', []))}",
             f"bed_basic_listed: {'bed_basic' in gen_names}",
             f"diag_object_count_in_export: {len(diag_objects)}",
+            f"wall_viewer_quads: {len(wall_objs)}",
             f"export_object_id: {layoutlab.get('object_id')}",
             f"export_part: {layoutlab.get('part')}",
             f"export_part_type: {layoutlab.get('part_type')}",
