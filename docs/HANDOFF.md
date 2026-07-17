@@ -161,11 +161,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. **Scaffold Phase A web viewer** (Three.js or Babylon) — load `reference_kids_room_export.json`, show room + furniture + clearances + findings when present  
-2. Harden Blender export → viewer_schema fields as needed while building A  
+1. Polish Phase A viewer (real Blender export → `viewer_schema` fields; findings demo fixture optional)  
+2. Harden Blender scene export to emit viewer hints consistently  
 3. **Not blocking standalone:** tiered clearances, more generators, polygon, multi-room; Phase B only after separate Accept  
 
-`desk_basic` ✅ · Room Model ✅ · constructive openings ✅ · native meters ✅ · room-aware analyze ✅ · **DD-014 Phase A Accepted** · viewer schema + kids export fixture ✅
+`desk_basic` ✅ · Room Model ✅ · constructive openings ✅ · native meters ✅ · room-aware analyze ✅ · **DD-014 Phase A Accepted** · viewer schema + kids export fixture ✅ · **`viewer/` Three.js scaffold ✅**
 
 ------------------------------------------------------------------------
 
@@ -181,12 +181,17 @@ layoutlab/
 ├── plugin/              # panel, browser, quick_test
 └── diagnostics.py       # 22 checks
 
+viewer/                  # Phase A read-only web viewer (Vite + Three.js)
+├── README.md
+├── package.json
+└── src/
+
 tests/
 ├── fixtures/
-│   └── reference_kids_room_commands.json
+│   ├── reference_kids_room_commands.json
+│   └── reference_kids_room_export.json
 
 docs/
-├── design_decisions/    # DD-001 … DD-009
 ├── HANDOFF.md           # this file
 ├── json_protocol.md
 ├── generator_api.md

@@ -148,5 +148,5 @@ not get to invent furniture/room semantics in the front-end.
 
 1. ~~Viewer-minimum export fields in `json_protocol.md`~~ ✅  
 2. ~~Kids-room export fixture~~ ✅  
-3. Scaffold Phase A viewer (read-only web) ← **next**  
+3. ~~Scaffold Phase A viewer (read-only web)~~ ✅ `viewer/` (Vite + Three.js)  
 4. Later: Phase B Accept + Core command path without Blender + geometry adapter

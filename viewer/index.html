@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LayoutLab Viewer</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">LayoutLab</span>
+          <span class="brand-sub">Viewer · Phase A</span>
+        </div>
+        <div class="toolbar">
+          <label class="file-btn">
+            Open export…
+            <input id="file-input" type="file" accept="application/json,.json" hidden />
+          </label>
+          <button type="button" id="btn-fixture" class="ghost">Kids room fixture</button>
+        </div>
+      </header>
+
+      <aside id="sidebar" class="sidebar">
+        <section>
+          <h2>Scene</h2>
+          <dl id="meta" class="meta"></dl>
+        </section>
+        <section>
+          <h2>Analysis</h2>
+          <div id="summary" class="summary"></div>
+          <ul id="findings" class="findings"></ul>
+        </section>
+        <section>
+          <h2>Objects</h2>
+          <p id="object-count" class="muted"></p>
+          <label class="toggle">
+            <input id="toggle-clearances" type="checkbox" checked />
+            Show clearances
+          </label>
+          <label class="toggle">
+            <input id="toggle-openings" type="checkbox" checked />
+            Show openings
+          </label>
+        </section>
+      </aside>
+
+      <main id="viewport" class="viewport" aria-label="3D viewport"></main>
+      <p id="status" class="status" role="status"></p>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
