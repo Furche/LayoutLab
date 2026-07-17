@@ -14,14 +14,35 @@
           <span class="brand-sub">Viewer · Phase A</span>
         </div>
         <div class="toolbar">
+          <button type="button" id="btn-paste" class="ghost">Paste export</button>
           <label class="file-btn">
-            Open export…
+            Open file…
             <input id="file-input" type="file" accept="application/json,.json" hidden />
           </label>
           <button type="button" id="btn-fixture" class="ghost">Kids room (clean)</button>
           <button type="button" id="btn-findings" class="ghost">Kids room (findings)</button>
         </div>
       </header>
+
+      <dialog id="paste-dialog" class="paste-dialog">
+        <form method="dialog" id="paste-form">
+          <h2>Paste LayoutLab export</h2>
+          <p class="muted">
+            In Blender: LayoutLab → <strong>Copy Scene Layout</strong>, then paste here
+            (<kbd>⌘V</kbd> / <kbd>Ctrl+V</kbd>).
+          </p>
+          <textarea
+            id="paste-text"
+            rows="12"
+            spellcheck="false"
+            placeholder='{ "layoutlab_version": "…", "objects": [ … ] }'
+          ></textarea>
+          <div class="paste-actions">
+            <button type="submit" value="cancel" class="ghost">Cancel</button>
+            <button type="submit" value="load" id="btn-paste-load">Load</button>
+          </div>
+        </form>
+      </dialog>
 
       <aside id="sidebar" class="sidebar">
         <section>

@@ -12,8 +12,12 @@ const el = {
   objectCount: document.getElementById("object-count"),
   status: document.getElementById("status"),
   fileInput: document.getElementById("file-input"),
+  btnPaste: document.getElementById("btn-paste"),
   btnFixture: document.getElementById("btn-fixture"),
   btnFindings: document.getElementById("btn-findings"),
+  pasteDialog: document.getElementById("paste-dialog"),
+  pasteForm: document.getElementById("paste-form"),
+  pasteText: document.getElementById("paste-text"),
   toggleClearances: document.getElementById("toggle-clearances"),
   toggleOpenings: document.getElementById("toggle-openings"),
 };
@@ -123,6 +127,37 @@ function applyLayerVisibility() {
   if (layers.openings) layers.openings.visible = el.toggleOpenings.checked;
 }
 
+/**
+ * Accept Blender clipboard JSON: scene export object.
+ * Commands payloads are rejected with a clear error.
+ */
+function parseExportText(text) {
+  const trimmed = String(text || "").trim();
+  if (!trimmed) throw new Error("Clipboard / paste is empty");
+  let data;
+  try {
+    data = JSON.parse(trimmed);
+  } catch (err) {
+    throw new Error(`Not valid JSON (${err.message})`);
+  }
+  if (Array.isArray(data)) {
+    throw new Error("Expected a scene export object, got a JSON array");
+  }
+  if (!data || typeof data !== "object") {
+    throw new Error("Expected a scene export object");
+  }
+  if (Array.isArray(data.commands) && !Array.isArray(data.objects)) {
+    throw new Error(
+      "This looks like a commands payload (Apply in Blender). Export the scene first, then paste that JSON here.",
+    );
+  }
+  if (!Array.isArray(data.objects) && !Array.isArray(data.rooms)) {
+    throw new Error("Export must include objects[] and/or rooms[]");
+  }
+  if (!Array.isArray(data.objects)) data.objects = [];
+  return data;
+}
+
 function loadExportData(data, sourceLabel) {
   if (!data || typeof data !== "object") throw new Error("Invalid export JSON");
   clearGroup(content);
@@ -138,6 +173,11 @@ function loadExportData(data, sourceLabel) {
   setStatus(`Loaded ${sourceLabel} · ${n} objects`);
 }
 
+function loadFromPasteText(text, sourceLabel = "clipboard paste") {
+  const data = parseExportText(text);
+  loadExportData(data, sourceLabel);
+}
+
 async function loadFixture() {
   setStatus("Loading kids-room fixture…");
   loadExportData(kidsRoomFixture, "reference_kids_room_export.json");
@@ -150,8 +190,25 @@ async function loadFindingsFixture() {
 
 async function loadFile(file) {
   const text = await file.text();
-  const data = JSON.parse(text);
-  loadExportData(data, file.name);
+  loadFromPasteText(text, file.name);
+}
+
+function openPasteDialog(prefill = "") {
+  el.pasteText.value = prefill;
+  el.pasteDialog.showModal();
+  el.pasteText.focus();
+  el.pasteText.select();
+}
+
+async function pasteFromClipboard() {
+  setStatus("Reading clipboard…");
+  try {
+    const text = await navigator.clipboard.readText();
+    loadFromPasteText(text, "clipboard");
+  } catch (err) {
+    openPasteDialog();
+    setStatus(`Clipboard blocked (${err.message}). Paste into the dialog.`);
+  }
 }
 
 function resize() {
@@ -169,6 +226,24 @@ function frame() {
   requestAnimationFrame(frame);
 }
 
+el.btnPaste.addEventListener("click", () => {
+  pasteFromClipboard().catch((err) => setStatus(`Error: ${err.message}`));
+});
+
+el.pasteForm.addEventListener("submit", (ev) => {
+  const submitter = ev.submitter;
+  const value = submitter?.value || "cancel";
+  if (value !== "load") return;
+  ev.preventDefault();
+  try {
+    loadFromPasteText(el.pasteText.value, "pasted JSON");
+    el.pasteDialog.close();
+    el.pasteText.value = "";
+  } catch (err) {
+    setStatus(`Error: ${err.message}`);
+  }
+});
+
 el.btnFixture.addEventListener("click", () => {
   loadFixture().catch((err) => setStatus(`Error: ${err.message}`));
 });
@@ -176,6 +251,7 @@ el.btnFixture.addEventListener("click", () => {
 el.btnFindings.addEventListener("click", () => {
   loadFindingsFixture().catch((err) => setStatus(`Error: ${err.message}`));
 });
+
 el.fileInput.addEventListener("change", () => {
   const file = el.fileInput.files?.[0];
   if (!file) return;
@@ -185,6 +261,20 @@ el.fileInput.addEventListener("change", () => {
 
 el.toggleClearances.addEventListener("change", applyLayerVisibility);
 el.toggleOpenings.addEventListener("change", applyLayerVisibility);
+
+// Global paste when not typing in an input: Blender clipboard → load immediately
+window.addEventListener("paste", (ev) => {
+  const tag = (ev.target && ev.target.tagName) || "";
+  if (tag === "TEXTAREA" || tag === "INPUT") return;
+  const text = ev.clipboardData?.getData("text");
+  if (!text || !text.trim()) return;
+  ev.preventDefault();
+  try {
+    loadFromPasteText(text, "clipboard paste");
+  } catch (err) {
+    setStatus(`Error: ${err.message}`);
+  }
+});
 
 window.addEventListener("resize", resize);
 resize();
