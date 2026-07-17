@@ -33,6 +33,18 @@ class TestChatPlan(unittest.TestCase):
         self.assertIn("create_room", actions)
         self.assertNotIn("run_generator", actions)
 
+    def test_demo_wardrobe(self):
+        result = self.chat.plan_from_message("bau ein zimmer mit einem schrank")
+        self.assertTrue(result["ok"])
+        gens = [c.get("generator") for c in result["commands"] if c.get("action") == "run_generator"]
+        self.assertIn("wardrobe_basic", gens)
+
+    def test_demo_delete_room(self):
+        result = self.chat.plan_from_message("lösche den raum")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["commands"][0]["action"], "delete_collection_objects")
+        self.assertEqual(result["commands"][0]["collection"], "layoutlab_room")
+
     def test_demo_analyze(self):
         result = self.chat.plan_from_message("analyze clearances")
         self.assertEqual(result["commands"][0]["action"], "analyze_layout")
@@ -45,8 +57,19 @@ class TestChatPlan(unittest.TestCase):
         result = self.chat.plan_from_message("was kannst du?")
         self.assertTrue(result["ok"])
         self.assertEqual(result["commands"], [])
-        self.assertIn("OPENAI_API_KEY", result["reply"])
+        self.assertIn("LLM", result["reply"])
 
+    def test_resolve_llm_settings_prefers_request_key(self):
+        settings = self.chat.resolve_llm_settings(
+            {"api_key": "sk-test", "model": "gpt-test", "base_url": "https://example.com/v1/"}
+        )
+        self.assertEqual(settings["api_key"], "sk-test")
+        self.assertEqual(settings["model"], "gpt-test")
+        self.assertEqual(settings["base_url"], "https://example.com/v1")
+
+    def test_llm_configured_from_request(self):
+        self.assertTrue(self.chat.llm_configured({"api_key": "sk-x"}))
+        self.assertFalse(self.chat.llm_configured({"api_key": "  "}))
 
 if __name__ == "__main__":
     unittest.main()

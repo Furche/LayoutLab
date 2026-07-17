@@ -81,8 +81,25 @@
           <h2>AI Chat</h2>
           <p class="muted chat-hint">
             Plant Commands (DD-009). Core führt erst nach <strong>Apply</strong> aus.
-            Demo ohne Key: „empty kids room“, „furnished kids room“.
+            Ohne Key: Demo-Intents. Mit Key: freiere Planung.
           </p>
+          <details class="llm-settings">
+            <summary>LLM-Einstellungen</summary>
+            <label class="llm-field">
+              API-Key
+              <input id="llm-api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…" />
+            </label>
+            <label class="llm-field">
+              Model
+              <input id="llm-model" type="text" spellcheck="false" value="gpt-4o-mini" />
+            </label>
+            <label class="llm-field">
+              Base URL
+              <input id="llm-base-url" type="url" spellcheck="false" value="https://api.openai.com/v1" />
+            </label>
+            <p class="muted llm-note">Nur lokal im Browser gespeichert; wird mit dem Chat-Request an Core geschickt (nicht geloggt).</p>
+            <button type="button" id="btn-llm-clear" class="ghost">Key löschen</button>
+          </details>
           <div id="chat-log" class="chat-log" aria-live="polite"></div>
           <form id="chat-form" class="chat-form">
             <textarea

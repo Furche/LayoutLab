@@ -98,8 +98,13 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/v1/chat", "/v1/chat/"):
             message = body.get("message") or body.get("prompt") or ""
             scene = body.get("scene")
+            llm = body.get("llm") if isinstance(body.get("llm"), dict) else None
             try:
-                result = plan_from_message(str(message), scene_summary=scene if isinstance(scene, dict) else None)
+                result = plan_from_message(
+                    str(message),
+                    scene_summary=scene if isinstance(scene, dict) else None,
+                    llm_config=llm,
+                )
             except Exception as exc:
                 self._json(500, {"ok": False, "error": str(exc), "commands": [], "reply": ""})
                 return

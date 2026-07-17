@@ -45,6 +45,10 @@ const el = {
   chatProposalJson: document.getElementById("chat-proposal-json"),
   btnChatApply: document.getElementById("btn-chat-apply"),
   btnChatDiscard: document.getElementById("btn-chat-discard"),
+  llmApiKey: document.getElementById("llm-api-key"),
+  llmModel: document.getElementById("llm-model"),
+  llmBaseUrl: document.getElementById("llm-base-url"),
+  btnLlmClear: document.getElementById("btn-llm-clear"),
 };
 
 /** Same shell as layoutlab/plugin/test_rooms.py empty_test_room_commands(). */
@@ -145,6 +149,7 @@ const FURNISHED_TEST_ROOM_COMMANDS = {
 };
 
 const CORE_URL_KEY = "layoutlab_core_url";
+const LLM_SETTINGS_KEY = "layoutlab_llm_settings";
 
 function getCoreUrl() {
   const fromInput = (el.coreUrl?.value || "").trim().replace(/\/$/, "");
@@ -169,6 +174,44 @@ function persistCoreUrl() {
   } catch {
     /* ignore */
   }
+}
+
+function loadLlmSettings() {
+  let stored = {};
+  try {
+    stored = JSON.parse(localStorage.getItem(LLM_SETTINGS_KEY) || "{}") || {};
+  } catch {
+    stored = {};
+  }
+  if (el.llmApiKey && stored.api_key) el.llmApiKey.value = stored.api_key;
+  if (el.llmModel) el.llmModel.value = stored.model || el.llmModel.value || "gpt-4o-mini";
+  if (el.llmBaseUrl) {
+    el.llmBaseUrl.value = stored.base_url || el.llmBaseUrl.value || "https://api.openai.com/v1";
+  }
+}
+
+function persistLlmSettings() {
+  const payload = {
+    api_key: (el.llmApiKey?.value || "").trim(),
+    model: (el.llmModel?.value || "").trim() || "gpt-4o-mini",
+    base_url: (el.llmBaseUrl?.value || "").trim() || "https://api.openai.com/v1",
+  };
+  try {
+    localStorage.setItem(LLM_SETTINGS_KEY, JSON.stringify(payload));
+  } catch {
+    /* ignore */
+  }
+  return payload;
+}
+
+function getLlmConfigForRequest() {
+  const settings = persistLlmSettings();
+  if (!settings.api_key) return null;
+  return {
+    api_key: settings.api_key,
+    model: settings.model,
+    base_url: settings.base_url,
+  };
 }
 
 async function postCommandsToCore(commandsPayload, sourceLabel) {
@@ -256,12 +299,15 @@ function showChatProposal(payload) {
 async function postChatToCore(message) {
   const base = getCoreUrl();
   persistCoreUrl();
+  const body = { message, scene: sceneSummaryForChat() };
+  const llm = getLlmConfigForRequest();
+  if (llm) body.llm = llm;
   let response;
   try {
     response = await fetch(`${base}/v1/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, scene: sceneSummaryForChat() }),
+      body: JSON.stringify(body),
     });
   } catch (err) {
     throw new Error(
@@ -910,6 +956,15 @@ el.commandsForm?.addEventListener("submit", (ev) => {
 
 el.coreUrl?.addEventListener("change", persistCoreUrl);
 loadStoredCoreUrl();
+loadLlmSettings();
+el.llmApiKey?.addEventListener("change", persistLlmSettings);
+el.llmModel?.addEventListener("change", persistLlmSettings);
+el.llmBaseUrl?.addEventListener("change", persistLlmSettings);
+el.btnLlmClear?.addEventListener("click", () => {
+  if (el.llmApiKey) el.llmApiKey.value = "";
+  persistLlmSettings();
+  setStatus("LLM API-Key gelöscht (lokal)", "ok");
+});
 
 el.pasteForm.addEventListener("submit", (ev) => {
   const submitter = ev.submitter;

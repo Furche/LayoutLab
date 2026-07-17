@@ -71,8 +71,32 @@ def furnished_kids_room_commands() -> list:
     return _load_fixture_commands("reference_kids_room_commands.json")
 
 
-def llm_configured() -> bool:
-    return bool(os.environ.get("OPENAI_API_KEY") or os.environ.get("LAYOUTLAB_LLM_API_KEY"))
+def llm_configured(llm_config: dict | None = None) -> bool:
+    cfg = llm_config or {}
+    return bool(
+        (cfg.get("api_key") or "").strip()
+        or os.environ.get("LAYOUTLAB_LLM_API_KEY")
+        or os.environ.get("OPENAI_API_KEY")
+    )
+
+
+def resolve_llm_settings(llm_config: dict | None = None) -> dict:
+    """Merge request LLM settings with environment defaults."""
+    cfg = llm_config or {}
+    api_key = (cfg.get("api_key") or "").strip() or (
+        os.environ.get("LAYOUTLAB_LLM_API_KEY") or os.environ.get("OPENAI_API_KEY") or ""
+    )
+    base = (
+        (cfg.get("base_url") or "").strip()
+        or os.environ.get("LAYOUTLAB_LLM_BASE_URL")
+        or "https://api.openai.com/v1"
+    ).rstrip("/")
+    model = (
+        (cfg.get("model") or "").strip()
+        or os.environ.get("LAYOUTLAB_LLM_MODEL")
+        or "gpt-4o-mini"
+    )
+    return {"api_key": api_key, "base_url": base, "model": model}
 
 
 def sanitize_commands(commands) -> list:
@@ -95,6 +119,7 @@ def demo_plan(message: str) -> dict | None:
     if not text:
         return None
 
+    wardrobe_keys = ("schrank", "wardrobe", "kleiderschrank")
     furnished_keys = (
         "furnished",
         "möbliert",
@@ -117,7 +142,34 @@ def demo_plan(message: str) -> dict | None:
         "raum anlegen",
         "kids room",
         "kinderzimmer",
+        "zimmer",
     )
+
+    if any(k in text for k in wardrobe_keys):
+        commands = empty_kids_room_commands() + [
+            {
+                "action": "run_generator",
+                "generator": "wardrobe_basic",
+                "params": {
+                    "name": "WARDROBE",
+                    "location": [0.3, 0.15, 0],
+                    "width": 1.0,
+                    "depth": 0.55,
+                    "height": 2.0,
+                    "show_clearance": True,
+                    "collection": "layoutlab_room",
+                },
+            }
+        ]
+        return {
+            "ok": True,
+            "mode": "demo",
+            "reply": (
+                "Vorschlag: Kids-Room-Schale plus wardrobe_basic. "
+                "Bitte Apply, um Core auszuführen."
+            ),
+            "commands": commands,
+        }
 
     if any(k in text for k in furnished_keys):
         return {
@@ -149,6 +201,35 @@ def demo_plan(message: str) -> dict | None:
             "commands": [{"action": "analyze_layout", "scope": "scene", "include": ["clearances"]}],
         }
 
+    delete_keys = (
+        "lösche",
+        "loesche",
+        "löschen",
+        "loeschen",
+        "delete",
+        "clear room",
+        "raum weg",
+        "raum löschen",
+        "raum loeschen",
+        "alles löschen",
+        "alles loeschen",
+        "clear collection",
+    )
+    if any(k in text for k in delete_keys) and any(
+        k in text for k in ("raum", "room", "zimmer", "alles", "collection", "szene", "scene")
+    ):
+        return {
+            "ok": True,
+            "mode": "demo",
+            "reply": (
+                "Vorschlag: Collection layoutlab_room leeren "
+                "(Raum + Möbel). Bitte Apply, um Core auszuführen."
+            ),
+            "commands": [
+                {"action": "delete_collection_objects", "collection": "layoutlab_room"},
+            ],
+        }
+
     return None
 
 
@@ -172,13 +253,14 @@ def _extract_json_object(text: str) -> dict:
     return data
 
 
-def _openai_compatible_plan(message: str, scene_summary: dict | None) -> dict:
-    api_key = os.environ.get("LAYOUTLAB_LLM_API_KEY") or os.environ.get("OPENAI_API_KEY")
+def _openai_compatible_plan(message: str, scene_summary: dict | None, llm_config: dict | None = None) -> dict:
+    settings = resolve_llm_settings(llm_config)
+    api_key = settings["api_key"]
     if not api_key:
         raise RuntimeError("no LLM API key configured")
 
-    base = (os.environ.get("LAYOUTLAB_LLM_BASE_URL") or "https://api.openai.com/v1").rstrip("/")
-    model = os.environ.get("LAYOUTLAB_LLM_MODEL") or "gpt-4o-mini"
+    base = settings["base_url"]
+    model = settings["model"]
 
     user_payload = {"message": message}
     if scene_summary:
@@ -224,16 +306,16 @@ def _openai_compatible_plan(message: str, scene_summary: dict | None) -> dict:
     }
 
 
-def plan_from_message(message: str, scene_summary: dict | None = None) -> dict:
+def plan_from_message(message: str, scene_summary: dict | None = None, llm_config: dict | None = None) -> dict:
     """Return ``{ ok, mode, reply, commands }`` — never applies commands."""
     message = (message or "").strip()
     if not message:
         return {"ok": False, "error": "message required", "commands": [], "reply": ""}
 
-    # Prefer LLM when configured; demo keywords remain as fallback / offline path.
-    if llm_configured():
+    # Prefer LLM when a key is available (request body or env); demo as fallback.
+    if llm_configured(llm_config):
         try:
-            return _openai_compatible_plan(message, scene_summary)
+            return _openai_compatible_plan(message, scene_summary, llm_config=llm_config)
         except Exception as exc:
             demo = demo_plan(message)
             if demo:
@@ -256,9 +338,10 @@ def plan_from_message(message: str, scene_summary: dict | None = None) -> dict:
         "ok": True,
         "mode": "demo",
         "reply": (
-            "Kein LLM-Key gesetzt (OPENAI_API_KEY oder LAYOUTLAB_LLM_API_KEY). "
-            "Demo-Intents: „empty kids room“, „furnished kids room“, „analyze“. "
-            "Oder Key setzen für freie Planung."
+            "Kein LLM-Key gesetzt. Im Viewer unter „LLM-Einstellungen“ einen Key eintragen "
+            "(oder OPENAI_API_KEY / LAYOUTLAB_LLM_API_KEY). "
+            "Demo-Intents: „empty kids room“, „furnished kids room“, „schrank“, "
+            "„lösche den raum“, „analyze“."
         ),
         "commands": [],
     }

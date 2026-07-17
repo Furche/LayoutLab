@@ -57,12 +57,23 @@ Apply only via `POST /v1/commands` (viewer **Apply** button).
 | Mode | When |
 |---|---|
 | `demo` | No API key — keyword intents (empty / furnished kids room, analyze) |
-| `llm` | `OPENAI_API_KEY` or `LAYOUTLAB_LLM_API_KEY` (+ optional `LAYOUTLAB_LLM_BASE_URL`, `LAYOUTLAB_LLM_MODEL`) |
+| `llm` | Viewer **LLM-Einstellungen** (API-Key) oder Env `OPENAI_API_KEY` / `LAYOUTLAB_LLM_API_KEY` |
 
-```bash
-export OPENAI_API_KEY=sk-…   # optional
-python3 -m server
+Request body may include:
+
+```json
+{
+  "message": "…",
+  "scene": { … },
+  "llm": {
+    "api_key": "sk-…",
+    "model": "gpt-4o-mini",
+    "base_url": "https://api.openai.com/v1"
+  }
+}
 ```
+
+Key from the request is preferred over env for that call. The viewer stores the key only in `localStorage`.
 
 ## Viewer
 
