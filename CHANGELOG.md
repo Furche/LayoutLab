@@ -10,7 +10,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
-- **DD-014 Proposed:** Standalone Runtime Path — Phase A read-only export viewer, then Phase B write adapter ([DD-014](docs/design_decisions/DD-014-standalone-runtime-path.md))
+- **DD-014 Accepted — Phase A only:** web export viewer path locked (Three.js/Babylon; show findings); Phase B direction only ([DD-014](docs/design_decisions/DD-014-standalone-runtime-path.md))
+- **Viewer-minimum export contract** in `json_protocol.md` §6.4 (`viewer_schema` 0.1.0)
+- **Fixture:** `tests/fixtures/reference_kids_room_export.json` — kids room + bed/desk for Phase A viewer
 
 ### Fixed (prior)
 

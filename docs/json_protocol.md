@@ -589,6 +589,60 @@ Exported types: `MESH`, `EMPTY`, `CURVE`, `FONT` only.
 | `custom_properties` | string/int/float/bool only (includes all `layoutlab_*` props) |
 | `layoutlab` | Present when `layoutlab_object_id` is set `[IMPLEMENTED]` v0.5.1; includes `clearance` sub-block on clearance Parts `[IMPLEMENTED]` v0.7.1 |
 
+## 6.4 Viewer-minimum export `[CONTRACT]` (DD-014 Phase A)
+
+Read-only standalone viewers consume a **subset** of the scene export. Blender may emit extra fields (`generator_dir`, full 8-corner bboxes, etc.); viewers must tolerate unknowns.
+
+**Reference fixture:** `tests/fixtures/reference_kids_room_export.json`
+
+```json
+{
+  "layoutlab_version": "0.10.3",
+  "viewer_schema": "0.1.0",
+  "unit": "METRIC",
+  "unit_scale": 1.0,
+  "scene": "KidsRoomReference",
+  "note": "…",
+  "rooms": [ { "room_id": "…", "name": "…", "footprint": {}, "walls": [], "openings": [], "fixed_elements": [] } ],
+  "objects": [
+    {
+      "name": "…",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [0, 0, 0],
+      "rotation_euler_deg": [0, 0, 0],
+      "dimensions": [1, 1, 1],
+      "visible": true,
+      "world_bbox_corners": [],
+      "custom_properties": { "layoutlab_role": "…" },
+      "layoutlab": { "object_id": "…", "role": "…" },
+      "viewer": { "primitive": "box" }
+    }
+  ],
+  "analysis": {
+    "analyzed": true,
+    "summary": { "errors": 0, "warnings": 0, "info": 0 },
+    "findings": []
+  }
+}
+```
+
+| Field | Required for viewer? | Notes |
+|---|---|---|
+| `layoutlab_version` | yes | Plugin / producer version |
+| `viewer_schema` | yes (viewer contract) | Semver of this minimum; currently `0.1.0` |
+| `unit` / `unit_scale` | yes | Same as §8 — Metric + `1.0` ⇒ 1 unit = 1 m |
+| `rooms[]` | recommended | Semantic room block from Room Model export |
+| `objects[].location` | yes | Origin |
+| `objects[].dimensions` | yes* | AABB size (*or derive from `world_bbox_corners` / `viewer.corners`) |
+| `objects[].rotation_euler_deg` | yes | Degrees |
+| `objects[].layoutlab.role` | yes | Drive materials / layering (`room_wall`, `clearance`, …) |
+| `objects[].viewer.primitive` | optional hint | `box` \| `quad`; walls with openings use `viewer.corners` (inward quad) |
+| `objects[].viewer.display` | optional | `wire` for openings / clearances |
+| `analysis` | optional | When present, Phase A **shows findings** (DD-014) |
+
+**Render defaults for Phase A:** solid boxes for furniture / fixed / floor; inward quads for wall panels; wire for openings and clearances; findings list/overlay from `analysis.findings` when non-empty.
+
 ------------------------------------------------------------------------
 
 # 7. Generator List Export

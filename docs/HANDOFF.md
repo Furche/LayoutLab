@@ -118,7 +118,7 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | **Accepted** — v1 shipped |
 | [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary | **Accepted** |
 | [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Accepted** — MVP shipped v0.9.0 |
-| [DD-014](design_decisions/DD-014-standalone-runtime-path.md) | Standalone runtime path | **Proposed** — viewer first, then write adapter |
+| [DD-014](design_decisions/DD-014-standalone-runtime-path.md) | Standalone runtime path | **Accepted — Phase A only** (web viewer; findings yes) |
 
 ### DD-007 (key points)
 
@@ -161,11 +161,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. **Review DD-014** (Standalone Runtime Path — Proposed): Accept / Accept Phase A only / Reject  
-2. After Accept: viewer-minimum export note + kids-room export fixture → Phase A scaffold  
-3. **Not blocking standalone:** tiered clearances, more generators, polygon, multi-room  
+1. **Scaffold Phase A web viewer** (Three.js or Babylon) — load `reference_kids_room_export.json`, show room + furniture + clearances + findings when present  
+2. Harden Blender export → viewer_schema fields as needed while building A  
+3. **Not blocking standalone:** tiered clearances, more generators, polygon, multi-room; Phase B only after separate Accept  
 
-`desk_basic` ✅ · Room Model ✅ · constructive openings ✅ · native meters ✅ · room-aware analyze ✅ · **DD-014 Proposed**
+`desk_basic` ✅ · Room Model ✅ · constructive openings ✅ · native meters ✅ · room-aware analyze ✅ · **DD-014 Phase A Accepted** · viewer schema + kids export fixture ✅
 
 ------------------------------------------------------------------------
 

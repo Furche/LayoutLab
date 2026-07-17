@@ -1,0 +1,1641 @@
+{
+  "layoutlab_version": "0.10.3",
+  "viewer_schema": "0.1.0",
+  "unit": "METRIC",
+  "unit_scale": 1.0,
+  "scene": "KidsRoomReference",
+  "note": "Coordinates/dimensions are Blender scene units (native). With Metric and unit_scale=1.0, 1 unit = 1 meter. Fixture for DD-014 Phase A viewer (synthesized from Room Model + reference layout).",
+  "rooms": [
+    {
+      "room_id": "kids-room-ref-0001",
+      "name": "KIDS_ROOM",
+      "schema_version": "0.1.0",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "height": 2.6,
+      "wall_thickness": 0.02,
+      "footprint": {
+        "kind": "rectangle",
+        "width": 4.2,
+        "depth": 2.18
+      },
+      "walls": [
+        {
+          "wall_id": "wall-south",
+          "side": "south",
+          "thickness": 0.02,
+          "height": 2.6,
+          "segment": {
+            "start": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "end": [
+              4.2,
+              0.0,
+              0.0
+            ]
+          },
+          "length": 4.2
+        },
+        {
+          "wall_id": "wall-east",
+          "side": "east",
+          "thickness": 0.02,
+          "height": 2.6,
+          "segment": {
+            "start": [
+              4.2,
+              0.0,
+              0.0
+            ],
+            "end": [
+              4.2,
+              2.18,
+              0.0
+            ]
+          },
+          "length": 2.18
+        },
+        {
+          "wall_id": "wall-north",
+          "side": "north",
+          "thickness": 0.02,
+          "height": 2.6,
+          "segment": {
+            "start": [
+              0.0,
+              2.18,
+              0.0
+            ],
+            "end": [
+              4.2,
+              2.18,
+              0.0
+            ]
+          },
+          "length": 4.2
+        },
+        {
+          "wall_id": "wall-west",
+          "side": "west",
+          "thickness": 0.02,
+          "height": 2.6,
+          "segment": {
+            "start": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "end": [
+              0.0,
+              2.18,
+              0.0
+            ]
+          },
+          "length": 2.18
+        }
+      ],
+      "openings": [
+        {
+          "opening_id": "opening-window_west",
+          "name": "window_west",
+          "kind": "window",
+          "wall_id": "wall-west",
+          "wall_side": "west",
+          "offset": 0.48054,
+          "width": 1.22946,
+          "height": 1.47,
+          "sill_height": 0.88
+        },
+        {
+          "opening_id": "opening-door_east",
+          "name": "door_east",
+          "kind": "door",
+          "wall_id": "wall-east",
+          "wall_side": "east",
+          "offset": 0.24866,
+          "width": 0.70801,
+          "height": 1.84453,
+          "sill_height": 0.0
+        }
+      ],
+      "fixed_elements": [
+        {
+          "fixed_element_id": "bb71e124-c874-46b9-be34-d96936802b2f",
+          "name": "heizung",
+          "kind": "radiator",
+          "wall_id": "wall-west",
+          "wall_side": "west",
+          "offset": 0.56494,
+          "width": 1.1,
+          "depth": 0.1,
+          "height": 0.75,
+          "fixed_id": "fixed-heizung"
+        }
+      ],
+      "world_bounds": {
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          4.2,
+          2.18,
+          2.6
+        ]
+      },
+      "collection": "layoutlab_room"
+    }
+  ],
+  "objects": [
+    {
+      "name": "KIDS_ROOM_floor",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        4.2,
+        2.18,
+        0.005
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          4.2,
+          0.0,
+          0.0
+        ],
+        [
+          4.2,
+          2.18,
+          0.0
+        ],
+        [
+          0.0,
+          2.18,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.005
+        ],
+        [
+          4.2,
+          0.0,
+          0.005
+        ],
+        [
+          4.2,
+          2.18,
+          0.005
+        ],
+        [
+          0.0,
+          2.18,
+          0.005
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_floor",
+        "layoutlab_room_id": "kids-room-ref-0001"
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_floor",
+        "part": "room_floor"
+      },
+      "viewer": {
+        "primitive": "box"
+      }
+    },
+    {
+      "name": "KIDS_ROOM_wall_south",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        4.2,
+        0.001,
+        2.6
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          2.6
+        ],
+        [
+          4.2,
+          0.0,
+          2.6
+        ],
+        [
+          4.2,
+          0.0,
+          0.0
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_wall",
+        "layoutlab_room_id": "kids-room-ref-0001",
+        "layoutlab_wall_side": "south",
+        "layoutlab_wall_facing": "inward",
+        "layoutlab_wall_panel_index": 0
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_wall",
+        "part": "room_wall"
+      },
+      "viewer": {
+        "primitive": "quad",
+        "corners": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            2.6
+          ],
+          [
+            4.2,
+            0.0,
+            2.6
+          ],
+          [
+            4.2,
+            0.0,
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "KIDS_ROOM_wall_east_p0",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        4.2,
+        0.0,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.001,
+        0.2487,
+        2.6
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          4.2,
+          0.0,
+          0.0
+        ],
+        [
+          4.2,
+          0.0,
+          2.6
+        ],
+        [
+          4.2,
+          0.2487,
+          2.6
+        ],
+        [
+          4.2,
+          0.2487,
+          0.0
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_wall",
+        "layoutlab_room_id": "kids-room-ref-0001",
+        "layoutlab_wall_side": "east",
+        "layoutlab_wall_facing": "inward",
+        "layoutlab_wall_panel_index": 0
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_wall",
+        "part": "room_wall"
+      },
+      "viewer": {
+        "primitive": "quad",
+        "corners": [
+          [
+            4.2,
+            0.0,
+            0.0
+          ],
+          [
+            4.2,
+            0.0,
+            2.6
+          ],
+          [
+            4.2,
+            0.2487,
+            2.6
+          ],
+          [
+            4.2,
+            0.2487,
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "KIDS_ROOM_wall_east_p1",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        4.2,
+        0.9567,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.001,
+        1.2233,
+        2.6
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          4.2,
+          0.9567,
+          0.0
+        ],
+        [
+          4.2,
+          0.9567,
+          2.6
+        ],
+        [
+          4.2,
+          2.18,
+          2.6
+        ],
+        [
+          4.2,
+          2.18,
+          0.0
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_wall",
+        "layoutlab_room_id": "kids-room-ref-0001",
+        "layoutlab_wall_side": "east",
+        "layoutlab_wall_facing": "inward",
+        "layoutlab_wall_panel_index": 1
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_wall",
+        "part": "room_wall"
+      },
+      "viewer": {
+        "primitive": "quad",
+        "corners": [
+          [
+            4.2,
+            0.9567,
+            0.0
+          ],
+          [
+            4.2,
+            0.9567,
+            2.6
+          ],
+          [
+            4.2,
+            2.18,
+            2.6
+          ],
+          [
+            4.2,
+            2.18,
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "KIDS_ROOM_wall_east_p2",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        4.2,
+        0.2487,
+        1.8445
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.001,
+        0.708,
+        0.7555
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          4.2,
+          0.2487,
+          1.8445
+        ],
+        [
+          4.2,
+          0.2487,
+          2.6
+        ],
+        [
+          4.2,
+          0.9567,
+          2.6
+        ],
+        [
+          4.2,
+          0.9567,
+          1.8445
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_wall",
+        "layoutlab_room_id": "kids-room-ref-0001",
+        "layoutlab_wall_side": "east",
+        "layoutlab_wall_facing": "inward",
+        "layoutlab_wall_panel_index": 2
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_wall",
+        "part": "room_wall"
+      },
+      "viewer": {
+        "primitive": "quad",
+        "corners": [
+          [
+            4.2,
+            0.2487,
+            1.8445
+          ],
+          [
+            4.2,
+            0.2487,
+            2.6
+          ],
+          [
+            4.2,
+            0.9567,
+            2.6
+          ],
+          [
+            4.2,
+            0.9567,
+            1.8445
+          ]
+        ]
+      }
+    },
+    {
+      "name": "KIDS_ROOM_wall_north",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        0.0,
+        2.18,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        4.2,
+        0.001,
+        2.6
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          0.0,
+          2.18,
+          0.0
+        ],
+        [
+          4.2,
+          2.18,
+          0.0
+        ],
+        [
+          4.2,
+          2.18,
+          2.6
+        ],
+        [
+          0.0,
+          2.18,
+          2.6
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_wall",
+        "layoutlab_room_id": "kids-room-ref-0001",
+        "layoutlab_wall_side": "north",
+        "layoutlab_wall_facing": "inward",
+        "layoutlab_wall_panel_index": 0
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_wall",
+        "part": "room_wall"
+      },
+      "viewer": {
+        "primitive": "quad",
+        "corners": [
+          [
+            0.0,
+            2.18,
+            0.0
+          ],
+          [
+            4.2,
+            2.18,
+            0.0
+          ],
+          [
+            4.2,
+            2.18,
+            2.6
+          ],
+          [
+            0.0,
+            2.18,
+            2.6
+          ]
+        ]
+      }
+    },
+    {
+      "name": "KIDS_ROOM_wall_west_p0",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.001,
+        0.4805,
+        2.6
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.4805,
+          0.0
+        ],
+        [
+          0.0,
+          0.4805,
+          2.6
+        ],
+        [
+          0.0,
+          0.0,
+          2.6
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_wall",
+        "layoutlab_room_id": "kids-room-ref-0001",
+        "layoutlab_wall_side": "west",
+        "layoutlab_wall_facing": "inward",
+        "layoutlab_wall_panel_index": 0
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_wall",
+        "part": "room_wall"
+      },
+      "viewer": {
+        "primitive": "quad",
+        "corners": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.4805,
+            0.0
+          ],
+          [
+            0.0,
+            0.4805,
+            2.6
+          ],
+          [
+            0.0,
+            0.0,
+            2.6
+          ]
+        ]
+      }
+    },
+    {
+      "name": "KIDS_ROOM_wall_west_p1",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        0.0,
+        1.71,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.001,
+        0.47,
+        2.6
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          0.0,
+          1.71,
+          0.0
+        ],
+        [
+          0.0,
+          2.18,
+          0.0
+        ],
+        [
+          0.0,
+          2.18,
+          2.6
+        ],
+        [
+          0.0,
+          1.71,
+          2.6
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_wall",
+        "layoutlab_room_id": "kids-room-ref-0001",
+        "layoutlab_wall_side": "west",
+        "layoutlab_wall_facing": "inward",
+        "layoutlab_wall_panel_index": 1
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_wall",
+        "part": "room_wall"
+      },
+      "viewer": {
+        "primitive": "quad",
+        "corners": [
+          [
+            0.0,
+            1.71,
+            0.0
+          ],
+          [
+            0.0,
+            2.18,
+            0.0
+          ],
+          [
+            0.0,
+            2.18,
+            2.6
+          ],
+          [
+            0.0,
+            1.71,
+            2.6
+          ]
+        ]
+      }
+    },
+    {
+      "name": "KIDS_ROOM_wall_west_p2",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        0.0,
+        0.4805,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.001,
+        1.2295,
+        0.88
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          0.0,
+          0.4805,
+          0.0
+        ],
+        [
+          0.0,
+          1.71,
+          0.0
+        ],
+        [
+          0.0,
+          1.71,
+          0.88
+        ],
+        [
+          0.0,
+          0.4805,
+          0.88
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_wall",
+        "layoutlab_room_id": "kids-room-ref-0001",
+        "layoutlab_wall_side": "west",
+        "layoutlab_wall_facing": "inward",
+        "layoutlab_wall_panel_index": 2
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_wall",
+        "part": "room_wall"
+      },
+      "viewer": {
+        "primitive": "quad",
+        "corners": [
+          [
+            0.0,
+            0.4805,
+            0.0
+          ],
+          [
+            0.0,
+            1.71,
+            0.0
+          ],
+          [
+            0.0,
+            1.71,
+            0.88
+          ],
+          [
+            0.0,
+            0.4805,
+            0.88
+          ]
+        ]
+      }
+    },
+    {
+      "name": "KIDS_ROOM_wall_west_p3",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        0.0,
+        0.4805,
+        2.35
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.001,
+        1.2295,
+        0.25
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          0.0,
+          0.4805,
+          2.35
+        ],
+        [
+          0.0,
+          1.71,
+          2.35
+        ],
+        [
+          0.0,
+          1.71,
+          2.6
+        ],
+        [
+          0.0,
+          0.4805,
+          2.6
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_wall",
+        "layoutlab_room_id": "kids-room-ref-0001",
+        "layoutlab_wall_side": "west",
+        "layoutlab_wall_facing": "inward",
+        "layoutlab_wall_panel_index": 3
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_wall",
+        "part": "room_wall"
+      },
+      "viewer": {
+        "primitive": "quad",
+        "corners": [
+          [
+            0.0,
+            0.4805,
+            2.35
+          ],
+          [
+            0.0,
+            1.71,
+            2.35
+          ],
+          [
+            0.0,
+            1.71,
+            2.6
+          ],
+          [
+            0.0,
+            0.4805,
+            2.6
+          ]
+        ]
+      }
+    },
+    {
+      "name": "KIDS_ROOM_opening_window_west",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        -0.025,
+        0.4805,
+        0.88
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.025,
+        1.2295,
+        1.47
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          -0.025,
+          0.4805,
+          0.88
+        ],
+        [
+          0.0,
+          0.4805,
+          0.88
+        ],
+        [
+          0.0,
+          1.71,
+          0.88
+        ],
+        [
+          -0.025,
+          1.71,
+          0.88
+        ],
+        [
+          -0.025,
+          0.4805,
+          2.35
+        ],
+        [
+          0.0,
+          0.4805,
+          2.35
+        ],
+        [
+          0.0,
+          1.71,
+          2.35
+        ],
+        [
+          -0.025,
+          1.71,
+          2.35
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_opening",
+        "layoutlab_room_id": "kids-room-ref-0001"
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_opening",
+        "part": "room_opening"
+      },
+      "viewer": {
+        "display": "wire"
+      }
+    },
+    {
+      "name": "KIDS_ROOM_opening_door_east",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        4.2,
+        0.2487,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.025,
+        0.708,
+        1.8445
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          4.2,
+          0.2487,
+          0.0
+        ],
+        [
+          4.225,
+          0.2487,
+          0.0
+        ],
+        [
+          4.225,
+          0.9567,
+          0.0
+        ],
+        [
+          4.2,
+          0.9567,
+          0.0
+        ],
+        [
+          4.2,
+          0.2487,
+          1.8445
+        ],
+        [
+          4.225,
+          0.2487,
+          1.8445
+        ],
+        [
+          4.225,
+          0.9567,
+          1.8445
+        ],
+        [
+          4.2,
+          0.9567,
+          1.8445
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_opening",
+        "layoutlab_room_id": "kids-room-ref-0001"
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_opening",
+        "part": "room_opening"
+      },
+      "viewer": {
+        "display": "wire"
+      }
+    },
+    {
+      "name": "KIDS_ROOM_fixed_heizung",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        0.0,
+        0.5649,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.1,
+        1.1,
+        0.75
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          0.0,
+          0.5649,
+          0.0
+        ],
+        [
+          0.1,
+          0.5649,
+          0.0
+        ],
+        [
+          0.1,
+          1.6649,
+          0.0
+        ],
+        [
+          0.0,
+          1.6649,
+          0.0
+        ],
+        [
+          0.0,
+          0.5649,
+          0.75
+        ],
+        [
+          0.1,
+          0.5649,
+          0.75
+        ],
+        [
+          0.1,
+          1.6649,
+          0.75
+        ],
+        [
+          0.0,
+          1.6649,
+          0.75
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "room_fixed",
+        "layoutlab_room_id": "kids-room-ref-0001"
+      },
+      "layoutlab": {
+        "object_id": "kids-room-ref-0001",
+        "role": "room_fixed",
+        "part": "room_fixed"
+      },
+      "viewer": {
+        "primitive": "box"
+      }
+    },
+    {
+      "name": "BED_120x200_body",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        0.15,
+        0.09,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        1.2,
+        2.0,
+        0.55
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          0.15,
+          0.09,
+          0.0
+        ],
+        [
+          1.35,
+          0.09,
+          0.0
+        ],
+        [
+          1.35,
+          2.09,
+          0.0
+        ],
+        [
+          0.15,
+          2.09,
+          0.0
+        ],
+        [
+          0.15,
+          0.09,
+          0.55
+        ],
+        [
+          1.35,
+          0.09,
+          0.55
+        ],
+        [
+          1.35,
+          2.09,
+          0.55
+        ],
+        [
+          0.15,
+          2.09,
+          0.55
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "bed_frame",
+        "layoutlab_object_id": "bed-fixture-0001"
+      },
+      "layoutlab": {
+        "object_id": "bed-fixture-0001",
+        "generator": "bed_basic",
+        "generator_version": "0.7.0",
+        "params": {
+          "name": "BED_120x200",
+          "location": [
+            0.15,
+            0.09,
+            0
+          ],
+          "length": 1.2,
+          "width": 2.0,
+          "head_side": "y_max"
+        },
+        "part": "body",
+        "part_type": "main",
+        "role": "bed_frame"
+      },
+      "viewer": {
+        "primitive": "box"
+      }
+    },
+    {
+      "name": "BED_120x200_clearance_bed_entry",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        1.35,
+        0.09,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.5,
+        2.0,
+        0.55
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          1.35,
+          0.09,
+          0.0
+        ],
+        [
+          1.85,
+          0.09,
+          0.0
+        ],
+        [
+          1.85,
+          2.09,
+          0.0
+        ],
+        [
+          1.35,
+          2.09,
+          0.0
+        ],
+        [
+          1.35,
+          0.09,
+          0.55
+        ],
+        [
+          1.85,
+          0.09,
+          0.55
+        ],
+        [
+          1.85,
+          2.09,
+          0.55
+        ],
+        [
+          1.35,
+          2.09,
+          0.55
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "clearance",
+        "layoutlab_object_id": "bed-fixture-0001",
+        "layoutlab_clearance_name": "bed_entry",
+        "layoutlab_clearance_requirement": "preferred"
+      },
+      "layoutlab": {
+        "object_id": "bed-fixture-0001",
+        "role": "clearance",
+        "part": "clearance_bed_entry",
+        "clearance": {
+          "clearance_name": "bed_entry",
+          "requirement": "preferred",
+          "world_bounds": {
+            "min": [
+              1.35,
+              0.09,
+              0.0
+            ],
+            "max": [
+              1.85,
+              2.09,
+              0.55
+            ]
+          }
+        }
+      },
+      "viewer": {
+        "primitive": "box",
+        "display": "wire"
+      }
+    },
+    {
+      "name": "DESK_120x60_body",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        2.7,
+        1.58,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        1.2,
+        0.6,
+        0.75
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          2.7,
+          1.58,
+          0.0
+        ],
+        [
+          3.9,
+          1.58,
+          0.0
+        ],
+        [
+          3.9,
+          2.18,
+          0.0
+        ],
+        [
+          2.7,
+          2.18,
+          0.0
+        ],
+        [
+          2.7,
+          1.58,
+          0.75
+        ],
+        [
+          3.9,
+          1.58,
+          0.75
+        ],
+        [
+          3.9,
+          2.18,
+          0.75
+        ],
+        [
+          2.7,
+          2.18,
+          0.75
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "desk_body",
+        "layoutlab_object_id": "desk-fixture-0001"
+      },
+      "layoutlab": {
+        "object_id": "desk-fixture-0001",
+        "generator": "desk_basic",
+        "generator_version": "0.2.0",
+        "params": {
+          "name": "DESK_120x60",
+          "location": [
+            2.7,
+            1.58,
+            0
+          ],
+          "width": 1.2,
+          "depth": 0.6,
+          "height": 0.75
+        },
+        "part": "body",
+        "part_type": "main",
+        "role": "desk_body"
+      },
+      "viewer": {
+        "primitive": "box"
+      }
+    },
+    {
+      "name": "DESK_120x60_clearance_chair_access",
+      "type": "MESH",
+      "collection": "layoutlab_room",
+      "location": [
+        2.7,
+        0.98,
+        0.0
+      ],
+      "rotation_euler_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        1.2,
+        0.6,
+        0.7
+      ],
+      "visible": true,
+      "world_bbox_corners": [
+        [
+          2.7,
+          0.98,
+          0.0
+        ],
+        [
+          3.9,
+          0.98,
+          0.0
+        ],
+        [
+          3.9,
+          1.58,
+          0.0
+        ],
+        [
+          2.7,
+          1.58,
+          0.0
+        ],
+        [
+          2.7,
+          0.98,
+          0.7
+        ],
+        [
+          3.9,
+          0.98,
+          0.7
+        ],
+        [
+          3.9,
+          1.58,
+          0.7
+        ],
+        [
+          2.7,
+          1.58,
+          0.7
+        ]
+      ],
+      "custom_properties": {
+        "layoutlab_role": "clearance",
+        "layoutlab_object_id": "desk-fixture-0001",
+        "layoutlab_clearance_name": "chair_access",
+        "layoutlab_clearance_requirement": "required"
+      },
+      "layoutlab": {
+        "object_id": "desk-fixture-0001",
+        "role": "clearance",
+        "part": "clearance_chair_access",
+        "clearance": {
+          "clearance_name": "chair_access",
+          "requirement": "required",
+          "world_bounds": {
+            "min": [
+              2.7,
+              0.98,
+              0.0
+            ],
+            "max": [
+              3.9,
+              1.58,
+              0.7
+            ]
+          }
+        }
+      },
+      "viewer": {
+        "primitive": "box",
+        "display": "wire"
+      }
+    }
+  ],
+  "analysis": {
+    "analyzed": true,
+    "scope": "collection",
+    "collection": "layoutlab_room",
+    "clearance_count": 2,
+    "summary": {
+      "errors": 0,
+      "warnings": 0,
+      "info": 0
+    },
+    "findings": []
+  }
+}

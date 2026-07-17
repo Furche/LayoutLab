@@ -1,9 +1,21 @@
 # DD-014 — Standalone Runtime Path (Viewer → Write Adapter)
 
-**Status:** Proposed  
+**Status:** Accepted — Phase A only  
 **Date:** 2026-07-17  
-**Version:** 0.1  
-**Related:** [DD-003](DD-003-json-only-communication.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-010](DD-010-room-model.md) · [ARCHITECTURE.md](../ARCHITECTURE.md) §2.2 · [Future_Ideas.md](../Future_Ideas.md) §11–§12 / §18
+**Accepted:** 2026-07-17  
+**Version:** 0.2  
+**Related:** [DD-003](DD-003-json-only-communication.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-010](DD-010-room-model.md) · [ARCHITECTURE.md](../ARCHITECTURE.md) §2.2 · [Future_Ideas.md](../Future_Ideas.md) §11–§12 / §18 · [json_protocol.md](../json_protocol.md) §6.4
+
+------------------------------------------------------------------------
+
+## Decision summary (Accepted)
+
+| Topic | Lock |
+|---|---|
+| Scope of this Accept | **Phase A only** (read-only viewer). Phase B remains documented direction; re-confirm before implementing write adapter |
+| Host for Phase A | **Web** — Three.js or Babylon (implementer picks between these) |
+| Findings in viewer | **Yes** — show `analyze_layout` results when present in export |
+| Packaging | Blender addon zip ≠ standalone app. Shared **Core** + Blender adapter + Standalone (viewer) adapter; same JSON protocol |
 
 ------------------------------------------------------------------------
 
@@ -48,7 +60,7 @@ phase order**, not a tech stack or ship date.
 
 ------------------------------------------------------------------------
 
-## Decision (proposed)
+## Decision (Accepted — Phase A)
 
 ### 1. Core statement
 
@@ -62,28 +74,29 @@ not get to invent furniture/room semantics in the front-end.
 
 ### 2. Phased path (fastest honest route)
 
-| Phase | Deliverable | Write? | Depends on |
+| Phase | Deliverable | Write? | Status |
 |---|---|---|---|
-| **A — Viewer** | App/page loads LayoutLab export JSON; shows room + furniture + clearances + optional findings | No | Frozen export subset + fixtures |
-| **B — Write adapter** | Same app (or sibling) applies protocol commands via Core; renders through non-Blender geometry API | Yes | Core command path without `bpy`; geometry backend |
-| **C — Product shell** | Project UX, in-app AI, capture (separate DDs) | Yes | B + DD-012/013 as needed |
+| **A — Viewer** | Web app loads LayoutLab export JSON; shows room + furniture + clearances + findings when present | No | **Accepted — implement next** |
+| **B — Write adapter** | Same app (or sibling) applies protocol commands via Core; renders through non-Blender geometry API | Yes | Direction only — re-confirm before code |
+| **C — Product shell** | Project UX, in-app AI, capture (separate DDs) | Yes | Future — needs B + DD-012/013 as needed |
 
 **Do not start B or C before A is useful.** A proves the contract and unblocks sharing layouts without Blender.
 
 ### 3. Interchange contract
 
-- **Source of truth for A:** scene / project **export JSON** (`json_protocol.md`), including `rooms[]`, objects with `layoutlab` blocks, clearance bounds, optional analysis findings.
-- Export must carry a **`layoutlab_version`** (already) and document a **viewer-minimum schema** (boxes, wall panels/planes, clearance wires, transforms, ids).
+- **Source of truth for A:** scene / project **export JSON** (`json_protocol.md` §6 / §6.4), including `rooms[]`, objects with `layoutlab` blocks, clearance bounds, optional `analysis` findings.
+- Export carries **`layoutlab_version`** and **`viewer_schema`** (viewer-minimum: boxes, wall panels/planes, clearance wires, transforms, ids).
 - Blender remains able to **produce** that export; Phase A only **consumes** it.
+- Reference fixture: `tests/fixtures/reference_kids_room_export.json`
 
-### 4. Core vs adapter (binding while Proposed → Accepted)
+### 4. Core vs adapter (binding)
 
 | Belongs in Core | Belongs in adapter |
 |---|---|
-| Room Model, opening panel math | `create_quad` / mesh materials |
+| Room Model, opening panel math | `create_quad` / mesh materials / Three.js meshes |
 | Generator param rules (sizes, clearances) | Instantiating meshes in host |
 | `analyze_layout` overlap rules | Drawing findings in UI |
-| JSON command semantics | Clipboard, Blender operators, web HTTP |
+| JSON command semantics | Clipboard, Blender operators, web file load |
 
 **Rule:** new domain features land in pure Python / JSON first; adapters only project.
 
@@ -93,12 +106,12 @@ not get to invent furniture/room semantics in the front-end.
 - Bridge / MCP / Expert Mode  
 - Full Core extraction of every generator (A can render export boxes without re-running generators)
 
-### 6. What *is* required before Phase A implementation
+### 6. Phase A prerequisites (status)
 
-1. This DD **Accepted** (or an explicit “Accept Phase A only” note)
-2. Short **viewer schema** appendix in `json_protocol.md` (minimum fields)
-3. **≥1 checked-in export fixture** from the kids-room reference layout
-4. One-page **framework choice** (host tech) in the implementation PR / follow-up note — not blocking Accept of this DD’s *path*
+1. ~~This DD Accepted (Phase A only)~~ ✅  
+2. ~~Viewer-minimum schema in `json_protocol.md` §6.4~~ ✅  
+3. ~~Kids-room export fixture~~ ✅ `reference_kids_room_export.json`  
+4. Framework choice (Three.js vs Babylon) — in Phase A scaffold PR, not blocking this Accept
 
 ------------------------------------------------------------------------
 
@@ -115,41 +128,25 @@ not get to invent furniture/room semantics in the front-end.
 
 ## Consequences
 
-### If Accepted
-
-- Roadmap priority shifts: **Phase A viewer** before more Blender-only features (unless they harden the export contract)
-- Blender stays reference for authoring/QA until Phase B
-- Future_Ideas §11 “no viewer prototype” is superseded for **Phase A only** once Accept + schema note exist
-
-### If Rejected / deferred
-
-- Continue Blender Execution Layer; standalone remains Future Vision without a path lock
+- Roadmap priority: **Phase A web viewer** before more Blender-only features (unless they harden the export contract)
+- Blender stays reference for authoring/QA until Phase B is separately accepted for implementation
+- Future_Ideas §11 “no viewer prototype” is superseded for **Phase A only**
+- Phase B package layout (monorepo vs `layoutlab-viewer`) deferred until B Accept
 
 ------------------------------------------------------------------------
 
-## Open questions (for Accept)
+## Resolved Accept questions
 
-1. **Phase A host:** web (Three.js/Babylon) vs desktop (e.g. Godot) — preference, or “implementer picks”?
-2. **Findings in viewer:** show `analyze_layout` results if present in a sidecar / export extension, or geometry-only for A?
-3. **Phase B timing:** same repo monorepo app vs separate `layoutlab-viewer` package — preference?
-4. **Accept scope:** Accept full A→B path now, or **Accept Phase A only** and re-propose B later?
-
-------------------------------------------------------------------------
-
-## Implementation order (after Accept)
-
-1. Document viewer-minimum export fields in `json_protocol.md`
-2. Add `tests/fixtures/` export snapshot(s) from kids room
-3. Scaffold Phase A viewer (read-only)
-4. Only then: Core command execution without Blender + geometry adapter (Phase B DD amendment or checklist)
-
-**No code under this DD until Status = Accepted** (or written Phase-A-only Accept).
+1. **Phase A host:** Web (Three.js or Babylon — implementer picks)
+2. **Findings in viewer:** Yes, when present in export `analysis`
+3. **Phase B package:** Deferred until Phase B Accept
+4. **Accept scope:** **Phase A only** (this Accept); A→B remains the documented direction
 
 ------------------------------------------------------------------------
 
-## Review checklist
+## Implementation order
 
-- [ ] Agree Core vs adapter rule
-- [ ] Agree Phase A = read-only viewer first
-- [ ] Answer open questions (or defer host choice to implementer)
-- [ ] Accept / Accept-Phase-A / Reject
+1. ~~Viewer-minimum export fields in `json_protocol.md`~~ ✅  
+2. ~~Kids-room export fixture~~ ✅  
+3. Scaffold Phase A viewer (read-only web) ← **next**  
+4. Later: Phase B Accept + Core command path without Blender + geometry adapter

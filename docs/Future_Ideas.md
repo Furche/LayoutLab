@@ -550,19 +550,18 @@ Generators should eventually be able to emit a **runtime-neutral description** (
 
 ### Future viewport (standalone authoring, not only viewer)
 
-A later **own viewport** would use an **existing 3D technology** — **not** a custom GPU render engine from scratch. Concrete stack remains open.
+A later **own viewport** would use an **existing 3D technology** — **not** a custom GPU render engine from scratch.
 
-- **Early experiment:** read-only viewer of current export format (share layouts without Blender).
-- **Long-term product:** full LayoutLab application with authoring, integrated AI, variants, and analysis — not “viewer only”.
+- **Phase A (DD-014 Accepted):** read-only **web** viewer of export JSON (Three.js or Babylon); show findings when present. Contract: `json_protocol.md` §6.4; fixture `reference_kids_room_export.json`.
+- **Long-term product:** full LayoutLab application with authoring, integrated AI, variants, and analysis — not “viewer only” (Phase B+).
 
 ### Explicitly out of scope now
 
-- Babylon.js / Three.js / Godot prototype
-- Separate repository or product fork
-- Replacing Blender as dev platform or primary runtime
+- Phase B write adapter (until separate Accept)
+- Separate product fork / replacing Blender as reference runtime
 - Custom render engine
 - Large refactor for abstraction alone
-- Standalone desktop/web app, mobile scanner, cloud sync (see §18)
+- Mobile scanner, cloud sync (see §18)
 
 ### When a formal DD becomes necessary
 
@@ -572,7 +571,7 @@ A later **own viewport** would use an **existing 3D technology** — **not** a c
 | Variants as first-class objects | **DD-011** — Layout Variants and Comparison |
 | In-app AI product experience | **DD-012** — Integrated AI Product Experience |
 | Capture / reconstruction pipeline | **DD-013** — Capture and Reconstruction Pipeline |
-| Neutral authoring model + second write runtime | **DD-014** — [Proposed](design_decisions/DD-014-standalone-runtime-path.md) (viewer-first path) |
+| Neutral authoring model + second write runtime | **DD-014** — [Accepted — Phase A](design_decisions/DD-014-standalone-runtime-path.md) (web viewer next; Phase B later) |
 
 Do **not** create or accept these DDs until implementation is actually planned. Until then: document here + `ARCHITECTURE.md` §2.2.
 
@@ -593,7 +592,7 @@ Ideas captured for later discussion. No DD, no roadmap slot.
 | Automatic layout repair | AI + planning layer, not execution |
 | Room boundary / wall detection | Unless explicit room mesh in scene; related to §13–§14 |
 | Physics collision | Rejected for v1 analyzer — semantic AABB sufficient (DD-008) |
-| **Read-only export viewer** | See §11 — after export schema frozen; Three.js/Babylon/Godot host |
+| **Read-only export viewer** | **DD-014 Phase A** — Accepted; scaffold next (web / Three.js|Babylon) |
 
 ### Important observation
 
@@ -810,7 +809,7 @@ Do **not** implement from this vision until separate DDs and explicit product ne
 | DD-011 | Layout Variants and Comparison | **Not created** — reserve when implementing §16 |
 | DD-012 | Integrated AI Product Experience | **Not created** — reserve when implementing §7 / §12 |
 | DD-013 | Capture and Reconstruction Pipeline | **Not created** — reserve when implementing §14–§15 |
-| DD-014 | Standalone Runtime Path (viewer → write) | **Proposed** — [DD-014](design_decisions/DD-014-standalone-runtime-path.md); multi-space Spatial Project still later |
+| DD-014 | Standalone Runtime Path (viewer → write) | **Accepted — Phase A only** — [DD-014](design_decisions/DD-014-standalone-runtime-path.md); Phase B later; multi-space Spatial Project still later |
 
 Align numbering with [design_decisions/README.md](design_decisions/README.md) when filing. Do not auto-Accept.
 
