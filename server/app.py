@@ -68,7 +68,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path in ("/health", "/health/"):
-            self._json(200, {"ok": True, "service": "layoutlab-core", "slice": "room_write"})
+            self._json(200, {"ok": True, "service": "layoutlab-core", "slice": "room_write+generators"})
             return
         self._json(404, {"ok": False, "error": f"not found: {path}"})
 

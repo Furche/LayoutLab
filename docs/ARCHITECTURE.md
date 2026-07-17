@@ -131,7 +131,8 @@ Blender is the **first runtime adapter**, not the permanent centre of the produc
 │  [IMPLEMENTED] Blender — bpy meshes, UI, undo, export   │
 │  [IMPLEMENTED] Phase A viewer — read-only Three.js      │
 │  [IMPLEMENTED] Phase B room write — local Python server │
-│  [FUTURE] Generators without Blender (B2) / capture     │
+│  [IMPLEMENTED] Phase B2 — headless run_generator        │
+│  [FUTURE] analyze headless / capture / in-app AI        │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -139,7 +140,7 @@ Blender is the **first runtime adapter**, not the permanent centre of the produc
 `bpy` unless it is explicitly runtime glue.
 
 **Today:** Blender remains the **reference** platform for generator QA. Standalone room
-authoring uses `server/` + `viewer/` (DD-014 Phase B room slice).
++ furniture authoring uses `server/` + `viewer/` (DD-014 Phase B / B2).
 
 ### Spatial Core guardrails `[FUTURE VISION]` (2026-07-16)
 

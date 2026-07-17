@@ -118,7 +118,7 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) | Constraints + `analyze_layout` | **Accepted** — v1 shipped |
 | [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary | **Accepted** |
 | [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Accepted** — MVP shipped v0.9.0 |
-| [DD-014](design_decisions/DD-014-standalone-runtime-path.md) | Standalone runtime path | **Accepted — Phase A + B (room write)** |
+| [DD-014](design_decisions/DD-014-standalone-runtime-path.md) | Standalone runtime path | **Accepted — Phase A + B + B2** |
 
 ### DD-007 (key points)
 
@@ -161,10 +161,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. Phase B2 later: headless generators (`run_generator` without Blender)  
-2. **Not blocking:** tiered clearances, more generators, polygon, multi-room  
+1. Optional: headless `analyze_layout` on session objects  
+2. Optional: thin in-viewer AI chat (commands → Core) — later **DD-012**  
+3. **Not blocking:** tiered clearances, more generators, polygon, multi-room  
 
-`desk_basic` ✅ · Room Model ✅ · **DD-014 Phase A + B (room write)** · viewer + Core server ✅
+`desk_basic` ✅ · Room Model ✅ · **DD-014 Phase A + B + B2** · viewer + Core (rooms + generators) ✅
 
 ------------------------------------------------------------------------
 

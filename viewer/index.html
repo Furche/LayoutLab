@@ -20,6 +20,7 @@
             <input id="file-input" type="file" accept="application/json,.json" hidden />
           </label>
           <button type="button" id="btn-core-empty" class="primary">Empty test room (Core)</button>
+          <button type="button" id="btn-core-furnished" class="primary">Furnished test room (Core)</button>
           <button type="button" id="btn-core-commands" class="ghost">Paste commands…</button>
           <label class="core-url" title="LayoutLab Core HTTP service">
             Core
@@ -59,8 +60,8 @@
         <form method="dialog" id="commands-form">
           <h2>Paste commands → Core</h2>
           <p class="muted">
-            Room Model commands JSON (<code>create_room</code>, openings, …). Posted to
-            <code>POST /v1/commands</code> on the Core URL. Generators are not supported in this slice.
+            Room Model + generator commands JSON. Posted to
+            <code>POST /v1/commands</code> on the Core URL.
           </p>
           <textarea
             id="commands-text"

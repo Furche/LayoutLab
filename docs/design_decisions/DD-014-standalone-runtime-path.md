@@ -1,10 +1,11 @@
 # DD-014 — Standalone Runtime Path (Viewer → Write Adapter)
 
-**Status:** Accepted — Phase A + Phase B (room write slice)  
+**Status:** Accepted — Phase A + Phase B (room) + Phase B2 (generators)  
 **Date:** 2026-07-17  
 **Accepted Phase A:** 2026-07-17  
 **Accepted Phase B (room write):** 2026-07-17  
-**Version:** 0.3  
+**Accepted Phase B2 (generators):** 2026-07-17  
+**Version:** 0.4  
 **Related:** [DD-003](DD-003-json-only-communication.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-010](DD-010-room-model.md) · [ARCHITECTURE.md](../ARCHITECTURE.md) §2.2 · [Future_Ideas.md](../Future_Ideas.md) §11–§12 / §18 · [json_protocol.md](../json_protocol.md) §6.4
 
 ------------------------------------------------------------------------
@@ -30,6 +31,16 @@
 | Generators | Out of this slice (later B2) |
 | Blender | Remains reference for generator QA |
 | Package | Monorepo: `layoutlab/` + `viewer/` + `server/` |
+
+### Phase B2 (generators)
+
+| Topic | Lock |
+|---|---|
+| `run_generator` | Headless via pure Python mesh store + same generator scripts |
+| First generators | Bundled `desk_basic`, `bed_basic`, `wardrobe_basic` |
+| Geometry | Join/parent in Python; export `viewer.mesh` + wire clearances |
+| Not in B2 | `analyze_layout`, undo, `regenerate`, in-app AI |
+| Blender | Still reference QA for generator visuals |
 
 ------------------------------------------------------------------------
 
@@ -90,8 +101,8 @@ DD-009 still holds: AI plans WHAT; Core/adapters execute HOW.
 | Phase | Deliverable | Write? | Status |
 |---|---|---|---|
 | **A — Viewer** | Web app loads LayoutLab export JSON | No | **Accepted + shipped** |
-| **B — Room write** | Local Python service applies room commands → export JSON → viewer | Yes (rooms) | **Accepted — implement** |
-| **B2 — Generators** | Headless `run_generator` / furniture without Blender | Yes | Later |
+| **B — Room write** | Local Python service applies room commands → export JSON → viewer | Yes (rooms) | **Accepted + shipped** |
+| **B2 — Generators** | Headless `run_generator` / furniture without Blender | Yes | **Accepted + shipped** |
 | **C — Product shell** | Project UX, in-app AI, capture | Yes | Future |
 
 ### 3. Interchange contract
@@ -127,9 +138,10 @@ DD-009 still holds: AI plans WHAT; Core/adapters execute HOW.
 
 ## Consequences
 
-- Phase A viewer + Phase B room service are the standalone path for rooms
-- Generators still require Blender until B2
+- Phase A viewer + Phase B/B2 Core service are the standalone path for rooms + furniture
+- `analyze_layout` and in-app AI remain later slices
 - Monorepo layout locked: `server/` + `viewer/` + `layoutlab/`
+- Blender remains reference QA for generator visuals
 
 ------------------------------------------------------------------------
 
@@ -137,5 +149,6 @@ DD-009 still holds: AI plans WHAT; Core/adapters execute HOW.
 
 1. ~~Viewer-minimum export + fixtures + Phase A viewer~~ ✅  
 2. ~~Phase B Accept (room write)~~ ✅  
-3. Headless room session + `server/` + viewer Core buttons ← **now**  
-4. Later B2: generators without Blender  
+3. ~~Headless room session + `server/` + viewer Core buttons~~ ✅  
+4. ~~Phase B2: generators without Blender~~ ✅  
+5. Later: headless analyze / DD-012 AI product UX  

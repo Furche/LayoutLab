@@ -28,12 +28,12 @@ Listens on `http://127.0.0.1:8765` by default.
 
 CORS is enabled for the Vite viewer (`http://localhost:5173`).
 
-## Room write slice
+## Room + generator write slice (Phase B / B2)
 
-Supported actions: `create_room`, `update_room`, `delete_room`, openings,
-fixed elements, `delete_collection_objects`.
+Supported actions: `create_room`, openings, fixed elements, `delete_collection_objects`,
+`delete_prefix`, `run_generator` (bundled generators: `bed_basic`, `desk_basic`, `wardrobe_basic`).
 
-Not in this slice: `run_generator`, `analyze_layout`, furniture.
+Not yet: `analyze_layout`, undo, `regenerate`.
 
 ## Example
 
@@ -42,10 +42,8 @@ curl -s http://127.0.0.1:8765/health
 
 curl -s -X POST http://127.0.0.1:8765/v1/commands \
   -H 'Content-Type: application/json' \
-  -d @tests/fixtures/reference_kids_room_shell_commands.json
+  -d @tests/fixtures/reference_kids_room_commands.json
 ```
-
-The response `export` field is the same shape the Phase A viewer loads.
 
 ## Viewer
 
@@ -53,5 +51,5 @@ The response `export` field is the same shape the Phase A viewer loads.
 cd viewer && npm run dev
 ```
 
-Then use **Empty test room (Core)** in the viewer toolbar (Core URL default
+Use **Empty test room (Core)** or **Furnished test room (Core)** (Core URL default
 `http://127.0.0.1:8765`).

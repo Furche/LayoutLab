@@ -20,12 +20,12 @@ New decisions use the next sequential number: `DD-006`, `DD-007`, …
 | [DD-008](DD-008-constraints-and-layout-analysis.md) | Constraints and layout analysis | Accepted | 2026-07-12 |
 | [DD-009](DD-009-ai-execution-boundary.md) | AI execution boundary; plugin responsibility | Accepted | 2026-07-12 |
 | [DD-010](DD-010-room-model.md) | Room Model (single space) — editable space, not room generator | **Accepted** | 2026-07-16 |
-| [DD-014](DD-014-standalone-runtime-path.md) | Standalone runtime path (viewer → write adapter) | **Accepted — Phase A + B (room)** | 2026-07-17 |
+| [DD-014](DD-014-standalone-runtime-path.md) | Standalone runtime path (viewer → write adapter) | **Accepted — Phase A + B + B2** | 2026-07-17 |
 
 When implementing anything that touches APIs, JSON protocol, generator behaviour,
 or UI patterns — check this index first.
 
 **Reserved (not created):** Future_Ideas §19 may later use DD-011 … DD-013 for
 Variants, Integrated AI, Capture Pipeline. **DD-014** is now the Standalone Runtime
-path (Phase A + Phase B room write Accepted; multi-space Spatial Project remains a later DD).
+path (Phase A + B room write + B2 generators Accepted; multi-space Spatial Project remains a later DD).
 Do not invent files for remaining reserved IDs until an actual proposal is written.

@@ -1,4 +1,4 @@
-"""In-memory Room Model session + headless viewer export (no bpy)."""
+"""In-memory Layout session: rooms + headless furniture (DD-014 Phase B/B2)."""
 
 from __future__ import annotations
 
@@ -6,12 +6,20 @@ import copy
 from typing import Any
 
 from ..core import room as room_core
-from ..protocol.viewer_export import VIEWER_SCHEMA, round_corner, viewer_block_for_role
+from ..protocol.viewer_export import (
+    MAX_VIEWER_MESH_VERTS,
+    SKIP_VIEWER_ROLES,
+    VIEWER_SCHEMA,
+    round_corner,
+    viewer_block_for_role,
+)
+from .headless_api import execute_generator_headless
+from .mesh_store import MeshStore, triangulate_faces
 
 # Keep in sync with layoutlab/__init__.py bl_info version when bumping the plugin.
 LAYOUTLAB_VERSION = "0.10.8"
 
-ROOM_ACTIONS = frozenset(
+SESSION_ACTIONS = frozenset(
     {
         "create_room",
         "update_room",
@@ -23,6 +31,8 @@ ROOM_ACTIONS = frozenset(
         "update_fixed_element",
         "remove_fixed_element",
         "delete_collection_objects",
+        "delete_prefix",
+        "run_generator",
     }
 )
 
@@ -53,23 +63,33 @@ def _object_dict(
     location,
     dimensions,
     role,
-    room_id,
+    object_id,
     world_bbox_corners,
     viewer=None,
     extra_props=None,
     entity_id=None,
+    obj_type="MESH",
+    layoutlab_extra=None,
 ):
     props = {
         "layoutlab_role": role,
-        "layoutlab_room_id": room_id,
     }
+    if object_id:
+        props["layoutlab_object_id"] = object_id
     if entity_id:
         props["layoutlab_room_entity_id"] = entity_id
     if extra_props:
         props.update(extra_props)
+    layoutlab = {
+        "object_id": object_id,
+        "role": role,
+        "part": (layoutlab_extra or {}).get("part") or role,
+    }
+    if layoutlab_extra:
+        layoutlab.update({k: v for k, v in layoutlab_extra.items() if v is not None})
     data = {
         "name": name,
-        "type": "MESH",
+        "type": obj_type,
         "collection": collection,
         "location": _r3(location),
         "rotation_euler_deg": [0.0, 0.0, 0.0],
@@ -77,12 +97,10 @@ def _object_dict(
         "dimensions": _r3(dimensions),
         "visible": True,
         "world_bbox_corners": [_r3(c) for c in world_bbox_corners],
-        "custom_properties": props,
-        "layoutlab": {
-            "object_id": room_id,
-            "role": role,
-            "part": role,
+        "custom_properties": {
+            k: v for k, v in props.items() if isinstance(v, (str, int, float, bool))
         },
+        "layoutlab": layoutlab,
     }
     if viewer:
         data["viewer"] = viewer
@@ -104,9 +122,10 @@ def _room_objects(model):
             location=floor_loc,
             dimensions=floor_dims,
             role="room_floor",
-            room_id=room_id,
+            object_id=room_id,
             world_bbox_corners=_box_corners(floor_loc, floor_dims),
             viewer=viewer_block_for_role("room_floor"),
+            extra_props={"layoutlab_room_id": room_id},
         )
     )
 
@@ -135,11 +154,12 @@ def _room_objects(model):
                     location=loc,
                     dimensions=dims,
                     role="room_wall",
-                    room_id=room_id,
+                    object_id=room_id,
                     world_bbox_corners=corners,
                     viewer=viewer_block_for_role("room_wall", corners=corners),
                     entity_id=wall.get("wall_id"),
                     extra_props={
+                        "layoutlab_room_id": room_id,
                         "layoutlab_wall_side": wall["side"],
                         "layoutlab_wall_facing": "inward",
                         "layoutlab_wall_panel_index": index,
@@ -156,10 +176,11 @@ def _room_objects(model):
                 location=loc,
                 dimensions=dims,
                 role="room_opening",
-                room_id=room_id,
+                object_id=room_id,
                 world_bbox_corners=_box_corners(loc, dims),
                 viewer=viewer_block_for_role("room_opening", display_type="WIRE"),
                 entity_id=opening.get("opening_id"),
+                extra_props={"layoutlab_room_id": room_id},
             )
         )
 
@@ -172,22 +193,79 @@ def _room_objects(model):
                 location=loc,
                 dimensions=dims,
                 role="room_fixed",
-                room_id=room_id,
+                object_id=room_id,
                 world_bbox_corners=_box_corners(loc, dims),
                 viewer=viewer_block_for_role("room_fixed"),
                 entity_id=fixed.get("fixed_element_id"),
+                extra_props={"layoutlab_room_id": room_id},
             )
         )
 
     return objects
 
 
+def _furniture_export_object(obj):
+    role = obj.get("layoutlab_role") or ""
+    if role in SKIP_VIEWER_ROLES or obj.type == "FONT":
+        return None
+
+    object_id = obj.get("layoutlab_object_id")
+    world_origin = obj.world_origin()
+    dims = obj.dimensions()
+    corners = obj.world_bbox_corners()
+
+    display_type = obj.display_type
+    is_wire = role == "clearance" or str(display_type).upper() == "WIRE"
+    mesh = None
+    if not is_wire and obj.vertices and len(obj.vertices) <= MAX_VIEWER_MESH_VERTS:
+        mesh = {
+            "vertices": [_r3(v) for v in obj.world_vertices()],
+            "faces": triangulate_faces(obj.faces),
+        }
+
+    viewer = viewer_block_for_role(
+        role,
+        display_type=display_type if is_wire else None,
+        mesh=mesh,
+    )
+
+    extra = {
+        k: v
+        for k, v in obj.props.items()
+        if isinstance(v, (str, int, float, bool)) and k != "layoutlab_role"
+    }
+    if object_id:
+        extra["layoutlab_object_id"] = object_id
+
+    return _object_dict(
+        name=obj.name,
+        collection=obj.collection,
+        location=world_origin,
+        dimensions=dims,
+        role=role or "mesh",
+        object_id=object_id,
+        world_bbox_corners=corners,
+        viewer=viewer,
+        extra_props=extra,
+        obj_type=obj.type,
+        layoutlab_extra={
+            "part": obj.get("layoutlab_part"),
+            "generator": obj.get("layoutlab_generator"),
+            "part_type": obj.get("layoutlab_part_type"),
+        },
+    )
+
+
 def export_viewer_scene(session: "RoomSession") -> dict:
-    """Build viewer_schema export dict from session rooms (same shape as Blender export)."""
+    """Build viewer_schema export dict from session rooms + furniture."""
     rooms = [room_core.export_room_block(m) for m in session.list_rooms()]
     objects = []
     for model in session.list_rooms():
         objects.extend(_room_objects(model))
+    for obj in session.mesh_store.objects:
+        exported = _furniture_export_object(obj)
+        if exported:
+            objects.append(exported)
     return {
         "layoutlab_version": LAYOUTLAB_VERSION,
         "viewer_schema": VIEWER_SCHEMA,
@@ -198,7 +276,7 @@ def export_viewer_scene(session: "RoomSession") -> dict:
         "note": (
             "Coordinates/dimensions are LayoutLab scene units (native). "
             "With Metric and unit_scale=1.0, 1 unit = 1 meter. "
-            "Headless Room Model export (DD-014 Phase B)."
+            "Headless Room Model + generator export (DD-014 Phase B2)."
         ),
         "rooms": rooms,
         "objects": objects,
@@ -207,19 +285,21 @@ def export_viewer_scene(session: "RoomSession") -> dict:
             "scope": "scene",
             "summary": {"errors": 0, "warnings": 0, "info": 0},
             "findings": [],
-            "note": "analyze_layout not available on headless room session in this slice",
+            "note": "analyze_layout not available on headless session in this slice",
         },
     }
 
 
 class RoomSession:
-    """In-memory store of room models keyed by room_id / name."""
+    """In-memory rooms + furniture mesh store."""
 
     def __init__(self):
-        self._rooms: dict[str, dict] = {}  # room_id -> model
+        self._rooms: dict[str, dict] = {}
+        self.mesh_store = MeshStore()
 
     def clear(self):
         self._rooms.clear()
+        self.mesh_store.clear()
 
     def list_rooms(self):
         return [copy.deepcopy(m) for m in self._rooms.values()]
@@ -269,29 +349,48 @@ class RoomSession:
 
     def apply_command(self, cmd: dict) -> Any:
         action = cmd.get("action")
-        if action not in ROOM_ACTIONS:
+        if action not in SESSION_ACTIONS:
             raise ValueError(
-                f"unsupported action {action!r} in room write slice "
-                f"(allowed: {sorted(ROOM_ACTIONS)})"
+                f"unsupported action {action!r} in headless session "
+                f"(allowed: {sorted(SESSION_ACTIONS)})"
             )
 
         if action == "delete_collection_objects":
             collection = cmd.get("collection")
             if not collection:
                 raise ValueError("delete_collection_objects requires collection")
-            removed = [
+            removed_rooms = [
                 rid
                 for rid, model in list(self._rooms.items())
                 if (model.get("collection") or "layoutlab_room") == collection
             ]
-            for rid in removed:
+            for rid in removed_rooms:
                 del self._rooms[rid]
-            return {"deleted": len(removed), "collection": collection, "room_ids": removed}
+            removed_meshes = self.mesh_store.delete_collection(collection)
+            return {
+                "deleted": len(removed_rooms) + removed_meshes,
+                "collection": collection,
+                "room_ids": removed_rooms,
+                "mesh_count": removed_meshes,
+            }
+
+        if action == "delete_prefix":
+            prefix = cmd.get("prefix")
+            if not prefix:
+                raise ValueError("delete_prefix requires prefix")
+            n = self.mesh_store.delete_prefix(prefix)
+            return {"deleted": n, "prefix": prefix}
+
+        if action == "run_generator":
+            generator = cmd.get("generator")
+            if not generator:
+                raise ValueError("run_generator requires generator")
+            params = dict(cmd.get("params") or {})
+            return execute_generator_headless(generator, params, store=self.mesh_store)
 
         if action == "create_room":
             params = cmd.get("params") or cmd
             model = room_core.create_room_model(params)
-            # Replace existing room with same name in same collection
             existing = self.get_by_name(model["name"])
             if existing and existing.get("collection") == model.get("collection"):
                 del self._rooms[existing["room_id"]]
@@ -355,8 +454,12 @@ class RoomSession:
             try:
                 results.append({"index": index, "ok": True, "result": self.apply_command(cmd)})
             except Exception as exc:
-                errors.append({"index": index, "ok": False, "error": str(exc), "action": cmd.get("action")})
-                results.append({"index": index, "ok": False, "error": str(exc), "action": cmd.get("action")})
+                errors.append(
+                    {"index": index, "ok": False, "error": str(exc), "action": cmd.get("action")}
+                )
+                results.append(
+                    {"index": index, "ok": False, "error": str(exc), "action": cmd.get("action")}
+                )
         ok = not errors
         return {
             "ok": ok,

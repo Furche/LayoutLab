@@ -24,6 +24,7 @@ const el = {
   btnFixture: document.getElementById("btn-fixture"),
   btnFindings: document.getElementById("btn-findings"),
   btnCoreEmpty: document.getElementById("btn-core-empty"),
+  btnCoreFurnished: document.getElementById("btn-core-furnished"),
   btnCoreCommands: document.getElementById("btn-core-commands"),
   coreUrl: document.getElementById("core-url"),
   pasteDialog: document.getElementById("paste-dialog"),
@@ -90,6 +91,46 @@ const EMPTY_TEST_ROOM_COMMANDS = {
         width: 1.1,
         depth: 0.1,
         height: 0.75,
+      },
+    },
+  ],
+};
+
+/** Same as layoutlab/plugin/test_rooms.py furnished_test_room_commands(). */
+const FURNISHED_TEST_ROOM_COMMANDS = {
+  commands: [
+    ...EMPTY_TEST_ROOM_COMMANDS.commands,
+    {
+      action: "run_generator",
+      generator: "bed_basic",
+      params: {
+        name: "BED_120x200",
+        location: [0.15, 0.09, 0],
+        length: 1.2,
+        width: 2.0,
+        head_side: "y_max",
+        clearances: [
+          {
+            clearance_name: "bed_entry",
+            side: "right",
+            depth: 0.5,
+            requirement: "preferred",
+          },
+        ],
+        collection: "layoutlab_room",
+      },
+    },
+    {
+      action: "run_generator",
+      generator: "desk_basic",
+      params: {
+        name: "DESK_120x60",
+        location: [2.7, 1.58, 0],
+        width: 1.2,
+        depth: 0.6,
+        height: 0.75,
+        show_clearance: true,
+        collection: "layoutlab_room",
       },
     },
   ],
@@ -708,8 +749,14 @@ el.btnCoreEmpty?.addEventListener("click", () => {
   );
 });
 
+el.btnCoreFurnished?.addEventListener("click", () => {
+  postCommandsToCore(FURNISHED_TEST_ROOM_COMMANDS, "Core · furnished kids room").catch((err) =>
+    setStatus(err.message, "error"),
+  );
+});
+
 el.btnCoreCommands?.addEventListener("click", () => {
-  el.commandsText.value = JSON.stringify(EMPTY_TEST_ROOM_COMMANDS, null, 2);
+  el.commandsText.value = JSON.stringify(FURNISHED_TEST_ROOM_COMMANDS, null, 2);
   el.commandsDialog.showModal();
   el.commandsText.focus();
 });
