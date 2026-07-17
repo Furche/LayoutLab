@@ -464,26 +464,35 @@ renderer.domElement.addEventListener("pointerup", (ev) => {
   }
 });
 
-// Drag & drop export JSON
-["dragenter", "dragover"].forEach((type) => {
-  el.viewport.addEventListener(type, (ev) => {
-    ev.preventDefault();
-    el.dropHint.hidden = false;
-    el.viewport.classList.add("drag-over");
-  });
+// Drag & drop export JSON (counter avoids flicker on child enter/leave)
+let dragDepth = 0;
+
+function showDropOverlay(on) {
+  if (on) el.viewport.classList.add("drag-over");
+  else el.viewport.classList.remove("drag-over");
+}
+
+el.viewport.addEventListener("dragenter", (ev) => {
+  ev.preventDefault();
+  dragDepth += 1;
+  showDropOverlay(true);
 });
-["dragleave", "drop"].forEach((type) => {
-  el.viewport.addEventListener(type, (ev) => {
-    ev.preventDefault();
-    if (type === "dragleave" && ev.target !== el.viewport) return;
-    el.dropHint.hidden = true;
-    el.viewport.classList.remove("drag-over");
-  });
+
+el.viewport.addEventListener("dragover", (ev) => {
+  ev.preventDefault();
+  if (ev.dataTransfer) ev.dataTransfer.dropEffect = "copy";
 });
+
+el.viewport.addEventListener("dragleave", (ev) => {
+  ev.preventDefault();
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) showDropOverlay(false);
+});
+
 el.viewport.addEventListener("drop", (ev) => {
   ev.preventDefault();
-  el.dropHint.hidden = true;
-  el.viewport.classList.remove("drag-over");
+  dragDepth = 0;
+  showDropOverlay(false);
   const file = ev.dataTransfer?.files?.[0];
   if (file) {
     loadFile(file).catch((err) => setStatus(`Error: ${err.message}`, "error"));
@@ -498,7 +507,6 @@ el.viewport.addEventListener("drop", (ev) => {
     }
   }
 });
-
 window.addEventListener("paste", (ev) => {
   const tag = (ev.target && ev.target.tagName) || "";
   if (tag === "TEXTAREA" || tag === "INPUT") return;

@@ -335,7 +335,7 @@ button:hover {
 .drop-hint {
   position: absolute;
   inset: 0;
-  display: grid;
+  display: none;
   place-items: center;
   pointer-events: none;
   background: color-mix(in srgb, var(--accent) 12%, transparent);
@@ -343,6 +343,11 @@ button:hover {
   font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+  z-index: 4;
+}
+
+.viewport.drag-over .drop-hint {
+  display: grid;
 }
 
 .status {
