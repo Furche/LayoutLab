@@ -926,6 +926,13 @@ el.chatForm?.addEventListener("submit", (ev) => {
     });
 });
 
+el.chatInput?.addEventListener("keydown", (ev) => {
+  if (ev.key !== "Enter") return;
+  if (ev.shiftKey) return; // Shift+Enter = newline
+  ev.preventDefault();
+  el.chatForm?.requestSubmit();
+});
+
 el.btnChatDiscard?.addEventListener("click", () => {
   clearChatProposal();
   setStatus("Chat proposal discarded");

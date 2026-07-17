@@ -72,6 +72,17 @@ class TestAgentTools(unittest.TestCase):
         self.assertEqual(out["mode"], "demo")
         self.assertEqual(out["proposal"]["commands"][0]["action"], "delete_collection_objects")
 
+    def test_proposal_missing_detects_bed_and_door(self):
+        from layoutlab.runtime import agent as ag
+
+        conv = "neuer raum mit bett vor der tür\n3x5 meter"
+        missing = ag._proposal_missing_requested(
+            conv,
+            [{"action": "create_room", "params": {"width": 3, "depth": 5}}],
+        )
+        self.assertTrue(any("add_opening" in m for m in missing))
+        self.assertTrue(any("bed_basic" in m for m in missing))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -22,50 +22,115 @@ AI decides WHAT; LayoutLab Core executes HOW. You invent no meshes, bpy, or free
 Workflow:
 1. Use at most a few tools (prefer get_scene_summary, then get_room / list_objects only if needed).
 2. Do NOT keep calling tools in a loop. After you understand the room, STOP tools and output the final JSON.
-3. Ask clarifying questions in the final JSON if critical info is missing.
+3. Ask clarifying questions ONLY if size/placement is still unknown. If the user already answered, do NOT ask again — emit complete commands.
 4. Finish with ONLY a JSON object (no markdown fences):
 {
   "reply": "short explanation in the user's language",
-  "questions": ["optional clarifying questions"],
+  "questions": [],
   "proposal": {
     "proposal_id": "uuid-or-string",
     "title": "short title",
     "rationale": "why this plan",
     "assumes": [],
-    "commands": [ /* LayoutLab commands only */ ],
+    "commands": [ /* full LayoutLab commands */ ],
     "expected_risks": []
   },
   "suggested_next_tools": []
 }
 
+Completeness (critical):
+- If the user wants a room WITH a door/window, commands MUST include add_opening (not only create_room).
+- If the user wants a bed/desk/wardrobe, commands MUST include run_generator for that item.
+- Never say you will place furniture/openings unless those commands are in proposal.commands.
+- Fresh layout sequence typically:
+  1) delete_collection_objects collection=layoutlab_room
+  2) create_room (width/depth/height in meters, collection=layoutlab_room)
+  3) add_opening for door/window (wall_side, offset, width, height, sill_height for windows)
+  4) run_generator e.g. bed_basic with location so the bed sits near the door wall but does not block the opening.
+
+Example fragment (door on east, bed near east wall):
+{"action":"add_opening","params":{"room":"ROOM","opening_name":"door_east","kind":"door","wall_side":"east","offset":0.3,"width":0.9,"height":2.0}}
+{"action":"run_generator","generator":"bed_basic","params":{"name":"BED","location":[1.0,0.15,0],"length":1.2,"width":2.0,"head_side":"y_max","collection":"layoutlab_room"}}
+
 Rules:
-- Prefer Metric meters (1 unit = 1 m).
-- Commands: only allowlisted actions (use list_supported_actions if needed).
-- Generators: bed_basic, desk_basic, wardrobe_basic.
-- For a fresh room, delete_collection_objects on layoutlab_room first, then create_room, then openings/furniture.
-- Place furniture with location in meters relative to room origin; door on a wall_side means keep clearance away from that opening.
+- Prefer Metric meters (1 unit = 1 m). width = X, depth = Y.
+- Generators: bed_basic, desk_basic, wardrobe_basic only.
 - Do not claim you applied changes — the user must Apply.
-- If you only need questions, set proposal.commands to [].
+- If you only need questions, set proposal.commands to [] AND leave questions non-empty.
 """
 
 MAX_TOOL_ROUNDS = 5
+REPAIR_HINT = (
+    "Your previous proposal was incomplete for the user's request. "
+    "Return ONLY a new JSON proposal whose commands include ALL required parts "
+    "(create_room AND add_opening for doors/windows AND run_generator for furniture). "
+    "questions must be []. No markdown, no tools."
+)
 
 
-def _finalize_proposal_from_messages(settings: dict, messages: list, tool_trace: list) -> dict:
+def _user_wants_bed(text: str) -> bool:
+    t = text.lower()
+    return any(k in t for k in ("bett", "bed"))
+
+
+def _user_wants_door(text: str) -> bool:
+    t = text.lower()
+    return any(k in t for k in ("tür", "tur", "door", "eingang"))
+
+
+def _user_wants_room(text: str) -> bool:
+    t = text.lower()
+    return any(k in t for k in ("raum", "zimmer", "room", "erstell"))
+
+
+def _conversation_text(message: str, history: list | None) -> str:
+    parts = [message or ""]
+    for item in history or []:
+        if isinstance(item, dict) and item.get("role") == "user":
+            parts.append(str(item.get("content") or ""))
+    return "\n".join(parts)
+
+
+def _proposal_missing_requested(conversation: str, commands: list) -> list:
+    """Return list of missing requirement labels for a repair turn."""
+    missing = []
+    actions = [c.get("action") for c in commands]
+    gens = [c.get("generator") for c in commands if c.get("action") == "run_generator"]
+    if _user_wants_room(conversation) and "create_room" not in actions:
+        missing.append("create_room")
+    if _user_wants_door(conversation) and "add_opening" not in actions:
+        missing.append("add_opening (door)")
+    if _user_wants_bed(conversation) and "bed_basic" not in gens:
+        missing.append("run_generator bed_basic")
+    # Furniture/door requested but only empty shell
+    if (_user_wants_bed(conversation) or _user_wants_door(conversation)) and commands:
+        if "create_room" in actions and "add_opening" not in actions and "run_generator" not in actions:
+            if "add_opening (door)" not in missing and _user_wants_door(conversation):
+                missing.append("add_opening (door)")
+            if "run_generator bed_basic" not in missing and _user_wants_bed(conversation):
+                missing.append("run_generator bed_basic")
+    return missing
+
+
+def _finalize_proposal_from_messages(
+    settings: dict,
+    messages: list,
+    tool_trace: list,
+    *,
+    repair_note: str | None = None,
+) -> dict:
     """Force one JSON-only completion after tools (or when the model loops)."""
     force_msgs = list(messages)
-    force_msgs.append(
-        {
-            "role": "user",
-            "content": (
-                "Stop calling tools. Using the tool results already available, "
-                "return ONLY the final JSON proposal object now (no markdown, no tools)."
-            ),
-        }
+    content = repair_note or (
+        "Stop calling tools. Using the tool results and conversation already available, "
+        "return ONLY a COMPLETE final JSON proposal now (no markdown, no tools). "
+        "If the user asked for a door and bed, commands MUST include add_opening and "
+        "run_generator bed_basic, not only create_room."
     )
+    force_msgs.append({"role": "user", "content": content})
     raw = _chat_completions(settings, force_msgs, tools=None)
-    content = (((raw.get("choices") or [{}])[0].get("message") or {}).get("content")) or ""
-    parsed = _extract_json_object(content)
+    text = (((raw.get("choices") or [{}])[0].get("message") or {}).get("content")) or ""
+    parsed = _extract_json_object(text)
     normalized = _normalize_proposal(parsed)
     return {
         "ok": True,
@@ -78,6 +143,25 @@ def _finalize_proposal_from_messages(settings: dict, messages: list, tool_trace:
         "commands": normalized["proposal"]["commands"],
         "tool_trace": tool_trace,
     }
+
+
+def _maybe_repair_proposal(settings, messages, result, conversation: str) -> dict:
+    commands = result.get("commands") or []
+    questions = result.get("questions") or []
+    # If still asking questions and no commands, leave as-is.
+    if questions and not commands:
+        return result
+    missing = _proposal_missing_requested(conversation, commands)
+    if not missing:
+        return result
+    note = REPAIR_HINT + " Missing: " + ", ".join(missing) + "."
+    repaired = _finalize_proposal_from_messages(
+        settings, messages, result.get("tool_trace") or [], repair_note=note
+    )
+    # Prefer repaired if it covers more; else keep original
+    if len(repaired.get("commands") or []) >= len(commands):
+        return repaired
+    return result
 
 
 def _tool_call_fingerprint(tool_calls: list) -> str:
@@ -220,6 +304,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
 
     settings = resolve_llm_settings(llm_config)
     tools = openai_tool_definitions()
+    conversation = _conversation_text(message, history)
     messages = [
         {"role": "system", "content": AGENT_SYSTEM_PROMPT},
     ]
@@ -252,8 +337,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             if tool_calls and use_tools:
                 fp = _tool_call_fingerprint(tool_calls)
                 if fp in seen_tool_fps:
-                    # Model is looping the same tools — finalize.
-                    return _finalize_proposal_from_messages(settings, messages, tool_trace)
+                    result = _finalize_proposal_from_messages(settings, messages, tool_trace)
+                    return _maybe_repair_proposal(settings, messages, result, conversation)
                 seen_tool_fps.add(fp)
 
                 messages.append(
@@ -293,10 +378,11 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             try:
                 parsed = _extract_json_object(content)
             except Exception:
-                return _finalize_proposal_from_messages(settings, messages, tool_trace)
+                result = _finalize_proposal_from_messages(settings, messages, tool_trace)
+                return _maybe_repair_proposal(settings, messages, result, conversation)
 
             normalized = _normalize_proposal(parsed)
-            return {
+            result = {
                 "ok": True,
                 "mode": "agent",
                 "model": settings["model"],
@@ -307,9 +393,10 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 "commands": normalized["proposal"]["commands"],
                 "tool_trace": tool_trace,
             }
+            return _maybe_repair_proposal(settings, messages, result, conversation)
 
-        # Exhausted rounds while still tool-calling — force proposal from context.
-        return _finalize_proposal_from_messages(settings, messages, tool_trace)
+        result = _finalize_proposal_from_messages(settings, messages, tool_trace)
+        return _maybe_repair_proposal(settings, messages, result, conversation)
     except Exception as exc:
         demo = _demo_as_agent_result(message)
         if demo:

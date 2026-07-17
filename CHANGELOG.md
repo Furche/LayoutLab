@@ -8,6 +8,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Agent incomplete proposals:** after a turn, Core repairs proposals that claim room+door+bed but only emit `create_room` (forces a second finalize with missing `add_opening` / `bed_basic`)
+- **Viewer chat Enter:** Enter submits the prompt; Shift+Enter inserts a newline
+
 ### Added
 
 - **DD-014 Phase B (room write):** Accepted locks — local Python Core HTTP service, Room Model commands only, headless viewer export (no `bpy`); Blender remains generator QA reference ([DD-014](docs/design_decisions/DD-014-standalone-runtime-path.md))
