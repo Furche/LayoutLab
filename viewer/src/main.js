@@ -49,6 +49,10 @@ const el = {
   llmModel: document.getElementById("llm-model"),
   llmBaseUrl: document.getElementById("llm-base-url"),
   btnLlmClear: document.getElementById("btn-llm-clear"),
+  btnSettings: document.getElementById("btn-settings"),
+  settingsPopover: document.getElementById("settings-popover"),
+  inspector: document.getElementById("inspector"),
+  btnInspectorToggle: document.getElementById("btn-inspector-toggle"),
 };
 
 /** Same shell as layoutlab/plugin/test_rooms.py empty_test_room_commands(). */
@@ -994,6 +998,39 @@ el.btnLlmClear?.addEventListener("click", () => {
   if (el.llmApiKey) el.llmApiKey.value = "";
   persistLlmSettings();
   setStatus("LLM API-Key gelöscht (lokal)", "ok");
+});
+
+function setSettingsOpen(open) {
+  if (!el.settingsPopover || !el.btnSettings) return;
+  el.settingsPopover.hidden = !open;
+  el.btnSettings.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+el.btnSettings?.addEventListener("click", (ev) => {
+  ev.stopPropagation();
+  const open = el.settingsPopover?.hidden !== false;
+  setSettingsOpen(open);
+});
+
+document.addEventListener("click", (ev) => {
+  if (!el.settingsPopover || el.settingsPopover.hidden) return;
+  const t = ev.target;
+  if (el.settingsPopover.contains(t) || el.btnSettings?.contains(t)) return;
+  setSettingsOpen(false);
+});
+
+function setInspectorCollapsed(collapsed) {
+  if (!el.inspector || !el.btnInspectorToggle) return;
+  el.inspector.dataset.collapsed = collapsed ? "true" : "false";
+  el.btnInspectorToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  el.btnInspectorToggle.title = collapsed ? "Inspector öffnen" : "Inspector schließen";
+  // Wait for CSS grid transition so Three.js picks the new viewport size.
+  window.setTimeout(resize, 220);
+}
+
+el.btnInspectorToggle?.addEventListener("click", () => {
+  const collapsed = el.inspector?.dataset.collapsed !== "false";
+  setInspectorCollapsed(!collapsed);
 });
 
 el.pasteForm.addEventListener("submit", (ev) => {

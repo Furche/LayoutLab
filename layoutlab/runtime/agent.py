@@ -1,4 +1,4 @@
-"""Agent turn: tool calling → structured proposal (agent_tools 0.1)."""
+"""Agent turn: tool calling → structured proposal (agent_tools 0.2)."""
 
 from __future__ import annotations
 
@@ -16,12 +16,19 @@ from .chat import (
 )
 from .tools import dispatch_tool, openai_tool_definitions
 
-AGENT_SYSTEM_PROMPT = """You are LayoutLab's planning agent (DD-009 / agent_tools 0.1).
+AGENT_SYSTEM_PROMPT = """You are LayoutLab's planning agent (DD-009 / agent_tools 0.2).
 AI decides WHAT; LayoutLab Core executes HOW. You invent no meshes, bpy, or free Python.
 
+Context:
+- A scene seed (get_scene_summary + list_generators) is already injected — trust it.
+- Call get_room / list_objects only when you need details the seed lacks.
+- Before a non-empty final proposal, prefer validate_commands then dry_run_commands.
+  If dry_run fails or analysis shows clearance errors, revise commands and dry-run again.
+- dry_run does NOT commit — the user must Apply.
+
 Workflow:
-1. Use at most a few tools (prefer get_scene_summary, then get_room / list_objects only if needed).
-2. Do NOT keep calling tools in a loop. After you understand the room, STOP tools and output the final JSON.
+1. Read the seed. Use at most a few extra tools if needed.
+2. Do NOT loop tools forever. After you understand the plan, STOP tools and output final JSON.
 3. Ask clarifying questions ONLY if size/placement is still unknown. If the user already answered, do NOT ask again — emit complete commands.
 4. Finish with ONLY a JSON object (no markdown fences):
 {
@@ -59,7 +66,7 @@ Rules:
 - If you only need questions, set proposal.commands to [] AND leave questions non-empty.
 """
 
-MAX_TOOL_ROUNDS = 5
+MAX_TOOL_ROUNDS = 6
 REPAIR_HINT = (
     "Your previous proposal was incomplete for the user's request. "
     "Return ONLY a new JSON proposal whose commands include ALL required parts "
@@ -170,6 +177,46 @@ def _tool_call_fingerprint(tool_calls: list) -> str:
         fn = call.get("function") or {}
         parts.append(f"{fn.get('name')}:{(fn.get('arguments') or '').strip()}")
     return "|".join(parts)
+
+
+def _inject_scene_seed(session, messages: list, tool_trace: list) -> None:
+    """Prepend authoritative Core seed as synthetic tool results (no LLM round)."""
+    seeds = (
+        ("seed_scene_summary", "get_scene_summary", {}),
+        ("seed_list_generators", "list_generators", {}),
+    )
+    tool_calls = []
+    tool_msgs = []
+    for call_id, name, args in seeds:
+        try:
+            result = dispatch_tool(session, name, args)
+            err = None
+        except Exception as exc:
+            result = {"ok": False, "error": str(exc)}
+            err = str(exc)
+        tool_trace.append({"tool": name, "arguments": args, "ok": err is None, "error": err, "seed": True})
+        tool_calls.append(
+            {
+                "id": call_id,
+                "type": "function",
+                "function": {"name": name, "arguments": json.dumps(args)},
+            }
+        )
+        tool_msgs.append(
+            {
+                "role": "tool",
+                "tool_call_id": call_id,
+                "content": json.dumps(result, ensure_ascii=False),
+            }
+        )
+    messages.append(
+        {
+            "role": "assistant",
+            "content": "Core seed loaded.",
+            "tool_calls": tool_calls,
+        }
+    )
+    messages.extend(tool_msgs)
 
 
 def _extract_json_object(text: str) -> dict:
@@ -319,6 +366,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
     messages.append({"role": "user", "content": message})
 
     tool_trace = []
+    _inject_scene_seed(session, messages, tool_trace)
     seen_tool_fps = set()
     try:
         for round_i in range(MAX_TOOL_ROUNDS):

@@ -1,7 +1,7 @@
 # LayoutLab Agent Tool Contract
 
-**Status:** Design + implementing (Agent-1 read tools)  
-**Version:** `agent_tools` 0.1  
+**Status:** Design + implementing (Agent-2 validate / dry-run)  
+**Version:** `agent_tools` 0.2  
 **Date:** 2026-07-18  
 **Related:** [DD-009](design_decisions/DD-009-ai-execution-boundary.md) · [json_protocol.md](json_protocol.md) · [DD-014](design_decisions/DD-014-standalone-runtime-path.md)
 
@@ -12,7 +12,7 @@
 1. **Core = source of truth.** Tools read/validate Core state; they invent no geometry.
 2. **Writes are proposals.** Mutating commands appear only in `proposal.commands` and need
    explicit Apply (`POST /v1/commands`) — or later an explicit commit tool.
-3. **Seed + tools.** Optional small scene seed; details loaded via tools.
+3. **Seed + tools.** Each agent turn injects a Core scene seed; details load via tools.
 4. **Provider-neutral.** Tool name + JSON params + JSON result + structured final proposal.
 5. **No meshes** in tool responses (except a future explicit debug tool).
 
@@ -34,6 +34,8 @@ Not the LLM transcript — a small app/Core state object:
   "constraints_noted": []
 }
 ```
+
+*(Persistence of this object is still pending — Agent-3.)*
 
 ------------------------------------------------------------------------
 
@@ -86,16 +88,37 @@ Clearances include clearance_name + requirement.
 
 ------------------------------------------------------------------------
 
-## Validate / dry-run (Agent-2 — later)
+## Validate / dry-run (Agent-2)
 
 ### `validate_commands`
 
-Static checks only (allowlist, required fields, generator exists). No geometry.
+**Params:** `{ "commands": [ … ] }`
+
+Static checks only (allowlist, required fields, known generators). No geometry.
+Returns `{ ok, errors[], warnings[], command_count }`.
 
 ### `dry_run_commands`
 
-Clone session → apply commands → optional analyze → discard clone. No live commit.
-Enables Plan → Dry-Run → Analyze → Revise without mutating the user session.
+**Params:** `{ "commands": [ … ], "analyze"?: true, "stop_on_invalid"?: true }`
+
+1. Optionally validate (default stop if invalid).
+2. `RoomSession.clone()` → apply commands on the clone.
+3. Optional analyze + `scene_after` summary.
+4. **Live session is never mutated.**
+
+Enables Plan → Dry-Run → Analyze → Revise without committing.
+
+------------------------------------------------------------------------
+
+## Turn seed (Agent-2)
+
+Every LLM agent turn injects synthetic tool results before the first model call:
+
+1. `get_scene_summary`
+2. `list_generators`
+
+The model should trust this seed and only call extra read tools when needed.
+Prefer `validate_commands` → `dry_run_commands` before a non-empty final proposal.
 
 ------------------------------------------------------------------------
 
@@ -129,7 +152,7 @@ Core re-sanitizes against the allowlist before apply.
 | Endpoint | Role |
 |---|---|
 | `POST /v1/tools/{name}` | Deterministic tool execution (testable without LLM) |
-| `POST /v1/agent/turn` | LLM orchestration: tool calls → structured proposal |
+| `POST /v1/agent/turn` | LLM orchestration: seed + tool calls → structured proposal |
 | `POST /v1/commands` | Commit / Apply (unchanged) |
 | `POST /v1/chat` | Legacy thin chat (demo + one-shot LLM); keep until agent turn replaces UI |
 
@@ -139,12 +162,13 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 
 ## Implementation order
 
-1. Core tool functions + `POST /v1/tools/{name}` (read tools) ← **now**
-2. `POST /v1/agent/turn` with tool calling → structured proposal
-3. Viewer uses agent turn; Apply still `/v1/commands`
-4. `validate_commands`
-5. Session clone + `dry_run_commands`
-6. Persist light agent state (goal / questions / last findings)
+1. Core tool functions + `POST /v1/tools/{name}` (read tools) ✅
+2. `POST /v1/agent/turn` with tool calling → structured proposal ✅
+3. Viewer uses agent turn; Apply still `/v1/commands` ✅
+4. `validate_commands` ✅
+5. Session clone + `dry_run_commands` ✅
+6. Automatic scene seed per turn ✅
+7. Persist light agent state (goal / questions / last findings) ← next
 
 ------------------------------------------------------------------------
 

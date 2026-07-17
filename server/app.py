@@ -84,7 +84,7 @@ class Handler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "service": "layoutlab-core",
-                    "slice": "room+generators+analyze+agent_tools",
+                    "slice": "room+generators+analyze+agent_tools_0.2",
                     "chat": "llm" if llm_configured() else "demo",
                     "tools": sorted(TOOL_NAMES),
                 },

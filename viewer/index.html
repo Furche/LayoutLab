@@ -76,15 +76,44 @@
         </form>
       </dialog>
 
-      <aside id="sidebar" class="sidebar">
-        <section class="chat-section">
+      <aside id="chat-panel" class="chat-panel">
+        <div class="chat-panel-header">
           <h2>AI Chat</h2>
           <p class="muted chat-hint">
-            Plant Commands (DD-009). Core führt erst nach <strong>Apply</strong> aus.
-            Mit Key: Agent nutzt Tools (`get_scene_summary` …). Ohne Key: Demo-Intents.
+            Plant Commands — Core führt erst nach <strong>Apply</strong> aus.
           </p>
-          <details class="llm-settings">
-            <summary>LLM-Einstellungen</summary>
+        </div>
+        <div id="chat-log" class="chat-log" aria-live="polite"></div>
+        <div id="chat-proposal" class="chat-proposal" hidden>
+          <p id="chat-proposal-meta" class="muted"></p>
+          <pre id="chat-proposal-json" class="chat-proposal-json"></pre>
+          <div class="chat-proposal-actions">
+            <button type="button" id="btn-chat-discard" class="ghost">Discard</button>
+            <button type="button" id="btn-chat-apply" class="primary">Apply to Core</button>
+          </div>
+        </div>
+        <form id="chat-form" class="chat-form">
+          <textarea
+            id="chat-input"
+            rows="2"
+            placeholder="Prompt… (Enter senden, Shift+Enter Zeile)"
+            spellcheck="true"
+          ></textarea>
+          <button type="submit" id="btn-chat-send" class="primary">Send</button>
+        </form>
+        <div class="chat-panel-footer">
+          <button
+            type="button"
+            id="btn-settings"
+            class="settings-btn"
+            aria-expanded="false"
+            aria-controls="settings-popover"
+            title="LLM-Einstellungen"
+          >
+            ⚙
+          </button>
+          <div id="settings-popover" class="settings-popover" hidden>
+            <h3>LLM-Einstellungen</h3>
             <label class="llm-field">
               API-Key
               <input id="llm-api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…" />
@@ -97,63 +126,10 @@
               Base URL
               <input id="llm-base-url" type="url" spellcheck="false" value="https://api.openai.com/v1" />
             </label>
-            <p class="muted llm-note">Nur lokal im Browser gespeichert; wird mit dem Chat-Request an Core geschickt (nicht geloggt).</p>
+            <p class="muted llm-note">Nur lokal im Browser gespeichert; wird mit dem Chat-Request an Core geschickt.</p>
             <button type="button" id="btn-llm-clear" class="ghost">Key löschen</button>
-          </details>
-          <div id="chat-log" class="chat-log" aria-live="polite"></div>
-          <form id="chat-form" class="chat-form">
-            <textarea
-              id="chat-input"
-              rows="2"
-              placeholder="z.B. furnished kids room… (Enter senden, Shift+Enter Zeile)"
-              spellcheck="true"
-            ></textarea>
-            <button type="submit" id="btn-chat-send" class="primary">Send</button>
-          </form>
-          <div id="chat-proposal" class="chat-proposal" hidden>
-            <p id="chat-proposal-meta" class="muted"></p>
-            <pre id="chat-proposal-json" class="chat-proposal-json"></pre>
-            <div class="chat-proposal-actions">
-              <button type="button" id="btn-chat-discard" class="ghost">Discard</button>
-              <button type="button" id="btn-chat-apply" class="primary">Apply to Core</button>
-            </div>
           </div>
-        </section>
-        <section>
-          <h2>Scene</h2>
-          <dl id="meta" class="meta"></dl>
-        </section>
-        <section>
-          <h2>Selection</h2>
-          <p id="selection" class="muted">Click an object in the viewport.</p>
-        </section>
-        <section>
-          <h2>Analysis</h2>
-          <div id="summary" class="summary"></div>
-          <ul id="findings" class="findings"></ul>
-        </section>
-        <section>
-          <h2>Display</h2>
-          <p id="object-count" class="muted"></p>
-          <label class="toggle">
-            <input id="toggle-clearances" type="checkbox" checked />
-            Show clearances
-          </label>
-          <label class="toggle">
-            <input id="toggle-openings" type="checkbox" checked />
-            Show openings
-          </label>
-        </section>
-        <section class="help">
-          <h2>Shortcuts</h2>
-          <ul class="shortcuts">
-            <li><kbd>⌘V</kbd> paste export</li>
-            <li><kbd>F</kbd> fit (perspective)</li>
-            <li><kbd>1</kbd>–<kbd>4</kbd> iso/top/front/side (ortho)</li>
-            <li>Orbit → perspective · pan/dolly keep ortho</li>
-            <li><kbd>Esc</kbd> clear selection</li>
-          </ul>
-        </section>
+        </div>
       </aside>
 
       <main id="viewport" class="viewport" aria-label="3D viewport">
@@ -166,6 +142,57 @@
         </div>
         <div id="drop-hint" class="drop-hint" hidden>Drop export JSON</div>
       </main>
+
+      <aside id="inspector" class="inspector" data-collapsed="true">
+        <button
+          type="button"
+          id="btn-inspector-toggle"
+          class="inspector-toggle"
+          aria-expanded="false"
+          aria-controls="inspector-body"
+          title="Inspector öffnen"
+        >
+          <span class="inspector-toggle-label">Inspector</span>
+        </button>
+        <div id="inspector-body" class="inspector-body">
+          <section>
+            <h2>Scene</h2>
+            <dl id="meta" class="meta"></dl>
+          </section>
+          <section>
+            <h2>Selection</h2>
+            <p id="selection" class="muted">Click an object in the viewport.</p>
+          </section>
+          <section>
+            <h2>Analysis</h2>
+            <div id="summary" class="summary"></div>
+            <ul id="findings" class="findings"></ul>
+          </section>
+          <section>
+            <h2>Display</h2>
+            <p id="object-count" class="muted"></p>
+            <label class="toggle">
+              <input id="toggle-clearances" type="checkbox" checked />
+              Show clearances
+            </label>
+            <label class="toggle">
+              <input id="toggle-openings" type="checkbox" checked />
+              Show openings
+            </label>
+          </section>
+          <section class="help">
+            <h2>Shortcuts</h2>
+            <ul class="shortcuts">
+              <li><kbd>⌘V</kbd> paste export</li>
+              <li><kbd>F</kbd> fit (perspective)</li>
+              <li><kbd>1</kbd>–<kbd>4</kbd> iso/top/front/side (ortho)</li>
+              <li>Orbit → perspective · pan/dolly keep ortho</li>
+              <li><kbd>Esc</kbd> clear selection</li>
+            </ul>
+          </section>
+        </div>
+      </aside>
+
       <p id="status" class="status" role="status"></p>
     </div>
     <script type="module" src="/src/main.js"></script>

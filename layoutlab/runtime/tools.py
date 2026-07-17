@@ -1,4 +1,4 @@
-"""Deterministic agent read tools over RoomSession (agent_tools 0.1) — no bpy."""
+"""Deterministic agent tools over RoomSession (agent_tools 0.2) — no bpy."""
 
 from __future__ import annotations
 
@@ -21,6 +21,8 @@ TOOL_NAMES = frozenset(
         "get_analysis",
         "list_generators",
         "list_supported_actions",
+        "validate_commands",
+        "dry_run_commands",
     }
 )
 
@@ -47,6 +49,8 @@ GENERATOR_KEY_PARAMS = {
         "collection",
     ],
 }
+
+KNOWN_GENERATORS = frozenset(GENERATOR_KEY_PARAMS.keys())
 
 
 def _r(values):
@@ -359,6 +363,233 @@ def list_supported_actions(session, params=None):
     }
 
 
+def _cmd_params(cmd: dict) -> dict:
+    params = cmd.get("params")
+    return params if isinstance(params, dict) else {}
+
+
+def _has_room_ref(cmd: dict) -> bool:
+    params = _cmd_params(cmd)
+    return bool(
+        params.get("room")
+        or params.get("room_id")
+        or params.get("room_name")
+        or params.get("name")
+        or cmd.get("room")
+        or cmd.get("room_id")
+    )
+
+
+def _create_room_has_size(cmd: dict) -> bool:
+    params = _cmd_params(cmd)
+    width = params.get("width", cmd.get("width"))
+    depth = params.get("depth", cmd.get("depth"))
+    return width is not None and depth is not None
+
+
+def validate_commands(session, params=None):
+    """Static checks only — allowlist, required fields, known generators. No geometry."""
+    params = params or {}
+    commands = params.get("commands")
+    errors = []
+    warnings = []
+
+    if not isinstance(commands, list):
+        return {
+            "ok": False,
+            "errors": [{"index": None, "code": "commands_not_list", "message": "commands must be a list"}],
+            "warnings": [],
+            "command_count": 0,
+        }
+
+    for index, cmd in enumerate(commands):
+        if not isinstance(cmd, dict):
+            errors.append(
+                {"index": index, "code": "not_object", "message": "each command must be an object"}
+            )
+            continue
+        action = cmd.get("action")
+        if action not in SESSION_ACTIONS:
+            errors.append(
+                {
+                    "index": index,
+                    "code": "unknown_action",
+                    "message": f"unsupported action {action!r}",
+                    "action": action,
+                }
+            )
+            continue
+
+        if action == "create_room" and not _create_room_has_size(cmd):
+            errors.append(
+                {
+                    "index": index,
+                    "code": "missing_size",
+                    "message": "create_room requires width and depth",
+                    "action": action,
+                }
+            )
+        if action in (
+            "add_opening",
+            "update_opening",
+            "remove_opening",
+            "add_fixed_element",
+            "update_fixed_element",
+            "remove_fixed_element",
+            "update_room",
+            "delete_room",
+        ) and not _has_room_ref(cmd):
+            errors.append(
+                {
+                    "index": index,
+                    "code": "missing_room",
+                    "message": f"{action} requires room or room_id",
+                    "action": action,
+                }
+            )
+        if action == "add_opening":
+            p = _cmd_params(cmd)
+            if not (p.get("kind") or cmd.get("kind")):
+                errors.append(
+                    {
+                        "index": index,
+                        "code": "missing_kind",
+                        "message": "add_opening requires kind (door|window)",
+                        "action": action,
+                    }
+                )
+            if not (p.get("wall_side") or p.get("wall_id") or cmd.get("wall_side") or cmd.get("wall_id")):
+                errors.append(
+                    {
+                        "index": index,
+                        "code": "missing_wall",
+                        "message": "add_opening requires wall_side or wall_id",
+                        "action": action,
+                    }
+                )
+        if action == "run_generator":
+            gen = cmd.get("generator")
+            if not gen:
+                errors.append(
+                    {
+                        "index": index,
+                        "code": "missing_generator",
+                        "message": "run_generator requires generator",
+                        "action": action,
+                    }
+                )
+            elif gen not in KNOWN_GENERATORS:
+                errors.append(
+                    {
+                        "index": index,
+                        "code": "unknown_generator",
+                        "message": f"unknown generator {gen!r} (known: {sorted(KNOWN_GENERATORS)})",
+                        "action": action,
+                    }
+                )
+            else:
+                gp = _cmd_params(cmd)
+                if "location" not in gp and "location" not in cmd:
+                    warnings.append(
+                        {
+                            "index": index,
+                            "code": "missing_location",
+                            "message": f"{gen} usually needs params.location",
+                            "action": action,
+                        }
+                    )
+        if action == "delete_collection_objects" and not cmd.get("collection"):
+            errors.append(
+                {
+                    "index": index,
+                    "code": "missing_collection",
+                    "message": "delete_collection_objects requires collection",
+                    "action": action,
+                }
+            )
+        if action == "delete_prefix" and not cmd.get("prefix"):
+            errors.append(
+                {
+                    "index": index,
+                    "code": "missing_prefix",
+                    "message": "delete_prefix requires prefix",
+                    "action": action,
+                }
+            )
+
+    return {
+        "ok": not errors,
+        "errors": errors,
+        "warnings": warnings,
+        "command_count": len(commands),
+    }
+
+
+def _slim_findings(findings, limit=20):
+    slim = []
+    for f in findings or []:
+        slim.append(
+            {
+                "severity": f.get("severity"),
+                "constraint_type": f.get("constraint_type"),
+                "message": f.get("message"),
+                "clearance_name": (f.get("clearance_ref") or {}).get("clearance_name"),
+                "furniture_name": (f.get("clearance_ref") or {}).get("furniture_name"),
+            }
+        )
+        if len(slim) >= limit:
+            break
+    return slim
+
+
+def dry_run_commands(session, params=None):
+    """Clone session → apply commands → optional analyze. Live session unchanged."""
+    params = params or {}
+    commands = params.get("commands")
+    do_analyze = params.get("analyze", True)
+    stop_on_invalid = params.get("stop_on_invalid", True)
+
+    validation = validate_commands(session, {"commands": commands})
+    if stop_on_invalid and not validation["ok"]:
+        return {
+            "ok": False,
+            "applied": False,
+            "validation": validation,
+            "note": "Live session unchanged. Fix validation errors before dry-run apply.",
+        }
+
+    if not isinstance(commands, list):
+        return {
+            "ok": False,
+            "applied": False,
+            "validation": validation,
+            "note": "Live session unchanged.",
+        }
+
+    clone = session.clone()
+    applied = clone.apply_commands(commands)
+    out = {
+        "ok": bool(applied.get("ok")) and validation["ok"],
+        "applied": True,
+        "apply_ok": bool(applied.get("ok")),
+        "validation": validation,
+        "errors": applied.get("errors") or [],
+        "result_count": len(applied.get("results") or []),
+        "scene_after": get_scene_summary(clone, {}),
+        "note": "Dry-run only — live session unchanged. User must Apply to commit.",
+    }
+    if do_analyze:
+        analysis = analyze_session(
+            clone, {"scope": "scene", "include": ["clearances"]}
+        )
+        out["analysis"] = {
+            "analyzed": analysis.get("analyzed"),
+            "summary": analysis.get("summary"),
+            "findings": _slim_findings(analysis.get("findings")),
+        }
+    return out
+
+
 TOOL_HANDLERS = {
     "get_scene_summary": get_scene_summary,
     "get_room": get_room,
@@ -367,6 +598,8 @@ TOOL_HANDLERS = {
     "get_analysis": get_analysis,
     "list_generators": list_generators,
     "list_supported_actions": list_supported_actions,
+    "validate_commands": validate_commands,
+    "dry_run_commands": dry_run_commands,
 }
 
 
@@ -377,7 +610,7 @@ def openai_tool_definitions():
             "type": "function",
             "function": {
                 "name": "get_scene_summary",
-                "description": "Cheap scene seed: rooms, object counts, analysis summary. Call first.",
+                "description": "Cheap scene overview. Usually already seeded — call again only if needed.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -469,6 +702,49 @@ def openai_tool_definitions():
                 "name": "list_supported_actions",
                 "description": "Allowlisted LayoutLab command actions for proposals.",
                 "parameters": {"type": "object", "properties": {}},
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "validate_commands",
+                "description": "Static-check a command list (allowlist, required fields, generators). No geometry.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "commands": {
+                            "type": "array",
+                            "items": {"type": "object"},
+                            "description": "Proposed LayoutLab commands",
+                        },
+                    },
+                    "required": ["commands"],
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "dry_run_commands",
+                "description": (
+                    "Clone session, apply commands, return scene_after + analysis. "
+                    "Does NOT mutate the live session. Prefer before final proposal."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "commands": {
+                            "type": "array",
+                            "items": {"type": "object"},
+                        },
+                        "analyze": {"type": "boolean", "description": "Default true"},
+                        "stop_on_invalid": {
+                            "type": "boolean",
+                            "description": "Default true — skip apply if validate fails",
+                        },
+                    },
+                    "required": ["commands"],
+                },
             },
         },
     ]

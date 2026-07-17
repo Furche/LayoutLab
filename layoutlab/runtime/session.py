@@ -298,6 +298,13 @@ class RoomSession:
         self._rooms.clear()
         self.mesh_store.clear()
 
+    def clone(self) -> "RoomSession":
+        """Independent copy for dry-run (mutations do not touch the live session)."""
+        other = RoomSession()
+        other._rooms = copy.deepcopy(self._rooms)
+        other.mesh_store = self.mesh_store.clone()
+        return other
+
     def list_rooms(self):
         return [copy.deepcopy(m) for m in self._rooms.values()]
 

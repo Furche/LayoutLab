@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from typing import Any
 
 
@@ -211,6 +212,12 @@ class MeshStore:
 
     def clear(self):
         self.objects.clear()
+
+    def clone(self) -> "MeshStore":
+        """Deep copy including parent links (for dry-run clones)."""
+        other = MeshStore()
+        other.objects = copy.deepcopy(self.objects)
+        return other
 
     def add(self, obj: MeshObject):
         self.objects.append(obj)

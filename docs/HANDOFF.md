@@ -161,11 +161,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. Agent-2: `validate_commands` + `dry_run_commands` (session clone)  
+1. Persist light **agent state** (goal / open questions / last findings)  
 2. Optional fuller **DD-012** (streaming, undo, auth UX)  
 3. **Not blocking:** tiered clearances, polygon, multi-room / variants  
 
-`desk_basic` ✅ · Core + agent read tools + `/v1/agent/turn` ✅ · see [agent_tool_contract.md](agent_tool_contract.md)
+`desk_basic` ✅ · Core + agent tools 0.2 (read + validate + dry-run + seed) + `/v1/agent/turn` ✅ · see [agent_tool_contract.md](agent_tool_contract.md)
 
 ------------------------------------------------------------------------
 

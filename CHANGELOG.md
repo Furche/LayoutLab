@@ -8,6 +8,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **Agent-2 tools:** `validate_commands` + `dry_run_commands` (session clone; live session unchanged); automatic scene seed (`get_scene_summary` + `list_generators`) on each LLM agent turn (`agent_tools` 0.2)
+
+### Changed
+
+- **Viewer layout:** left panel is chat-only (⚙ settings bottom-left); Scene/Selection/Analysis/Display/Shortcuts live in a collapsed inspector rail on the right edge
+
 ### Fixed
 
 - **Agent incomplete proposals:** after a turn, Core repairs proposals that claim room+door+bed but only emit `create_room` (forces a second finalize with missing `add_opening` / `bed_basic`)

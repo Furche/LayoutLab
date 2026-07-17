@@ -83,6 +83,119 @@ class TestAgentTools(unittest.TestCase):
         self.assertTrue(any("add_opening" in m for m in missing))
         self.assertTrue(any("bed_basic" in m for m in missing))
 
+    def test_validate_commands(self):
+        good = self.dispatch(
+            self.session,
+            "validate_commands",
+            {
+                "commands": [
+                    {"action": "delete_collection_objects", "collection": "layoutlab_room"},
+                    {
+                        "action": "create_room",
+                        "params": {"name": "R", "width": 3, "depth": 5, "height": 2.5},
+                    },
+                    {
+                        "action": "add_opening",
+                        "params": {
+                            "room": "R",
+                            "kind": "door",
+                            "wall_side": "east",
+                            "offset": 0.3,
+                            "width": 0.9,
+                            "height": 2.0,
+                        },
+                    },
+                    {
+                        "action": "run_generator",
+                        "generator": "bed_basic",
+                        "params": {"name": "BED", "location": [0.5, 0.2, 0]},
+                    },
+                ]
+            },
+        )
+        self.assertTrue(good["ok"], good)
+
+        bad = self.dispatch(
+            self.session,
+            "validate_commands",
+            {
+                "commands": [
+                    {"action": "create_room", "params": {"name": "R"}},
+                    {"action": "run_generator", "generator": "sofa_basic", "params": {}},
+                    {"action": "explode"},
+                ]
+            },
+        )
+        self.assertFalse(bad["ok"])
+        codes = {e["code"] for e in bad["errors"]}
+        self.assertIn("missing_size", codes)
+        self.assertIn("unknown_generator", codes)
+        self.assertIn("unknown_action", codes)
+
+    def test_dry_run_does_not_mutate_live_session(self):
+        before_rooms = len(self.session.list_rooms())
+        before_meshes = len(self.session.mesh_store.objects)
+        out = self.dispatch(
+            self.session,
+            "dry_run_commands",
+            {
+                "commands": [
+                    {"action": "delete_collection_objects", "collection": "layoutlab_room"},
+                    {
+                        "action": "create_room",
+                        "params": {
+                            "name": "DRY_ROOM",
+                            "width": 3,
+                            "depth": 4,
+                            "height": 2.5,
+                            "collection": "layoutlab_room",
+                        },
+                    },
+                    {
+                        "action": "add_opening",
+                        "params": {
+                            "room": "DRY_ROOM",
+                            "opening_name": "door_east",
+                            "kind": "door",
+                            "wall_side": "east",
+                            "offset": 0.4,
+                            "width": 0.9,
+                            "height": 2.0,
+                        },
+                    },
+                    {
+                        "action": "run_generator",
+                        "generator": "bed_basic",
+                        "params": {
+                            "name": "DRY_BED",
+                            "location": [0.4, 0.15, 0],
+                            "length": 1.2,
+                            "width": 2.0,
+                            "collection": "layoutlab_room",
+                        },
+                    },
+                ],
+                "analyze": True,
+            },
+        )
+        self.assertTrue(out["ok"], out)
+        self.assertTrue(out["applied"])
+        self.assertEqual(out["scene_after"]["rooms"][0]["name"], "DRY_ROOM")
+        self.assertIn("bed_basic", out["scene_after"]["generators_present"])
+        self.assertIn("analysis", out)
+        # Live session unchanged
+        self.assertEqual(len(self.session.list_rooms()), before_rooms)
+        self.assertEqual(len(self.session.mesh_store.objects), before_meshes)
+        self.assertEqual(self.session.list_rooms()[0]["name"], "KIDS_ROOM")
+
+    def test_session_clone_independence(self):
+        clone = self.session.clone()
+        clone.apply_commands(
+            [{"action": "delete_collection_objects", "collection": "layoutlab_room"}]
+        )
+        self.assertEqual(len(clone.list_rooms()), 0)
+        self.assertEqual(self.session.list_rooms()[0]["name"], "KIDS_ROOM")
+
 
 if __name__ == "__main__":
     unittest.main()
