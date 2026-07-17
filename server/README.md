@@ -63,3 +63,12 @@ Apply only via `POST /v1/commands` (viewer **Apply** button).
 export OPENAI_API_KEY=sk-…   # optional
 python3 -m server
 ```
+
+## Viewer
+
+```bash
+cd viewer && npm run dev
+```
+
+Use the sidebar **AI Chat**, or **Empty / Furnished test room (Core)** (Core URL default
+`http://127.0.0.1:8765`).
