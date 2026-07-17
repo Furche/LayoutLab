@@ -23,14 +23,139 @@ const el = {
   btnPaste: document.getElementById("btn-paste"),
   btnFixture: document.getElementById("btn-fixture"),
   btnFindings: document.getElementById("btn-findings"),
+  btnCoreEmpty: document.getElementById("btn-core-empty"),
+  btnCoreCommands: document.getElementById("btn-core-commands"),
+  coreUrl: document.getElementById("core-url"),
   pasteDialog: document.getElementById("paste-dialog"),
   pasteForm: document.getElementById("paste-form"),
   pasteText: document.getElementById("paste-text"),
+  commandsDialog: document.getElementById("commands-dialog"),
+  commandsForm: document.getElementById("commands-form"),
+  commandsText: document.getElementById("commands-text"),
   toggleClearances: document.getElementById("toggle-clearances"),
   toggleOpenings: document.getElementById("toggle-openings"),
   dropHint: document.getElementById("drop-hint"),
   viewControls: document.querySelector(".view-controls"),
 };
+
+/** Same shell as layoutlab/plugin/test_rooms.py empty_test_room_commands(). */
+const EMPTY_TEST_ROOM_COMMANDS = {
+  commands: [
+    { action: "delete_collection_objects", collection: "layoutlab_room" },
+    {
+      action: "create_room",
+      params: {
+        name: "KIDS_ROOM",
+        location: [0, 0, 0],
+        width: 4.2,
+        depth: 2.18,
+        height: 2.6,
+        wall_thickness: 0.02,
+        collection: "layoutlab_room",
+      },
+    },
+    {
+      action: "add_opening",
+      params: {
+        room: "KIDS_ROOM",
+        opening_name: "window_west",
+        kind: "window",
+        wall_side: "west",
+        offset: 0.48054,
+        width: 1.22946,
+        height: 1.47,
+        sill_height: 0.88,
+      },
+    },
+    {
+      action: "add_opening",
+      params: {
+        room: "KIDS_ROOM",
+        opening_name: "door_east",
+        kind: "door",
+        wall_side: "east",
+        offset: 0.24866,
+        width: 0.70801,
+        height: 1.84453,
+      },
+    },
+    {
+      action: "add_fixed_element",
+      params: {
+        room: "KIDS_ROOM",
+        fixed_name: "heizung",
+        kind: "radiator",
+        wall_side: "west",
+        offset: 0.56494,
+        width: 1.1,
+        depth: 0.1,
+        height: 0.75,
+      },
+    },
+  ],
+};
+
+const CORE_URL_KEY = "layoutlab_core_url";
+
+function getCoreUrl() {
+  const fromInput = (el.coreUrl?.value || "").trim().replace(/\/$/, "");
+  if (fromInput) return fromInput;
+  return "http://127.0.0.1:8765";
+}
+
+function loadStoredCoreUrl() {
+  if (!el.coreUrl) return;
+  try {
+    const stored = localStorage.getItem(CORE_URL_KEY);
+    if (stored) el.coreUrl.value = stored;
+  } catch {
+    /* ignore */
+  }
+}
+
+function persistCoreUrl() {
+  if (!el.coreUrl) return;
+  try {
+    localStorage.setItem(CORE_URL_KEY, getCoreUrl());
+  } catch {
+    /* ignore */
+  }
+}
+
+async function postCommandsToCore(commandsPayload, sourceLabel) {
+  const base = getCoreUrl();
+  persistCoreUrl();
+  setStatus(`Sending commands to Core (${base})…`);
+  let response;
+  try {
+    response = await fetch(`${base}/v1/commands`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        Array.isArray(commandsPayload) ? { commands: commandsPayload } : commandsPayload,
+      ),
+    });
+  } catch (err) {
+    throw new Error(
+      `Core unreachable at ${base} (${err.message}). Start with: python -m server`,
+    );
+  }
+  let payload;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(`Core returned non-JSON (HTTP ${response.status})`);
+  }
+  if (!payload.export) {
+    const detail = payload.error || payload.errors?.[0]?.error || `HTTP ${response.status}`;
+    throw new Error(`Core error: ${detail}`);
+  }
+  if (!payload.ok) {
+    const detail = payload.errors?.[0]?.error || "command failed";
+    setStatus(`Core reported errors: ${detail}`, "warn");
+  }
+  loadExportData(payload.export, sourceLabel);
+}
 
 const HIGHLIGHT = 0xffcc66;
 const FINDING_ERROR = 0xe06c75;
@@ -576,6 +701,40 @@ function frame(now = performance.now()) {
 el.btnPaste.addEventListener("click", () => {
   pasteFromClipboard().catch((err) => setStatus(`Error: ${err.message}`, "error"));
 });
+
+el.btnCoreEmpty?.addEventListener("click", () => {
+  postCommandsToCore(EMPTY_TEST_ROOM_COMMANDS, "Core · empty kids room").catch((err) =>
+    setStatus(err.message, "error"),
+  );
+});
+
+el.btnCoreCommands?.addEventListener("click", () => {
+  el.commandsText.value = JSON.stringify(EMPTY_TEST_ROOM_COMMANDS, null, 2);
+  el.commandsDialog.showModal();
+  el.commandsText.focus();
+});
+
+el.commandsForm?.addEventListener("submit", (ev) => {
+  const submitter = ev.submitter;
+  const value = submitter?.value || "cancel";
+  if (value !== "send") return;
+  ev.preventDefault();
+  try {
+    const parsed = JSON.parse(el.commandsText.value);
+    const commands = Array.isArray(parsed) ? parsed : parsed.commands;
+    if (!Array.isArray(commands)) throw new Error('JSON must include "commands": [...]');
+    postCommandsToCore({ commands }, "Core · pasted commands")
+      .then(() => {
+        el.commandsDialog.close();
+      })
+      .catch((err) => setStatus(err.message, "error"));
+  } catch (err) {
+    setStatus(`Error: ${err.message}`, "error");
+  }
+});
+
+el.coreUrl?.addEventListener("change", persistCoreUrl);
+loadStoredCoreUrl();
 
 el.pasteForm.addEventListener("submit", (ev) => {
   const submitter = ev.submitter;

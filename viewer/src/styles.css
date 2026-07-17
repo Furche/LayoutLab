@@ -64,6 +64,26 @@ body {
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: flex-end;
+  align-items: center;
+}
+
+.core-url {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.core-url input {
+  width: 11.5rem;
+  border: 1px solid var(--border);
+  background: #151a22;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  font-size: 0.8rem;
 }
 
 .file-btn,

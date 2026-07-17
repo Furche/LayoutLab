@@ -11,13 +11,19 @@
       <header class="topbar">
         <div class="brand">
           <span class="brand-mark">LayoutLab</span>
-          <span class="brand-sub">Viewer · Phase A</span>
+          <span class="brand-sub">Viewer · Phase B</span>
         </div>
         <div class="toolbar">
           <button type="button" id="btn-paste" class="primary">Paste export</button>
           <label class="file-btn">
             Open file…
             <input id="file-input" type="file" accept="application/json,.json" hidden />
+          </label>
+          <button type="button" id="btn-core-empty" class="primary">Empty test room (Core)</button>
+          <button type="button" id="btn-core-commands" class="ghost">Paste commands…</button>
+          <label class="core-url" title="LayoutLab Core HTTP service">
+            Core
+            <input id="core-url" type="url" value="http://127.0.0.1:8765" spellcheck="false" />
           </label>
           <details class="examples">
             <summary>Examples</summary>
@@ -45,6 +51,26 @@
           <div class="paste-actions">
             <button type="submit" value="cancel" class="ghost">Cancel</button>
             <button type="submit" value="load" id="btn-paste-load" class="primary">Load</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog id="commands-dialog" class="paste-dialog">
+        <form method="dialog" id="commands-form">
+          <h2>Paste commands → Core</h2>
+          <p class="muted">
+            Room Model commands JSON (<code>create_room</code>, openings, …). Posted to
+            <code>POST /v1/commands</code> on the Core URL. Generators are not supported in this slice.
+          </p>
+          <textarea
+            id="commands-text"
+            rows="12"
+            spellcheck="false"
+            placeholder='{ "commands": [ { "action": "create_room", "params": { … } } ] }'
+          ></textarea>
+          <div class="paste-actions">
+            <button type="submit" value="cancel" class="ghost">Cancel</button>
+            <button type="submit" value="send" id="btn-commands-send" class="primary">Send to Core</button>
           </div>
         </form>
       </dialog>

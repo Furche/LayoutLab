@@ -10,6 +10,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **DD-014 Phase B (room write):** Accepted locks — local Python Core HTTP service, Room Model commands only, headless viewer export (no `bpy`); Blender remains generator QA reference ([DD-014](docs/design_decisions/DD-014-standalone-runtime-path.md))
+- **Headless room session:** `layoutlab/runtime/session.py` — in-memory Room Model + `export_viewer_scene`
+- **Core server:** `server/` — `GET /health`, `POST /v1/commands`, CORS for Vite; `python -m server`
+- **Viewer write:** Empty test room (Core) + paste commands → Core URL (`http://127.0.0.1:8765`)
 - **DD-014 Accepted — Phase A only:** web export viewer path locked (Three.js/Babylon; show findings); Phase B direction only ([DD-014](docs/design_decisions/DD-014-standalone-runtime-path.md))
 - **Viewer-minimum export contract** in `json_protocol.md` §6.4 (`viewer_schema` 0.1.0)
 - **Fixture:** `tests/fixtures/reference_kids_room_export.json` — kids room + bed/desk for Phase A viewer

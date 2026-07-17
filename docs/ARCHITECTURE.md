@@ -129,16 +129,17 @@ Blender is the **first runtime adapter**, not the permanent centre of the produc
 ├─────────────────────────────────────────────────────────┤
 │  Runtime / client adapter(s)                            │
 │  [IMPLEMENTED] Blender — bpy meshes, UI, undo, export   │
-│  [FUTURE VISION] Standalone editor / mobile capture /   │
-│                  read-only viewer (existing 3D stack)   │
+│  [IMPLEMENTED] Phase A viewer — read-only Three.js      │
+│  [IMPLEMENTED] Phase B room write — local Python server │
+│  [FUTURE] Generators without Blender (B2) / capture     │
 └─────────────────────────────────────────────────────────┘
 ```
 
 **Rule for new work:** *Is this LayoutLab or Blender?* — domain logic must not depend on
-`bpy` unless it is explicitly runtime glue. No second runtime until a DD says otherwise.
+`bpy` unless it is explicitly runtime glue.
 
-**Today:** Blender remains the **primary, fully supported** development platform and frontend.
-No replacement, no viewer/scanner/standalone prototype in current roadmap.
+**Today:** Blender remains the **reference** platform for generator QA. Standalone room
+authoring uses `server/` + `viewer/` (DD-014 Phase B room slice).
 
 ### Spatial Core guardrails `[FUTURE VISION]` (2026-07-16)
 
@@ -154,11 +155,8 @@ authoritative project state; data should support a **validation / confirmation**
 ([Future_Ideas.md](Future_Ideas.md) §15).
 
 Concrete Project / Spatial / Variant schemas beyond a single room require dedicated DDs
-**before** implementation. **DD-010** ([Room Model](design_decisions/DD-010-room-model.md))
-is **Proposed** for one editable space. Further reservations: DD-011 … DD-014 in
-Future_Ideas §19 — **not created**.
-
-Do **not** present today’s `[IMPLEMENTED]` architecture as already standalone-capable.
+**before** implementation. **DD-010** Room Model and **DD-014** Phase A/B (viewer + room
+write service) are Accepted; generators without Blender remain Phase B2.
 
 ### Runtime coupling inventory `[AS-BUILT]` (2026-07-12)
 
