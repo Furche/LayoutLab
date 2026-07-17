@@ -161,10 +161,10 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. Optional: thin in-viewer AI chat (commands → Core) — later **DD-012**  
+1. Optional: fuller **DD-012** (provider UX, streaming, undo, multi-turn memory)  
 2. **Not blocking:** tiered clearances, more generators, polygon, multi-room  
 
-`desk_basic` ✅ · Room Model ✅ · **DD-014 Phase A + B + B2 + headless analyze** · viewer + Core ✅
+`desk_basic` ✅ · Room Model ✅ · Core (rooms + generators + analyze + thin chat) ✅
 
 ------------------------------------------------------------------------
 

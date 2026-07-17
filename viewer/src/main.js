@@ -37,6 +37,14 @@ const el = {
   toggleOpenings: document.getElementById("toggle-openings"),
   dropHint: document.getElementById("drop-hint"),
   viewControls: document.querySelector(".view-controls"),
+  chatLog: document.getElementById("chat-log"),
+  chatForm: document.getElementById("chat-form"),
+  chatInput: document.getElementById("chat-input"),
+  chatProposal: document.getElementById("chat-proposal"),
+  chatProposalMeta: document.getElementById("chat-proposal-meta"),
+  chatProposalJson: document.getElementById("chat-proposal-json"),
+  btnChatApply: document.getElementById("btn-chat-apply"),
+  btnChatDiscard: document.getElementById("btn-chat-discard"),
 };
 
 /** Same shell as layoutlab/plugin/test_rooms.py empty_test_room_commands(). */
@@ -196,6 +204,80 @@ async function postCommandsToCore(commandsPayload, sourceLabel) {
     setStatus(`Core reported errors: ${detail}`, "warn");
   }
   loadExportData(payload.export, sourceLabel);
+}
+
+let lastExportData = null;
+let pendingChatCommands = null;
+
+function sceneSummaryForChat() {
+  const data = lastExportData;
+  if (!data) return null;
+  const analysis = data.analysis || {};
+  return {
+    rooms: (data.rooms || []).map((r) => ({
+      name: r.name,
+      width: r.footprint?.width,
+      depth: r.footprint?.depth,
+      height: r.height,
+    })),
+    object_count: (data.objects || []).length,
+    object_names: (data.objects || []).slice(0, 40).map((o) => o.name),
+    analysis_summary: analysis.summary || null,
+    findings_count: (analysis.findings || []).length,
+  };
+}
+
+function appendChatBubble(role, text) {
+  if (!el.chatLog) return;
+  const div = document.createElement("div");
+  div.className = `chat-bubble ${role}`;
+  div.textContent = text;
+  el.chatLog.appendChild(div);
+  el.chatLog.scrollTop = el.chatLog.scrollHeight;
+}
+
+function clearChatProposal() {
+  pendingChatCommands = null;
+  if (el.chatProposal) el.chatProposal.hidden = true;
+  if (el.chatProposalJson) el.chatProposalJson.textContent = "";
+  if (el.chatProposalMeta) el.chatProposalMeta.textContent = "";
+}
+
+function showChatProposal(payload) {
+  const commands = payload.commands || [];
+  pendingChatCommands = commands;
+  if (!el.chatProposal) return;
+  el.chatProposal.hidden = false;
+  const mode = payload.mode || "plan";
+  el.chatProposalMeta.textContent = `${commands.length} command${commands.length === 1 ? "" : "s"} · mode=${mode} — Apply führt Core aus`;
+  el.chatProposalJson.textContent = JSON.stringify({ commands }, null, 2);
+}
+
+async function postChatToCore(message) {
+  const base = getCoreUrl();
+  persistCoreUrl();
+  let response;
+  try {
+    response = await fetch(`${base}/v1/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, scene: sceneSummaryForChat() }),
+    });
+  } catch (err) {
+    throw new Error(
+      `Core unreachable at ${base} (${err.message}). Start with: python3 -m server`,
+    );
+  }
+  let payload;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(`Core chat returned non-JSON (HTTP ${response.status})`);
+  }
+  if (!payload.ok && !payload.reply) {
+    throw new Error(payload.error || `Chat failed (HTTP ${response.status})`);
+  }
+  return payload;
 }
 
 const HIGHLIGHT = 0xffcc66;
@@ -615,6 +697,7 @@ function parseExportText(text) {
 
 function loadExportData(data, sourceLabel) {
   if (!data || typeof data !== "object") throw new Error("Invalid export JSON");
+  lastExportData = data;
   clearSelection();
   clearFindingHighlights();
   clearGroup(content);
@@ -747,6 +830,51 @@ el.btnCoreEmpty?.addEventListener("click", () => {
   postCommandsToCore(EMPTY_TEST_ROOM_COMMANDS, "Core · empty kids room").catch((err) =>
     setStatus(err.message, "error"),
   );
+});
+
+el.chatForm?.addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const message = (el.chatInput?.value || "").trim();
+  if (!message) return;
+  appendChatBubble("user", message);
+  el.chatInput.value = "";
+  clearChatProposal();
+  setStatus("Planning via Core /v1/chat…");
+  postChatToCore(message)
+    .then((payload) => {
+      const reply = payload.reply || payload.error || "(no reply)";
+      appendChatBubble("assistant", reply);
+      if (payload.commands?.length) {
+        showChatProposal(payload);
+        setStatus(`Chat proposal · ${payload.commands.length} commands — Apply to run`, "ok");
+      } else {
+        setStatus("Chat: no commands proposed", "warn");
+      }
+    })
+    .catch((err) => {
+      appendChatBubble("assistant", err.message);
+      setStatus(err.message, "error");
+    });
+});
+
+el.btnChatDiscard?.addEventListener("click", () => {
+  clearChatProposal();
+  setStatus("Chat proposal discarded");
+});
+
+el.btnChatApply?.addEventListener("click", () => {
+  if (!pendingChatCommands?.length) {
+    setStatus("No commands to apply", "warn");
+    return;
+  }
+  const commands = pendingChatCommands;
+  clearChatProposal();
+  postCommandsToCore({ commands }, "Core · chat Apply")
+    .then(() => appendChatBubble("assistant", "Applied to Core."))
+    .catch((err) => {
+      appendChatBubble("assistant", err.message);
+      setStatus(err.message, "error");
+    });
 });
 
 el.btnCoreFurnished?.addEventListener("click", () => {

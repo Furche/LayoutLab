@@ -11,7 +11,7 @@
       <header class="topbar">
         <div class="brand">
           <span class="brand-mark">LayoutLab</span>
-          <span class="brand-sub">Viewer · Phase B</span>
+          <span class="brand-sub">Viewer · Core</span>
         </div>
         <div class="toolbar">
           <button type="button" id="btn-paste" class="primary">Paste export</button>
@@ -77,6 +77,31 @@
       </dialog>
 
       <aside id="sidebar" class="sidebar">
+        <section class="chat-section">
+          <h2>AI Chat</h2>
+          <p class="muted chat-hint">
+            Plant Commands (DD-009). Core führt erst nach <strong>Apply</strong> aus.
+            Demo ohne Key: „empty kids room“, „furnished kids room“.
+          </p>
+          <div id="chat-log" class="chat-log" aria-live="polite"></div>
+          <form id="chat-form" class="chat-form">
+            <textarea
+              id="chat-input"
+              rows="2"
+              placeholder="z.B. furnished kids room…"
+              spellcheck="true"
+            ></textarea>
+            <button type="submit" id="btn-chat-send" class="primary">Send</button>
+          </form>
+          <div id="chat-proposal" class="chat-proposal" hidden>
+            <p id="chat-proposal-meta" class="muted"></p>
+            <pre id="chat-proposal-json" class="chat-proposal-json"></pre>
+            <div class="chat-proposal-actions">
+              <button type="button" id="btn-chat-discard" class="ghost">Discard</button>
+              <button type="button" id="btn-chat-apply" class="primary">Apply to Core</button>
+            </div>
+          </div>
+        </section>
         <section>
           <h2>Scene</h2>
           <dl id="meta" class="meta"></dl>

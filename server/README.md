@@ -46,11 +46,19 @@ curl -s -X POST http://127.0.0.1:8765/v1/commands \
   -d @tests/fixtures/reference_kids_room_commands.json
 ```
 
-## Viewer
+## Chat (thin planning)
+
+`POST /v1/chat` with `{ "message": "…", "scene"?: {…} }` returns a **proposal**:
+`{ ok, mode, reply, commands }` — it does **not** mutate the session.
+
+Apply only via `POST /v1/commands` (viewer **Apply** button).
+
+| Mode | When |
+|---|---|
+| `demo` | No API key — keyword intents (empty / furnished kids room, analyze) |
+| `llm` | `OPENAI_API_KEY` or `LAYOUTLAB_LLM_API_KEY` (+ optional `LAYOUTLAB_LLM_BASE_URL`, `LAYOUTLAB_LLM_MODEL`) |
 
 ```bash
-cd viewer && npm run dev
+export OPENAI_API_KEY=sk-…   # optional
+python3 -m server
 ```
-
-Use **Empty test room (Core)** or **Furnished test room (Core)** (Core URL default
-`http://127.0.0.1:8765`).

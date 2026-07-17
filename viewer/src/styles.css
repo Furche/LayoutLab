@@ -152,6 +152,92 @@ button:hover {
   text-align: left;
 }
 
+.chat-section {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.chat-hint {
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 11rem;
+  overflow: auto;
+  margin-bottom: 0.55rem;
+  padding: 0.35rem 0;
+}
+
+.chat-bubble {
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
+.chat-bubble.user {
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--accent) 22%, #232a34);
+  max-width: 95%;
+}
+
+.chat-bubble.assistant {
+  align-self: flex-start;
+  background: #232a34;
+  border: 1px solid var(--border);
+  max-width: 95%;
+}
+
+.chat-form {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.chat-form textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 2.6rem;
+  border: 1px solid var(--border);
+  background: #151a22;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.45rem 0.55rem;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.chat-proposal {
+  margin-top: 0.65rem;
+  padding-top: 0.55rem;
+  border-top: 1px dashed var(--border);
+}
+
+.chat-proposal-json {
+  margin: 0.35rem 0 0.55rem;
+  max-height: 8rem;
+  overflow: auto;
+  padding: 0.45rem;
+  border-radius: 6px;
+  background: #12161c;
+  border: 1px solid var(--border);
+  font-size: 0.68rem;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+.chat-proposal-actions {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
 .sidebar {
   overflow: auto;
   padding: 0.85rem 1rem 1.5rem;

@@ -133,7 +133,8 @@ Blender is the **first runtime adapter**, not the permanent centre of the produc
 │  [IMPLEMENTED] Phase B room write — local Python server │
 │  [IMPLEMENTED] Phase B2 — headless run_generator        │
 │  [IMPLEMENTED] Headless analyze_layout on session       │
-│  [FUTURE] capture / in-app AI (DD-012)                  │
+│  [IMPLEMENTED] Thin chat → propose commands (pre-DD-012)│
+│  [FUTURE] capture / full in-app AI product (DD-012)     │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -141,7 +142,8 @@ Blender is the **first runtime adapter**, not the permanent centre of the produc
 `bpy` unless it is explicitly runtime glue.
 
 **Today:** Blender remains the **reference** platform for generator QA. Standalone room
-+ furniture authoring + clearance analysis uses `server/` + `viewer/` (DD-014).
++ furniture authoring + clearance analysis + thin chat planning uses `server/` + `viewer/` (DD-014).
+AI proposes commands only; Core executes after explicit Apply (DD-009).
 
 ### Spatial Core guardrails `[FUTURE VISION]` (2026-07-16)
 
