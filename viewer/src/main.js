@@ -287,24 +287,33 @@ function clearChatProposal() {
 }
 
 function showChatProposal(payload) {
-  const commands = payload.commands || [];
+  const commands =
+    payload.proposal?.commands ||
+    payload.commands ||
+    [];
   pendingChatCommands = commands;
   if (!el.chatProposal) return;
   el.chatProposal.hidden = false;
   const mode = payload.mode || "plan";
-  el.chatProposalMeta.textContent = `${commands.length} command${commands.length === 1 ? "" : "s"} · mode=${mode} — Apply führt Core aus`;
-  el.chatProposalJson.textContent = JSON.stringify({ commands }, null, 2);
+  const tools = (payload.tool_trace || []).length;
+  const title = payload.proposal?.title ? ` · ${payload.proposal.title}` : "";
+  el.chatProposalMeta.textContent = `${commands.length} command${commands.length === 1 ? "" : "s"}${title} · mode=${mode}${tools ? ` · ${tools} tools` : ""} — Apply führt Core aus`;
+  const preview = {
+    questions: payload.questions || [],
+    proposal: payload.proposal || { commands },
+  };
+  el.chatProposalJson.textContent = JSON.stringify(preview, null, 2);
 }
 
 async function postChatToCore(message) {
   const base = getCoreUrl();
   persistCoreUrl();
-  const body = { message, scene: sceneSummaryForChat() };
+  const body = { message, history: chatHistoryForAgent() };
   const llm = getLlmConfigForRequest();
   if (llm) body.llm = llm;
   let response;
   try {
-    response = await fetch(`${base}/v1/chat`, {
+    response = await fetch(`${base}/v1/agent/turn`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -318,12 +327,19 @@ async function postChatToCore(message) {
   try {
     payload = await response.json();
   } catch {
-    throw new Error(`Core chat returned non-JSON (HTTP ${response.status})`);
+    throw new Error(`Core agent returned non-JSON (HTTP ${response.status})`);
   }
   if (!payload.ok && !payload.reply) {
-    throw new Error(payload.error || `Chat failed (HTTP ${response.status})`);
+    throw new Error(payload.error || `Agent failed (HTTP ${response.status})`);
   }
   return payload;
+}
+
+let chatTurnHistory = [];
+
+function chatHistoryForAgent() {
+  // Last few user/assistant text turns only (no tool dumps).
+  return chatTurnHistory.slice(-8);
 }
 
 const HIGHLIGHT = 0xffcc66;
@@ -883,18 +899,25 @@ el.chatForm?.addEventListener("submit", (ev) => {
   const message = (el.chatInput?.value || "").trim();
   if (!message) return;
   appendChatBubble("user", message);
+  chatTurnHistory.push({ role: "user", content: message });
   el.chatInput.value = "";
   clearChatProposal();
-  setStatus("Planning via Core /v1/chat…");
+  setStatus("Agent planning via Core /v1/agent/turn…");
   postChatToCore(message)
     .then((payload) => {
-      const reply = payload.reply || payload.error || "(no reply)";
+      let reply = payload.reply || payload.error || "(no reply)";
+      const qs = payload.questions || [];
+      if (qs.length) {
+        reply += `\n\nFragen:\n- ${qs.join("\n- ")}`;
+      }
       appendChatBubble("assistant", reply);
-      if (payload.commands?.length) {
+      chatTurnHistory.push({ role: "assistant", content: reply });
+      const commands = payload.proposal?.commands || payload.commands || [];
+      if (commands.length) {
         showChatProposal(payload);
-        setStatus(`Chat proposal · ${payload.commands.length} commands — Apply to run`, "ok");
+        setStatus(`Agent proposal · ${commands.length} commands — Apply to run`, "ok");
       } else {
-        setStatus("Chat: no commands proposed", "warn");
+        setStatus("Agent: no commands proposed", "warn");
       }
     })
     .catch((err) => {

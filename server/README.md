@@ -1,6 +1,6 @@
-# LayoutLab Core server (DD-014 Phase B)
+# LayoutLab Core server (DD-014 + agent tools)
 
-Local Python HTTP service that applies **Room Model** commands and returns a
+Local Python HTTP service that applies **Room Model** / generator commands and returns
 `viewer_schema` export JSON. No Blender / `bpy` required.
 
 ## Start
@@ -8,13 +8,7 @@ Local Python HTTP service that applies **Room Model** commands and returns a
 From the repo root:
 
 ```bash
-python -m server
-```
-
-Or:
-
-```bash
-python server/app.py
+python3 -m server
 ```
 
 Listens on `http://127.0.0.1:8765` by default.
@@ -23,57 +17,35 @@ Listens on `http://127.0.0.1:8765` by default.
 
 | Method | Path | Body | Response |
 |---|---|---|---|
-| `GET` | `/health` | — | `{ "ok": true, "chat": "demo"|"llm", ... }` |
-| `POST` | `/v1/commands` | `{ "commands": [ ... ] }` | `{ "ok", "results", "export" }` |
-| `POST` | `/v1/chat` | `{ "message": "…", "scene"?: {…} }` | `{ "ok", "reply", "commands" }` proposal |
+| `GET` | `/health` | — | `{ "ok", "tools", "chat", … }` |
+| `POST` | `/v1/commands` | `{ "commands": [ … ] }` | `{ "ok", "results", "export" }` |
+| `POST` | `/v1/agent/turn` | `{ "message", "llm"?, "history"? }` | proposal (no apply) |
+| `POST` | `/v1/tools/{name}` | tool params JSON | tool result |
+| `POST` | `/v1/chat` | legacy thin chat | proposal |
 
 CORS is enabled for the Vite viewer (`http://localhost:5173`).
 
-## Room + generator write slice (Phase B / B2)
+## Agent tools
 
-Supported actions: `create_room`, openings, fixed elements, `delete_collection_objects`,
-`delete_prefix`, `run_generator` (bundled generators: `bed_basic`, `desk_basic`, `wardrobe_basic`),
-`analyze_layout`.
+Contract: [docs/agent_tool_contract.md](../docs/agent_tool_contract.md).
 
-Export always includes live `analysis` (clearance overlaps). Not yet: undo, `regenerate`.
-
-## Example
+Read tools: `get_scene_summary`, `get_room`, `list_objects`, `get_object`,
+`get_analysis`, `list_generators`, `list_supported_actions`.
 
 ```bash
-curl -s http://127.0.0.1:8765/health
-
-curl -s -X POST http://127.0.0.1:8765/v1/commands \
-  -H 'Content-Type: application/json' \
-  -d @tests/fixtures/reference_kids_room_commands.json
+curl -s -X POST http://127.0.0.1:8765/v1/tools/get_scene_summary \
+  -H 'Content-Type: application/json' -d '{}'
 ```
 
-## Chat (thin planning)
+With an API key (viewer LLM settings or env), `/v1/agent/turn` runs tool calling and
+returns a structured `proposal`. Apply still uses `/v1/commands`.
 
-`POST /v1/chat` with `{ "message": "…", "scene"?: {…} }` returns a **proposal**:
-`{ ok, mode, reply, commands }` — it does **not** mutate the session.
+Without a key, demo intents still work (empty/furnished kids room, schrank, lösche den raum, analyze).
 
-Apply only via `POST /v1/commands` (viewer **Apply** button).
+## Room + generator write
 
-| Mode | When |
-|---|---|
-| `demo` | No API key — keyword intents (empty / furnished kids room, analyze) |
-| `llm` | Viewer **LLM-Einstellungen** (API-Key) oder Env `OPENAI_API_KEY` / `LAYOUTLAB_LLM_API_KEY` |
-
-Request body may include:
-
-```json
-{
-  "message": "…",
-  "scene": { … },
-  "llm": {
-    "api_key": "sk-…",
-    "model": "gpt-4o-mini",
-    "base_url": "https://api.openai.com/v1"
-  }
-}
-```
-
-Key from the request is preferred over env for that call. The viewer stores the key only in `localStorage`.
+Supported: room model, openings, fixed, `run_generator`, `analyze_layout`, deletes.
+Export embeds live `analysis`. Not yet: undo, `regenerate`, `dry_run_commands`.
 
 ## Viewer
 
@@ -81,5 +53,4 @@ Key from the request is preferred over env for that call. The viewer stores the 
 cd viewer && npm run dev
 ```
 
-Use the sidebar **AI Chat**, or **Empty / Furnished test room (Core)** (Core URL default
-`http://127.0.0.1:8765`).
+Sidebar **AI Chat** → agent turn; **Apply to Core** commits commands.

@@ -161,10 +161,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. Optional: fuller **DD-012** (provider UX, streaming, undo, multi-turn memory)  
-2. **Not blocking:** tiered clearances, more generators, polygon, multi-room  
+1. Agent-2: `validate_commands` + `dry_run_commands` (session clone)  
+2. Optional fuller **DD-012** (streaming, undo, auth UX)  
+3. **Not blocking:** tiered clearances, polygon, multi-room / variants  
 
-`desk_basic` ✅ · Room Model ✅ · Core (rooms + generators + analyze + thin chat) ✅
+`desk_basic` ✅ · Core + agent read tools + `/v1/agent/turn` ✅ · see [agent_tool_contract.md](agent_tool_contract.md)
 
 ------------------------------------------------------------------------
 

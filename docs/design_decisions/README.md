@@ -28,4 +28,5 @@ or UI patterns — check this index first.
 **Reserved (not created):** Future_Ideas §19 may later use DD-011 … DD-013 for
 Variants, Integrated AI, Capture Pipeline. **DD-014** is now the Standalone Runtime
 path (Phase A + B room write + B2 generators Accepted; multi-space Spatial Project remains a later DD).
+Agent tools: see [../agent_tool_contract.md](../agent_tool_contract.md).
 Do not invent files for remaining reserved IDs until an actual proposal is written.
