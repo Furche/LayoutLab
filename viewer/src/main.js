@@ -3,8 +3,10 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import {
   buildSceneFromExport,
   clearGroup,
+  computeFit,
   fitCameraToRoot,
-  setCameraPreset,
+  getFitViewPose,
+  getPresetPose,
 } from "./scene.js";
 import kidsRoomFixture from "../../tests/fixtures/reference_kids_room_export.json";
 import kidsRoomFindings from "../../tests/fixtures/reference_kids_room_export_findings.json";
@@ -71,6 +73,78 @@ let pointerDown = null;
 let lastPointerButton = 0;
 let lastPointerType = "mouse";
 let activeTouchCount = 0;
+let camTween = null;
+
+const _lookObj = new THREE.Object3D();
+
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+function cancelCameraTween({ restoreControls = true } = {}) {
+  camTween = null;
+  if (restoreControls) controls.enabled = true;
+}
+
+function animateCameraTo(pose, { projection, durationMs = 480, statusMsg } = {}) {
+  if (!pose) return;
+  cancelCameraTween({ restoreControls: false });
+
+  const fromPos = camera.position.clone();
+  const fromTarget = controls.target.clone();
+  const fromUp = camera.up.clone();
+  const fromQuat = camera.quaternion.clone();
+
+  if (projection === "orthographic") useOrthographic();
+  else if (projection === "perspective") usePerspective();
+
+  // After projection switch, keep starting from the captured pose.
+  camera.position.copy(fromPos);
+  camera.up.copy(fromUp);
+  camera.quaternion.copy(fromQuat);
+  controls.target.copy(fromTarget);
+
+  _lookObj.position.copy(pose.position);
+  _lookObj.up.copy(pose.up);
+  _lookObj.lookAt(pose.target);
+  const toQuat = _lookObj.quaternion.clone();
+
+  controls.enabled = false;
+  camTween = {
+    t0: performance.now(),
+    durationMs,
+    fromPos,
+    fromTarget,
+    fromUp,
+    fromQuat,
+    toPos: pose.position.clone(),
+    toTarget: pose.target.clone(),
+    toUp: pose.up.clone(),
+    toQuat,
+    statusMsg,
+  };
+}
+
+function updateCameraTween(now) {
+  if (!camTween) return;
+  const u = Math.min(1, (now - camTween.t0) / camTween.durationMs);
+  const e = easeInOutCubic(u);
+  camera.position.lerpVectors(camTween.fromPos, camTween.toPos, e);
+  controls.target.lerpVectors(camTween.fromTarget, camTween.toTarget, e);
+  camera.up.copy(camTween.fromUp).lerp(camTween.toUp, e).normalize();
+  camera.quaternion.slerpQuaternions(camTween.fromQuat, camTween.toQuat, e);
+  camera.updateMatrixWorld();
+  if (u >= 1) {
+    camera.position.copy(camTween.toPos);
+    camera.up.copy(camTween.toUp);
+    camera.quaternion.copy(camTween.toQuat);
+    controls.target.copy(camTween.toTarget);
+    const msg = camTween.statusMsg;
+    cancelCameraTween();
+    controls.update();
+    if (msg) setStatus(msg, "ok");
+  }
+}
 
 function syncCameraPose(from, to) {
   to.position.copy(from.position);
@@ -438,20 +512,38 @@ async function pasteFromClipboard() {
 }
 
 function applyCamera(preset) {
-  if (!sceneRoot || !lastFit) {
+  if (!sceneRoot) {
     setStatus("Load a scene first", "warn");
     return;
   }
   if (preset === "fit") {
-    usePerspective();
-    lastFit = fitCameraToRoot(perspCamera, controls, sceneRoot);
-    setStatus("Camera fit · perspective", "ok");
+    const fit = computeFit(sceneRoot);
+    if (!fit) {
+      setStatus("Nothing to frame", "warn");
+      return;
+    }
+    lastFit = fit;
+    if (camera === perspCamera) {
+      perspCamera.near = Math.max(0.01, fit.dist / 100);
+      perspCamera.far = fit.dist * 20;
+    }
+    animateCameraTo(getFitViewPose(fit), {
+      projection: "perspective",
+      statusMsg: "Camera fit · perspective",
+    });
     return;
   }
-  // View presets are orthographic; dolly/pan keep ortho until the user orbits.
-  useOrthographic();
-  setCameraPreset(orthoCamera, controls, lastFit, preset);
-  setStatus(`Camera ${preset} · orthographic`, "ok");
+  if (!lastFit) {
+    lastFit = computeFit(sceneRoot);
+  }
+  if (!lastFit) {
+    setStatus("Load a scene first", "warn");
+    return;
+  }
+  animateCameraTo(getPresetPose(lastFit, preset), {
+    projection: "orthographic",
+    statusMsg: `Camera ${preset} · orthographic`,
+  });
 }
 
 function pickObject(clientX, clientY) {
@@ -474,7 +566,8 @@ function resize() {
   renderer.setSize(w, h, false);
 }
 
-function frame() {
+function frame(now = performance.now()) {
+  updateCameraTween(now);
   controls.update();
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
@@ -552,6 +645,7 @@ renderer.domElement.addEventListener("pointercancel", () => {
 
 // Orbit (rotate) leaves orthographic; dolly/pan keep it.
 controls.addEventListener("start", () => {
+  if (camTween) cancelCameraTween();
   if (projectionMode !== "orthographic") return;
   let isRotate = false;
   if (lastPointerType === "touch") {

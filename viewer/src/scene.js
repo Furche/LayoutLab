@@ -262,52 +262,82 @@ export function buildSceneFromExport(data) {
   return { root, layers: { clearances, openings, solids } };
 }
 
-export function fitCameraToRoot(camera, controls, root, margin = 1.35) {
+export function computeFit(root, margin = 1.35) {
   const box = new THREE.Box3().setFromObject(root);
   if (box.isEmpty()) return null;
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z, 1);
   const dist = maxDim * margin;
-  camera.near = Math.max(0.01, dist / 100);
-  camera.far = dist * 20;
-  camera.position.set(center.x + dist * 0.7, center.y + dist * 0.55, center.z + dist * 0.7);
-  camera.lookAt(center);
-  camera.updateProjectionMatrix();
-  if (controls) {
-    controls.target.copy(center);
-    controls.update();
-  }
   return { center, size, maxDim, dist };
 }
 
-/** Presets relative to a fitted scene: iso, top, front, side (typically orthographic). */
-export function setCameraPreset(camera, controls, fit, preset) {
-  if (!fit) return;
+export function getFitViewPose(fit) {
+  if (!fit) return null;
   const { center, dist } = fit;
-  const d = dist;
+  return {
+    position: new THREE.Vector3(center.x + dist * 0.7, center.y + dist * 0.55, center.z + dist * 0.7),
+    up: new THREE.Vector3(0, 1, 0),
+    target: center.clone(),
+  };
+}
 
+/** Preset eye pose (iso / top / front / side). */
+export function getPresetPose(fit, preset) {
+  if (!fit) return null;
+  const { center, dist: d } = fit;
+  const target = center.clone();
   if (preset === "top") {
-    // Straight down; nudge +Z so lookAt has a stable up vector.
-    camera.up.set(0, 0, -1);
-    camera.position.set(center.x, center.y + d, center.z);
-  } else if (preset === "front") {
-    // Horizontal view along −Z (toward −Z from +Z).
-    camera.up.set(0, 1, 0);
-    camera.position.set(center.x, center.y, center.z + d);
-  } else if (preset === "side") {
-    // Horizontal view along −X (from +X).
-    camera.up.set(0, 1, 0);
-    camera.position.set(center.x + d, center.y, center.z);
-  } else {
-    // iso — slight elevation is intentional
-    camera.up.set(0, 1, 0);
-    camera.position.set(center.x + d * 0.7, center.y + d * 0.55, center.z + d * 0.7);
+    return {
+      position: new THREE.Vector3(center.x, center.y + d, center.z),
+      up: new THREE.Vector3(0, 0, -1),
+      target,
+    };
   }
-  camera.lookAt(center);
+  if (preset === "front") {
+    return {
+      position: new THREE.Vector3(center.x, center.y, center.z + d),
+      up: new THREE.Vector3(0, 1, 0),
+      target,
+    };
+  }
+  if (preset === "side") {
+    return {
+      position: new THREE.Vector3(center.x + d, center.y, center.z),
+      up: new THREE.Vector3(0, 1, 0),
+      target,
+    };
+  }
+  // iso
+  return {
+    position: new THREE.Vector3(center.x + d * 0.7, center.y + d * 0.55, center.z + d * 0.7),
+    up: new THREE.Vector3(0, 1, 0),
+    target,
+  };
+}
+
+export function applyViewPose(camera, controls, pose) {
+  if (!pose) return;
+  camera.up.copy(pose.up);
+  camera.position.copy(pose.position);
+  camera.lookAt(pose.target);
   camera.updateProjectionMatrix();
   if (controls) {
-    controls.target.copy(center);
+    controls.target.copy(pose.target);
     controls.update();
   }
+}
+
+export function fitCameraToRoot(camera, controls, root, margin = 1.35) {
+  const fit = computeFit(root, margin);
+  if (!fit) return null;
+  applyViewPose(camera, controls, getFitViewPose(fit));
+  camera.near = Math.max(0.01, fit.dist / 100);
+  camera.far = fit.dist * 20;
+  camera.updateProjectionMatrix();
+  return fit;
+}
+
+export function setCameraPreset(camera, controls, fit, preset) {
+  applyViewPose(camera, controls, getPresetPose(fit, preset));
 }
