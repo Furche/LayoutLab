@@ -286,16 +286,24 @@ export function setCameraPreset(camera, controls, fit, preset) {
   if (!fit) return;
   const { center, dist } = fit;
   const d = dist;
+
   if (preset === "top") {
-    camera.position.set(center.x, center.y + d * 1.1, center.z + 0.001);
+    // Straight down; nudge +Z so lookAt has a stable up vector.
+    camera.up.set(0, 0, -1);
+    camera.position.set(center.x, center.y + d, center.z);
   } else if (preset === "front") {
-    camera.position.set(center.x, center.y + d * 0.25, center.z + d);
+    // Horizontal view along −Z (toward −Z from +Z).
+    camera.up.set(0, 1, 0);
+    camera.position.set(center.x, center.y, center.z + d);
   } else if (preset === "side") {
-    camera.position.set(center.x + d, center.y + d * 0.25, center.z);
+    // Horizontal view along −X (from +X).
+    camera.up.set(0, 1, 0);
+    camera.position.set(center.x + d, center.y, center.z);
   } else {
+    // iso — slight elevation is intentional
+    camera.up.set(0, 1, 0);
     camera.position.set(center.x + d * 0.7, center.y + d * 0.55, center.z + d * 0.7);
   }
-  camera.up.set(0, 1, 0);
   camera.lookAt(center);
   camera.updateProjectionMatrix();
   if (controls) {
