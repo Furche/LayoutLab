@@ -8,11 +8,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-### Fixed
+### Added
+
+- **DD-014 Proposed:** Standalone Runtime Path — Phase A read-only export viewer, then Phase B write adapter ([DD-014](docs/design_decisions/DD-014-standalone-runtime-path.md))
+
+### Fixed (prior)
 
 - **`analyze_layout` summary:** count `error`/`warning` into `errors`/`warnings` (was stuck at 0)
 
-### Changed
+### Changed (prior)
 
 - Plugin version **0.10.3**
 

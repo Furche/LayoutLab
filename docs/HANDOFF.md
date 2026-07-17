@@ -160,11 +160,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. Blender QA: `analyze_layout` against kids room (walls/heater as blockers)  
-2. Optional: tiered multi-zone clearances / polygon  
-3. **Not now:** multi-room, standalone, capture  
+1. **Review DD-014** (Standalone Runtime Path — Proposed): Accept / Accept Phase A only / Reject  
+2. After Accept: viewer-minimum export note + kids-room export fixture → Phase A scaffold  
+3. **Not blocking standalone:** tiered clearances, more generators, polygon, multi-room  
 
-`desk_basic` ✅ · Room Model ✅ · constructive openings ✅ · native meters ✅ · **room-aware analyze ✅**
+`desk_basic` ✅ · Room Model ✅ · constructive openings ✅ · native meters ✅ · room-aware analyze ✅ · **DD-014 Proposed**
 
 ------------------------------------------------------------------------
 

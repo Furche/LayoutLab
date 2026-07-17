@@ -572,7 +572,7 @@ A later **own viewport** would use an **existing 3D technology** — **not** a c
 | Variants as first-class objects | **DD-011** — Layout Variants and Comparison |
 | In-app AI product experience | **DD-012** — Integrated AI Product Experience |
 | Capture / reconstruction pipeline | **DD-013** — Capture and Reconstruction Pipeline |
-| Neutral authoring model + second write runtime | **DD-014** — Standalone Runtime and Authoring Model |
+| Neutral authoring model + second write runtime | **DD-014** — [Proposed](design_decisions/DD-014-standalone-runtime-path.md) (viewer-first path) |
 
 Do **not** create or accept these DDs until implementation is actually planned. Until then: document here + `ARCHITECTURE.md` §2.2.
 
@@ -810,7 +810,7 @@ Do **not** implement from this vision until separate DDs and explicit product ne
 | DD-011 | Layout Variants and Comparison | **Not created** — reserve when implementing §16 |
 | DD-012 | Integrated AI Product Experience | **Not created** — reserve when implementing §7 / §12 |
 | DD-013 | Capture and Reconstruction Pipeline | **Not created** — reserve when implementing §14–§15 |
-| DD-014 | Standalone Runtime / multi-space Spatial Project | **Not created** — apartment/building beyond DD-010; §11 write path |
+| DD-014 | Standalone Runtime Path (viewer → write) | **Proposed** — [DD-014](design_decisions/DD-014-standalone-runtime-path.md); multi-space Spatial Project still later |
 
 Align numbering with [design_decisions/README.md](design_decisions/README.md) when filing. Do not auto-Accept.
 
