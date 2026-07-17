@@ -281,7 +281,7 @@ export function fitCameraToRoot(camera, controls, root, margin = 1.35) {
   return { center, size, maxDim, dist };
 }
 
-/** Presets relative to a fitted scene: iso (default), top, front, side. */
+/** Presets relative to a fitted scene: iso, top, front, side (typically orthographic). */
 export function setCameraPreset(camera, controls, fit, preset) {
   if (!fit) return;
   const { center, dist } = fit;
@@ -289,17 +289,15 @@ export function setCameraPreset(camera, controls, fit, preset) {
   if (preset === "top") {
     camera.position.set(center.x, center.y + d * 1.1, center.z + 0.001);
   } else if (preset === "front") {
-    // Looking along +Y in Blender → after Z-up→Y-up root, Blender Y is -Z in three? 
-    // Root has rotation.x = -PI/2, so Blender (x,y,z) → Three (x,z,-y) roughly via the group.
-    // Camera is in Three space; content is under rotated root. Target is already in Three space from Box3.
     camera.position.set(center.x, center.y + d * 0.25, center.z + d);
   } else if (preset === "side") {
     camera.position.set(center.x + d, center.y + d * 0.25, center.z);
   } else {
-    // iso
     camera.position.set(center.x + d * 0.7, center.y + d * 0.55, center.z + d * 0.7);
   }
+  camera.up.set(0, 1, 0);
   camera.lookAt(center);
+  camera.updateProjectionMatrix();
   if (controls) {
     controls.target.copy(center);
     controls.update();

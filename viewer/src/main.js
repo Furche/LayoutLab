@@ -40,7 +40,11 @@ renderer.setClearColor(0x000000, 0);
 el.viewport.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 200);
+const perspCamera = new THREE.PerspectiveCamera(50, 1, 0.05, 200);
+const orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.05, 200);
+let camera = perspCamera;
+let projectionMode = "perspective"; // perspective | orthographic
+
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
@@ -64,6 +68,69 @@ let lastFit = null;
 let selected = null;
 let findingMeshes = [];
 let pointerDown = null;
+let lastPointerButton = 0;
+let lastPointerType = "mouse";
+let activeTouchCount = 0;
+
+function syncCameraPose(from, to) {
+  to.position.copy(from.position);
+  to.quaternion.copy(from.quaternion);
+  to.up.copy(from.up);
+  to.near = from.near;
+  to.far = from.far;
+}
+
+function updateOrthoFrustum() {
+  const w = Math.max(el.viewport.clientWidth, 1);
+  const h = Math.max(el.viewport.clientHeight, 1);
+  const aspect = w / h;
+  const span = lastFit ? lastFit.maxDim * 1.2 : 4;
+  const halfH = span / 2;
+  const halfW = halfH * aspect;
+  orthoCamera.left = -halfW;
+  orthoCamera.right = halfW;
+  orthoCamera.top = halfH;
+  orthoCamera.bottom = -halfH;
+  if (lastFit) {
+    orthoCamera.near = Math.max(0.01, lastFit.dist / 100);
+    orthoCamera.far = lastFit.dist * 20;
+  }
+  orthoCamera.updateProjectionMatrix();
+}
+
+function setActiveCamera(next, { updateControls = true } = {}) {
+  if (camera === next) {
+    if (next === orthoCamera) updateOrthoFrustum();
+    next.updateProjectionMatrix();
+    return;
+  }
+  syncCameraPose(camera, next);
+  if (next === orthoCamera) {
+    next.zoom = 1;
+    updateOrthoFrustum();
+  } else {
+    next.aspect = Math.max(el.viewport.clientWidth, 1) / Math.max(el.viewport.clientHeight, 1);
+  }
+  next.updateProjectionMatrix();
+  camera = next;
+  if (updateControls) {
+    controls.object = camera;
+    controls.update();
+  }
+}
+
+function usePerspective({ statusMsg } = {}) {
+  if (projectionMode === "perspective" && camera === perspCamera) return;
+  projectionMode = "perspective";
+  setActiveCamera(perspCamera);
+  if (statusMsg) setStatus(statusMsg, "ok");
+}
+
+function useOrthographic({ statusMsg } = {}) {
+  projectionMode = "orthographic";
+  setActiveCamera(orthoCamera);
+  if (statusMsg) setStatus(statusMsg, "ok");
+}
 
 function setStatus(msg, kind = "") {
   el.status.textContent = msg;
@@ -316,7 +383,13 @@ function loadExportData(data, sourceLabel) {
   sceneRoot = built.root;
   layers = built.layers;
   applyLayerVisibility();
-  lastFit = fitCameraToRoot(camera, controls, built.root);
+  projectionMode = "perspective";
+  camera = perspCamera;
+  controls.object = perspCamera;
+  lastFit = fitCameraToRoot(perspCamera, controls, built.root);
+  perspCamera.aspect = Math.max(el.viewport.clientWidth, 1) / Math.max(el.viewport.clientHeight, 1);
+  perspCamera.updateProjectionMatrix();
+  controls.update();
   renderMeta(data, sourceLabel);
   renderAnalysis(data);
   const n = (data.objects || []).length;
@@ -370,12 +443,15 @@ function applyCamera(preset) {
     return;
   }
   if (preset === "fit") {
-    lastFit = fitCameraToRoot(camera, controls, sceneRoot);
-    setStatus("Camera fit", "ok");
+    usePerspective();
+    lastFit = fitCameraToRoot(perspCamera, controls, sceneRoot);
+    setStatus("Camera fit · perspective", "ok");
     return;
   }
-  setCameraPreset(camera, controls, lastFit, preset);
-  setStatus(`Camera ${preset}`, "ok");
+  // View presets are orthographic; dolly/pan keep ortho until the user orbits.
+  useOrthographic();
+  setCameraPreset(orthoCamera, controls, lastFit, preset);
+  setStatus(`Camera ${preset} · orthographic`, "ok");
 }
 
 function pickObject(clientX, clientY) {
@@ -391,8 +467,10 @@ function resize() {
   const w = el.viewport.clientWidth;
   const h = el.viewport.clientHeight;
   if (w < 1 || h < 1) return;
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
+  perspCamera.aspect = w / h;
+  perspCamera.updateProjectionMatrix();
+  if (projectionMode === "orthographic") updateOrthoFrustum();
+  else orthoCamera.updateProjectionMatrix();
   renderer.setSize(w, h, false);
 }
 
@@ -445,11 +523,15 @@ el.viewControls?.addEventListener("click", (ev) => {
 });
 
 renderer.domElement.addEventListener("pointerdown", (ev) => {
+  lastPointerButton = ev.button;
+  lastPointerType = ev.pointerType || "mouse";
+  if (ev.pointerType === "touch") activeTouchCount += 1;
   if (ev.button !== 0) return;
   pointerDown = { x: ev.clientX, y: ev.clientY };
 });
 
 renderer.domElement.addEventListener("pointerup", (ev) => {
+  if (ev.pointerType === "touch") activeTouchCount = Math.max(0, activeTouchCount - 1);
   if (ev.button !== 0 || !pointerDown) return;
   const dx = ev.clientX - pointerDown.x;
   const dy = ev.clientY - pointerDown.y;
@@ -464,6 +546,32 @@ renderer.domElement.addEventListener("pointerup", (ev) => {
   }
 });
 
+renderer.domElement.addEventListener("pointercancel", () => {
+  activeTouchCount = 0;
+});
+
+// Orbit (rotate) leaves orthographic; dolly/pan keep it.
+controls.addEventListener("start", () => {
+  if (projectionMode !== "orthographic") return;
+  let isRotate = false;
+  if (lastPointerType === "touch") {
+    isRotate = activeTouchCount <= 1;
+  } else {
+    const map = controls.mouseButtons;
+    const action =
+      lastPointerButton === 0
+        ? map.LEFT
+        : lastPointerButton === 1
+          ? map.MIDDLE
+          : lastPointerButton === 2
+            ? map.RIGHT
+            : null;
+    isRotate = action === THREE.MOUSE.ROTATE;
+  }
+  if (isRotate) {
+    usePerspective({ statusMsg: "Orbit · perspective" });
+  }
+});
 // Drag & drop export JSON (counter avoids flicker on child enter/leave)
 let dragDepth = 0;
 

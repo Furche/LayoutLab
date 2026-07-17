@@ -20,7 +20,7 @@ On start the viewer loads `tests/fixtures/reference_kids_room_export.json`.
 
 Also: drag-drop a `.json` onto the viewport, or **Examples** for fixtures.
 
-**Viewport:** Fit / Iso / Top / Front / Side · click objects to select · click a finding to highlight related meshes · `F` fit, `1`–`4` camera, `Esc` clear.
+**Viewport:** Fit (perspective) · Iso/Top/Front/Side (orthographic) · orbit returns to perspective · pan/dolly keep ortho · click to select · finding highlights · `F` / `1`–`4` / `Esc`.
 
 ## What it shows
 
