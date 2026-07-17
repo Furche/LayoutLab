@@ -6,7 +6,14 @@ from mathutils import Vector
 from .. import bl_info
 from ..engine.registry import addon_user_dir, list_generators_meta
 from .semantic import layoutlab_block_from_object
-from .viewer_export import VIEWER_SCHEMA, parse_corners_json, viewer_block_for_role
+from .viewer_export import (
+    MAX_VIEWER_MESH_VERTS,
+    SKIP_VIEWER_ROLES,
+    VIEWER_SCHEMA,
+    WIRE_ROLES,
+    parse_corners_json,
+    viewer_block_for_role,
+)
 
 
 def v3(values):
@@ -25,30 +32,62 @@ def mesh_world_quad_corners(obj):
     return [v3(obj.matrix_world @ mesh.vertices[i].co) for i in idxs]
 
 
+def mesh_world_geometry(obj):
+    """World-space triangulated faces for viewer mesh primitive (or None)."""
+    if obj.type != "MESH" or not obj.data:
+        return None
+    mesh = obj.data
+    if len(mesh.vertices) == 0 or len(mesh.vertices) > MAX_VIEWER_MESH_VERTS:
+        return None
+    mw = obj.matrix_world
+    vertices = [v3(mw @ v.co) for v in mesh.vertices]
+    faces = []
+    for poly in mesh.polygons:
+        idxs = list(poly.vertices)
+        if len(idxs) < 3:
+            continue
+        for i in range(1, len(idxs) - 1):
+            faces.append([idxs[0], idxs[i], idxs[i + 1]])
+    if not faces:
+        return None
+    return {"vertices": vertices, "faces": faces}
+
+
 def viewer_block_from_object(obj):
     role = obj.get("layoutlab_role") or ""
+    if role in SKIP_VIEWER_ROLES:
+        return None
+    display_type = getattr(obj, "display_type", None)
+    is_wire = role in WIRE_ROLES or (display_type and str(display_type).upper() == "WIRE")
+
     corners = parse_corners_json(obj.get("layoutlab_viewer_corners"))
     if corners is None and role == "room_wall":
         corners = mesh_world_quad_corners(obj)
-    display_type = getattr(obj, "display_type", None)
-    return viewer_block_for_role(role, corners=corners, display_type=display_type)
+
+    mesh = None
+    if not is_wire and role != "room_wall":
+        mesh = mesh_world_geometry(obj)
+
+    return viewer_block_for_role(role, corners=corners, display_type=display_type, mesh=mesh)
 
 
 def object_to_dict(obj):
     world_corners = []
     if hasattr(obj, "bound_box"):
         world_corners = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
+    world_loc = obj.matrix_world.to_translation()
+    world_euler = obj.matrix_world.to_euler("XYZ")
     data = {
         "name": obj.name,
         "type": obj.type,
         "collection": obj.users_collection[0].name if obj.users_collection else "",
-        "location": v3(obj.location),
+        "location": v3(world_loc),
         "rotation_euler_deg": [
-            round(math.degrees(obj.rotation_euler.x), 3),
-            round(math.degrees(obj.rotation_euler.y), 3),
-            round(math.degrees(obj.rotation_euler.z), 3),
+            round(math.degrees(world_euler.x), 3),
+            round(math.degrees(world_euler.y), 3),
+            round(math.degrees(world_euler.z), 3),
         ],
-        "scale": v3(obj.scale),
+        "scale": v3(obj.matrix_world.to_scale()),
         "dimensions": v3(obj.dimensions) if hasattr(obj, "dimensions") else [0, 0, 0],
         "visible": bool(obj.visible_get()),
         "world_bbox_corners": [v3(c) for c in world_corners],
@@ -81,9 +120,15 @@ def layout_export_json(context, selected_only=False):
         "generators": list_generators_meta(),
         "note": (
             "Coordinates/dimensions are Blender scene units (native). "
-            "With Metric and unit_scale=1.0, 1 unit = 1 meter."
+            "With Metric and unit_scale=1.0, 1 unit = 1 meter. "
+            "location/rotation are world-space; prefer world_bbox_corners / viewer.mesh for display."
         ),
         "rooms": rooms,
-        "objects": [object_to_dict(o) for o in objs if o.type in {"MESH", "EMPTY", "CURVE", "FONT"}],
+        "objects": [
+            object_to_dict(o)
+            for o in objs
+            if o.type in {"MESH", "EMPTY", "CURVE", "FONT"}
+            and (o.get("layoutlab_role") or "") not in SKIP_VIEWER_ROLES
+        ],
     }
     return json.dumps(data, indent=2, ensure_ascii=False)

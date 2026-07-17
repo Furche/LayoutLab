@@ -518,7 +518,7 @@ Also: `update_room`, `delete_room`, `update_opening`, `remove_opening`, `update_
 ```json
 {
   "layoutlab_version": "0.10.4",
-  "viewer_schema": "0.1.0",
+  "viewer_schema": "0.1.1",
   "unit": "METRIC",
   "unit_scale": 1.0,
   "scene": "Scene",
@@ -533,7 +533,7 @@ Also: `update_room`, `delete_room`, `update_opening`, `remove_opening`, `update_
 | Field | Type | Description |
 |---|---|---|
 | `layoutlab_version` | string | Plugin version |
-| `viewer_schema` | string | Viewer-minimum contract semver (`0.1.0`) — [DD-014](design_decisions/DD-014-standalone-runtime-path.md) / §6.4 `[IMPLEMENTED]` v0.10.4 |
+| `viewer_schema` | string | Viewer-minimum contract semver (`0.1.1`) — [DD-014](design_decisions/DD-014-standalone-runtime-path.md) / §6.4 `[IMPLEMENTED]` v0.10.6 |
 | `unit` | string | `METRIC`, `IMPERIAL`, or `NONE` |
 | `unit_scale` | number | Blender `scale_length` |
 | `scene` | string | Scene name |
@@ -602,7 +602,7 @@ Read-only standalone viewers consume a **subset** of the scene export. Blender m
 ```json
 {
   "layoutlab_version": "0.10.4",
-  "viewer_schema": "0.1.0",
+  "viewer_schema": "0.1.1",
   "unit": "METRIC",
   "unit_scale": 1.0,
   "scene": "KidsRoomReference",
@@ -634,18 +634,21 @@ Read-only standalone viewers consume a **subset** of the scene export. Blender m
 | Field | Required for viewer? | Notes |
 |---|---|---|
 | `layoutlab_version` | yes | Plugin / producer version |
-| `viewer_schema` | yes (viewer contract) | Semver of this minimum; currently `0.1.0` |
+| `viewer_schema` | yes (viewer contract) | Semver of this minimum; currently `0.1.1` |
 | `unit` / `unit_scale` | yes | Same as §8 — Metric + `1.0` ⇒ 1 unit = 1 m |
 | `rooms[]` | recommended | Semantic room block from Room Model export |
-| `objects[].location` | yes | Origin |
-| `objects[].dimensions` | yes* | AABB size (*or derive from `world_bbox_corners` / `viewer.corners`) |
-| `objects[].rotation_euler_deg` | yes | Degrees |
+| `objects[].location` | yes | **World** origin (v0.10.6+); do not treat as AABB min |
+| `objects[].world_bbox_corners` | yes* | Preferred for AABB placement (*fallback: location+dimensions) |
+| `objects[].dimensions` | yes* | World AABB size |
+| `objects[].rotation_euler_deg` | yes | World Euler degrees (v0.10.6+) |
 | `objects[].layoutlab.role` | yes | Drive materials / layering (`room_wall`, `clearance`, …) |
-| `objects[].viewer.primitive` | optional hint | `box` \| `quad`; walls with openings use `viewer.corners` (inward quad) |
+| `objects[].viewer.primitive` | optional hint | `box` \| `quad` \| `mesh` |
+| `objects[].viewer.corners` | for quads | Inward wall panel corners |
+| `objects[].viewer.vertices` / `faces` | for mesh | World-space triangulated mesh (furniture) |
 | `objects[].viewer.display` | optional | `wire` for openings / clearances |
 | `analysis` | optional | When present, Phase A **shows findings** (DD-014) |
 
-**Render defaults for Phase A:** solid boxes for furniture / fixed / floor; inward quads for wall panels; wire for openings and clearances; findings list/overlay from `analysis.findings` when non-empty.
+**Render defaults for Phase A:** real `viewer.mesh` when present; else AABB from `world_bbox_corners`; inward quads for wall panels; wire for openings/clearances; findings from `analysis.findings` when non-empty.
 
 ------------------------------------------------------------------------
 

@@ -340,7 +340,7 @@ def run_console_checks(context):
         if missing:
             check.fail(f"missing_keys: {sorted(missing)}")
             return
-        if export.get("viewer_schema") != "0.1.0":
+        if export.get("viewer_schema") not in {"0.1.0", "0.1.1"}:
             check.fail(f"viewer_schema: {export.get('viewer_schema')}")
             return
         wall_objs = [

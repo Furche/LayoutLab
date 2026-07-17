@@ -25,6 +25,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 - **Quick Test units (v0.10.5):** browser defaults were still pre-metric (`12`/`20`); now meters (`1.2`×`2.0` bed, desk/wardrobe profiles). Stale scene values auto-reset when opening the browser.
 
+### Fixed
+
+- **Viewer placement / desk mesh (v0.10.6):** paste used object `location` as AABB corner (wrong for parented Parts / non-corner origins). Now uses `world_bbox_corners`; furniture exports `viewer.mesh` so desk legs/top match Blender. Labels skipped. `viewer_schema` → `0.1.1`.
+
 ### Fixed (prior)
 
 - **`analyze_layout` summary:** count `error`/`warning` into `errors`/`warnings` (was stuck at 0)
