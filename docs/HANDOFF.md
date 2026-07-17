@@ -161,10 +161,9 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. Polish Phase A viewer UX (optional)  
-2. **Not blocking standalone:** tiered clearances, more generators, polygon, multi-room; Phase B only after separate Accept  
+1. **Not blocking standalone:** tiered clearances, more generators, polygon, multi-room; Phase B only after separate Accept  
 
-`desk_basic` ✅ · Room Model ✅ · constructive openings ✅ · native meters ✅ · room-aware analyze ✅ · **DD-014 Phase A Accepted** · viewer + paste ✅ · test-room buttons ✅ · **export embeds analysis v0.10.8 ✅**
+`desk_basic` ✅ · Room Model ✅ · constructive openings ✅ · native meters ✅ · room-aware analyze ✅ · **DD-014 Phase A Accepted** · viewer + paste + analysis export ✅ · test-room buttons ✅ · **viewer polish ✅**
 
 ------------------------------------------------------------------------
 

@@ -238,7 +238,16 @@ export function buildSceneFromExport(data) {
     }
 
     mesh.name = obj.name || role;
-    mesh.userData = { role, object_id: obj.layoutlab?.object_id };
+    mesh.userData = {
+      role,
+      object_id: obj.layoutlab?.object_id || obj.custom_properties?.layoutlab_object_id || "",
+      clearance_name:
+        obj.layoutlab?.clearance?.clearance_name ||
+        obj.custom_properties?.layoutlab_clearance_name ||
+        "",
+      exportName: obj.name || "",
+      baseColor: color,
+    };
 
     if (role === "clearance") clearances.add(mesh);
     else if (role === "room_opening") openings.add(mesh);
@@ -255,7 +264,7 @@ export function buildSceneFromExport(data) {
 
 export function fitCameraToRoot(camera, controls, root, margin = 1.35) {
   const box = new THREE.Box3().setFromObject(root);
-  if (box.isEmpty()) return;
+  if (box.isEmpty()) return null;
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z, 1);
@@ -265,6 +274,32 @@ export function fitCameraToRoot(camera, controls, root, margin = 1.35) {
   camera.position.set(center.x + dist * 0.7, center.y + dist * 0.55, center.z + dist * 0.7);
   camera.lookAt(center);
   camera.updateProjectionMatrix();
+  if (controls) {
+    controls.target.copy(center);
+    controls.update();
+  }
+  return { center, size, maxDim, dist };
+}
+
+/** Presets relative to a fitted scene: iso (default), top, front, side. */
+export function setCameraPreset(camera, controls, fit, preset) {
+  if (!fit) return;
+  const { center, dist } = fit;
+  const d = dist;
+  if (preset === "top") {
+    camera.position.set(center.x, center.y + d * 1.1, center.z + 0.001);
+  } else if (preset === "front") {
+    // Looking along +Y in Blender → after Z-up→Y-up root, Blender Y is -Z in three? 
+    // Root has rotation.x = -PI/2, so Blender (x,y,z) → Three (x,z,-y) roughly via the group.
+    // Camera is in Three space; content is under rotated root. Target is already in Three space from Box3.
+    camera.position.set(center.x, center.y + d * 0.25, center.z + d);
+  } else if (preset === "side") {
+    camera.position.set(center.x + d, center.y + d * 0.25, center.z);
+  } else {
+    // iso
+    camera.position.set(center.x + d * 0.7, center.y + d * 0.55, center.z + d * 0.7);
+  }
+  camera.lookAt(center);
   if (controls) {
     controls.target.copy(center);
     controls.update();

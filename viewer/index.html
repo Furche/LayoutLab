@@ -14,13 +14,18 @@
           <span class="brand-sub">Viewer · Phase A</span>
         </div>
         <div class="toolbar">
-          <button type="button" id="btn-paste" class="ghost">Paste export</button>
+          <button type="button" id="btn-paste" class="primary">Paste export</button>
           <label class="file-btn">
             Open file…
             <input id="file-input" type="file" accept="application/json,.json" hidden />
           </label>
-          <button type="button" id="btn-fixture" class="ghost">Kids room (clean)</button>
-          <button type="button" id="btn-findings" class="ghost">Kids room (findings)</button>
+          <details class="examples">
+            <summary>Examples</summary>
+            <div class="examples-menu">
+              <button type="button" id="btn-fixture" class="ghost">Kids room (clean)</button>
+              <button type="button" id="btn-findings" class="ghost">Kids room (findings)</button>
+            </div>
+          </details>
         </div>
       </header>
 
@@ -29,17 +34,17 @@
           <h2>Paste LayoutLab export</h2>
           <p class="muted">
             In Blender: LayoutLab → <strong>Copy Scene Layout</strong>, then paste here
-            (<kbd>⌘V</kbd> / <kbd>Ctrl+V</kbd>).
+            (<kbd>⌘V</kbd> / <kbd>Ctrl+V</kbd>). Not the commands JSON.
           </p>
           <textarea
             id="paste-text"
             rows="12"
             spellcheck="false"
-            placeholder='{ "layoutlab_version": "…", "objects": [ … ] }'
+            placeholder='{ "layoutlab_version": "…", "objects": [ … ], "analysis": { … } }'
           ></textarea>
           <div class="paste-actions">
             <button type="submit" value="cancel" class="ghost">Cancel</button>
-            <button type="submit" value="load" id="btn-paste-load">Load</button>
+            <button type="submit" value="load" id="btn-paste-load" class="primary">Load</button>
           </div>
         </form>
       </dialog>
@@ -50,12 +55,16 @@
           <dl id="meta" class="meta"></dl>
         </section>
         <section>
+          <h2>Selection</h2>
+          <p id="selection" class="muted">Click an object in the viewport.</p>
+        </section>
+        <section>
           <h2>Analysis</h2>
           <div id="summary" class="summary"></div>
           <ul id="findings" class="findings"></ul>
         </section>
         <section>
-          <h2>Objects</h2>
+          <h2>Display</h2>
           <p id="object-count" class="muted"></p>
           <label class="toggle">
             <input id="toggle-clearances" type="checkbox" checked />
@@ -66,9 +75,27 @@
             Show openings
           </label>
         </section>
+        <section class="help">
+          <h2>Shortcuts</h2>
+          <ul class="shortcuts">
+            <li><kbd>⌘V</kbd> paste export</li>
+            <li><kbd>F</kbd> fit view</li>
+            <li><kbd>1</kbd> iso · <kbd>2</kbd> top · <kbd>3</kbd> front · <kbd>4</kbd> side</li>
+            <li><kbd>Esc</kbd> clear selection</li>
+          </ul>
+        </section>
       </aside>
 
-      <main id="viewport" class="viewport" aria-label="3D viewport"></main>
+      <main id="viewport" class="viewport" aria-label="3D viewport">
+        <div class="view-controls" role="toolbar" aria-label="Camera">
+          <button type="button" data-cam="fit" title="Fit (F)">Fit</button>
+          <button type="button" data-cam="iso" title="Iso (1)">Iso</button>
+          <button type="button" data-cam="top" title="Top (2)">Top</button>
+          <button type="button" data-cam="front" title="Front (3)">Front</button>
+          <button type="button" data-cam="side" title="Side (4)">Side</button>
+        </div>
+        <div id="drop-hint" class="drop-hint" hidden>Drop export JSON</div>
+      </main>
       <p id="status" class="status" role="status"></p>
     </div>
     <script type="module" src="/src/main.js"></script>

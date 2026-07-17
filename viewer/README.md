@@ -18,7 +18,9 @@ On start the viewer loads `tests/fixtures/reference_kids_room_export.json`.
 
 **From Blender:** LayoutLab → **Copy Scene Layout** → in the viewer click **Paste export** (or press ⌘V / Ctrl+V). If the browser blocks clipboard access, a paste dialog opens.
 
-Also: **Kids room (findings)** for the intentional violations demo, or **Open file…** for a `.json` on disk.
+Also: drag-drop a `.json` onto the viewport, or **Examples** for fixtures.
+
+**Viewport:** Fit / Iso / Top / Front / Side · click objects to select · click a finding to highlight related meshes · `F` fit, `1`–`4` camera, `Esc` clear.
 
 ## What it shows
 

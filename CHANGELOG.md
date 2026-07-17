@@ -37,6 +37,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 - **Export embeds analysis (v0.10.8):** `Copy Scene` / `Copy Selected` include live `analyze_layout` under `analysis` for the Phase A viewer
 
+### Changed
+
+- **Viewer polish:** Fit/Iso/Top/Front/Side camera, click-to-select, finding click highlights, drag-drop JSON, clearer paste errors, Examples menu
+
 ### Fixed (prior)
 
 - **`analyze_layout` summary:** count `error`/`warning` into `errors`/`warnings` (was stuck at 0)

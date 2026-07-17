@@ -61,11 +61,14 @@ body {
 
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  justify-content: flex-end;
 }
 
 .file-btn,
 .ghost,
+.primary,
 button {
   appearance: none;
   border: 1px solid var(--border);
@@ -78,10 +81,55 @@ button {
   cursor: pointer;
 }
 
+.primary {
+  background: color-mix(in srgb, var(--accent) 28%, #232a34);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+
 .file-btn:hover,
 .ghost:hover,
+.primary:hover,
 button:hover {
   border-color: var(--accent);
+}
+
+.examples {
+  position: relative;
+}
+
+.examples > summary {
+  list-style: none;
+  border: 1px solid var(--border);
+  background: #232a34;
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.examples > summary::-webkit-details-marker {
+  display: none;
+}
+
+.examples-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 11rem;
+  padding: 0.45rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.examples-menu button {
+  width: 100%;
+  text-align: left;
 }
 
 .sidebar {
@@ -121,6 +169,16 @@ button:hover {
   word-break: break-word;
 }
 
+.selection-info {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.selection-info strong {
+  font-weight: 600;
+}
+
 .summary {
   display: flex;
   flex-wrap: wrap;
@@ -140,7 +198,8 @@ button:hover {
   border-color: color-mix(in srgb, var(--error) 40%, var(--border));
 }
 
-.chip.warning {
+.chip.warning,
+.chip.warn {
   color: var(--warning);
 }
 
@@ -167,6 +226,19 @@ button:hover {
   padding: 0.5rem 0.6rem;
   font-size: 0.82rem;
   background: #161b22;
+}
+
+.findings li.clickable {
+  cursor: pointer;
+}
+
+.findings li.clickable:hover {
+  border-color: var(--accent);
+}
+
+.findings li.active {
+  border-color: var(--warning);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warning) 40%, transparent);
 }
 
 .findings .sev {
@@ -203,16 +275,74 @@ button:hover {
   cursor: pointer;
 }
 
+.shortcuts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.shortcuts kbd,
+.paste-dialog kbd {
+  font-size: 0.72rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  background: #232a34;
+  color: var(--text);
+}
+
 .viewport {
   position: relative;
   min-height: 0;
   background: radial-gradient(ellipse at 40% 20%, #1c2430 0%, #0e1116 70%);
 }
 
+.viewport.drag-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: -8px;
+}
+
 .viewport canvas {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.view-controls {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  z-index: 5;
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: calc(100% - 1.4rem);
+}
+
+.view-controls button {
+  padding: 0.28rem 0.55rem;
+  font-size: 0.75rem;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.drop-hint {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .status {
@@ -223,6 +353,18 @@ button:hover {
   color: var(--muted);
   border-top: 1px solid var(--border);
   background: var(--panel);
+}
+
+.status.ok {
+  color: var(--ok);
+}
+
+.status.error {
+  color: var(--error);
+}
+
+.status.warn {
+  color: var(--warning);
 }
 
 .paste-dialog {
@@ -253,14 +395,6 @@ button:hover {
 
 .paste-dialog .muted {
   margin: 0;
-}
-
-.paste-dialog kbd {
-  font-size: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0.05rem 0.3rem;
-  background: #232a34;
 }
 
 .paste-dialog textarea {
@@ -302,5 +436,9 @@ button:hover {
 
   .viewport {
     min-height: 50vh;
+  }
+
+  .help {
+    display: none;
   }
 }
