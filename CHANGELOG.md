@@ -21,6 +21,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - **Findings demo fixture:** `tests/fixtures/reference_kids_room_export_findings.json` (1 error + 1 warning) — loadable in viewer
 - **Viewer paste:** Paste Blender scene-export JSON from clipboard (button + ⌘V/Ctrl+V, dialog fallback)
 
+### Fixed
+
+- **Quick Test units (v0.10.5):** browser defaults were still pre-metric (`12`/`20`); now meters (`1.2`×`2.0` bed, desk/wardrobe profiles). Stale scene values auto-reset when opening the browser.
+
 ### Fixed (prior)
 
 - **`analyze_layout` summary:** count `error`/`warning` into `errors`/`warnings` (was stuck at 0)

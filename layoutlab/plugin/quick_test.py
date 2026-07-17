@@ -1,4 +1,7 @@
-"""Generator-specific Quick Test fields and params for the browser popup."""
+"""Generator-specific Quick Test fields and params for the browser popup.
+
+Defaults are Blender scene units (Metric: 1 unit = 1 meter).
+"""
 
 QUICK_TEST_PROFILES = {
     "bed_basic": {
@@ -8,8 +11,8 @@ QUICK_TEST_PROFILES = {
             ("layoutlab_test_width", "Width"),
         ),
         "defaults": {
-            "layoutlab_test_length": 12.0,
-            "layoutlab_test_width": 20.0,
+            "layoutlab_test_length": 1.2,
+            "layoutlab_test_width": 2.0,
         },
     },
     "wardrobe_basic": {
@@ -20,9 +23,22 @@ QUICK_TEST_PROFILES = {
             ("layoutlab_test_height", "Height"),
         ),
         "defaults": {
-            "layoutlab_test_width": 8.0,
-            "layoutlab_test_depth": 4.0,
-            "layoutlab_test_height": 15.0,
+            "layoutlab_test_width": 0.8,
+            "layoutlab_test_depth": 0.4,
+            "layoutlab_test_height": 1.5,
+        },
+    },
+    "desk_basic": {
+        "object_name": "TEST_DESK",
+        "fields": (
+            ("layoutlab_test_width", "Width"),
+            ("layoutlab_test_depth", "Depth"),
+            ("layoutlab_test_height", "Height"),
+        ),
+        "defaults": {
+            "layoutlab_test_width": 1.2,
+            "layoutlab_test_depth": 0.6,
+            "layoutlab_test_height": 0.75,
         },
     },
 }
@@ -34,10 +50,13 @@ GENERIC_QUICK_TEST = {
         ("layoutlab_test_width", "Width"),
     ),
     "defaults": {
-        "layoutlab_test_length": 12.0,
-        "layoutlab_test_width": 20.0,
+        "layoutlab_test_length": 1.0,
+        "layoutlab_test_width": 1.0,
     },
 }
+
+# Furniture in meters rarely exceeds this; old Quick Test used 8–20 (pre-metric).
+_PRE_METRIC_DIM_THRESHOLD = 5.0
 
 
 def quick_test_profile(generator_name):
@@ -50,6 +69,18 @@ def default_quick_test_object_name(generator_name):
         return profile["object_name"]
     safe = (generator_name or "generator").upper().replace(".", "_")
     return f"TEST_{safe}"
+
+
+def quick_test_values_look_pre_metric(scene, generator_name):
+    """True if scene Quick Test dims still look like the old ÷10 / cm-era defaults."""
+    profile = quick_test_profile(generator_name)
+    for prop_name in profile.get("defaults", {}):
+        try:
+            if float(getattr(scene, prop_name)) > _PRE_METRIC_DIM_THRESHOLD:
+                return True
+        except (TypeError, ValueError, AttributeError):
+            continue
+    return False
 
 
 def apply_quick_test_profile(scene, generator_name):
@@ -85,6 +116,13 @@ def build_quick_test_params(scene, generator_name):
             "head_side": "y_max",
         })
     elif generator_name == "wardrobe_basic":
+        params.update({
+            "width": scene.layoutlab_test_width,
+            "depth": scene.layoutlab_test_depth,
+            "height": scene.layoutlab_test_height,
+            "show_clearance": True,
+        })
+    elif generator_name == "desk_basic":
         params.update({
             "width": scene.layoutlab_test_width,
             "depth": scene.layoutlab_test_depth,

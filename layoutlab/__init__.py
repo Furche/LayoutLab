@@ -1,7 +1,7 @@
 bl_info = {
     "name": "LayoutLab",
     "author": "ChatGPT / Alexander",
-    "version": (0, 10, 4),
+    "version": (0, 10, 5),
     "blender": (4, 0, 0),
     "location": "View3D > Sidebar > LayoutLab",
     "description": "Room layout JSON exchange with an asset-browser-like generator browser.",
@@ -62,10 +62,10 @@ def register():
     bpy.types.Scene.layoutlab_quick_test_profile_gen = bpy.props.StringProperty(name="Quick Test Profile", default="")
     bpy.types.Scene.layoutlab_test_object_name = bpy.props.StringProperty(name="Object Name", default="TEST_BED")
     bpy.types.Scene.layoutlab_test_location = bpy.props.FloatVectorProperty(name="Location", size=3, default=(0.0, 0.0, 0.0))
-    bpy.types.Scene.layoutlab_test_length = bpy.props.FloatProperty(name="Length", default=12.0)
-    bpy.types.Scene.layoutlab_test_width = bpy.props.FloatProperty(name="Width", default=20.0)
-    bpy.types.Scene.layoutlab_test_depth = bpy.props.FloatProperty(name="Depth", default=4.0)
-    bpy.types.Scene.layoutlab_test_height = bpy.props.FloatProperty(name="Height", default=15.0)
+    bpy.types.Scene.layoutlab_test_length = bpy.props.FloatProperty(name="Length", default=1.2)
+    bpy.types.Scene.layoutlab_test_width = bpy.props.FloatProperty(name="Width", default=2.0)
+    bpy.types.Scene.layoutlab_test_depth = bpy.props.FloatProperty(name="Depth", default=0.6)
+    bpy.types.Scene.layoutlab_test_height = bpy.props.FloatProperty(name="Height", default=0.75)
     addon_user_dir()
     sync_bundled_generators()
 

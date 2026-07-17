@@ -108,14 +108,14 @@ class LAYOUTLAB_OT_open_generator_browser(bpy.types.Operator):
     bl_label = "Generator Browser"
     bl_options = {"REGISTER"}
     def execute(self, context):
-        from .quick_test import apply_quick_test_profile
+        from .quick_test import apply_quick_test_profile, quick_test_values_look_pre_metric
 
         refresh_browser_items(context)
         scene = context.scene
         if scene.layoutlab_generator_items:
             idx = min(max(scene.layoutlab_generator_index, 0), len(scene.layoutlab_generator_items) - 1)
             gen = scene.layoutlab_generator_items[idx].name
-            if gen != scene.layoutlab_quick_test_profile_gen:
+            if gen != scene.layoutlab_quick_test_profile_gen or quick_test_values_look_pre_metric(scene, gen):
                 apply_quick_test_profile(scene, gen)
                 scene.layoutlab_quick_test_profile_gen = gen
         return context.window_manager.invoke_popup(self, width=760)
