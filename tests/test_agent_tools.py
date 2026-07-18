@@ -80,8 +80,33 @@ class TestAgentTools(unittest.TestCase):
             conv,
             [{"action": "create_room", "params": {"width": 3, "depth": 5}}],
         )
-        self.assertTrue(any("add_opening" in m for m in missing))
+        self.assertTrue(any("door" in m for m in missing))
         self.assertTrue(any("bed_basic" in m for m in missing))
+
+    def test_proposal_missing_detects_windows_even_with_door(self):
+        from layoutlab.runtime import agent as ag
+
+        conv = "raum mit 2 fenstern, einer tür und einem bett"
+        cmds = [
+            {"action": "create_room", "params": {"width": 4, "depth": 5}},
+            {
+                "action": "add_opening",
+                "params": {"room": "R", "kind": "door", "wall_side": "east", "offset": 0.3},
+            },
+            {"action": "run_generator", "generator": "bed_basic", "params": {"location": [0, 0, 0]}},
+        ]
+        missing = ag._proposal_missing_requested(conv, cmds)
+        self.assertTrue(any("window" in m for m in missing), missing)
+        self.assertEqual(ag._requested_window_count(conv), 2)
+        # Door alone must not satisfy window requirement
+        self.assertFalse(any("door" in m for m in missing), missing)
+
+    def test_requested_window_count_words(self):
+        from layoutlab.runtime import agent as ag
+
+        self.assertEqual(ag._requested_window_count("zwei fenster bitte"), 2)
+        self.assertEqual(ag._requested_window_count("ein fenster"), 1)
+        self.assertEqual(ag._requested_window_count("nur bett"), 0)
 
     def test_validate_commands(self):
         good = self.dispatch(

@@ -46,17 +46,21 @@ Workflow:
 }
 
 Completeness (critical):
-- If the user wants a room WITH a door/window, commands MUST include add_opening (not only create_room).
+- If the user wants a door, commands MUST include add_opening with kind "door".
+- If the user wants N windows, commands MUST include N add_opening with kind "window"
+  (and sill_height, typically ~0.8–1.0 m). A door alone does NOT satisfy windows.
 - If the user wants a bed/desk/wardrobe, commands MUST include run_generator for that item.
 - Never say you will place furniture/openings unless those commands are in proposal.commands.
 - Fresh layout sequence typically:
   1) delete_collection_objects collection=layoutlab_room
   2) create_room (width/depth/height in meters, collection=layoutlab_room)
-  3) add_opening for door/window (wall_side, offset, width, height, sill_height for windows)
-  4) run_generator e.g. bed_basic with location so the bed sits near the door wall but does not block the opening.
+  3) add_opening for EACH door and EACH window
+  4) run_generator for each furniture item
 
-Example fragment (door on east, bed near east wall):
+Example openings:
 {"action":"add_opening","params":{"room":"ROOM","opening_name":"door_east","kind":"door","wall_side":"east","offset":0.3,"width":0.9,"height":2.0}}
+{"action":"add_opening","params":{"room":"ROOM","opening_name":"win_south_1","kind":"window","wall_side":"south","offset":0.5,"width":1.2,"height":1.2,"sill_height":0.9}}
+{"action":"add_opening","params":{"room":"ROOM","opening_name":"win_south_2","kind":"window","wall_side":"south","offset":2.0,"width":1.2,"height":1.2,"sill_height":0.9}}
 {"action":"run_generator","generator":"bed_basic","params":{"name":"BED","location":[1.0,0.15,0],"length":1.2,"width":2.0,"head_side":"y_max","collection":"layoutlab_room"}}
 
 Rules:
@@ -70,9 +74,30 @@ MAX_TOOL_ROUNDS = 6
 REPAIR_HINT = (
     "Your previous proposal was incomplete for the user's request. "
     "Return ONLY a new JSON proposal whose commands include ALL required parts "
-    "(create_room AND add_opening for doors/windows AND run_generator for furniture). "
-    "questions must be []. No markdown, no tools."
+    "(create_room, add_opening kind=door, add_opening kind=window for EACH requested window "
+    "with sill_height, and run_generator for furniture). "
+    "A door does not replace windows. questions must be []. No markdown, no tools."
 )
+
+_WORD_COUNTS = {
+    "ein": 1,
+    "eine": 1,
+    "einem": 1,
+    "einen": 1,
+    "einer": 1,
+    "zwei": 2,
+    "drei": 3,
+    "vier": 4,
+    "fünf": 5,
+    "fuenf": 5,
+    "sechs": 6,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+}
 
 
 def _user_wants_bed(text: str) -> bool:
@@ -87,7 +112,45 @@ def _user_wants_door(text: str) -> bool:
 
 def _user_wants_room(text: str) -> bool:
     t = text.lower()
-    return any(k in t for k in ("raum", "zimmer", "room", "erstell"))
+    return any(k in t for k in ("raum", "zimmer", "room", "erstell", "bau"))
+
+
+def _count_requested_noun(text: str, nouns: tuple[str, ...]) -> int:
+    """Best-effort count for 'zwei fenster' / '2 windows' / bare 'fenster' → 1."""
+    t = text.lower()
+    best = 0
+    for noun in nouns:
+        npat = re.escape(noun)
+        scored = []
+        for m in re.finditer(rf"(\d+)\s*x?\s*{npat}\b", t):
+            scored.append(max(1, int(m.group(1))))
+        for word, n in _WORD_COUNTS.items():
+            if re.search(rf"\b{re.escape(word)}\s+{npat}\b", t):
+                scored.append(n)
+        if scored:
+            best = max(best, sum(scored))
+        elif re.search(rf"\b{npat}\b", t):
+            best = max(best, 1)
+    return best
+
+
+def _requested_window_count(text: str) -> int:
+    return _count_requested_noun(text, ("fenstern", "fenster", "windows", "window"))
+
+
+def _opening_kind_counts(commands: list) -> tuple[int, int]:
+    doors = 0
+    windows = 0
+    for cmd in commands or []:
+        if cmd.get("action") != "add_opening":
+            continue
+        params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
+        kind = str(params.get("kind") or cmd.get("kind") or "").lower()
+        if kind == "window":
+            windows += 1
+        elif kind == "door":
+            doors += 1
+    return doors, windows
 
 
 def _conversation_text(message: str, history: list | None) -> str:
@@ -103,19 +166,17 @@ def _proposal_missing_requested(conversation: str, commands: list) -> list:
     missing = []
     actions = [c.get("action") for c in commands]
     gens = [c.get("generator") for c in commands if c.get("action") == "run_generator"]
+    doors, windows = _opening_kind_counts(commands)
+    want_windows = _requested_window_count(conversation)
+
     if _user_wants_room(conversation) and "create_room" not in actions:
         missing.append("create_room")
-    if _user_wants_door(conversation) and "add_opening" not in actions:
-        missing.append("add_opening (door)")
+    if _user_wants_door(conversation) and doors < 1:
+        missing.append("add_opening kind=door")
+    if want_windows > windows:
+        missing.append(f"add_opening kind=window x{want_windows} (have {windows})")
     if _user_wants_bed(conversation) and "bed_basic" not in gens:
         missing.append("run_generator bed_basic")
-    # Furniture/door requested but only empty shell
-    if (_user_wants_bed(conversation) or _user_wants_door(conversation)) and commands:
-        if "create_room" in actions and "add_opening" not in actions and "run_generator" not in actions:
-            if "add_opening (door)" not in missing and _user_wants_door(conversation):
-                missing.append("add_opening (door)")
-            if "run_generator bed_basic" not in missing and _user_wants_bed(conversation):
-                missing.append("run_generator bed_basic")
     return missing
 
 
@@ -131,8 +192,8 @@ def _finalize_proposal_from_messages(
     content = repair_note or (
         "Stop calling tools. Using the tool results and conversation already available, "
         "return ONLY a COMPLETE final JSON proposal now (no markdown, no tools). "
-        "If the user asked for a door and bed, commands MUST include add_opening and "
-        "run_generator bed_basic, not only create_room."
+        "Include every requested door (kind=door) and every requested window "
+        "(kind=window + sill_height), plus furniture generators — not only create_room."
     )
     force_msgs.append({"role": "user", "content": content})
     raw = _chat_completions(settings, force_msgs, tools=None)
@@ -165,8 +226,14 @@ def _maybe_repair_proposal(settings, messages, result, conversation: str) -> dic
     repaired = _finalize_proposal_from_messages(
         settings, messages, result.get("tool_trace") or [], repair_note=note
     )
-    # Prefer repaired if it covers more; else keep original
-    if len(repaired.get("commands") or []) >= len(commands):
+    repaired_cmds = repaired.get("commands") or []
+    still_missing = _proposal_missing_requested(conversation, repaired_cmds)
+    # Prefer repaired if it closes more gaps (or adds commands when still incomplete).
+    if len(still_missing) < len(missing):
+        return repaired
+    if not still_missing:
+        return repaired
+    if len(repaired_cmds) > len(commands):
         return repaired
     return result
 
