@@ -125,19 +125,73 @@ def analyze_session(session, cmd=None):
     cmd = cmd or {}
     scope = cmd.get("scope", "scene")
     collection_name = cmd.get("collection")
-    include = cmd.get("include", ["clearances"])
-    if include != ["clearances"]:
-        raise ValueError('analyze_layout v1 only supports include=["clearances"]')
+    include = cmd.get("include")
+    if include is None:
+        include_set = {"clearances", "soft"}
+    else:
+        include_set = set(include)
+    unknown = include_set - {"clearances", "soft"}
+    if unknown:
+        raise ValueError(f"analyze_layout unknown include entries: {sorted(unknown)}")
 
-    objects = collect_session_objects(session, scope=scope, collection_name=collection_name)
-    result = analyze_clearance_objects(
-        objects,
-        get_world_bounds=world_bounds_for_target,
-        scope=scope,
-    )
+    from ..core.soft_metrics import analyze_soft_metrics, soft_summary_from_findings
+
+    findings = []
+    clearance_count = 0
+    object_count = 0
+
+    if "clearances" in include_set:
+        objects = collect_session_objects(session, scope=scope, collection_name=collection_name)
+        object_count = len(objects)
+        clearance_result = analyze_clearance_objects(
+            objects,
+            get_world_bounds=world_bounds_for_target,
+            scope=scope,
+        )
+        findings.extend(clearance_result.get("findings") or [])
+        clearance_count = clearance_result.get("clearance_count") or 0
+
+    if "soft" in include_set and scope in ("scene", "collection"):
+        soft_findings = analyze_soft_metrics(session)
+        if scope == "collection" and collection_name:
+            soft_findings = [
+                f
+                for f in soft_findings
+                if (
+                    (f.get("metrics") or {}).get("room")
+                    and any(
+                        m.get("name") == (f.get("metrics") or {}).get("room")
+                        and (m.get("collection") or "layoutlab_room") == collection_name
+                        for m in session._rooms.values()
+                    )
+                )
+                or (
+                    f.get("constraint_type") == "opening_access"
+                    and (f.get("opening_ref") or {}).get("collection") == collection_name
+                )
+            ]
+        findings.extend(soft_findings)
+
+    summary = {"errors": 0, "warnings": 0, "info": 0}
+    severity_to_summary = {"error": "errors", "warning": "warnings", "info": "info"}
+    for finding in findings:
+        key = severity_to_summary.get(finding.get("severity", "warning"), "warnings")
+        summary[key] += 1
+
     # Alias for viewers that expect overlaps[].name
-    for finding in result.get("findings") or []:
+    for finding in findings:
         for overlap in finding.get("overlaps") or []:
             if "name" not in overlap and overlap.get("object_name"):
                 overlap["name"] = overlap["object_name"]
+
+    result = {
+        "analyzed": True,
+        "scope": scope,
+        "object_count": object_count,
+        "clearance_count": clearance_count,
+        "summary": summary,
+        "findings": findings,
+        "soft_summary": soft_summary_from_findings(findings),
+        "include": sorted(include_set),
+    }
     return result

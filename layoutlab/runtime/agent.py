@@ -1,4 +1,4 @@
-"""Agent turn: tool calling → structured proposal (agent_tools 0.2)."""
+"""Agent turn: tool calling → structured proposal (agent_tools 0.3)."""
 
 from __future__ import annotations
 
@@ -16,20 +16,30 @@ from .chat import (
 )
 from .tools import dispatch_tool, openai_tool_definitions
 
-AGENT_SYSTEM_PROMPT = """You are LayoutLab's planning agent (DD-009 / agent_tools 0.2).
+AGENT_SYSTEM_PROMPT = """You are LayoutLab's planning agent (DD-009 / DD-015 / agent_tools 0.3).
 AI decides WHAT; LayoutLab Core executes HOW. You invent no meshes, bpy, or free Python.
+
+Role (compassionate planner):
+- Work in the user's interest: rooms should feel comfortable AND be practically usable.
+- Prefer free floor, light, and door/window access over packing like a warehouse.
+- Gather missing context with a few bundled questions when size, use, or priorities are unclear.
+  If the user already answered or said you may choose, document defaults in proposal.assumes — do not ask again.
+- Soft metrics (packing density, opening_access) are comfort/usability proxies from Core — treat warnings seriously.
 
 Context:
 - A scene seed (get_scene_summary + list_generators) is already injected — trust it.
 - Call get_room / list_objects only when you need details the seed lacks.
 - Before a non-empty final proposal, prefer validate_commands then dry_run_commands.
-  If dry_run fails or analysis shows clearance errors, revise commands and dry-run again.
-- dry_run does NOT commit — the user must Apply.
+- On soft warnings (soft_packing, opening_access): replan if possible.
+- On hard clearance errors: try alternatives first.
+- If a compromise is unavoidable (e.g. wardrobe blocks full door swing): keep the proposal,
+  explain the tradeoff in reply, and fill proposal.expected_risks (human language). Never hide it.
+- dry_run does NOT commit — the user must Apply (Apply = consent to documented risks).
 
 Workflow:
 1. Read the seed. Use at most a few extra tools if needed.
-2. Do NOT loop tools forever. After you understand the plan, STOP tools and output final JSON.
-3. Ask clarifying questions ONLY if size/placement is still unknown. If the user already answered, do NOT ask again — emit complete commands.
+2. Think zones (sleep / work / storage / circulation) before placing furniture.
+3. Do NOT loop tools forever. After you understand the plan, STOP tools and output final JSON.
 4. Finish with ONLY a JSON object (no markdown fences):
 {
   "reply": "short explanation in the user's language",
@@ -55,12 +65,11 @@ Completeness (critical):
   1) delete_collection_objects collection=layoutlab_room
   2) create_room (width/depth/height in meters, collection=layoutlab_room)
   3) add_opening for EACH door and EACH window
-  4) run_generator for each furniture item
+  4) run_generator for each furniture item (leave circulation; do not block openings)
 
 Example openings:
 {"action":"add_opening","params":{"room":"ROOM","opening_name":"door_east","kind":"door","wall_side":"east","offset":0.3,"width":0.9,"height":2.0}}
 {"action":"add_opening","params":{"room":"ROOM","opening_name":"win_south_1","kind":"window","wall_side":"south","offset":0.5,"width":1.2,"height":1.2,"sill_height":0.9}}
-{"action":"add_opening","params":{"room":"ROOM","opening_name":"win_south_2","kind":"window","wall_side":"south","offset":2.0,"width":1.2,"height":1.2,"sill_height":0.9}}
 {"action":"run_generator","generator":"bed_basic","params":{"name":"BED","location":[1.0,0.15,0],"length":1.2,"width":2.0,"head_side":"y_max","collection":"layoutlab_room"}}
 
 Rules:
@@ -238,6 +247,48 @@ def _maybe_repair_proposal(settings, messages, result, conversation: str) -> dic
     return result
 
 
+def _attach_quality_preview(session, result: dict) -> dict:
+    """Dry-run final proposal commands for hard/soft findings (live session unchanged)."""
+    commands = result.get("commands") or []
+    if not commands:
+        return result
+    try:
+        dry = dispatch_tool(
+            session,
+            "dry_run_commands",
+            {"commands": commands, "analyze": True, "stop_on_invalid": False},
+        )
+    except Exception as exc:
+        result["quality"] = {"ok": False, "error": str(exc)}
+        return result
+
+    analysis = dry.get("analysis") or {}
+    summary = analysis.get("summary") or {}
+    soft = dry.get("soft_summary") or analysis.get("soft_summary") or {}
+    hard_errors = int(summary.get("errors") or 0)
+    soft_warnings = int(soft.get("warnings") or 0)
+    risks = list((result.get("proposal") or {}).get("expected_risks") or [])
+    result["quality"] = {
+        "ok": bool(dry.get("ok")),
+        "apply_ok": bool(dry.get("apply_ok")),
+        "summary": summary,
+        "soft_summary": soft,
+        "findings": analysis.get("findings") or [],
+        "has_hard_errors": hard_errors > 0,
+        "has_soft_warnings": soft_warnings > 0,
+        "has_expected_risks": len(risks) > 0,
+        "needs_user_confirm": hard_errors > 0 or soft_warnings > 0 or len(risks) > 0,
+    }
+    # Nudge reply if hard errors without documented risks
+    if hard_errors > 0 and not risks:
+        note = (
+            " Hinweis: Dry-Run meldet noch harte Clearance-Fehler — "
+            "bitte Tradeoff prüfen oder umplanen (expected_risks setzen wenn Kompromiss)."
+        )
+        result["reply"] = (result.get("reply") or "").rstrip() + note
+    return result
+
+
 def _tool_call_fingerprint(tool_calls: list) -> str:
     parts = []
     for call in tool_calls:
@@ -394,7 +445,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
     if not llm_configured(llm_config):
         demo = _demo_as_agent_result(message)
         if demo:
-            return demo
+            return _attach_quality_preview(session, demo)
         return {
             "ok": True,
             "mode": "demo",
@@ -453,7 +504,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 fp = _tool_call_fingerprint(tool_calls)
                 if fp in seen_tool_fps:
                     result = _finalize_proposal_from_messages(settings, messages, tool_trace)
-                    return _maybe_repair_proposal(settings, messages, result, conversation)
+                    result = _maybe_repair_proposal(settings, messages, result, conversation)
+                    return _attach_quality_preview(session, result)
                 seen_tool_fps.add(fp)
 
                 messages.append(
@@ -494,7 +546,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 parsed = _extract_json_object(content)
             except Exception:
                 result = _finalize_proposal_from_messages(settings, messages, tool_trace)
-                return _maybe_repair_proposal(settings, messages, result, conversation)
+                result = _maybe_repair_proposal(settings, messages, result, conversation)
+                return _attach_quality_preview(session, result)
 
             normalized = _normalize_proposal(parsed)
             result = {
@@ -508,16 +561,18 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 "commands": normalized["proposal"]["commands"],
                 "tool_trace": tool_trace,
             }
-            return _maybe_repair_proposal(settings, messages, result, conversation)
+            result = _maybe_repair_proposal(settings, messages, result, conversation)
+            return _attach_quality_preview(session, result)
 
         result = _finalize_proposal_from_messages(settings, messages, tool_trace)
-        return _maybe_repair_proposal(settings, messages, result, conversation)
+        result = _maybe_repair_proposal(settings, messages, result, conversation)
+        return _attach_quality_preview(session, result)
     except Exception as exc:
         demo = _demo_as_agent_result(message)
         if demo:
             demo["reply"] = f"(Agent/LLM fehlgeschlagen: {exc}) {demo['reply']}"
             demo["llm_error"] = str(exc)
-            return demo
+            return _attach_quality_preview(session, demo)
         return {
             "ok": False,
             "mode": "agent",

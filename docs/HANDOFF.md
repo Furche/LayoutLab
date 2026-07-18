@@ -163,9 +163,9 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 1. Persist light **agent state** (goal / open questions / last findings)  
 2. Optional fuller **DD-012** (streaming, undo, auth UX)  
-3. **Not blocking:** tiered clearances, polygon, multi-room / variants  
+3. **Not blocking:** tiered clearances, polygon, multi-room / variants; circulation soft proxy  
 
-`desk_basic` ✅ · Core + agent tools 0.2 (read + validate + dry-run + seed) + `/v1/agent/turn` ✅ · see [agent_tool_contract.md](agent_tool_contract.md)
+`desk_basic` ✅ · Core + agent tools 0.3 (read + validate + dry-run + seed + soft metrics/tradeoffs) + `/v1/agent/turn` ✅ · [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) Proposed · see [agent_tool_contract.md](agent_tool_contract.md)
 
 ------------------------------------------------------------------------
 

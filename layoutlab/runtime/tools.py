@@ -580,12 +580,19 @@ def dry_run_commands(session, params=None):
     }
     if do_analyze:
         analysis = analyze_session(
-            clone, {"scope": "scene", "include": ["clearances"]}
+            clone, {"scope": "scene", "include": ["clearances", "soft"]}
         )
         out["analysis"] = {
             "analyzed": analysis.get("analyzed"),
             "summary": analysis.get("summary"),
+            "soft_summary": analysis.get("soft_summary"),
             "findings": _slim_findings(analysis.get("findings")),
+        }
+        out["soft_summary"] = analysis.get("soft_summary") or {
+            "count": 0,
+            "warnings": 0,
+            "info": 0,
+            "types": [],
         }
     return out
 

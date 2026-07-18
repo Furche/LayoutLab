@@ -255,6 +255,7 @@ async function postCommandsToCore(commandsPayload, sourceLabel) {
 
 let lastExportData = null;
 let pendingChatCommands = null;
+let pendingChatQuality = null;
 
 function sceneSummaryForChat() {
   const data = lastExportData;
@@ -285,6 +286,7 @@ function appendChatBubble(role, text) {
 
 function clearChatProposal() {
   pendingChatCommands = null;
+  pendingChatQuality = null;
   if (el.chatProposal) el.chatProposal.hidden = true;
   if (el.chatProposalJson) el.chatProposalJson.textContent = "";
   if (el.chatProposalMeta) el.chatProposalMeta.textContent = "";
@@ -296,15 +298,27 @@ function showChatProposal(payload) {
     payload.commands ||
     [];
   pendingChatCommands = commands;
+  pendingChatQuality = payload.quality || null;
   if (!el.chatProposal) return;
   el.chatProposal.hidden = false;
   const mode = payload.mode || "plan";
   const tools = (payload.tool_trace || []).length;
   const title = payload.proposal?.title ? ` · ${payload.proposal.title}` : "";
-  el.chatProposalMeta.textContent = `${commands.length} command${commands.length === 1 ? "" : "s"}${title} · mode=${mode}${tools ? ` · ${tools} tools` : ""} — Apply führt Core aus`;
+  const risks = payload.proposal?.expected_risks || [];
+  const q = payload.quality || {};
+  let qualityHint = "";
+  if (q.needs_user_confirm || risks.length || q.has_hard_errors || q.has_soft_warnings) {
+    const bits = [];
+    if (q.has_hard_errors) bits.push("hard errors");
+    if (q.has_soft_warnings) bits.push("soft warnings");
+    if (risks.length) bits.push(`${risks.length} risk(s)`);
+    qualityHint = ` · ⚠ ${bits.join(", ") || "review"}`;
+  }
+  el.chatProposalMeta.textContent = `${commands.length} command${commands.length === 1 ? "" : "s"}${title} · mode=${mode}${tools ? ` · ${tools} tools` : ""}${qualityHint} — Apply führt Core aus`;
   const preview = {
     questions: payload.questions || [],
     proposal: payload.proposal || { commands },
+    quality: payload.quality || undefined,
   };
   el.chatProposalJson.textContent = JSON.stringify(preview, null, 2);
 }
@@ -946,6 +960,21 @@ el.btnChatApply?.addEventListener("click", () => {
   if (!pendingChatCommands?.length) {
     setStatus("No commands to apply", "warn");
     return;
+  }
+  const q = pendingChatQuality || {};
+  if (q.needs_user_confirm || q.has_hard_errors || q.has_soft_warnings || q.has_expected_risks) {
+    const parts = [];
+    if (q.has_hard_errors) parts.push("harte Clearance-Fehler");
+    if (q.has_soft_warnings) parts.push("Soft-Warnungen (Packung/Öffnungen)");
+    if (q.has_expected_risks) parts.push("dokumentierte Kompromisse");
+    const detail = parts.length ? parts.join(", ") : "Qualitäts-Hinweise";
+    const ok = window.confirm(
+      `Apply trotz ${detail}?\n\nLayoutLab führt die Commands aus; Apply gilt als Zustimmung zum Kompromiss.`,
+    );
+    if (!ok) {
+      setStatus("Apply abgebrochen — Proposal unverändert", "warn");
+      return;
+    }
   }
   const commands = pendingChatCommands;
   clearChatProposal();

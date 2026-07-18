@@ -1,0 +1,70 @@
+# DD-015 — Soft Metrics and Rule Tradeoffs (AI ↔ LayoutLab)
+
+**Status:** Proposed  
+**Date:** 2026-07-18  
+**Related:** [DD-007](DD-007-clearance-zones.md) · [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [agent_tool_contract.md](../agent_tool_contract.md)
+
+------------------------------------------------------------------------
+
+## Problem
+
+Clearance analysis (DD-008) answers *zone blocked?* but not *does this room feel usable?*  
+The agent often packs furniture like a warehouse. Users need soft, measurable quality signals, and the AI must be allowed to **bend hard rules** when a compromise is in the user’s interest — with transparency, not silent violation.
+
+## Decision
+
+### 1. Responsibility
+
+| Layer | Owner | Role |
+|---|---|---|
+| Hard validity | LayoutLab | Allowlist, params, execution |
+| Hard spatial | LayoutLab | `required` clearances → `error` findings |
+| Soft measurable | LayoutLab | Soft metrics → `warning` / `info` findings |
+| Judgment / tradeoffs | AI | Choose layout, explain compromises |
+| Consent | User | Apply (waiver by applying with documented risks) |
+
+> LayoutLab **measures and reports**. The AI **chooses and explains**. The User **confirms**.
+
+### 2. Soft metrics (v1)
+
+Emitted by headless `analyze_layout` / `analyze_session` alongside clearance findings:
+
+| `constraint_type` | Meaning | Typical severity |
+|---|---|---|
+| `soft_packing` | Furniture XY footprint / room footprint | info ≥ 0.35, warning ≥ 0.48 |
+| `opening_access` | Inward access box in front of door/window overlaps furniture | warning |
+
+No aesthetics score. No “73% good layout.”
+
+### 3. Rule bending (tradeoffs)
+
+- Hard findings **remain** findings; Core does **not** auto-clear them.
+- AI may propose a layout that still has hard errors when the user goal otherwise fails.
+- Proposal **must** then fill `expected_risks` (and preferably `assumes`) in human language.
+- **v1 Apply:** Core does not block Apply. Viewer warns when `expected_risks` or dry-run/quality errors exist; user Apply = consent.
+- Future: optional server `accept_risks` gate.
+
+### 4. Agent behaviour
+
+1. Prefer replan on soft warnings.  
+2. On hard errors: try alternatives first.  
+3. If compromise needed: explain tradeoff, set `expected_risks`, leave Apply to the user.  
+4. Never claim a hard violation is “OK” without stating the cost.
+
+## Alternatives considered
+
+- **Core blocks Apply on any error** — rejected for v1; prevents necessary compromises.  
+- **AI-only soft heuristics in prompt** — rejected as sole approach; not testable/deterministic.  
+- **Aesthetic ML score** — out of scope.
+
+## Consequences
+
+- Analysis payload grows with soft findings; exporters/viewers should tolerate unknown `constraint_type`.  
+- Agent contract and system prompt must require `expected_risks` on hard compromise.  
+- Soft metrics are **proxies** for comfort/usability, not a substitute for user taste.
+
+## Implementation notes
+
+- Soft analysis lives in headless path first (`layoutlab/runtime` + `layoutlab/core`).  
+- `dry_run_commands` returns `soft_summary` plus slim findings.  
+- Agent turn may attach a `quality` preview from an automatic dry-run of the final proposal.

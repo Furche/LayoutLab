@@ -409,6 +409,21 @@ def opening_world_box(model, opening):
     )
 
 
+def opening_access_world_box(model, opening, depth=0.7):
+    """Inward box in front of a door/window for soft access checks (DD-015)."""
+    wall = find_wall(model, opening["wall_id"])
+    return _wall_slot_box(
+        model,
+        wall,
+        opening["offset"],
+        opening["width"],
+        opening.get("sill_height", 0.0),
+        opening["height"],
+        depth=_f(depth, 0.7),
+        inward=True,
+    )
+
+
 def fixed_element_world_box(model, fixed):
     wall = find_wall(model, fixed["wall_id"])
     return _wall_slot_box(

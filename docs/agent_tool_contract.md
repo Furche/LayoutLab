@@ -1,9 +1,9 @@
 # LayoutLab Agent Tool Contract
 
-**Status:** Design + implementing (Agent-2 validate / dry-run)  
-**Version:** `agent_tools` 0.2  
+**Status:** Design + implementing (Agent-2.1 soft metrics / tradeoffs)  
+**Version:** `agent_tools` 0.3  
 **Date:** 2026-07-18  
-**Related:** [DD-009](design_decisions/DD-009-ai-execution-boundary.md) · [json_protocol.md](json_protocol.md) · [DD-014](design_decisions/DD-014-standalone-runtime-path.md)
+**Related:** [DD-009](design_decisions/DD-009-ai-execution-boundary.md) · [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) · [json_protocol.md](json_protocol.md) · [DD-014](design_decisions/DD-014-standalone-runtime-path.md)
 
 ------------------------------------------------------------------------
 
@@ -15,6 +15,8 @@
 3. **Seed + tools.** Each agent turn injects a Core scene seed; details load via tools.
 4. **Provider-neutral.** Tool name + JSON params + JSON result + structured final proposal.
 5. **No meshes** in tool responses (except a future explicit debug tool).
+6. **Soft metrics + tradeoffs (DD-015).** Core measures packing / opening access; AI may bend hard
+   rules only with documented `expected_risks`; User Apply = consent. Core does not block Apply in v1.
 
 DD-009 remains binding: AI plans WHAT; LayoutLab Core executes HOW.
 
@@ -72,7 +74,8 @@ Clearances include clearance_name + requirement.
 
 **Params:** `{ "scope": "scene"|"collection", "collection"?, "refresh"?: true }`
 
-**Returns:** DD-008 analysis shape (`analyzed`, `summary`, `findings`, …).
+**Returns:** DD-008 + DD-015 analysis (`analyzed`, `summary`, `findings`, `soft_summary`, …).
+Soft finding types: `soft_packing`, `opening_access`.
 
 ### `list_generators`
 
@@ -103,7 +106,7 @@ Returns `{ ok, errors[], warnings[], command_count }`.
 
 1. Optionally validate (default stop if invalid).
 2. `RoomSession.clone()` → apply commands on the clone.
-3. Optional analyze + `scene_after` summary.
+3. Optional analyze (clearances + soft) + `scene_after` + `soft_summary`.
 4. **Live session is never mutated.**
 
 Enables Plan → Dry-Run → Analyze → Revise without committing.
@@ -119,6 +122,18 @@ Every LLM agent turn injects synthetic tool results before the first model call:
 
 The model should trust this seed and only call extra read tools when needed.
 Prefer `validate_commands` → `dry_run_commands` before a non-empty final proposal.
+
+After the final proposal, Core attaches a **`quality`** preview (automatic dry-run):
+`has_hard_errors`, `has_soft_warnings`, `has_expected_risks`, `needs_user_confirm`, slim findings.
+
+------------------------------------------------------------------------
+
+## Tradeoffs (DD-015)
+
+- Soft warnings → prefer replan.
+- Hard errors → try alternatives; if compromise: fill `proposal.expected_risks` and explain.
+- Never claim a hard violation is OK without stating the cost.
+- Viewer should warn before Apply when `quality.needs_user_confirm` or risks/errors are present.
 
 ------------------------------------------------------------------------
 
@@ -152,8 +167,8 @@ Core re-sanitizes against the allowlist before apply.
 | Endpoint | Role |
 |---|---|
 | `POST /v1/tools/{name}` | Deterministic tool execution (testable without LLM) |
-| `POST /v1/agent/turn` | LLM orchestration: seed + tool calls → structured proposal |
-| `POST /v1/commands` | Commit / Apply (unchanged) |
+| `POST /v1/agent/turn` | LLM orchestration: seed + tool calls → structured proposal + quality |
+| `POST /v1/commands` | Commit / Apply (unchanged; no hard block on findings in v1) |
 | `POST /v1/chat` | Legacy thin chat (demo + one-shot LLM); keep until agent turn replaces UI |
 
 MCP may later adapt the same tool functions; it is not the primary bus.
@@ -168,7 +183,8 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 4. `validate_commands` ✅
 5. Session clone + `dry_run_commands` ✅
 6. Automatic scene seed per turn ✅
-7. Persist light agent state (goal / questions / last findings) ← next
+7. Soft metrics + quality preview + tradeoff prompt (DD-015) ✅
+8. Persist light agent state (goal / questions / last findings) ← next
 
 ------------------------------------------------------------------------
 
@@ -180,3 +196,4 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 - MCP as primary bus
 - Streaming product / auth (DD-012)
 - Dumping full viewer export / meshes into the model context
+- Aesthetic ML / numeric “goodness” scores
