@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-17 (v0.10.3 analyze summary fix)  
-**Plugin version:** 0.10.3 · **Branch:** `main`
+**Last updated:** 2026-07-19 (v0.10.15 plan_layout / DD-016)  
+**Plugin version:** 0.10.15 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -22,17 +22,17 @@
 **Copy-paste prompt for new chat:**
 
 ```
-LayoutLab — Blender-Addon für semantische Raumplanung (Execution Layer).
+LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.3.
+Branch: main. Plugin v0.10.15.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
-Aktueller Stand (2026-07-16):
-- DD-010 Accepted: Room Model MVP (create_room, openings, fixed elements, export rooms[])
-- DD-008/009 Accepted; Execution Layer in Blender
+Aktueller Stand (2026-07-19):
+- DD-016 Proposed (v0): plan_layout + bedroom_basic recipe (agent_tools 0.5)
+- DD-015 Proposed: soft metrics + tradeoffs
+- DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
 - Generatoren: bed_basic, wardrobe_basic, desk_basic
-- Fixture: tests/fixtures/reference_kids_room_shell_commands.json
-- Docs: docs/room_model.md
+- Core: python3 -m server (:8765); Viewer Vite (:5173)
 
 Bitte auf Deutsch antworten. Keine vollen Diagnostic-Reports inline — nur fehlgeschlagene Checks oder Dateireferenz.
 Lies docs/HANDOFF.md für Details.
@@ -119,6 +119,8 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary | **Accepted** |
 | [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Accepted** — MVP shipped v0.9.0 |
 | [DD-014](design_decisions/DD-014-standalone-runtime-path.md) | Standalone runtime path | **Accepted — Phase A + B + B2** |
+| [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) | Soft metrics + tradeoffs | **Proposed** |
+| [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) | Layout recipes (Planning v0) | **Proposed** — `plan_layout` + `bedroom_basic` shipped |
 
 ### DD-007 (key points)
 
@@ -161,11 +163,13 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. Persist light **agent state** (goal / open questions / last findings)  
-2. Optional fuller **DD-012** (streaming, undo, auth UX)  
-3. **Not blocking:** tiered clearances, polygon, multi-room / variants; circulation soft proxy  
+1. **Accept / refine DD-016** after trying `plan_layout` in the viewer  
+2. More recipes (`kids_room`, `office`) or wardrobe X-fronts if needed  
+3. Persist light **agent state** (goal / open questions / last findings)  
+4. Optional fuller **DD-012** (streaming, undo, auth UX)  
+5. **Not blocking:** tiered clearances, polygon, multi-room / variants  
 
-`desk_basic` ✅ · Core + agent tools 0.3 (read + validate + dry-run + seed + soft metrics/tradeoffs) + `/v1/agent/turn` ✅ · [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) Proposed · see [agent_tool_contract.md](agent_tool_contract.md)
+`plan_layout` + `bedroom_basic` ✅ · agent tools **0.5** · [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) Proposed · see [agent_tool_contract.md](agent_tool_contract.md)
 
 ------------------------------------------------------------------------
 

@@ -90,7 +90,7 @@ class Handler(BaseHTTPRequestHandler):
                     "ok": True,
                     "service": "layoutlab-core",
                     "core_version": session_log.core_version_string(),
-                    "slice": "room+generators+analyze+agent_tools_0.4",
+                    "slice": "room+generators+analyze+agent_tools_0.5",
                     "chat": "llm" if llm_configured() else "demo",
                     "tools": sorted(TOOL_NAMES),
                     "session_log": str(session_log.MARKDOWN_PATH),

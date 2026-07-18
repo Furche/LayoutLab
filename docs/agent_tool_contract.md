@@ -1,9 +1,9 @@
 # LayoutLab Agent Tool Contract
 
-**Status:** Design + implementing (Agent-2.2 layout sketch)  
-**Version:** `agent_tools` 0.4  
-**Date:** 2026-07-18  
-**Related:** [DD-009](design_decisions/DD-009-ai-execution-boundary.md) · [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) · [json_protocol.md](json_protocol.md) · [DD-014](design_decisions/DD-014-standalone-runtime-path.md)
+**Status:** Design + implementing (Agent-2.3 plan_layout recipes)  
+**Version:** `agent_tools` 0.5  
+**Date:** 2026-07-19  
+**Related:** [DD-009](design_decisions/DD-009-ai-execution-boundary.md) · [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) · [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) · [json_protocol.md](json_protocol.md) · [DD-014](design_decisions/DD-014-standalone-runtime-path.md)
 
 ------------------------------------------------------------------------
 
@@ -129,6 +129,36 @@ Not pixels and not the 3D viewport — intentional cheap “eyes” for the LLM.
 
 ------------------------------------------------------------------------
 
+## Planning recipes (DD-016 / Agent-2.3)
+
+### `plan_layout`
+
+**Params (v0):**
+
+```json
+{
+  "recipe": "bedroom_basic",
+  "width": 4.0,
+  "depth": 3.5,
+  "height": 2.5,
+  "door": { "wall_side": "east", "width": 0.9 },
+  "windows": [{ "wall_side": "south", "width": 1.2, "sill_height": 0.9 }],
+  "include_desk": true,
+  "include_wardrobe": true,
+  "collection": "layoutlab_room"
+}
+```
+
+**Returns:** `{ ok, recipe, commands, assumes, notes, known_recipes, … }`
+
+Deterministic Core planner — **does not mutate** the live session. Agent should prefer this for
+standard bedrooms instead of inventing free `location` / `head_side`. Then
+`validate_commands` → `dry_run_commands` on the returned commands.
+
+v0 recipe: **`bedroom_basic`** only (bed + optional wardrobe/desk; door + windows).
+
+------------------------------------------------------------------------
+
 ## Turn seed (Agent-2)
 
 Every LLM agent turn injects synthetic tool results before the first model call:
@@ -204,7 +234,9 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 6. Automatic scene seed per turn ✅
 7. Soft metrics + quality preview + tradeoff prompt (DD-015) ✅
 8. Layout sketch (top-down ASCII) in seed + dry_run + quality ✅
-9. Persist light agent state (goal / questions / last findings) ← next
+9. `plan_layout` + `bedroom_basic` recipe (DD-016) ✅
+10. Persist light agent state (goal / questions / last findings) ← next
+11. More recipes (`kids_room`, `office`) / variants ← later
 
 ------------------------------------------------------------------------
 

@@ -4,6 +4,21 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-19 — DD-016 Planning recipes v0 (`plan_layout`)
+
+**Why:** Endless agent prompt/heuristic patches (sketch, soft/hard replan, AABB nudges)
+improved reliability but did not encode “how a human furnishes a bedroom.” Planning must
+be a Core layer (Future_Ideas §9), not more LLM xy invention.
+
+**Shipped:** `layoutlab/runtime/planning/bedroom_basic.py`, tool `plan_layout`
+(`agent_tools` 0.5), agent prompt prefers recipes, tests dry-run hard errors = 0 on
+reference sizes. Wardrobe on north wall (`front_side=y_min`) because `wardrobe_basic`
+only supports Y fronts.
+
+**Not shipped:** multi-variant scoring, kids/office recipes, Accept of DD-016.
+
+------------------------------------------------------------------------
+
 ## 2026-07-16 — DD-010 Accepted + Room Model MVP (v0.9.0)
 
 **Shipped:** Editable single-space Room Model (not a room generator). Rectangle footprint,

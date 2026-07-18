@@ -1,15 +1,15 @@
-"""Deterministic agent tools over RoomSession (agent_tools 0.4) — no bpy."""
+"""Deterministic agent tools over RoomSession (agent_tools 0.5) — no bpy."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
 
 from ..util import axis_aligned_bounds_from_points, infer_generator_meta_from_code
 from .analyze import analyze_session, world_bounds_for_target
 from .headless_api import bundled_generators_dir
 from .mesh_store import MeshObject
+from .planning import list_recipes, plan_layout as run_plan_layout
 from .session import SESSION_ACTIONS
 
 TOOL_NAMES = frozenset(
@@ -24,6 +24,7 @@ TOOL_NAMES = frozenset(
         "validate_commands",
         "dry_run_commands",
         "get_layout_sketch",
+        "plan_layout",
     }
 )
 
@@ -613,6 +614,18 @@ def get_layout_sketch(session, params=None):
     return build_layout_sketch(session, params)
 
 
+def plan_layout(session, params=None):
+    """Deterministic layout recipe → commands (DD-016). Does not mutate session."""
+    del session  # recipes are pure; session reserved for future room-aware planning
+    out = run_plan_layout(params or {})
+    out["known_recipes"] = list_recipes()
+    out["note"] = (
+        "Planning only — live session unchanged. Put returned commands into "
+        "validate_commands / dry_run_commands, then proposal.commands for Apply."
+    )
+    return out
+
+
 TOOL_HANDLERS = {
     "get_scene_summary": get_scene_summary,
     "get_room": get_room,
@@ -624,6 +637,7 @@ TOOL_HANDLERS = {
     "validate_commands": validate_commands,
     "dry_run_commands": dry_run_commands,
     "get_layout_sketch": get_layout_sketch,
+    "plan_layout": plan_layout,
 }
 
 
@@ -794,6 +808,42 @@ def openai_tool_definitions():
                         },
                     },
                     "required": ["commands"],
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "plan_layout",
+                "description": (
+                    "DD-016 deterministic layout recipe. Prefer this for standard "
+                    "bedrooms instead of inventing free location/head_side. "
+                    "Returns full LayoutLab commands (room + openings + furniture). "
+                    "Then validate + dry_run those commands. Live session unchanged."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "recipe": {
+                            "type": "string",
+                            "description": "Recipe id. v0: bedroom_basic",
+                        },
+                        "width": {"type": "number"},
+                        "depth": {"type": "number"},
+                        "height": {"type": "number"},
+                        "door": {
+                            "type": "object",
+                            "description": "{wall_side, width?, height?, offset?}",
+                        },
+                        "windows": {
+                            "type": "array",
+                            "items": {"type": "object"},
+                            "description": "[{wall_side, width?, sill_height?, offset?}]",
+                        },
+                        "include_desk": {"type": "boolean"},
+                        "include_wardrobe": {"type": "boolean"},
+                        "collection": {"type": "string"},
+                    },
                 },
             },
         },
