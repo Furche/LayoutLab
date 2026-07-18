@@ -33,10 +33,29 @@ def _ensure_dir():
 
 
 def start_session(*, label: str = "core") -> str:
-    """Begin a new log file for this Core process (truncates previous jsonl)."""
+    """Begin a new log for this Core process.
+
+    Previous ``session.jsonl`` / ``LAST_SESSION.md`` are archived under ``logs/archive/``
+    so a Core restart does not erase the last conversation for inspection.
+    """
     global _session_id, _started_at
     with _lock:
         _ensure_dir()
+        archive = LOG_DIR / "archive"
+        archive.mkdir(parents=True, exist_ok=True)
+        stamp = _utc_now().replace(":", "").replace(".", "-")
+        if JSONL_PATH.is_file() and JSONL_PATH.stat().st_size > 0:
+            JSONL_PATH.replace(archive / f"session-{stamp}.jsonl")
+        if MARKDOWN_PATH.is_file() and MARKDOWN_PATH.stat().st_size > 0:
+            # Keep a stable pointer to the previous transcript for quick reading.
+            prev = LOG_DIR / "PREV_SESSION.md"
+            MARKDOWN_PATH.replace(prev)
+            try:
+                prev_bytes = prev.read_bytes()
+                (archive / f"session-{stamp}.md").write_bytes(prev_bytes)
+            except OSError:
+                pass
+
         _started_at = _utc_now()
         _session_id = f"{label}-{_started_at.replace(':', '').replace('.', '-')}"
         JSONL_PATH.write_text("", encoding="utf-8")
@@ -96,7 +115,7 @@ def _slim_quality(quality: dict | None) -> dict | None:
 
 
 def log_event(event_type: str, **payload) -> None:
-    """Append one event and refresh LAST_SESSION.md."""
+    """Append one event immediately and refresh LAST_SESSION.md (flush to disk)."""
     global _session_id, _started_at
     with _lock:
         _ensure_dir()
@@ -111,6 +130,7 @@ def log_event(event_type: str, **payload) -> None:
         }
         with JSONL_PATH.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(event, ensure_ascii=False) + "\n")
+            fh.flush()
         _rewrite_markdown_unlocked()
 
 

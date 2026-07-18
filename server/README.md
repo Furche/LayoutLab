@@ -26,12 +26,9 @@ Listens on `http://127.0.0.1:8765` by default.
 
 ## Session log
 
-Each Core start truncates and writes:
-
-- `logs/session.jsonl` — structured events (agent turns, apply, warnings)
-- `logs/LAST_SESSION.md` — readable transcript for debugging / agent inspection
-
-No API keys are logged. Paths are reported on `/health` and `/v1/session/log`.
+Each Core start archives the previous transcript to ``logs/PREV_SESSION.md`` (+ ``logs/archive/``)
+and starts a fresh current log. Events are flushed to disk **immediately after every**
+``/v1/agent/turn`` and ``/v1/commands`` response — not only on shutdown.
 
 CORS is enabled for the Vite viewer (`http://localhost:5173`).
 
