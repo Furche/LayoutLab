@@ -76,6 +76,18 @@
         </form>
       </dialog>
 
+      <dialog id="commands-view-dialog" class="paste-dialog">
+        <form method="dialog" id="commands-view-form">
+          <h2>Pending commands</h2>
+          <p id="commands-view-meta" class="muted"></p>
+          <pre id="commands-view-json" class="commands-view-json"></pre>
+          <div class="paste-actions">
+            <button type="submit" value="close" class="ghost">Close</button>
+            <button type="button" id="btn-commands-view-apply" class="primary">Apply to Core</button>
+          </div>
+        </form>
+      </dialog>
+
       <aside id="chat-panel" class="chat-panel">
         <div class="chat-panel-header">
           <h2>AI Chat</h2>
@@ -84,12 +96,12 @@
           </p>
         </div>
         <div id="chat-log" class="chat-log" aria-live="polite"></div>
-        <div id="chat-proposal" class="chat-proposal" hidden>
-          <p id="chat-proposal-meta" class="muted"></p>
-          <pre id="chat-proposal-json" class="chat-proposal-json"></pre>
+        <div id="chat-proposal-bar" class="chat-proposal-bar" hidden>
+          <p id="chat-proposal-meta" class="chat-proposal-meta muted"></p>
           <div class="chat-proposal-actions">
             <button type="button" id="btn-chat-discard" class="ghost">Discard</button>
-            <button type="button" id="btn-chat-apply" class="primary">Apply to Core</button>
+            <button type="button" id="btn-chat-view" class="ghost">View commands</button>
+            <button type="button" id="btn-chat-apply" class="primary">Apply</button>
           </div>
         </div>
         <form id="chat-form" class="chat-form">

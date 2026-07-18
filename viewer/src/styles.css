@@ -237,31 +237,47 @@ button:hover {
   font-size: 0.82rem;
 }
 
-.chat-proposal {
-  margin-top: 0.35rem;
-  padding-top: 0.45rem;
-  border-top: 1px dashed var(--border);
-  max-height: 30%;
-  overflow: auto;
+.chat-proposal-bar {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #151a22;
 }
 
-.chat-proposal-json {
-  margin: 0.35rem 0 0.55rem;
-  max-height: 8rem;
-  overflow: auto;
-  padding: 0.45rem;
-  border-radius: 6px;
-  background: #12161c;
-  border: 1px solid var(--border);
-  font-size: 0.68rem;
-  line-height: 1.3;
-  color: var(--muted);
+.chat-proposal-bar[hidden] {
+  display: none;
+}
+
+.chat-proposal-meta {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .chat-proposal-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
   justify-content: flex-end;
+}
+
+.commands-view-json {
+  margin: 0;
+  max-height: min(50vh, 22rem);
+  overflow: auto;
+  padding: 0.65rem 0.7rem;
+  border-radius: 6px;
+  background: #0e1116;
+  border: 1px solid var(--border);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--muted);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .chat-panel-footer {

@@ -40,11 +40,15 @@ const el = {
   chatLog: document.getElementById("chat-log"),
   chatForm: document.getElementById("chat-form"),
   chatInput: document.getElementById("chat-input"),
-  chatProposal: document.getElementById("chat-proposal"),
+  chatProposalBar: document.getElementById("chat-proposal-bar"),
   chatProposalMeta: document.getElementById("chat-proposal-meta"),
-  chatProposalJson: document.getElementById("chat-proposal-json"),
   btnChatApply: document.getElementById("btn-chat-apply"),
+  btnChatView: document.getElementById("btn-chat-view"),
   btnChatDiscard: document.getElementById("btn-chat-discard"),
+  commandsViewDialog: document.getElementById("commands-view-dialog"),
+  commandsViewMeta: document.getElementById("commands-view-meta"),
+  commandsViewJson: document.getElementById("commands-view-json"),
+  btnCommandsViewApply: document.getElementById("btn-commands-view-apply"),
   llmApiKey: document.getElementById("llm-api-key"),
   llmModel: document.getElementById("llm-model"),
   llmBaseUrl: document.getElementById("llm-base-url"),
@@ -256,6 +260,7 @@ async function postCommandsToCore(commandsPayload, sourceLabel) {
 let lastExportData = null;
 let pendingChatCommands = null;
 let pendingChatQuality = null;
+let pendingChatProposalPayload = null;
 
 function sceneSummaryForChat() {
   const data = lastExportData;
@@ -287,27 +292,26 @@ function appendChatBubble(role, text) {
 function clearChatProposal() {
   pendingChatCommands = null;
   pendingChatQuality = null;
-  if (el.chatProposal) el.chatProposal.hidden = true;
-  if (el.chatProposalJson) el.chatProposalJson.textContent = "";
+  pendingChatProposalPayload = null;
+  if (el.chatProposalBar) el.chatProposalBar.hidden = true;
   if (el.chatProposalMeta) el.chatProposalMeta.textContent = "";
+  if (el.commandsViewDialog?.open) el.commandsViewDialog.close();
 }
 
-function showChatProposal(payload) {
-  const commands =
-    payload.proposal?.commands ||
-    payload.commands ||
-    [];
-  pendingChatCommands = commands;
-  pendingChatQuality = payload.quality || null;
-  if (!el.chatProposal) return;
-  el.chatProposal.hidden = false;
+function proposalMetaText(payload, commands) {
   const mode = payload.mode || "plan";
   const tools = (payload.tool_trace || []).length;
   const title = payload.proposal?.title ? ` · ${payload.proposal.title}` : "";
   const risks = payload.proposal?.expected_risks || [];
   const q = payload.quality || {};
   let qualityHint = "";
-  if (q.needs_user_confirm || risks.length || q.has_hard_errors || q.has_soft_warnings || q.has_solid_collisions) {
+  if (
+    q.needs_user_confirm ||
+    risks.length ||
+    q.has_hard_errors ||
+    q.has_soft_warnings ||
+    q.has_solid_collisions
+  ) {
     const bits = [];
     if (q.has_solid_collisions) bits.push("WALL HIT");
     if (q.has_hard_errors) bits.push("hard errors");
@@ -315,13 +319,81 @@ function showChatProposal(payload) {
     if (risks.length) bits.push(`${risks.length} risk(s)`);
     qualityHint = ` · ⚠ ${bits.join(", ") || "review"}`;
   }
-  el.chatProposalMeta.textContent = `${commands.length} command${commands.length === 1 ? "" : "s"}${title} · mode=${mode}${tools ? ` · ${tools} tools` : ""}${qualityHint} — Apply führt Core aus`;
-  const preview = {
-    questions: payload.questions || [],
-    proposal: payload.proposal || { commands },
-    quality: payload.quality || undefined,
-  };
-  el.chatProposalJson.textContent = JSON.stringify(preview, null, 2);
+  return `${commands.length} command${commands.length === 1 ? "" : "s"}${title} · mode=${mode}${tools ? ` · ${tools} tools` : ""}${qualityHint}`;
+}
+
+function showChatProposal(payload) {
+  const commands = payload.proposal?.commands || payload.commands || [];
+  pendingChatCommands = commands;
+  pendingChatQuality = payload.quality || null;
+  pendingChatProposalPayload = payload;
+  if (!el.chatProposalBar) return;
+  el.chatProposalBar.hidden = false;
+  if (el.chatProposalMeta) {
+    el.chatProposalMeta.textContent = `${proposalMetaText(payload, commands)} — bereit zum Apply`;
+  }
+}
+
+function openCommandsView() {
+  if (!pendingChatCommands?.length || !el.commandsViewDialog) {
+    setStatus("No commands to view", "warn");
+    return;
+  }
+  const payload = pendingChatProposalPayload || {};
+  if (el.commandsViewMeta) {
+    el.commandsViewMeta.textContent = proposalMetaText(payload, pendingChatCommands);
+  }
+  if (el.commandsViewJson) {
+    el.commandsViewJson.textContent = JSON.stringify(
+      {
+        questions: payload.questions || [],
+        proposal: payload.proposal || { commands: pendingChatCommands },
+        quality: payload.quality || undefined,
+      },
+      null,
+      2,
+    );
+  }
+  el.commandsViewDialog.showModal();
+}
+
+function applyPendingChatCommands() {
+  if (!pendingChatCommands?.length) {
+    setStatus("No commands to apply", "warn");
+    return;
+  }
+  const q = pendingChatQuality || {};
+  if (q.blocks_apply || q.has_solid_collisions) {
+    const msgs = (q.solid_messages || []).slice(0, 3).join("\n") || "Möbel durchdringt Wand.";
+    window.alert(
+      `Apply blockiert — physikalisch ungültig (kein Kompromiss):\n\n${msgs}\n\nBitte neu planen.`,
+    );
+    setStatus("Apply blockiert: Wand-Durchdringung", "error");
+    return;
+  }
+  if (q.needs_user_confirm || q.has_hard_errors || q.has_soft_warnings || q.has_expected_risks) {
+    const parts = [];
+    if (q.has_hard_errors) parts.push("harte Clearance-Fehler");
+    if (q.has_soft_warnings) parts.push("Soft-Warnungen (Packung/Öffnungen)");
+    if (q.has_expected_risks) parts.push("dokumentierte Kompromisse");
+    const detail = parts.length ? parts.join(", ") : "Qualitäts-Hinweise";
+    const ok = window.confirm(
+      `Apply trotz ${detail}?\n\nLayoutLab führt die Commands aus; Apply gilt als Zustimmung zum Kompromiss.`,
+    );
+    if (!ok) {
+      setStatus("Apply abgebrochen — Proposal unverändert", "warn");
+      return;
+    }
+  }
+  const commands = pendingChatCommands;
+  if (el.commandsViewDialog?.open) el.commandsViewDialog.close();
+  clearChatProposal();
+  postCommandsToCore({ commands }, "Core · chat Apply")
+    .then(() => appendChatBubble("assistant", "Applied to Core."))
+    .catch((err) => {
+      appendChatBubble("assistant", err.message);
+      setStatus(err.message, "error");
+    });
 }
 
 async function postChatToCore(message) {
@@ -957,42 +1029,16 @@ el.btnChatDiscard?.addEventListener("click", () => {
   setStatus("Chat proposal discarded");
 });
 
+el.btnChatView?.addEventListener("click", () => {
+  openCommandsView();
+});
+
 el.btnChatApply?.addEventListener("click", () => {
-  if (!pendingChatCommands?.length) {
-    setStatus("No commands to apply", "warn");
-    return;
-  }
-  const q = pendingChatQuality || {};
-  if (q.blocks_apply || q.has_solid_collisions) {
-    const msgs = (q.solid_messages || []).slice(0, 3).join("\n") || "Möbel durchdringt Wand.";
-    window.alert(
-      `Apply blockiert — physikalisch ungültig (kein Kompromiss):\n\n${msgs}\n\nBitte neu planen.`,
-    );
-    setStatus("Apply blockiert: Wand-Durchdringung", "error");
-    return;
-  }
-  if (q.needs_user_confirm || q.has_hard_errors || q.has_soft_warnings || q.has_expected_risks) {
-    const parts = [];
-    if (q.has_hard_errors) parts.push("harte Clearance-Fehler");
-    if (q.has_soft_warnings) parts.push("Soft-Warnungen (Packung/Öffnungen)");
-    if (q.has_expected_risks) parts.push("dokumentierte Kompromisse");
-    const detail = parts.length ? parts.join(", ") : "Qualitäts-Hinweise";
-    const ok = window.confirm(
-      `Apply trotz ${detail}?\n\nLayoutLab führt die Commands aus; Apply gilt als Zustimmung zum Kompromiss.`,
-    );
-    if (!ok) {
-      setStatus("Apply abgebrochen — Proposal unverändert", "warn");
-      return;
-    }
-  }
-  const commands = pendingChatCommands;
-  clearChatProposal();
-  postCommandsToCore({ commands }, "Core · chat Apply")
-    .then(() => appendChatBubble("assistant", "Applied to Core."))
-    .catch((err) => {
-      appendChatBubble("assistant", err.message);
-      setStatus(err.message, "error");
-    });
+  applyPendingChatCommands();
+});
+
+el.btnCommandsViewApply?.addEventListener("click", () => {
+  applyPendingChatCommands();
 });
 
 el.btnCoreFurnished?.addEventListener("click", () => {
