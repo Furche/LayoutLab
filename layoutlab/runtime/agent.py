@@ -101,8 +101,14 @@ Example openings / bed (headboard against south wall → head_side y_min):
 
 Bed orientation:
 - head_side is the headboard wall direction (x_min|x_max|y_min|y_max).
-- If the user says the head points into the room / wants the head at the wall: set head_side to the nearest wall of the bed location (south wall → y_min).
-- Do not claim you rotated the bed unless head_side (or location) actually changed vs the previous plan.
+- Beds must sit against a wall (not floating in the center). Prefer south or west wall;
+  set head_side to that wall and location so the footprint touches it (~0.08 m margin).
+- If the user says the head points into the room / wants the head at the wall: fix head_side.
+- Do not claim you rotated/moved the bed unless head_side or location actually changed.
+
+When the user asks for a better / different arrangement:
+- You MUST change furniture locations (and usually bed head_side). Identical coords = failure.
+- Keep door access clear; prefer wardrobe west/north, desk near window but not in the door path.
 
 Storage vs openings:
 - Do not place wardrobe/desk in front of a door or so close that opening_access warns.
@@ -123,6 +129,14 @@ SOFT_REPLAN_HINT = (
     "questions must be []. No markdown, no tools."
 )
 
+IMPROVE_LAYOUT_HINT = (
+    "The user asked for a BETTER / different placement. Your previous locations are not good enough. "
+    "Return ONLY a new JSON proposal with REAL geometry changes: move the bed against a wall "
+    "(set head_side to that wall), keep the east door clear, put the wardrobe on the west/north wall, "
+    "and place the desk by the window without blocking the door. "
+    "Do NOT repeat the same location arrays. questions must be []. No markdown, no tools."
+)
+
 MAX_TOOL_ROUNDS = 6
 REPAIR_HINT = (
     "Your previous proposal was incomplete for the user's request. "
@@ -131,6 +145,9 @@ REPAIR_HINT = (
     "with sill_height, and run_generator for furniture). "
     "A door does not replace windows. questions must be []. No markdown, no tools."
 )
+
+# Last accepted proposal fingerprint (this Core process) — detect identical "improve" replies.
+_LAST_PLACEMENT_FP: tuple | None = None
 
 _WORD_COUNTS = {
     "ein": 1,
@@ -394,6 +411,33 @@ def _user_mentions_bed_head(text: str) -> bool:
     )
 
 
+def _user_wants_better_layout(text: str) -> bool:
+    t = (text or "").lower()
+    return any(
+        k in t
+        for k in (
+            "besser",
+            "bessere",
+            "besseren",
+            "andere lösung",
+            "andere losung",
+            "anders stellen",
+            "umstellen",
+            "neu platz",
+            "neuplatz",
+            "verbesser",
+            "optimize",
+            "optimier",
+            "better",
+            "rearrange",
+            "umräumen",
+            "umraumen",
+            "schickere",
+            "geeignetere",
+        )
+    )
+
+
 def _room_size_from_commands(commands: list) -> tuple[float, float]:
     for cmd in commands or []:
         if cmd.get("action") != "create_room":
@@ -435,15 +479,142 @@ def _east_door_present(commands: list) -> bool:
     return False
 
 
+def _placement_fingerprint(commands: list) -> tuple:
+    parts = []
+    for cmd in commands or []:
+        if cmd.get("action") != "run_generator":
+            continue
+        params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
+        loc = params.get("location") or []
+        try:
+            loc_t = tuple(round(float(v), 3) for v in loc[:3])
+        except (TypeError, ValueError):
+            loc_t = tuple(loc[:3])
+        parts.append(
+            (
+                cmd.get("generator"),
+                loc_t,
+                params.get("head_side"),
+                params.get("front_side"),
+            )
+        )
+    return tuple(parts)
+
+
+def _snap_bed_to_wall(params: dict, room_w: float, room_d: float, *, prefer: str | None = None):
+    """Move bed footprint against a wall; set matching head_side.
+
+    bed_basic footprint: length along X, width along Y (independent of head_side).
+    """
+    try:
+        length = float(params.get("length") or 2.0)
+        width = float(params.get("width") or 1.2)
+    except (TypeError, ValueError):
+        length, width = 2.0, 1.2
+    margin = 0.08
+    loc = list(params.get("location") or [0, 0, 0])
+    try:
+        x = float(loc[0])
+        y = float(loc[1])
+        z = float(loc[2]) if len(loc) > 2 else 0.0
+    except (TypeError, ValueError, IndexError):
+        x, y, z = 0.0, 0.0, 0.0
+
+    gap = {
+        "y_min": y,
+        "y_max": room_d - (y + width),
+        "x_min": x,
+        "x_max": room_w - (x + length),
+    }
+    side = prefer or min(gap, key=gap.get)
+    # Not already hugging a wall → default south wall for bedrooms.
+    if prefer is None and min(gap.values()) > 0.25:
+        side = "y_min"
+
+    if side == "y_min":
+        x = max(margin, min(room_w - length - margin, (room_w - length) / 2))
+        y = margin
+        head = "y_min"
+    elif side == "y_max":
+        x = max(margin, min(room_w - length - margin, (room_w - length) / 2))
+        y = max(margin, room_d - width - margin)
+        head = "y_max"
+    elif side == "x_min":
+        x = margin
+        y = max(margin, min(room_d - width - margin, (room_d - width) / 2))
+        head = "x_min"
+    else:
+        x = max(margin, room_w - length - margin)
+        y = max(margin, min(room_d - width - margin, (room_d - width) / 2))
+        head = "x_max"
+    return [round(x, 3), round(y, 3), round(z, 3)], head
+
+
+def _apply_improved_bedroom_layout(commands: list, room_w: float, room_d: float) -> bool:
+    """Force a distinct wall-based arrangement (used when user asks for better)."""
+    margin = 0.08
+    east_door = _east_door_present(commands)
+    changed = False
+    for cmd in commands:
+        if cmd.get("action") != "run_generator":
+            continue
+        gen = cmd.get("generator")
+        params = dict(cmd.get("params") or {})
+        if gen == "bed_basic":
+            # Alternate: north wall
+            loc, head = _snap_bed_to_wall(params, room_w, room_d, prefer="y_max")
+            if params.get("location") != loc or params.get("head_side") != head:
+                params["location"] = loc
+                params["head_side"] = head
+                cmd["params"] = params
+                changed = True
+        elif gen == "wardrobe_basic":
+            depth = float(params.get("depth") or 0.6)
+            width = float(params.get("width") or 1.0)
+            # West wall, north-ish — clear of east door and south window traffic
+            loc = [
+                round(margin + depth / 2, 3),
+                round(max(margin, room_d - width - 0.4), 3),
+                0.0,
+            ]
+            if params.get("location") != loc or params.get("front_side") != "x_max":
+                params["location"] = loc
+                params["front_side"] = "x_max"
+                cmd["params"] = params
+                changed = True
+        elif gen == "desk_basic":
+            depth = float(params.get("depth") or 0.6)
+            width = float(params.get("width") or 1.2)
+            # South / window side but west of the door clearance strip
+            max_x = room_w - width - (1.1 if east_door else margin)
+            loc = [
+                round(max(margin, min(max_x, 0.35)), 3),
+                round(margin, 3),
+                0.0,
+            ]
+            if params.get("location") != loc:
+                params["location"] = loc
+                cmd["params"] = params
+                changed = True
+    return changed
+
+
 def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dict:
-    """Fix common LLM misses: bed head_side, wardrobe blocking east door."""
+    """Fix common LLM misses: floating beds, head_side, door-blocking storage."""
     commands = list(result.get("commands") or [])
     if not commands:
         return result
     room_w, room_d = _room_size_from_commands(commands)
     want_head = _user_mentions_bed_head(conversation)
+    want_better = _user_wants_better_layout(conversation)
     east_door = _east_door_present(commands)
     changed = False
+    notes = []
+
+    if want_better:
+        if _apply_improved_bedroom_layout(commands, room_w, room_d):
+            changed = True
+            notes.append("Layout-Korrektur: alternative Wandplatzierung (bessere Lösung).")
 
     for cmd in commands:
         if cmd.get("action") != "run_generator":
@@ -452,21 +623,25 @@ def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dic
         params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
         if not params:
             continue
-        if gen == "bed_basic" and want_head:
-            loc = params.get("location") or [0, 0, 0]
-            side = _nearest_wall_side(loc, room_w, room_d)
-            if params.get("head_side") != side:
+        if gen == "bed_basic":
+            prefer = "y_max" if want_better else None
+            if want_head and not want_better:
+                prefer = _nearest_wall_side(params.get("location") or [0, 0, 0], room_w, room_d)
+            loc, head = _snap_bed_to_wall(params, room_w, room_d, prefer=prefer)
+            if params.get("location") != loc or params.get("head_side") != head:
                 params = dict(params)
-                params["head_side"] = side
+                params["location"] = loc
+                params["head_side"] = head
                 cmd["params"] = params
                 changed = True
+                if "Bett" not in "".join(notes):
+                    notes.append("Layout-Korrektur: Bett an die Wand (head_side).")
         if gen == "wardrobe_basic" and east_door:
             loc = list(params.get("location") or [0, 0, 0])
             try:
                 x = float(loc[0])
             except (TypeError, ValueError):
                 x = 0.0
-            # Wardrobe center too far east → shift to west wall clearance.
             if x > room_w * 0.55:
                 depth = float(params.get("depth") or 0.6)
                 try:
@@ -479,6 +654,30 @@ def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dic
                 params["front_side"] = "x_max"
                 cmd["params"] = params
                 changed = True
+                notes.append("Layout-Korrektur: Schrank von der Ost-Tür weg.")
+        if gen == "desk_basic" and east_door:
+            loc = list(params.get("location") or [0, 0, 0])
+            try:
+                x = float(loc[0])
+                width = float(params.get("width") or 1.2)
+            except (TypeError, ValueError):
+                x, width = 0.0, 1.2
+            if x + width > room_w - 1.0:
+                params = dict(params)
+                params["location"] = [
+                    round(max(0.15, min(x, room_w - width - 1.1)), 3),
+                    round(float(loc[1]) if len(loc) > 1 else 0.15, 3),
+                    float(loc[2]) if len(loc) > 2 else 0.0,
+                ]
+                cmd["params"] = params
+                changed = True
+                notes.append("Layout-Korrektur: Schreibtisch aus dem Türbereich.")
+
+    if want_better and _LAST_PLACEMENT_FP is not None:
+        if _placement_fingerprint(commands) == _LAST_PLACEMENT_FP:
+            if _apply_improved_bedroom_layout(commands, room_w, room_d):
+                changed = True
+                notes.append("Layout-Korrektur: erzwungene Umstellung (vorher identisch).")
 
     if not changed:
         return result
@@ -488,11 +687,31 @@ def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dic
     proposal = dict(result.get("proposal") or {})
     proposal["commands"] = commands
     result["proposal"] = proposal
-    note = (
-        " (Layout-Korrektur: Bett-Kopfende zur Wand und/oder Schrank von der Tür weg.)"
-    )
-    result["reply"] = (result.get("reply") or "").rstrip() + note
+    if notes:
+        result["reply"] = (result.get("reply") or "").rstrip() + " (" + " ".join(notes) + ")"
     return result
+
+
+def _maybe_improve_replan(session, settings, messages, result: dict, conversation: str) -> dict:
+    """If user asked for better layout but placement still matches last turn, force LLM replan."""
+    if not _user_wants_better_layout(conversation):
+        return result
+    if not (result.get("commands") or []):
+        return result
+    fp = _placement_fingerprint(result.get("commands") or [])
+    if _LAST_PLACEMENT_FP is None or fp != _LAST_PLACEMENT_FP:
+        return result
+    try:
+        repaired = _finalize_proposal_from_messages(
+            settings,
+            messages,
+            result.get("tool_trace") or [],
+            repair_note=IMPROVE_LAYOUT_HINT,
+        )
+    except Exception:
+        return result
+    repaired = _apply_deterministic_placement_fixes(conversation, repaired)
+    return _attach_quality_preview(session, repaired)
 
 
 def _maybe_soft_replan(session, settings, messages, result: dict, conversation: str) -> dict:
@@ -538,10 +757,13 @@ def _maybe_soft_replan(session, settings, messages, result: dict, conversation: 
 
 
 def _finish_agent_result(session, settings, messages, result: dict, conversation: str) -> dict:
+    global _LAST_PLACEMENT_FP
     result = _maybe_repair_proposal(settings, messages, result, conversation)
     result = _apply_deterministic_placement_fixes(conversation, result)
     result = _attach_quality_preview(session, result)
     result = _maybe_soft_replan(session, settings, messages, result, conversation)
+    result = _maybe_improve_replan(session, settings, messages, result, conversation)
+    _LAST_PLACEMENT_FP = _placement_fingerprint(result.get("commands") or [])
     return result
 
 

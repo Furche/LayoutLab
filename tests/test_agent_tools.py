@@ -256,6 +256,8 @@ class TestAgentTools(unittest.TestCase):
                     "params": {
                         "name": "BED",
                         "location": [1.0, 0.15, 0],
+                        "length": 2.0,
+                        "width": 1.2,
                         "head_side": "y_max",
                         "collection": "layoutlab_room",
                     },
@@ -281,7 +283,102 @@ class TestAgentTools(unittest.TestCase):
         bed = next(c for c in fixed["commands"] if c.get("generator") == "bed_basic")
         wardrobe = next(c for c in fixed["commands"] if c.get("generator") == "wardrobe_basic")
         self.assertEqual(bed["params"]["head_side"], "y_min")
+        self.assertLess(float(bed["params"]["location"][1]), 0.2)
         self.assertLess(float(wardrobe["params"]["location"][0]), 1.0)
+
+    def test_floating_bed_snaps_to_wall(self):
+        from layoutlab.runtime import agent as ag
+
+        result = {
+            "reply": "ok",
+            "commands": [
+                {"action": "create_room", "params": {"width": 4.0, "depth": 3.5}},
+                {
+                    "action": "run_generator",
+                    "generator": "bed_basic",
+                    "params": {
+                        "name": "BED",
+                        "location": [1.0, 1.15, 0],
+                        "length": 2.0,
+                        "width": 1.2,
+                        "collection": "layoutlab_room",
+                    },
+                },
+            ],
+            "proposal": {"commands": []},
+        }
+        result["proposal"]["commands"] = result["commands"]
+        fixed = ag._apply_deterministic_placement_fixes("bau ein schlafzimmer", result)
+        bed = next(c for c in fixed["commands"] if c.get("generator") == "bed_basic")
+        self.assertEqual(bed["params"]["head_side"], "y_min")
+        self.assertLess(float(bed["params"]["location"][1]), 0.2)
+
+    def test_better_layout_moves_furniture(self):
+        from layoutlab.runtime import agent as ag
+
+        ag._LAST_PLACEMENT_FP = (
+            ("bed_basic", (2.0, 1.0, 0.0), None, None),
+            ("wardrobe_basic", (0.5, 1.5, 0.0), None, None),
+            ("desk_basic", (1.5, 0.5, 0.0), None, None),
+        )
+        result = {
+            "reply": "besser",
+            "commands": [
+                {"action": "create_room", "params": {"width": 4.0, "depth": 3.5}},
+                {
+                    "action": "add_opening",
+                    "params": {"room": "ROOM", "kind": "door", "wall_side": "east", "width": 0.9},
+                },
+                {
+                    "action": "add_opening",
+                    "params": {"room": "ROOM", "kind": "window", "wall_side": "south", "width": 1.2},
+                },
+                {
+                    "action": "run_generator",
+                    "generator": "bed_basic",
+                    "params": {
+                        "name": "BED",
+                        "location": [2.0, 1.0, 0],
+                        "length": 2.0,
+                        "width": 1.2,
+                        "collection": "layoutlab_room",
+                    },
+                },
+                {
+                    "action": "run_generator",
+                    "generator": "wardrobe_basic",
+                    "params": {
+                        "name": "WARDROBE",
+                        "location": [0.5, 1.5, 0],
+                        "width": 1.0,
+                        "depth": 0.6,
+                        "collection": "layoutlab_room",
+                    },
+                },
+                {
+                    "action": "run_generator",
+                    "generator": "desk_basic",
+                    "params": {
+                        "name": "DESK",
+                        "location": [1.5, 0.5, 0],
+                        "width": 1.2,
+                        "depth": 0.6,
+                        "collection": "layoutlab_room",
+                    },
+                },
+            ],
+            "proposal": {"commands": []},
+        }
+        result["proposal"]["commands"] = result["commands"]
+        fixed = ag._apply_deterministic_placement_fixes(
+            "glaubst du du findest eine bessere lösung", result
+        )
+        bed = next(c for c in fixed["commands"] if c.get("generator") == "bed_basic")
+        desk = next(c for c in fixed["commands"] if c.get("generator") == "desk_basic")
+        self.assertEqual(bed["params"]["head_side"], "y_max")
+        self.assertNotEqual(tuple(bed["params"]["location"]), (2.0, 1.0, 0))
+        self.assertLess(float(desk["params"]["location"][0]), 1.0)
+        ag._LAST_PLACEMENT_FP = None
 
 
 if __name__ == "__main__":
