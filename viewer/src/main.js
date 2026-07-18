@@ -27,6 +27,7 @@ const el = {
   btnCoreFurnished: document.getElementById("btn-core-furnished"),
   btnCoreCommands: document.getElementById("btn-core-commands"),
   coreUrl: document.getElementById("core-url"),
+  coreVersion: document.getElementById("core-version"),
   pasteDialog: document.getElementById("paste-dialog"),
   pasteForm: document.getElementById("paste-form"),
   pasteText: document.getElementById("paste-text"),
@@ -184,6 +185,37 @@ function persistCoreUrl() {
   }
 }
 
+function setCoreVersionDisplay(version, { offline = false } = {}) {
+  if (!el.coreVersion) return;
+  if (offline) {
+    el.coreVersion.textContent = "offline";
+    el.coreVersion.classList.add("offline");
+    el.coreVersion.title = "Core nicht erreichbar";
+    return;
+  }
+  el.coreVersion.classList.remove("offline");
+  el.coreVersion.textContent = version ? `v${version}` : "…";
+  el.coreVersion.title = version ? `LayoutLab Core ${version}` : "Core version";
+}
+
+async function refreshCoreVersion() {
+  const base = getCoreUrl();
+  try {
+    const response = await fetch(`${base}/health`);
+    if (!response.ok) {
+      setCoreVersionDisplay(null, { offline: true });
+      return null;
+    }
+    const data = await response.json();
+    const ver = data.core_version || null;
+    setCoreVersionDisplay(ver);
+    return ver;
+  } catch {
+    setCoreVersionDisplay(null, { offline: true });
+    return null;
+  }
+}
+
 /** Archive Core session log + clear Core scene on full page load / tab refresh. */
 async function resetCoreSessionOnLoad() {
   const base = getCoreUrl();
@@ -194,11 +226,16 @@ async function resetCoreSessionOnLoad() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reason: "viewer_reload", clear_scene: true }),
     });
-    if (!response.ok) return;
+    if (!response.ok) {
+      await refreshCoreVersion();
+      return;
+    }
     const data = await response.json();
     const ver = data.core_version || "?";
+    setCoreVersionDisplay(ver === "?" ? null : ver);
     setStatus(`Core ${ver} · session reset (${data.session_id || "ok"})`);
   } catch {
+    setCoreVersionDisplay(null, { offline: true });
     /* Core offline — ignore; chat/commands will surface the error later */
   }
 }
@@ -1091,7 +1128,10 @@ el.commandsForm?.addEventListener("submit", (ev) => {
   }
 });
 
-el.coreUrl?.addEventListener("change", persistCoreUrl);
+el.coreUrl?.addEventListener("change", () => {
+  persistCoreUrl();
+  refreshCoreVersion();
+});
 loadStoredCoreUrl();
 loadLlmSettings();
 el.llmApiKey?.addEventListener("change", persistLlmSettings);

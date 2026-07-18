@@ -67,6 +67,18 @@ body {
   font-size: 0.85rem;
 }
 
+.core-version {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+  margin-left: 0.2em;
+}
+
+.core-version.offline {
+  color: #c45c26;
+  font-weight: 500;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
