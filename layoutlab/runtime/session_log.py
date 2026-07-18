@@ -111,6 +111,8 @@ def _slim_quality(quality: dict | None) -> dict | None:
                 if isinstance(f, dict) and f.get("constraint_type")
             }
         ),
+        "layout_sketch_ascii": quality.get("layout_sketch_ascii"),
+        "layout_sketch_legend": quality.get("layout_sketch_legend") or {},
     }
 
 
@@ -252,9 +254,21 @@ def _rewrite_markdown_unlocked() -> None:
             if quality:
                 lines.append("**Quality:**")
                 lines.append("```json")
-                lines.append(json.dumps(quality, ensure_ascii=False, indent=2))
+                slim_q = {k: v for k, v in quality.items() if k != "layout_sketch_ascii"}
+                lines.append(json.dumps(slim_q, ensure_ascii=False, indent=2))
                 lines.append("```")
                 lines.append("")
+                ascii_map = quality.get("layout_sketch_ascii")
+                if ascii_map:
+                    lines.append("**Layout sketch (top-down):**")
+                    lines.append("```")
+                    lines.append(str(ascii_map))
+                    lines.append("```")
+                    lines.append("")
+                legend = quality.get("layout_sketch_legend") or {}
+                if legend:
+                    lines.append(f"**Legend:** {json.dumps(legend, ensure_ascii=False)}")
+                    lines.append("")
             tools = ev.get("tools_used") or []
             if tools:
                 lines.append(f"**Tools:** {', '.join(str(t) for t in tools)}")

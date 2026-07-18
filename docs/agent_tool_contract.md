@@ -1,7 +1,7 @@
 # LayoutLab Agent Tool Contract
 
-**Status:** Design + implementing (Agent-2.1 soft metrics / tradeoffs)  
-**Version:** `agent_tools` 0.3  
+**Status:** Design + implementing (Agent-2.2 layout sketch)  
+**Version:** `agent_tools` 0.4  
 **Date:** 2026-07-18  
 **Related:** [DD-009](design_decisions/DD-009-ai-execution-boundary.md) · [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) · [json_protocol.md](json_protocol.md) · [DD-014](design_decisions/DD-014-standalone-runtime-path.md)
 
@@ -107,9 +107,22 @@ Returns `{ ok, errors[], warnings[], command_count }`.
 1. Optionally validate (default stop if invalid).
 2. `RoomSession.clone()` → apply commands on the clone.
 3. Optional analyze (clearances + soft) + `scene_after` + `soft_summary`.
-4. **Live session is never mutated.**
+4. Always includes **`layout_sketch`** (top-down ASCII + `bounds_xy`) for the clone.
+5. **Live session is never mutated.**
 
-Enables Plan → Dry-Run → Analyze → Revise without committing.
+Enables Plan → Dry-Run → See sketch → Analyze → Revise without committing.
+
+### `get_layout_sketch`
+
+**Params:** `{ "collection"?: string }`
+
+**Returns:** top-down spatial abstraction for the current (or dry-run) scene:
+
+- `ascii` — compact map (`#` wall, `D` door, `W` window, letters = furniture)
+- `rooms[].openings` / `rooms[].furniture[].bounds_xy` (+ `head_side` when known)
+- `legend`, orientation notes (top = north / +Y)
+
+Not pixels and not the 3D viewport — intentional cheap “eyes” for the LLM.
 
 ------------------------------------------------------------------------
 
@@ -119,12 +132,15 @@ Every LLM agent turn injects synthetic tool results before the first model call:
 
 1. `get_scene_summary`
 2. `list_generators`
+3. `get_layout_sketch`
 
 The model should trust this seed and only call extra read tools when needed.
 Prefer `validate_commands` → `dry_run_commands` before a non-empty final proposal.
+After dry-run, read `layout_sketch.ascii` + soft warnings and revise if needed.
 
 After the final proposal, Core attaches a **`quality`** preview (automatic dry-run):
-`has_hard_errors`, `has_soft_warnings`, `has_expected_risks`, `needs_user_confirm`, slim findings.
+`has_hard_errors`, `has_soft_warnings`, `has_expected_risks`, `needs_user_confirm`,
+slim findings, plus `layout_sketch_ascii` / legend.
 
 ------------------------------------------------------------------------
 
@@ -184,7 +200,8 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 5. Session clone + `dry_run_commands` ✅
 6. Automatic scene seed per turn ✅
 7. Soft metrics + quality preview + tradeoff prompt (DD-015) ✅
-8. Persist light agent state (goal / questions / last findings) ← next
+8. Layout sketch (top-down ASCII) in seed + dry_run + quality ✅
+9. Persist light agent state (goal / questions / last findings) ← next
 
 ------------------------------------------------------------------------
 

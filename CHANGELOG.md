@@ -8,13 +8,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-### Fixed
-
-- **Command shape (Apply):** `delete_collection_objects` accepts `params.collection`; flat `run_generator` keys are folded into `params` (LLM often omitted top-level `collection` / nested params — Apply failed and furniture ignored placement/`head_side`)
-- **Agent placement:** when the user mentions bed head/Kopfende, force `head_side` toward the nearest wall; nudge wardrobe away from an east door; one soft-metric replan when dry-run still warns without `expected_risks`
-
 ### Added
 
+- **Layout sketch (`agent_tools` 0.4):** `get_layout_sketch` top-down ASCII + `bounds_xy`; included in dry-run, scene seed, quality preview, and session log — spatial eyes for the agent without the 3D viewport
 - **Agent-2 tools:** `validate_commands` + `dry_run_commands` (session clone; live session unchanged); automatic scene seed (`get_scene_summary` + `list_generators`) on each LLM agent turn (`agent_tools` 0.2)
 - **DD-015 Soft metrics + tradeoffs (Proposed):** packing density + opening-access findings; dry-run `soft_summary`; agent quality preview; Viewer Apply confirm on hard/soft/risks (`agent_tools` 0.3)
 - **Observation queries + solid wall hits:** scene-status questions return no commands; `solid_wall_penetration` is a non-negotiable error and blocks Apply
@@ -26,6 +22,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Command shape (Apply):** `delete_collection_objects` accepts `params.collection`; flat `run_generator` keys are folded into `params` (LLM often omitted top-level `collection` / nested params — Apply failed and furniture ignored placement/`head_side`)
+- **Agent placement:** when the user mentions bed head/Kopfende, force `head_side` toward the nearest wall; nudge wardrobe away from an east door; one soft-metric replan when dry-run still warns without `expected_risks`
 - **Agent incomplete proposals:** after a turn, Core repairs proposals that claim room+door+bed but only emit `create_room` (forces a second finalize with missing `add_opening` / `bed_basic`)
 - **Agent window completeness:** repair now requires `kind=window` openings by requested count (a door alone no longer counts as windows)
 - **Viewer chat Enter:** Enter submits the prompt; Shift+Enter inserts a newline

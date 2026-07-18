@@ -1,4 +1,4 @@
-"""Deterministic agent tools over RoomSession (agent_tools 0.2) — no bpy."""
+"""Deterministic agent tools over RoomSession (agent_tools 0.4) — no bpy."""
 
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ TOOL_NAMES = frozenset(
         "list_supported_actions",
         "validate_commands",
         "dry_run_commands",
+        "get_layout_sketch",
     }
 )
 
@@ -580,7 +581,11 @@ def dry_run_commands(session, params=None):
         "errors": applied.get("errors") or [],
         "result_count": len(applied.get("results") or []),
         "scene_after": get_scene_summary(clone, {}),
-        "note": "Dry-run only — live session unchanged. User must Apply to commit.",
+        "layout_sketch": get_layout_sketch(clone, {}),
+        "note": (
+            "Dry-run only — live session unchanged. User must Apply to commit. "
+            "Read layout_sketch.ascii before revising placement."
+        ),
     }
     if do_analyze:
         analysis = analyze_session(
@@ -601,6 +606,13 @@ def dry_run_commands(session, params=None):
     return out
 
 
+def get_layout_sketch(session, params=None):
+    """Top-down XY sketch (ASCII + bounds) for current session state."""
+    from .layout_sketch import build_layout_sketch
+
+    return build_layout_sketch(session, params)
+
+
 TOOL_HANDLERS = {
     "get_scene_summary": get_scene_summary,
     "get_room": get_room,
@@ -611,6 +623,7 @@ TOOL_HANDLERS = {
     "list_supported_actions": list_supported_actions,
     "validate_commands": validate_commands,
     "dry_run_commands": dry_run_commands,
+    "get_layout_sketch": get_layout_sketch,
 }
 
 
@@ -736,10 +749,30 @@ def openai_tool_definitions():
         {
             "type": "function",
             "function": {
+                "name": "get_layout_sketch",
+                "description": (
+                    "Top-down XY layout sketch (ASCII map + furniture bounds_xy + openings). "
+                    "Not the 3D viewport — use to spatially check placement. "
+                    "Also returned inside dry_run_commands as layout_sketch."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "collection": {"type": "string"},
+                    },
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
                 "name": "dry_run_commands",
                 "description": (
-                    "Clone session, apply commands, return scene_after + analysis. "
-                    "Does NOT mutate the live session. Prefer before final proposal."
+                    "Clone session, apply commands, return scene_after + layout_sketch "
+                    "(ASCII top-down) + analysis/soft_summary. "
+                    "Does NOT mutate the live session. Always read layout_sketch.ascii "
+                    "and soft warnings before the final proposal; revise if furniture "
+                    "blocks doors/windows or packing looks wrong."
                 ),
                 "parameters": {
                     "type": "object",

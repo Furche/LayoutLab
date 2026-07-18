@@ -1,4 +1,4 @@
-"""Agent turn: tool calling → structured proposal (agent_tools 0.3)."""
+"""Agent turn: tool calling → structured proposal (agent_tools 0.4)."""
 
 from __future__ import annotations
 
@@ -16,8 +16,14 @@ from .chat import (
 )
 from .tools import dispatch_tool, openai_tool_definitions
 
-AGENT_SYSTEM_PROMPT = """You are LayoutLab's planning agent (DD-009 / DD-015 / agent_tools 0.3).
+AGENT_SYSTEM_PROMPT = """You are LayoutLab's planning agent (DD-009 / DD-015 / agent_tools 0.4).
 AI decides WHAT; LayoutLab Core executes HOW. You invent no meshes, bpy, or free Python.
+
+Spatial perception (critical):
+- You cannot see the 3D viewport. Your eyes are tools: get_layout_sketch and dry_run_commands.layout_sketch.
+- layout_sketch.ascii is a top-down map: top=N, bottom=S, left=W, right=E; #=wall D=door W=window letters=furniture.
+- After drafting commands, dry_run and READ the ascii + soft_summary before finishing.
+- If a letter sits on D/W or crowding looks wrong, change location/head_side and dry_run again.
 
 Role (compassionate planner):
 - Work in the user's interest: rooms should feel comfortable AND be practically usable.
@@ -39,6 +45,9 @@ Context:
 - A scene seed (get_scene_summary + list_generators) is already injected — trust it.
 - Call get_room / list_objects only when you need details the seed lacks.
 - Before a non-empty final proposal, prefer validate_commands then dry_run_commands.
+- After dry_run: READ layout_sketch.ascii + soft_summary. If furniture sits on a door (D)
+  or packs the room badly, revise commands and dry_run again — do not ship the first draft.
+- You do NOT see the 3D viewport; layout_sketch is your spatial eyes (top-down XY).
 - On soft warnings (soft_packing, opening_access): replan if possible.
 - On hard clearance errors: try alternatives first.
 - If a clearance compromise is unavoidable (e.g. wardrobe reduces door swing but does not enter the wall):
@@ -499,7 +508,13 @@ def _maybe_soft_replan(session, settings, messages, result: dict, conversation: 
 
     soft = quality.get("soft_summary") or {}
     types = ",".join(soft.get("types") or []) or "soft warnings"
+    ascii_map = quality.get("layout_sketch_ascii") or ""
     note = SOFT_REPLAN_HINT + f" Soft types: {types}."
+    if ascii_map:
+        note += (
+            "\nCurrent dry-run top-down sketch (fix geometry so this improves):\n"
+            + ascii_map
+        )
     try:
         repaired = _finalize_proposal_from_messages(
             settings, messages, result.get("tool_trace") or [], repair_note=note
@@ -556,6 +571,7 @@ def _attach_quality_preview(session, result: dict) -> dict:
     soft_warnings = int(soft.get("warnings") or 0)
     risks = list((result.get("proposal") or {}).get("expected_risks") or [])
     has_solid = len(solid) > 0
+    sketch = dry.get("layout_sketch") if isinstance(dry.get("layout_sketch"), dict) else {}
     result["quality"] = {
         "ok": bool(dry.get("ok")) and not has_solid,
         "apply_ok": bool(dry.get("apply_ok")),
@@ -570,6 +586,8 @@ def _attach_quality_preview(session, result: dict) -> dict:
         and not has_solid,
         "blocks_apply": has_solid,
         "solid_messages": [f.get("message") for f in solid[:5]],
+        "layout_sketch_ascii": sketch.get("ascii"),
+        "layout_sketch_legend": sketch.get("legend") or {},
     }
     if has_solid:
         note = (
@@ -599,6 +617,7 @@ def _inject_scene_seed(session, messages: list, tool_trace: list) -> None:
     seeds = (
         ("seed_scene_summary", "get_scene_summary", {}),
         ("seed_list_generators", "list_generators", {}),
+        ("seed_layout_sketch", "get_layout_sketch", {}),
     )
     tool_calls = []
     tool_msgs = []
