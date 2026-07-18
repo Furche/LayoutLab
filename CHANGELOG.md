@@ -12,6 +12,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 - **Layout sketch (`agent_tools` 0.4):** `get_layout_sketch` top-down ASCII + `bounds_xy`; included in dry-run, scene seed, quality preview, and session log — spatial eyes for the agent without the 3D viewport
 - **Clearance zones in sketch:** `+` preferred / `*` required painted into ASCII + structured `rooms[].clearances` (default on)
+- **Session reset on Viewer refresh:** `POST /v1/session/reset` archives the log and clears the Core scene; Viewer calls it on full page load; `LAST_SESSION.md` header shows `core_version`
 - **Agent-2 tools:** `validate_commands` + `dry_run_commands` (session clone; live session unchanged); automatic scene seed (`get_scene_summary` + `list_generators`) on each LLM agent turn (`agent_tools` 0.2)
 - **DD-015 Soft metrics + tradeoffs (Proposed):** packing density + opening-access findings; dry-run `soft_summary`; agent quality preview; Viewer Apply confirm on hard/soft/risks (`agent_tools` 0.3)
 - **Observation queries + solid wall hits:** scene-status questions return no commands; `solid_wall_penetration` is a non-negotiable error and blocks Apply

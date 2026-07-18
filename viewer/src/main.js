@@ -184,6 +184,25 @@ function persistCoreUrl() {
   }
 }
 
+/** Archive Core session log + clear Core scene on full page load / tab refresh. */
+async function resetCoreSessionOnLoad() {
+  const base = getCoreUrl();
+  persistCoreUrl();
+  try {
+    const response = await fetch(`${base}/v1/session/reset`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason: "viewer_reload", clear_scene: true }),
+    });
+    if (!response.ok) return;
+    const data = await response.json();
+    const ver = data.core_version || "?";
+    setStatus(`Core ${ver} · session reset (${data.session_id || "ok"})`);
+  } catch {
+    /* Core offline — ignore; chat/commands will surface the error later */
+  }
+}
+
 function loadLlmSettings() {
   let stored = {};
   try {
@@ -1283,4 +1302,6 @@ window.addEventListener("resize", resize);
 resize();
 frame();
 
-loadFixture().catch((err) => setStatus(`Error: ${err.message}`, "error"));
+resetCoreSessionOnLoad().finally(() => {
+  loadFixture().catch((err) => setStatus(`Error: ${err.message}`, "error"));
+});

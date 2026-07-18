@@ -28,6 +28,9 @@ class TestSessionLog(unittest.TestCase):
             ):
                 sid = sl.start_session(label="test")
                 self.assertTrue(sid.startswith("test-"))
+                text = md.read_text(encoding="utf-8")
+                self.assertIn("core_version:", text)
+                self.assertRegex(text, r"core_version: `\d+\.\d+\.\d+`")
                 sl.log_agent_turn(
                     message="kannst du die aktuelle scene sehen?",
                     history_len=0,

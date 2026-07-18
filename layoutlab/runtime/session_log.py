@@ -22,6 +22,18 @@ MARKDOWN_PATH = LOG_DIR / "LAST_SESSION.md"
 _lock = threading.Lock()
 _session_id: str | None = None
 _started_at: str | None = None
+_core_version: str | None = None
+
+
+def core_version_string() -> str:
+    """Plugin / Core version from ``layoutlab.bl_info`` (e.g. ``0.10.12``)."""
+    try:
+        from layoutlab import bl_info
+
+        ver = bl_info.get("version") or ()
+        return ".".join(str(int(x)) for x in ver)
+    except Exception:
+        return "unknown"
 
 
 def _utc_now() -> str:
@@ -32,13 +44,13 @@ def _ensure_dir():
     LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def start_session(*, label: str = "core") -> str:
-    """Begin a new log for this Core process.
+def start_session(*, label: str = "core", reason: str | None = None) -> str:
+    """Begin a new log for this Core process (or viewer reload).
 
     Previous ``session.jsonl`` / ``LAST_SESSION.md`` are archived under ``logs/archive/``
-    so a Core restart does not erase the last conversation for inspection.
+    so a restart does not erase the last conversation for inspection.
     """
-    global _session_id, _started_at
+    global _session_id, _started_at, _core_version
     with _lock:
         _ensure_dir()
         archive = LOG_DIR / "archive"
@@ -57,6 +69,7 @@ def start_session(*, label: str = "core") -> str:
                 pass
 
         _started_at = _utc_now()
+        _core_version = core_version_string()
         _session_id = f"{label}-{_started_at.replace(':', '').replace('.', '-')}"
         JSONL_PATH.write_text("", encoding="utf-8")
         event = {
@@ -64,7 +77,10 @@ def start_session(*, label: str = "core") -> str:
             "session_id": _session_id,
             "type": "session_start",
             "label": label,
+            "core_version": _core_version,
         }
+        if reason:
+            event["reason"] = reason
         with JSONL_PATH.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(event, ensure_ascii=False) + "\n")
         _rewrite_markdown_unlocked()
@@ -207,6 +223,7 @@ def _rewrite_markdown_unlocked() -> None:
     lines = [
         "# LayoutLab last session",
         "",
+        f"- core_version: `{_core_version or core_version_string()}`",
         f"- session_id: `{_session_id or '—'}`",
         f"- started: `{_started_at or '—'}`",
         f"- events: {len(events)}",
@@ -219,7 +236,10 @@ def _rewrite_markdown_unlocked() -> None:
         et = ev.get("type")
         ts = ev.get("ts", "")
         if et == "session_start":
-            lines.append(f"## {ts} · session start")
+            ver = ev.get("core_version") or _core_version or "—"
+            reason = ev.get("reason")
+            extra = f" · reason=`{reason}`" if reason else ""
+            lines.append(f"## {ts} · session start · core `{ver}`{extra}")
             lines.append("")
             continue
         if et == "agent_turn":
@@ -320,6 +340,7 @@ def latest_summary() -> dict:
             "ok": True,
             "session_id": _session_id,
             "started_at": _started_at,
+            "core_version": _core_version or core_version_string(),
             "jsonl": str(JSONL_PATH),
             "markdown": str(MARKDOWN_PATH),
             "event_count": len(events),

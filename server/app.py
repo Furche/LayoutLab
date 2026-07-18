@@ -89,7 +89,8 @@ class Handler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "service": "layoutlab-core",
-                    "slice": "room+generators+analyze+agent_tools_0.3",
+                    "core_version": session_log.core_version_string(),
+                    "slice": "room+generators+analyze+agent_tools_0.4",
                     "chat": "llm" if llm_configured() else "demo",
                     "tools": sorted(TOOL_NAMES),
                     "session_log": str(session_log.MARKDOWN_PATH),
@@ -107,6 +108,29 @@ class Handler(BaseHTTPRequestHandler):
             body = _read_json(self)
         except json.JSONDecodeError as exc:
             self._json(400, {"ok": False, "error": f"invalid JSON: {exc}"})
+            return
+
+        if path == "/v1/session/reset":
+            reason = body.get("reason") if isinstance(body, dict) else None
+            clear_scene = True
+            if isinstance(body, dict) and "clear_scene" in body:
+                clear_scene = bool(body.get("clear_scene"))
+            if clear_scene:
+                SESSION.clear()
+            sid = session_log.start_session(
+                label="core",
+                reason=str(reason) if reason else "session_reset",
+            )
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "session_id": sid,
+                    "core_version": session_log.core_version_string(),
+                    "cleared_scene": clear_scene,
+                    "session_log": str(session_log.MARKDOWN_PATH),
+                },
+            )
             return
 
         if path == "/v1/chat":
@@ -218,10 +242,11 @@ def main(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
     sid = session_log.start_session(label="core")
     server = ThreadingHTTPServer((host, port), Handler)
     mode = "llm" if llm_configured() else "demo"
-    print(f"LayoutLab Core listening on http://{host}:{port}", flush=True)
+    print(f"LayoutLab Core {session_log.core_version_string()} listening on http://{host}:{port}", flush=True)
     print(f"  session log: {session_log.MARKDOWN_PATH} ({sid})", flush=True)
     print("  GET  /health", flush=True)
     print("  GET  /v1/session/log", flush=True)
+    print("  POST /v1/session/reset", flush=True)
     print("  POST /v1/commands", flush=True)
     print(f"  POST /v1/agent/turn  (mode={mode})", flush=True)
     print("  POST /v1/tools/{name}", flush=True)

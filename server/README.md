@@ -17,8 +17,9 @@ Listens on `http://127.0.0.1:8765` by default.
 
 | Method | Path | Body | Response |
 |---|---|---|---|
-| `GET` | `/health` | — | `{ "ok", "tools", "chat", "session_log", … }` |
-| `GET` | `/v1/session/log` | — | last session events (tail) + paths |
+| `GET` | `/health` | — | `{ "ok", "core_version", "tools", "chat", "session_log", … }` |
+| `GET` | `/v1/session/log` | — | last session events (tail) + paths + `core_version` |
+| `POST` | `/v1/session/reset` | `{ "reason"?, "clear_scene"? }` | archive log, start fresh session (viewer calls this on tab refresh) |
 | `POST` | `/v1/commands` | `{ "commands": [ … ] }` | `{ "ok", "results", "export" }` |
 | `POST` | `/v1/agent/turn` | `{ "message", "llm"?, "history"? }` | proposal (no apply) |
 | `POST` | `/v1/tools/{name}` | tool params JSON | tool result |
@@ -26,9 +27,12 @@ Listens on `http://127.0.0.1:8765` by default.
 
 ## Session log
 
-Each Core start archives the previous transcript to ``logs/PREV_SESSION.md`` (+ ``logs/archive/``)
-and starts a fresh current log. Events are flushed to disk **immediately after every**
-``/v1/agent/turn`` and ``/v1/commands`` response — not only on shutdown.
+Each Core start (and each Viewer full reload via ``POST /v1/session/reset``) archives the
+previous transcript to ``logs/PREV_SESSION.md`` (+ ``logs/archive/``) and starts a fresh
+current log. The markdown header includes ``core_version`` from ``layoutlab.bl_info``.
+
+Events are flushed to disk **immediately after every** ``/v1/agent/turn`` and
+``/v1/commands`` response — not only on shutdown.
 
 CORS is enabled for the Vite viewer (`http://localhost:5173`).
 
