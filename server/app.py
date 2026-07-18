@@ -25,6 +25,7 @@ if str(_ROOT) not in sys.path:
 from layoutlab.runtime.agent import run_agent_turn  # noqa: E402
 from layoutlab.runtime.chat import llm_configured, plan_from_message  # noqa: E402
 from layoutlab.runtime.session import RoomSession  # noqa: E402
+from layoutlab.runtime import session_log  # noqa: E402
 from layoutlab.runtime.tools import TOOL_NAMES, dispatch_tool  # noqa: E402
 
 DEFAULT_HOST = "127.0.0.1"
@@ -87,8 +88,12 @@ class Handler(BaseHTTPRequestHandler):
                     "slice": "room+generators+analyze+agent_tools_0.3",
                     "chat": "llm" if llm_configured() else "demo",
                     "tools": sorted(TOOL_NAMES),
+                    "session_log": str(session_log.MARKDOWN_PATH),
                 },
             )
+            return
+        if path in ("/v1/session/log", "/v1/session/log/"):
+            self._json(200, session_log.latest_summary())
             return
         self._json(404, {"ok": False, "error": f"not found: {path}"})
 
@@ -124,6 +129,11 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 result = run_agent_turn(SESSION, str(message), llm_config=llm, history=history)
             except Exception as exc:
+                session_log.log_event(
+                    "agent_turn_error",
+                    user_message=str(message),
+                    error=str(exc),
+                )
                 self._json(
                     500,
                     {
@@ -135,6 +145,14 @@ class Handler(BaseHTTPRequestHandler):
                     },
                 )
                 return
+            try:
+                session_log.log_agent_turn(
+                    message=str(message),
+                    history_len=len(history or []),
+                    result=result,
+                )
+            except Exception:
+                pass
             status = 200 if result.get("ok") else 400
             self._json(status, result)
             return
@@ -173,8 +191,13 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 result = SESSION.apply_commands(commands)
             except Exception as exc:
+                session_log.log_event("apply_error", error=str(exc), command_count=len(commands))
                 self._json(500, {"ok": False, "error": str(exc)})
                 return
+            try:
+                session_log.log_apply(commands=commands, result=result, source="v1/commands")
+            except Exception:
+                pass
             status = 200 if result.get("ok") else 400
             self._json(status, result)
             return
@@ -183,10 +206,13 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
+    sid = session_log.start_session(label="core")
     server = ThreadingHTTPServer((host, port), Handler)
     mode = "llm" if llm_configured() else "demo"
     print(f"LayoutLab Core listening on http://{host}:{port}", flush=True)
+    print(f"  session log: {session_log.MARKDOWN_PATH} ({sid})", flush=True)
     print("  GET  /health", flush=True)
+    print("  GET  /v1/session/log", flush=True)
     print("  POST /v1/commands", flush=True)
     print(f"  POST /v1/agent/turn  (mode={mode})", flush=True)
     print("  POST /v1/tools/{name}", flush=True)

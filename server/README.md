@@ -17,11 +17,21 @@ Listens on `http://127.0.0.1:8765` by default.
 
 | Method | Path | Body | Response |
 |---|---|---|---|
-| `GET` | `/health` | — | `{ "ok", "tools", "chat", … }` |
+| `GET` | `/health` | — | `{ "ok", "tools", "chat", "session_log", … }` |
+| `GET` | `/v1/session/log` | — | last session events (tail) + paths |
 | `POST` | `/v1/commands` | `{ "commands": [ … ] }` | `{ "ok", "results", "export" }` |
 | `POST` | `/v1/agent/turn` | `{ "message", "llm"?, "history"? }` | proposal (no apply) |
 | `POST` | `/v1/tools/{name}` | tool params JSON | tool result |
 | `POST` | `/v1/chat` | legacy thin chat | proposal |
+
+## Session log
+
+Each Core start truncates and writes:
+
+- `logs/session.jsonl` — structured events (agent turns, apply, warnings)
+- `logs/LAST_SESSION.md` — readable transcript for debugging / agent inspection
+
+No API keys are logged. Paths are reported on `/health` and `/v1/session/log`.
 
 CORS is enabled for the Vite viewer (`http://localhost:5173`).
 
