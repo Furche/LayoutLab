@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Bed orientation:** normal 120×200 beds with head on south/north use `length=1.2` (along wall) and `width=2.0` (into room); recipe + wall-snap no longer put the 2 m side along the wall
+
 ### Added
 
 - **DD-016 Planning recipes (`agent_tools` 0.5):** tool `plan_layout` + recipe `bedroom_basic` — Core places standard bedroom furniture deterministically; agent prefers recipes over free xy; dry-run target = 0 hard errors on 4×3.5 / 4×4

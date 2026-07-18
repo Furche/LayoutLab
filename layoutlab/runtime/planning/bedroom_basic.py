@@ -9,8 +9,9 @@ ROOM_NAME = "BEDROOM"
 COLLECTION = "layoutlab_room"
 
 MARGIN = 0.08
-BED_LENGTH = 2.0
-BED_WIDTH = 1.2
+# Semantic mattress sizes (human: width × length). Mapped to bed_basic axes below.
+BED_MATTRESS_WIDTH = 1.2   # side-to-side
+BED_MATTRESS_LENGTH = 2.0  # head-to-foot
 WARDROBE_WIDTH = 1.0
 WARDROBE_DEPTH = 0.55
 WARDROBE_HEIGHT = 2.0
@@ -136,14 +137,18 @@ def plan_bedroom_basic(params: dict | None = None) -> dict[str, Any]:
         if w_side == "south" and win_south is None:
             win_south = (w_off, w_w)
 
-    # --- Bed: south wall, long side along X, head against south ---
-    bed_len = min(BED_LENGTH, room_w - 2 * MARGIN)
-    bed_wid = min(BED_WIDTH, max(0.9, room_d * 0.35))
+    # --- Bed: south wall, head against south ---
+    # bed_basic axes are fixed: length=X, width=Y. With head_side=y_min/y_max,
+    # sleeping is along Y → X = mattress width, Y = mattress length (120×200 → 1.2×2.0).
+    mattress_w = max(0.8, _f(params.get("bed_width"), BED_MATTRESS_WIDTH))
+    mattress_l = max(1.6, _f(params.get("bed_length"), BED_MATTRESS_LENGTH))
+    axis_x = min(mattress_w, room_w - 2 * MARGIN)  # along wall (side-to-side)
+    axis_y = min(mattress_l, room_d - 2 * MARGIN)  # into room (head-to-foot)
     bed_x = MARGIN
     if win_south is not None:
         # Prefer west of south window when it fits
         w_off, w_w = win_south
-        if bed_len + MARGIN <= w_off - 0.05:
+        if axis_x + MARGIN <= w_off - 0.05:
             bed_x = MARGIN
         else:
             bed_x = MARGIN  # still west; window soft access may warn
@@ -155,17 +160,18 @@ def plan_bedroom_basic(params: dict | None = None) -> dict[str, Any]:
             "params": {
                 "name": "BED",
                 "location": [round(bed_x, 3), round(bed_y, 3), 0],
-                "length": round(bed_len, 3),
-                "width": round(bed_wid, 3),
+                "length": round(axis_x, 3),
+                "width": round(axis_y, 3),
                 "head_side": "y_min",
                 "collection": collection,
             },
         }
     )
-    bed_box = (bed_x, bed_y, bed_x + bed_len, bed_y + bed_wid)
+    bed_box = (bed_x, bed_y, bed_x + axis_x, bed_y + axis_y)
 
     notes = [
-        "Bed on south wall (head_side=y_min).",
+        "Bed on south wall (head_side=y_min): mattress "
+        f"{axis_x:.2f}m wide × {axis_y:.2f}m long (sleep along +Y).",
         "Circulation kept toward east door when door is east.",
     ]
 

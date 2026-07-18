@@ -99,6 +99,11 @@ Command shape (critical):
   {"action":"delete_collection_objects","collection":"layoutlab_room"}
 - run_generator MUST put placement in params (location, head_side, …) — flat keys alone are fragile.
 
+Bed size (critical):
+- Human "120×200" = mattress width × length. With head on south/north (y_min/y_max):
+  length=1.2 (along wall), width=2.0 (into room). Never put 2.0 along the wall for a single bed.
+- Prefer plan_layout with bed_width / bed_length for size changes.
+
 When the user asks for a better / different arrangement:
 - Call plan_layout again and/or change recipe options; do not repeat identical coords.
 - Keep door access clear.
@@ -612,8 +617,10 @@ def _placement_fingerprint(commands: list) -> tuple:
 def _snap_bed_to_wall(params: dict, room_w: float, room_d: float, *, prefer: str | None = None):
     """Move bed footprint against a wall; set matching head_side.
 
-    bed_basic footprint: length along X, width along Y (independent of head_side).
-    For south/north walls, prefer the longer dimension along X (parallel to wall).
+    bed_basic axes are fixed: length=X, width=Y. Orientation:
+    - head on south/north (y_*): sleep along Y → X = mattress width, Y = mattress length
+      (normal 120×200 → length=1.2, width=2.0 — NOT 2.0 along the wall).
+    - head on east/west (x_*): sleep along X → length = mattress length, width = mattress width.
     Returns (location, head_side, dim_updates_or_None).
     """
     try:
@@ -641,8 +648,13 @@ def _snap_bed_to_wall(params: dict, room_w: float, room_d: float, *, prefer: str
     if prefer is None and min(gap.values()) > 0.25:
         side = "y_min"
 
+    # Ensure sleep axis is the longer mattress dimension when dims look swapped.
     swapped = False
-    if side in ("y_min", "y_max") and width > length:
+    if side in ("y_min", "y_max") and length > width:
+        # Sleep should be along Y (width param); side-to-side along X (length param).
+        length, width = width, length
+        swapped = True
+    elif side in ("x_min", "x_max") and width > length:
         length, width = width, length
         swapped = True
 

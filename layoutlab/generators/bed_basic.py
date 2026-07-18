@@ -469,6 +469,8 @@ def generate(params, api):
 
     pillow_count = 2 if width >= PILLOW_COUNT_WIDTH_THRESHOLD else 1
     if head_side in ("y_max", "y_min"):
+        # Side-to-side is X (length); sleep along Y (width).
+        pillow_count = 2 if length >= PILLOW_COUNT_WIDTH_THRESHOLD else 1
         pillow_span = bed.mattress_l
         pillow_depth = min(0.18, bed.mattress_w * 0.35)
         pillow_len = max((pillow_span - PILLOW_GAP * (pillow_count + 1)) / pillow_count, 0.08)

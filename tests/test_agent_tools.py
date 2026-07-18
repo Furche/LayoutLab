@@ -418,8 +418,8 @@ class TestAgentTools(unittest.TestCase):
         fixed = ag._apply_deterministic_placement_fixes("schlafzimmer", result)
         bed = next(c for c in fixed["commands"] if c.get("generator") == "bed_basic")
         desk = next(c for c in fixed["commands"] if c.get("generator") == "desk_basic")
-        # Bed should be oriented long side along wall
-        self.assertGreaterEqual(float(bed["params"]["length"]), float(bed["params"]["width"]))
+        # South-wall bed: sleep along Y → width (Y) is mattress length, length (X) is mattress width
+        self.assertGreaterEqual(float(bed["params"]["width"]), float(bed["params"]["length"]))
         bed_box = ag._gen_xy_aabb("bed_basic", bed["params"])
         desk_box = ag._gen_xy_aabb("desk_basic", desk["params"])
         self.assertFalse(ag._aabb_overlap_tuple(bed_box, desk_box), (bed_box, desk_box))

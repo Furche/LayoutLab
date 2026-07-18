@@ -842,6 +842,14 @@ def openai_tool_definitions():
                         },
                         "include_desk": {"type": "boolean"},
                         "include_wardrobe": {"type": "boolean"},
+                        "bed_width": {
+                            "type": "number",
+                            "description": "Mattress side-to-side in meters (e.g. 1.2 for 120 cm)",
+                        },
+                        "bed_length": {
+                            "type": "number",
+                            "description": "Mattress head-to-foot in meters (e.g. 2.0 for 200 cm)",
+                        },
                         "collection": {"type": "string"},
                     },
                 },

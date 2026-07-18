@@ -89,7 +89,7 @@ Free-form `run_generator` placement remains allowed for **custom** user instruct
 
 For a rectangular room with east door + south window (defaults):
 
-1. **Bed** against south wall, long side along wall, `head_side=y_min`, on free south span (prefer west of the south window when present).
+1. **Bed** against south wall, `head_side=y_min`. Human 120×200 → `length=1.2` (X, along wall) and `width=2.0` (Y, into room) — sleep along +Y, not a 2 m-wide short bed.
 2. **Wardrobe** on **north** wall (`front_side=y_min` — `wardrobe_basic` only supports Y fronts), toward west, clear of east door.
 3. **Desk** on north wall east of wardrobe (or west of door strip) — chair clearance (−Y) into free floor; **never** overlapping bed AABB; keep east door access clear.
 4. Always emit `delete_collection_objects` + `create_room` + openings before furniture.

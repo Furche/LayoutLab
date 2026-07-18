@@ -73,6 +73,9 @@ class TestBedroomBasicRecipe(unittest.TestCase):
         )
         self.assertEqual(bed["params"]["head_side"], "y_min")
         self.assertLess(float(bed["params"]["location"][1]), 0.2)
+        # 120×200 human: along wall 1.2 (length/X), into room 2.0 (width/Y)
+        self.assertAlmostEqual(float(bed["params"]["length"]), 1.2, places=2)
+        self.assertAlmostEqual(float(bed["params"]["width"]), 2.0, places=2)
 
     def test_bedroom_basic_dry_run_no_hard_errors_4x4(self):
         from layoutlab.runtime.session import RoomSession

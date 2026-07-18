@@ -70,12 +70,19 @@ Aligns with `docs/units_and_coordinates.md`:
 
 | Parameter | Axis | Meaning |
 |---|---|---|
-| `length` | X | Head-to-foot extent |
-| `width` | Y | Side-to-side extent |
+| `length` | X | Footprint extent along **X** (always) |
+| `width` | Y | Footprint extent along **Y** (always) |
 | `location` | XYZ | Min corner of footprint at floor (Z = floor) |
 | `head_side` | — | Which edge has the headboard |
 
-Sleeping direction is along **Y** when `head_side` is `y_max` or `y_min`.
+**Mattress orientation (important):** `length`/`width` are **axis extents**, not “bed length/width” in furniture language.
+
+| `head_side` | Sleep direction | Side-to-side (human “Breite”) | Head-to-foot (human “Länge”) |
+|---|---|---|---|
+| `y_min` / `y_max` | along **Y** | `length` (X) | `width` (Y) |
+| `x_min` / `x_max` | along **X** | `width` (Y) | `length` (X) |
+
+Example: a normal **120×200** bed with head on the south wall → `head_side=y_min`, `length=1.2`, `width=2.0`.
 
 ------------------------------------------------------------------------
 
@@ -85,8 +92,8 @@ Sleeping direction is along **Y** when `head_side` is `y_max` or `y_min`.
 |---|---|---|
 | `name` | `"BED_basic"` | Prefix for all Blender object names |
 | `location` | `[0, 0, 0]` | Footprint min corner at floor |
-| `length` | `20` | X extent; clamped to min `3` |
-| `width` | `12` | Y extent; clamped to min `3` |
+| `length` | `2.0` | X extent (meters); min `0.3` |
+| `width` | `1.2` | Y extent (meters); min `0.3` |
 | `collection` | `"layout_tests"` | Blender collection |
 | `head_side` | `"y_max"` | `y_max`, `y_min`, `x_max`, `x_min` |
 | `leg_height` | `2.5` | Post height **below** the frame loop (posts still extend through frame band to `frame_top`) |
