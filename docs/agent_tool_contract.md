@@ -118,8 +118,11 @@ Enables Plan → Dry-Run → See sketch → Analyze → Revise without committin
 
 **Returns:** top-down spatial abstraction for the current (or dry-run) scene:
 
-- `ascii` — compact map (`#` wall, `D` door, `W` window, letters = furniture)
+- `ascii` — compact map (`#` wall, `D` door, `W` window, letters = furniture,
+  `+` preferred clearance, `*` required clearance, `.` free floor)
 - `rooms[].openings` / `rooms[].furniture[].bounds_xy` (+ `head_side` when known)
+- `rooms[].clearances[]` with `clearance_name`, `requirement`, `bounds_xy` (default on;
+  set `include_clearances: false` to omit)
 - `legend`, orientation notes (top = north / +Y)
 
 Not pixels and not the 3D viewport — intentional cheap “eyes” for the LLM.

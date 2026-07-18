@@ -35,6 +35,25 @@ class TestLayoutSketch(unittest.TestCase):
         self.assertIn("bed_basic", gens)
         self.assertTrue(out["legend"])
 
+    def test_sketch_includes_clearance_zones(self):
+        out = self.dispatch(self.session, "get_layout_sketch", {})
+        self.assertTrue(out.get("include_clearances", True))
+        room = out["rooms"][0]
+        self.assertGreater(room.get("clearance_count", 0), 0)
+        self.assertTrue(room["clearances"])
+        ascii_map = out["ascii"]
+        self.assertTrue("+" in ascii_map or "*" in ascii_map, ascii_map)
+        self.assertIn("+", out["legend"])
+
+    def test_sketch_can_omit_clearances(self):
+        out = self.dispatch(
+            self.session, "get_layout_sketch", {"include_clearances": False}
+        )
+        self.assertFalse(out["include_clearances"])
+        self.assertNotIn("clearances", out["rooms"][0])
+        self.assertNotIn("+", out["ascii"])
+        self.assertNotIn("*", out["ascii"])
+
     def test_dry_run_includes_layout_sketch(self):
         out = self.dispatch(
             self.session,

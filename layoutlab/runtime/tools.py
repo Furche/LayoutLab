@@ -751,14 +751,20 @@ def openai_tool_definitions():
             "function": {
                 "name": "get_layout_sketch",
                 "description": (
-                    "Top-down XY layout sketch (ASCII map + furniture bounds_xy + openings). "
-                    "Not the 3D viewport — use to spatially check placement. "
+                    "Top-down XY layout sketch (ASCII map + furniture bounds_xy + "
+                    "openings + clearance zones). "
+                    "+ = preferred clearance, * = required clearance. "
+                    "Not the 3D viewport — use to check placement and free usage space. "
                     "Also returned inside dry_run_commands as layout_sketch."
                 ),
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "collection": {"type": "string"},
+                        "include_clearances": {
+                            "type": "boolean",
+                            "description": "Default true — paint +/* clearance zones",
+                        },
                     },
                 },
             },

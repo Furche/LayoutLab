@@ -1,6 +1,7 @@
 """Top-down layout sketch for the agent (text + structured XY) — no meshes / no bpy.
 
-Gives the LLM a spatial abstraction of the room: walls, openings, furniture AABBs.
+Gives the LLM a spatial abstraction of the room: walls, openings, furniture AABBs,
+and clearance usage zones.
 """
 
 from __future__ import annotations
@@ -46,6 +47,17 @@ def _furniture_groups(session, collection: str | None):
     return groups
 
 
+def _iter_clearances(session, collection: str | None):
+    for obj in session.mesh_store.objects:
+        if collection and obj.collection != collection:
+            continue
+        cname = obj.get("layoutlab_clearance_name")
+        role = obj.get("layoutlab_role") or ""
+        if not cname and role != "clearance":
+            continue
+        yield obj
+
+
 def _group_bounds_xy(objs):
     mins_x, mins_y, maxs_x, maxs_y = [], [], [], []
     for obj in objs:
@@ -74,7 +86,6 @@ def _pick_label(name: str, generator: str, used: set) -> str:
         if ch not in used:
             used.add(ch)
             return ch
-    # Fallback digit-ish
     for i in range(10):
         ch = str(i)
         if ch not in used:
@@ -117,7 +128,10 @@ def _opening_cells(wall_side: str, offset, width, cols: int, rows: int, room_w: 
     return cells
 
 
-def _fill_rect(grid, bounds, label, ox, oy, room_w, room_d, cols, rows):
+def _fill_rect(grid, bounds, label, ox, oy, room_w, room_d, cols, rows, *, overwrite=None):
+    """Paint AABB onto grid. ``overwrite`` = cells that may be replaced."""
+    if overwrite is None:
+        overwrite = (".", "#")
     mn, mx = bounds["min"], bounds["max"]
     x0 = (float(mn[0]) - ox) / room_w
     x1 = (float(mx[0]) - ox) / room_w
@@ -125,12 +139,11 @@ def _fill_rect(grid, bounds, label, ox, oy, room_w, room_d, cols, rows):
     y1 = (float(mx[1]) - oy) / room_d
     c0 = int(max(0, min(cols - 1, x0 * (cols - 1))))
     c1 = int(max(0, min(cols - 1, x1 * (cols - 1))))
-    # ascii row 0 = north (y_max)
     r_south = int(max(0, min(rows - 1, (1.0 - y0) * (rows - 1))))
     r_north = int(max(0, min(rows - 1, (1.0 - y1) * (rows - 1))))
     for r in range(min(r_north, r_south), max(r_north, r_south) + 1):
         for c in range(min(c0, c1), max(c0, c1) + 1):
-            if grid[r][c] in (".", "#"):
+            if grid[r][c] in overwrite:
                 grid[r][c] = label
 
 
@@ -138,7 +151,8 @@ def build_layout_sketch(session, params=None) -> dict:
     """Return structured XY + ASCII top-down for rooms in the session."""
     params = params or {}
     collection = params.get("collection")
-    include_clearances = bool(params.get("include_clearances", False))
+    # Clearance zones on by default — agent needs usage space, not only solids.
+    include_clearances = bool(params.get("include_clearances", True))
 
     rooms_out = []
     ascii_blocks = []
@@ -159,7 +173,6 @@ def build_layout_sketch(session, params=None) -> dict:
         if room_w <= 0 or room_d <= 0:
             continue
 
-        # Grid aspect roughly matches room
         if room_w >= room_d:
             cols = _MAX_COLS
             rows = max(8, int(round(_MAX_COLS * room_d / room_w)))
@@ -170,13 +183,51 @@ def build_layout_sketch(session, params=None) -> dict:
             cols = min(cols, _MAX_COLS)
 
         grid = [["." for _ in range(cols)] for _ in range(rows)]
-        # Border walls
         for c in range(cols):
             grid[0][c] = "#"
             grid[rows - 1][c] = "#"
         for r in range(rows):
             grid[r][0] = "#"
             grid[r][cols - 1] = "#"
+
+        clearances_out = []
+        if include_clearances:
+            legend["+"] = "preferred clearance (usage zone)"
+            legend["*"] = "required clearance (must stay clear)"
+            # Preferred first, then required overwrites preferred where both exist.
+            preferred = []
+            required = []
+            for obj in _iter_clearances(session, coll):
+                req = str(obj.get("layoutlab_clearance_requirement") or "preferred").lower()
+                (required if req == "required" else preferred).append(obj)
+            for obj in preferred + required:
+                req = str(obj.get("layoutlab_clearance_requirement") or "preferred").lower()
+                mark = "*" if req == "required" else "+"
+                bounds = _group_bounds_xy([obj])
+                cname = obj.get("layoutlab_clearance_name") or "clearance"
+                clearances_out.append(
+                    {
+                        "name": obj.name,
+                        "clearance_name": cname,
+                        "requirement": req,
+                        "mark": mark,
+                        "object_id": obj.get("layoutlab_object_id") or "",
+                        "bounds_xy": bounds,
+                    }
+                )
+                overwrite = (".",) if mark == "+" else (".", "+")
+                _fill_rect(
+                    grid,
+                    bounds,
+                    mark,
+                    ox,
+                    oy,
+                    room_w,
+                    room_d,
+                    cols,
+                    rows,
+                    overwrite=overwrite,
+                )
 
         openings_out = []
         for op in model.get("openings") or []:
@@ -192,16 +243,13 @@ def build_layout_sketch(session, params=None) -> dict:
                     "width": _round2(op.get("width") or 0),
                 }
             )
-            for r, c in _opening_cells(side, op.get("offset"), op.get("width"), cols, rows, room_w, room_d):
-                grid[r][c] = mark
 
-        used_labels = {"D", "W", "O", "#"}
+        used_labels = {"D", "W", "O", "#", "+", "*"}
         furniture_out = []
         groups = _furniture_groups(session, coll)
         for oid, objs in groups.items():
             gen = objs[0].get("layoutlab_generator") or ""
             name = objs[0].get("layoutlab_name") or objs[0].name
-            # Prefer short furniture prefix (before _part)
             for o in objs:
                 if o.get("layoutlab_role") in ("body", "main") or o.name.endswith("_body"):
                     name = o.name.rsplit("_", 1)[0] if "_" in o.name else o.name
@@ -232,11 +280,33 @@ def build_layout_sketch(session, params=None) -> dict:
                 entry["head_side"] = head_side
             furniture_out.append(entry)
             legend[label] = f"{name} ({gen})" if gen else str(name)
-            _fill_rect(grid, bounds, label, ox, oy, room_w, room_d, cols, rows)
+            _fill_rect(
+                grid,
+                bounds,
+                label,
+                ox,
+                oy,
+                room_w,
+                room_d,
+                cols,
+                rows,
+                overwrite=(".", "+", "*", "#"),
+            )
 
-        if include_clearances:
-            # Optional: mark preferred clearances lightly — skip for default agent view
-            pass
+        # Openings last so D/W stay visible on the wall edge.
+        for op in model.get("openings") or []:
+            kind = str(op.get("kind") or "").lower()
+            mark = "D" if kind == "door" else "W" if kind == "window" else "O"
+            for r, c in _opening_cells(
+                op.get("wall_side") or "",
+                op.get("offset"),
+                op.get("width"),
+                cols,
+                rows,
+                room_w,
+                room_d,
+            ):
+                grid[r][c] = mark
 
         ascii_map = "\n".join("".join(row) for row in grid)
         header = (
@@ -245,42 +315,50 @@ def build_layout_sketch(session, params=None) -> dict:
         )
         ascii_blocks.append(header + "\n" + ascii_map)
 
-        rooms_out.append(
-            {
-                "name": model.get("name"),
-                "room_id": model.get("room_id"),
-                "collection": coll,
-                "origin_xy": [_round2(ox), _round2(oy)],
-                "width": _round2(room_w),
-                "depth": _round2(room_d),
-                "openings": openings_out,
-                "furniture": furniture_out,
-            }
+        room_entry = {
+            "name": model.get("name"),
+            "room_id": model.get("room_id"),
+            "collection": coll,
+            "origin_xy": [_round2(ox), _round2(oy)],
+            "width": _round2(room_w),
+            "depth": _round2(room_d),
+            "openings": openings_out,
+            "furniture": furniture_out,
+        }
+        if include_clearances:
+            room_entry["clearances"] = clearances_out
+            room_entry["clearance_count"] = len(clearances_out)
+        rooms_out.append(room_entry)
+
+    notes = [
+        "Top-down XY abstraction (not the 3D viewport).",
+        "#=wall  D=door  W=window  .=free floor  letters=furniture (see legend)",
+        "ascii top = north (+Y), right = east (+X)",
+        "Use bounds_xy / openings / clearances to revise placement; head_side when present.",
+    ]
+    if include_clearances:
+        notes.insert(
+            2,
+            "+=preferred clearance  *=required clearance — keep * clear; avoid packing into +",
         )
 
     if not rooms_out:
         return {
             "ok": True,
             "unit": "METRIC",
+            "include_clearances": include_clearances,
             "rooms": [],
             "ascii": "(empty scene — no rooms)",
             "legend": {},
-            "notes": [
-                "Top-down XY only. No pixels/viewport.",
-                "Call after dry_run_commands to see the proposed layout.",
-            ],
+            "notes": notes + ["Call after dry_run_commands to see the proposed layout."],
         }
 
     return {
         "ok": True,
         "unit": "METRIC",
+        "include_clearances": include_clearances,
         "rooms": rooms_out,
         "ascii": "\n\n".join(ascii_blocks),
         "legend": legend,
-        "notes": [
-            "Top-down XY abstraction (not the 3D viewport).",
-            "#=wall  D=door  W=window  .=floor  letters=furniture (see legend)",
-            "ascii top = north (+Y), right = east (+X)",
-            "Use bounds_xy / openings to revise placement; head_side when present.",
-        ],
+        "notes": notes,
     }
