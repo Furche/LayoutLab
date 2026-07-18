@@ -196,6 +196,11 @@ class TestObservationQueries(unittest.TestCase):
         self.assertEqual(out["mode"], "observe")
         self.assertEqual(out["commands"], [])
         self.assertIn("BEDROOM", out["reply"])
+        tools = [t.get("tool") for t in out.get("tool_trace") or []]
+        self.assertIn("get_analysis", tools)
+        self.assertIn("get_layout_sketch", tools)
+        self.assertTrue(out.get("quality"))
+        self.assertIn("Top-down", out["reply"])
 
 
 if __name__ == "__main__":

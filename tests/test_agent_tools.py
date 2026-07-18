@@ -381,5 +381,56 @@ class TestAgentTools(unittest.TestCase):
         ag._LAST_PLACEMENT_FP = None
 
 
+    def test_desk_bed_overlap_separated(self):
+        from layoutlab.runtime import agent as ag
+
+        result = {
+            "reply": "ok",
+            "commands": [
+                {"action": "create_room", "params": {"width": 4.0, "depth": 3.5}},
+                {
+                    "action": "run_generator",
+                    "generator": "bed_basic",
+                    "params": {
+                        "name": "BED",
+                        "location": [1.4, 0.08, 0],
+                        "length": 1.2,
+                        "width": 2.0,
+                        "head_side": "y_min",
+                        "collection": "layoutlab_room",
+                    },
+                },
+                {
+                    "action": "run_generator",
+                    "generator": "desk_basic",
+                    "params": {
+                        "name": "DESK",
+                        "location": [1.4, 0.5, 0],
+                        "width": 1.5,
+                        "depth": 0.7,
+                        "collection": "layoutlab_room",
+                    },
+                },
+            ],
+            "proposal": {"commands": []},
+        }
+        result["proposal"]["commands"] = result["commands"]
+        fixed = ag._apply_deterministic_placement_fixes("schlafzimmer", result)
+        bed = next(c for c in fixed["commands"] if c.get("generator") == "bed_basic")
+        desk = next(c for c in fixed["commands"] if c.get("generator") == "desk_basic")
+        # Bed should be oriented long side along wall
+        self.assertGreaterEqual(float(bed["params"]["length"]), float(bed["params"]["width"]))
+        bed_box = ag._gen_xy_aabb("bed_basic", bed["params"])
+        desk_box = ag._gen_xy_aabb("desk_basic", desk["params"])
+        self.assertFalse(ag._aabb_overlap_tuple(bed_box, desk_box), (bed_box, desk_box))
+
+    def test_observation_detects_problems_phrase(self):
+        from layoutlab.runtime import agent as ag
+
+        self.assertTrue(ag._is_observation_query("siehst du was eventuell problematisch sein könnte?"))
+        self.assertTrue(ag._is_observation_query("siehst du auch, dass der tisch im bett drin steht?"))
+        self.assertFalse(ag._is_observation_query("kannst du mir ein layout bauen welches physikalisch möglich ist"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -97,7 +97,19 @@ def _slim_commands(commands, limit=40):
             entry["generator"] = cmd.get("generator")
         params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
         # Keep placement-relevant crumbs only
-        for key in ("name", "room", "kind", "wall_side", "location", "width", "depth", "length", "collection"):
+        for key in (
+            "name",
+            "room",
+            "kind",
+            "wall_side",
+            "location",
+            "width",
+            "depth",
+            "length",
+            "head_side",
+            "front_side",
+            "collection",
+        ):
             if key in params:
                 entry[key] = params[key]
             elif key in cmd and key not in ("action", "generator", "params"):

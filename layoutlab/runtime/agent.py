@@ -129,6 +129,15 @@ SOFT_REPLAN_HINT = (
     "questions must be []. No markdown, no tools."
 )
 
+HARD_REPLAN_HINT = (
+    "Your previous proposal still has HARD layout errors from dry_run "
+    "(zone_must_be_clear / blocked required clearances / overlapping furniture). "
+    "Return ONLY a new JSON proposal that is physically valid: "
+    "no furniture AABB overlap, required clearances free, bed against a wall with head_side, "
+    "desk not inside the bed, wardrobe not blocking the door. "
+    "Change locations for real. questions must be []. No markdown, no tools."
+)
+
 IMPROVE_LAYOUT_HINT = (
     "The user asked for a BETTER / different placement. Your previous locations are not good enough. "
     "Return ONLY a new JSON proposal with REAL geometry changes: move the bed against a wall "
@@ -256,6 +265,9 @@ def _is_observation_query(message: str) -> bool:
         "create",
         "delete",
         "move ",
+        "neu plan",
+        "neuplan",
+        "umplan",
     )
     if any(k in t for k in mutate):
         return False
@@ -270,15 +282,48 @@ def _is_observation_query(message: str) -> bool:
         r"\bwhat('?s| is)\b.*\b(scene|room)\b",
         r"\bwelche m[oö]bel\b",
         r"\bwas siehst du\b",
+        r"\bproblematisch\b",
+        r"\bproblem\b",
+        r"\bkollision\b",
+        r"\büberlapp",
+        r"\buberlapp",
+        r"\bim bett\b",
+        r"\bfalsch\b",
+        r"\bstimmt (das|etwas|was)\b",
     )
     return any(re.search(p, t) for p in patterns)
 
 
 def _observation_reply(session) -> dict:
     summary = dispatch_tool(session, "get_scene_summary", {})
+    analysis = dispatch_tool(session, "get_analysis", {"scope": "scene"})
+    sketch = dispatch_tool(session, "get_layout_sketch", {})
     rooms = summary.get("rooms") or []
     gens = summary.get("generators_present") or []
     counts = summary.get("object_counts") or {}
+    findings = analysis.get("findings") or []
+    hard = [
+        f
+        for f in findings
+        if f.get("severity") == "error" or f.get("non_negotiable")
+    ]
+    soft = [
+        f
+        for f in findings
+        if f.get("severity") == "warning"
+        and f.get("constraint_type") in ("soft_packing", "opening_access", "zone_must_be_clear")
+    ]
+    # Prefer listing zone blocks even if severity varies
+    zone_hits = [
+        f for f in findings if f.get("constraint_type") == "zone_must_be_clear"
+    ]
+
+    tool_trace = [
+        {"tool": "get_scene_summary", "arguments": {}, "ok": True, "seed": False},
+        {"tool": "get_analysis", "arguments": {"scope": "scene"}, "ok": True, "seed": False},
+        {"tool": "get_layout_sketch", "arguments": {}, "ok": True, "seed": False},
+    ]
+
     if not rooms:
         reply = "Die aktuelle Scene ist leer — kein Raum im Core."
     else:
@@ -289,12 +334,51 @@ def _observation_reply(session) -> dict:
                 f"{r.get('opening_count', 0)} Öffnungen)"
             )
         furn = ", ".join(gens) if gens else "keine Generator-Möbel"
-        reply = (
-            "Ja — ich sehe die aktuelle Core-Scene: "
-            + "; ".join(room_bits)
-            + f". Möbel/Generatoren: {furn}. "
-            f"Counts: furniture={counts.get('furniture', 0)}, walls={counts.get('walls', 0)}."
-        )
+        lines = [
+            "Ja — ich prüfe die aktuelle Core-Scene (Summary + Analysis + Top-Down-Sketch):",
+            "; ".join(room_bits) + f". Möbel: {furn}.",
+            f"Counts: furniture={counts.get('furniture', 0)}, walls={counts.get('walls', 0)}.",
+        ]
+        if hard or zone_hits:
+            lines.append("Probleme:")
+            for f in (hard or zone_hits)[:8]:
+                lines.append(
+                    f"- [{f.get('severity')}] {f.get('constraint_type')}: {f.get('message')}"
+                )
+        elif soft:
+            lines.append("Auffälligkeiten (soft/warn):")
+            for f in soft[:6]:
+                lines.append(f"- {f.get('constraint_type')}: {f.get('message')}")
+        else:
+            lines.append("Keine harten Analysis-Fehler; Soft-Warnings: keine oder gering.")
+
+        ascii_map = sketch.get("ascii") or ""
+        if ascii_map and ascii_map != "(empty scene — no rooms)":
+            lines.append("Top-down sketch (# Wand, D Tür, W Fenster, Buchstaben=Möbel, +/* Clearance):")
+            lines.append(ascii_map)
+            # Heuristic overlap callout from sketch letters colliding is hard;
+            # mention if bed+desk bounds overlap from sketch furniture list.
+            overlap_note = _observation_overlap_note(sketch)
+            if overlap_note:
+                lines.append(overlap_note)
+
+        reply = "\n".join(lines)
+
+    quality = {
+        "ok": not hard,
+        "has_hard_errors": len(hard) > 0 or any(
+            f.get("severity") == "error" for f in zone_hits
+        ),
+        "has_soft_warnings": len(soft) > 0,
+        "summary": analysis.get("summary"),
+        "soft_summary": analysis.get("soft_summary"),
+        "finding_types": sorted(
+            {f.get("constraint_type") for f in findings if f.get("constraint_type")}
+        ),
+        "layout_sketch_ascii": sketch.get("ascii"),
+        "layout_sketch_legend": sketch.get("legend") or {},
+    }
+
     return {
         "ok": True,
         "mode": "observe",
@@ -310,9 +394,44 @@ def _observation_reply(session) -> dict:
         },
         "suggested_next_tools": [],
         "commands": [],
-        "tool_trace": [{"tool": "get_scene_summary", "arguments": {}, "ok": True, "seed": False}],
+        "tool_trace": tool_trace,
         "scene_summary": summary,
+        "quality": quality,
     }
+
+
+def _observation_overlap_note(sketch: dict) -> str:
+    rooms = sketch.get("rooms") or []
+    if not rooms:
+        return ""
+    furn = rooms[0].get("furniture") or []
+    by_gen = {}
+    for f in furn:
+        gen = f.get("generator") or ""
+        b = f.get("bounds_xy") or {}
+        if b.get("min") and b.get("max"):
+            by_gen.setdefault(gen, []).append(b)
+    bed = (by_gen.get("bed_basic") or [None])[0]
+    desk = (by_gen.get("desk_basic") or [None])[0]
+    if not bed or not desk:
+        return ""
+    if _bounds_xy_overlap(bed, desk):
+        return (
+            "Hinweis aus Sketch-Bounds: Schreibtisch und Bett überlappen sich "
+            "(Tisch steht im Bett-Bereich)."
+        )
+    return ""
+
+
+def _bounds_xy_overlap(a: dict, b: dict) -> bool:
+    amin, amax = a.get("min") or [0, 0], a.get("max") or [0, 0]
+    bmin, bmax = b.get("min") or [0, 0], b.get("max") or [0, 0]
+    return not (
+        float(amax[0]) <= float(bmin[0])
+        or float(bmax[0]) <= float(amin[0])
+        or float(amax[1]) <= float(bmin[1])
+        or float(bmax[1]) <= float(amin[1])
+    )
 
 
 def _proposal_missing_requested(conversation: str, commands: list) -> list:
@@ -505,6 +624,8 @@ def _snap_bed_to_wall(params: dict, room_w: float, room_d: float, *, prefer: str
     """Move bed footprint against a wall; set matching head_side.
 
     bed_basic footprint: length along X, width along Y (independent of head_side).
+    For south/north walls, prefer the longer dimension along X (parallel to wall).
+    Returns (location, head_side, dim_updates_or_None).
     """
     try:
         length = float(params.get("length") or 2.0)
@@ -531,6 +652,11 @@ def _snap_bed_to_wall(params: dict, room_w: float, room_d: float, *, prefer: str
     if prefer is None and min(gap.values()) > 0.25:
         side = "y_min"
 
+    swapped = False
+    if side in ("y_min", "y_max") and width > length:
+        length, width = width, length
+        swapped = True
+
     if side == "y_min":
         x = max(margin, min(room_w - length - margin, (room_w - length) / 2))
         y = margin
@@ -547,7 +673,112 @@ def _snap_bed_to_wall(params: dict, room_w: float, room_d: float, *, prefer: str
         x = max(margin, room_w - length - margin)
         y = max(margin, min(room_d - width - margin, (room_d - width) / 2))
         head = "x_max"
-    return [round(x, 3), round(y, 3), round(z, 3)], head
+    dims = {"length": round(length, 3), "width": round(width, 3)} if swapped else None
+    return [round(x, 3), round(y, 3), round(z, 3)], head, dims
+
+
+def _gen_xy_aabb(gen: str, params: dict):
+    loc = list(params.get("location") or [0, 0, 0])
+    try:
+        x, y = float(loc[0]), float(loc[1])
+    except (TypeError, ValueError, IndexError):
+        return None
+    if gen == "bed_basic":
+        try:
+            length = float(params.get("length") or 2.0)
+            width = float(params.get("width") or 1.2)
+        except (TypeError, ValueError):
+            length, width = 2.0, 1.2
+        return (x, y, x + length, y + width)
+    if gen in ("desk_basic", "wardrobe_basic"):
+        try:
+            w = float(params.get("width") or 1.0)
+            d = float(params.get("depth") or 0.6)
+        except (TypeError, ValueError):
+            w, d = 1.0, 0.6
+        return (x, y, x + w, y + d)
+    return None
+
+
+def _aabb_overlap_tuple(a, b) -> bool:
+    if not a or not b:
+        return False
+    return not (a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1])
+
+
+def _separate_furniture_overlaps(commands: list, room_w: float, room_d: float) -> bool:
+    """Push desk/wardrobe out of bed footprint if AABBs overlap."""
+    items = []
+    for cmd in commands:
+        if cmd.get("action") != "run_generator":
+            continue
+        gen = cmd.get("generator")
+        params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
+        if not params or not gen:
+            continue
+        box = _gen_xy_aabb(gen, params)
+        if box:
+            items.append((cmd, gen, params, box))
+
+    changed = False
+    beds = [it for it in items if it[1] == "bed_basic"]
+    desks = [it for it in items if it[1] == "desk_basic"]
+    wards = [it for it in items if it[1] == "wardrobe_basic"]
+    margin = 0.12
+
+    for cmd, _gen, params, box in desks:
+        for _bcmd, _bgen, bparams, bbox in beds:
+            if not _aabb_overlap_tuple(box, bbox):
+                continue
+            bw = float(bparams.get("length") or 2.0)
+            bh = float(bparams.get("width") or 1.2)
+            bloc = bparams.get("location") or [0, 0, 0]
+            bx, by = float(bloc[0]), float(bloc[1])
+            dw = float(params.get("width") or 1.2)
+            dd = float(params.get("depth") or 0.6)
+            candidates = [
+                [bx + bw + margin, by, 0.0],
+                [bx, by + bh + margin, 0.0],
+                [max(0.08, bx - dw - margin), by, 0.0],
+            ]
+            new_loc = None
+            for cand in candidates:
+                if cand[0] < 0.05 or cand[1] < 0.05:
+                    continue
+                if cand[0] + dw > room_w - 0.05 or cand[1] + dd > room_d - 0.05:
+                    continue
+                test = (cand[0], cand[1], cand[0] + dw, cand[1] + dd)
+                if not _aabb_overlap_tuple(test, bbox):
+                    new_loc = [round(cand[0], 3), round(cand[1], 3), 0.0]
+                    break
+            if new_loc is None:
+                new_loc = [0.15, round(max(0.15, room_d - dd - 0.15), 3), 0.0]
+            params = dict(params)
+            params["location"] = new_loc
+            cmd["params"] = params
+            box = _gen_xy_aabb("desk_basic", params)
+            changed = True
+
+    for cmd, _gen, params, box in wards:
+        for _bcmd, _bgen, bparams, bbox in beds:
+            if not _aabb_overlap_tuple(box, bbox):
+                continue
+            depth = float(params.get("depth") or 0.6)
+            width = float(params.get("width") or 1.0)
+            bloc = bparams.get("location") or [0, 1, 0]
+            params = dict(params)
+            params["location"] = [
+                round(0.08 + depth / 2, 3),
+                round(
+                    max(0.15, min(float(bloc[1]), room_d - width - 0.15)),
+                    3,
+                ),
+                0.0,
+            ]
+            params["front_side"] = "x_max"
+            cmd["params"] = params
+            changed = True
+    return changed
 
 
 def _apply_improved_bedroom_layout(commands: list, room_w: float, room_d: float) -> bool:
@@ -562,10 +793,12 @@ def _apply_improved_bedroom_layout(commands: list, room_w: float, room_d: float)
         params = dict(cmd.get("params") or {})
         if gen == "bed_basic":
             # Alternate: north wall
-            loc, head = _snap_bed_to_wall(params, room_w, room_d, prefer="y_max")
-            if params.get("location") != loc or params.get("head_side") != head:
+            loc, head, dims = _snap_bed_to_wall(params, room_w, room_d, prefer="y_max")
+            if params.get("location") != loc or params.get("head_side") != head or dims:
                 params["location"] = loc
                 params["head_side"] = head
+                if dims:
+                    params.update(dims)
                 cmd["params"] = params
                 changed = True
         elif gen == "wardrobe_basic":
@@ -585,13 +818,14 @@ def _apply_improved_bedroom_layout(commands: list, room_w: float, room_d: float)
         elif gen == "desk_basic":
             depth = float(params.get("depth") or 0.6)
             width = float(params.get("width") or 1.2)
-            # South / window side but west of the door clearance strip
-            max_x = room_w - width - (1.1 if east_door else margin)
+            # West / north of south window strip — not on top of a south-wall bed
             loc = [
-                round(max(margin, min(max_x, 0.35)), 3),
                 round(margin, 3),
+                round(margin + 1.4, 3),
                 0.0,
             ]
+            if east_door and loc[0] + width > room_w - 1.0:
+                loc[0] = round(max(margin, room_w - width - 1.1), 3)
             if params.get("location") != loc:
                 params["location"] = loc
                 cmd["params"] = params
@@ -627,11 +861,17 @@ def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dic
             prefer = "y_max" if want_better else None
             if want_head and not want_better:
                 prefer = _nearest_wall_side(params.get("location") or [0, 0, 0], room_w, room_d)
-            loc, head = _snap_bed_to_wall(params, room_w, room_d, prefer=prefer)
-            if params.get("location") != loc or params.get("head_side") != head:
+            loc, head, dims = _snap_bed_to_wall(params, room_w, room_d, prefer=prefer)
+            if (
+                params.get("location") != loc
+                or params.get("head_side") != head
+                or (dims and (params.get("length") != dims["length"] or params.get("width") != dims["width"]))
+            ):
                 params = dict(params)
                 params["location"] = loc
                 params["head_side"] = head
+                if dims:
+                    params.update(dims)
                 cmd["params"] = params
                 changed = True
                 if "Bett" not in "".join(notes):
@@ -679,6 +919,10 @@ def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dic
                 changed = True
                 notes.append("Layout-Korrektur: erzwungene Umstellung (vorher identisch).")
 
+    if _separate_furniture_overlaps(commands, room_w, room_d):
+        changed = True
+        notes.append("Layout-Korrektur: Möbel-Überlappung getrennt (z.B. Tisch aus dem Bett).")
+
     if not changed:
         return result
 
@@ -712,6 +956,45 @@ def _maybe_improve_replan(session, settings, messages, result: dict, conversatio
         return result
     repaired = _apply_deterministic_placement_fixes(conversation, repaired)
     return _attach_quality_preview(session, repaired)
+
+
+def _maybe_hard_replan(session, settings, messages, result: dict, conversation: str) -> dict:
+    """One LLM replan when dry-run still has hard clearance/overlap errors."""
+    quality = result.get("quality") if isinstance(result.get("quality"), dict) else {}
+    if not quality.get("has_hard_errors"):
+        return result
+    if quality.get("has_solid_collisions") or quality.get("blocks_apply"):
+        # Solid hits already force a note; still try one geometry replan.
+        pass
+    proposal = result.get("proposal") if isinstance(result.get("proposal"), dict) else {}
+    if proposal.get("expected_risks") and not quality.get("has_solid_collisions"):
+        return result
+    if not (result.get("commands") or []):
+        return result
+
+    types = ",".join(quality.get("finding_types") or []) or "hard errors"
+    ascii_map = quality.get("layout_sketch_ascii") or ""
+    note = HARD_REPLAN_HINT + f" Finding types: {types}."
+    if ascii_map:
+        note += "\nCurrent dry-run top-down sketch:\n" + ascii_map
+    try:
+        repaired = _finalize_proposal_from_messages(
+            settings, messages, result.get("tool_trace") or [], repair_note=note
+        )
+    except Exception:
+        return result
+    repaired = _apply_deterministic_placement_fixes(conversation, repaired)
+    repaired = _attach_quality_preview(session, repaired)
+    old_e = int((quality.get("summary") or {}).get("errors") or 0)
+    new_q = repaired.get("quality") if isinstance(repaired.get("quality"), dict) else {}
+    new_e = int((new_q.get("summary") or {}).get("errors") or 0)
+    if new_e < old_e:
+        return repaired
+    if not new_q.get("has_hard_errors") and quality.get("has_hard_errors"):
+        return repaired
+    if (repaired.get("commands") or []) != (result.get("commands") or []):
+        return repaired
+    return result
 
 
 def _maybe_soft_replan(session, settings, messages, result: dict, conversation: str) -> dict:
@@ -761,6 +1044,7 @@ def _finish_agent_result(session, settings, messages, result: dict, conversation
     result = _maybe_repair_proposal(settings, messages, result, conversation)
     result = _apply_deterministic_placement_fixes(conversation, result)
     result = _attach_quality_preview(session, result)
+    result = _maybe_hard_replan(session, settings, messages, result, conversation)
     result = _maybe_soft_replan(session, settings, messages, result, conversation)
     result = _maybe_improve_replan(session, settings, messages, result, conversation)
     _LAST_PLACEMENT_FP = _placement_fingerprint(result.get("commands") or [])
