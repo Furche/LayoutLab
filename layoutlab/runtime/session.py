@@ -360,7 +360,8 @@ class RoomSession:
             )
 
         if action == "delete_collection_objects":
-            collection = cmd.get("collection")
+            params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
+            collection = cmd.get("collection") or params.get("collection")
             if not collection:
                 raise ValueError("delete_collection_objects requires collection")
             removed_rooms = [
@@ -379,7 +380,8 @@ class RoomSession:
             }
 
         if action == "delete_prefix":
-            prefix = cmd.get("prefix")
+            params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
+            prefix = cmd.get("prefix") or params.get("prefix")
             if not prefix:
                 raise ValueError("delete_prefix requires prefix")
             n = self.mesh_store.delete_prefix(prefix)
@@ -390,6 +392,22 @@ class RoomSession:
             if not generator:
                 raise ValueError("run_generator requires generator")
             params = dict(cmd.get("params") or {})
+            # Accept flat generator keys (LLM often omits params{}).
+            for key in (
+                "name",
+                "location",
+                "width",
+                "depth",
+                "length",
+                "height",
+                "head_side",
+                "front_side",
+                "collection",
+                "show_clearance",
+                "object_id",
+            ):
+                if key in cmd and key not in params:
+                    params[key] = cmd[key]
             return execute_generator_headless(generator, params, store=self.mesh_store)
 
         if action == "analyze_layout":

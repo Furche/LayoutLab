@@ -183,6 +183,67 @@ class TestHeadlessGenerators(unittest.TestCase):
         self.assertGreaterEqual(len(export["analysis"]["findings"]), 1)
         _assert_no_bpy()
 
+    def test_delete_collection_accepts_params_collection(self):
+        session = self.RoomSession()
+        session.apply_commands(
+            [
+                {
+                    "action": "create_room",
+                    "params": {
+                        "name": "R",
+                        "width": 3,
+                        "depth": 3,
+                        "height": 2.5,
+                        "collection": "layoutlab_room",
+                    },
+                }
+            ]
+        )
+        self.assertEqual(len(session.list_rooms()), 1)
+        result = session.apply_commands(
+            [
+                {
+                    "action": "delete_collection_objects",
+                    "params": {"collection": "layoutlab_room"},
+                }
+            ]
+        )
+        self.assertTrue(result["ok"], result.get("errors"))
+        self.assertEqual(len(session.list_rooms()), 0)
+
+    def test_flat_run_generator_uses_location(self):
+        session = self.RoomSession()
+        result = session.apply_commands(
+            [
+                {
+                    "action": "create_room",
+                    "params": {
+                        "name": "R",
+                        "width": 4,
+                        "depth": 3,
+                        "height": 2.5,
+                        "collection": "layoutlab_room",
+                    },
+                },
+                {
+                    "action": "run_generator",
+                    "generator": "bed_basic",
+                    "name": "BED",
+                    "location": [1.0, 0.15, 0],
+                    "width": 2.0,
+                    "length": 1.2,
+                    "head_side": "y_min",
+                    "collection": "layoutlab_room",
+                },
+            ]
+        )
+        self.assertTrue(result["ok"], result.get("errors"))
+        beds = [o for o in result["export"]["objects"] if o["name"].startswith("BED")]
+        self.assertTrue(beds)
+        # Flat location must be honored (defaults would place near origin differently).
+        locs = [o.get("location") or [0, 0, 0] for o in beds]
+        self.assertTrue(any(abs(float(loc[1]) - 0.15) < 0.05 for loc in locs), locs)
+
 
 if __name__ == "__main__":
     unittest.main()

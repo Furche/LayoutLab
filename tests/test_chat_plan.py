@@ -53,6 +53,31 @@ class TestChatPlan(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.chat.sanitize_commands([{"action": "run_python", "code": "x"}])
 
+    def test_sanitize_hoists_delete_collection_from_params(self):
+        out = self.chat.sanitize_commands(
+            [{"action": "delete_collection_objects", "params": {"collection": "layoutlab_room"}}]
+        )
+        self.assertEqual(out[0]["collection"], "layoutlab_room")
+        self.assertNotIn("params", out[0])
+
+    def test_sanitize_wraps_flat_run_generator(self):
+        out = self.chat.sanitize_commands(
+            [
+                {
+                    "action": "run_generator",
+                    "generator": "bed_basic",
+                    "name": "BED",
+                    "location": [1.0, 0.15, 0],
+                    "head_side": "y_min",
+                    "collection": "layoutlab_room",
+                }
+            ]
+        )
+        params = out[0]["params"]
+        self.assertEqual(params["location"], [1.0, 0.15, 0])
+        self.assertEqual(params["head_side"], "y_min")
+        self.assertNotIn("location", out[0])
+
     def test_help_without_key(self):
         result = self.chat.plan_from_message("was kannst du?")
         self.assertTrue(result["ok"])

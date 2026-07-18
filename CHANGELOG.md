@@ -8,6 +8,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Command shape (Apply):** `delete_collection_objects` accepts `params.collection`; flat `run_generator` keys are folded into `params` (LLM often omitted top-level `collection` / nested params — Apply failed and furniture ignored placement/`head_side`)
+- **Agent placement:** when the user mentions bed head/Kopfende, force `head_side` toward the nearest wall; nudge wardrobe away from an east door; one soft-metric replan when dry-run still warns without `expected_risks`
+
 ### Added
 
 - **Agent-2 tools:** `validate_commands` + `dry_run_commands` (session clone; live session unchanged); automatic scene seed (`get_scene_summary` + `list_generators`) on each LLM agent turn (`agent_tools` 0.2)

@@ -72,15 +72,30 @@ Completeness (critical):
 - If the user wants a bed/desk/wardrobe, commands MUST include run_generator for that item.
 - Never say you will place furniture/openings unless those commands are in proposal.commands.
 - Fresh layout sequence typically:
-  1) delete_collection_objects collection=layoutlab_room
+  1) delete_collection_objects with top-level collection (or params.collection)
   2) create_room (width/depth/height in meters, collection=layoutlab_room)
   3) add_opening for EACH door and EACH window
   4) run_generator for each furniture item (inside footprint; leave circulation; do not block or enter openings)
 
-Example openings:
+Command shape (critical):
+- Prefer params{} for create_room / add_opening / run_generator.
+- delete_collection_objects MUST include collection, e.g.
+  {"action":"delete_collection_objects","collection":"layoutlab_room"}
+- run_generator MUST put placement in params (location, head_side, …) — flat keys alone are fragile.
+
+Example openings / bed (headboard against south wall → head_side y_min):
 {"action":"add_opening","params":{"room":"ROOM","opening_name":"door_east","kind":"door","wall_side":"east","offset":0.3,"width":0.9,"height":2.0}}
 {"action":"add_opening","params":{"room":"ROOM","opening_name":"win_south_1","kind":"window","wall_side":"south","offset":0.5,"width":1.2,"height":1.2,"sill_height":0.9}}
-{"action":"run_generator","generator":"bed_basic","params":{"name":"BED","location":[1.0,0.15,0],"length":1.2,"width":2.0,"head_side":"y_max","collection":"layoutlab_room"}}
+{"action":"run_generator","generator":"bed_basic","params":{"name":"BED","location":[1.0,0.15,0],"length":1.2,"width":2.0,"head_side":"y_min","collection":"layoutlab_room"}}
+
+Bed orientation:
+- head_side is the headboard wall direction (x_min|x_max|y_min|y_max).
+- If the user says the head points into the room / wants the head at the wall: set head_side to the nearest wall of the bed location (south wall → y_min).
+- Do not claim you rotated the bed unless head_side (or location) actually changed vs the previous plan.
+
+Storage vs openings:
+- Do not place wardrobe/desk in front of a door or so close that opening_access warns.
+- East door → keep east wall clear; put wardrobe on west/north instead.
 
 Rules:
 - Prefer Metric meters (1 unit = 1 m). width = X, depth = Y.
@@ -88,6 +103,14 @@ Rules:
 - Do not claim you applied changes — the user must Apply.
 - If you only need questions, set proposal.commands to [] AND leave questions non-empty.
 """
+
+SOFT_REPLAN_HINT = (
+    "Your previous proposal still has soft comfort/usability warnings from dry_run "
+    "(opening_access and/or soft_packing). Return ONLY a new JSON proposal that fixes them: "
+    "move storage away from doors/windows, set bed head_side against the wall the user wants, "
+    "and keep clear circulation. Prefer a real geometry change over repeating the same locations. "
+    "questions must be []. No markdown, no tools."
+)
 
 MAX_TOOL_ROUNDS = 6
 REPAIR_HINT = (
@@ -338,6 +361,170 @@ def _maybe_repair_proposal(settings, messages, result, conversation: str) -> dic
         return repaired
     if len(repaired_cmds) > len(commands):
         return repaired
+    return result
+
+
+def _user_mentions_bed_head(text: str) -> bool:
+    t = (text or "").lower()
+    return any(
+        k in t
+        for k in (
+            "kopfende",
+            "kopfseite",
+            "kopfteile",
+            "headboard",
+            "head of the bed",
+            "head of bed",
+            "bett dreh",
+            "bett rotier",
+            "rotate the bed",
+            "turn the bed",
+        )
+    )
+
+
+def _room_size_from_commands(commands: list) -> tuple[float, float]:
+    for cmd in commands or []:
+        if cmd.get("action") != "create_room":
+            continue
+        params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
+        w = params.get("width", cmd.get("width"))
+        d = params.get("depth", cmd.get("depth"))
+        try:
+            return float(w), float(d)
+        except (TypeError, ValueError):
+            break
+    return 4.0, 3.0
+
+
+def _nearest_wall_side(location, room_w: float, room_d: float) -> str:
+    try:
+        x = float(location[0])
+        y = float(location[1])
+    except (TypeError, ValueError, IndexError):
+        return "y_min"
+    dist = {
+        "x_min": x,
+        "x_max": max(0.0, room_w - x),
+        "y_min": y,
+        "y_max": max(0.0, room_d - y),
+    }
+    return min(dist, key=dist.get)
+
+
+def _east_door_present(commands: list) -> bool:
+    for cmd in commands or []:
+        if cmd.get("action") != "add_opening":
+            continue
+        params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
+        kind = str(params.get("kind") or cmd.get("kind") or "").lower()
+        wall = str(params.get("wall_side") or cmd.get("wall_side") or "").lower()
+        if kind == "door" and wall == "east":
+            return True
+    return False
+
+
+def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dict:
+    """Fix common LLM misses: bed head_side, wardrobe blocking east door."""
+    commands = list(result.get("commands") or [])
+    if not commands:
+        return result
+    room_w, room_d = _room_size_from_commands(commands)
+    want_head = _user_mentions_bed_head(conversation)
+    east_door = _east_door_present(commands)
+    changed = False
+
+    for cmd in commands:
+        if cmd.get("action") != "run_generator":
+            continue
+        gen = cmd.get("generator")
+        params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
+        if not params:
+            continue
+        if gen == "bed_basic" and want_head:
+            loc = params.get("location") or [0, 0, 0]
+            side = _nearest_wall_side(loc, room_w, room_d)
+            if params.get("head_side") != side:
+                params = dict(params)
+                params["head_side"] = side
+                cmd["params"] = params
+                changed = True
+        if gen == "wardrobe_basic" and east_door:
+            loc = list(params.get("location") or [0, 0, 0])
+            try:
+                x = float(loc[0])
+            except (TypeError, ValueError):
+                x = 0.0
+            # Wardrobe center too far east → shift to west wall clearance.
+            if x > room_w * 0.55:
+                depth = float(params.get("depth") or 0.6)
+                try:
+                    y = float(loc[1]) if len(loc) > 1 else 0.15
+                    z = float(loc[2]) if len(loc) > 2 else 0.0
+                except (TypeError, ValueError):
+                    y, z = 0.15, 0.0
+                params = dict(params)
+                params["location"] = [max(0.15, depth / 2 + 0.05), max(0.15, y), z]
+                params["front_side"] = "x_max"
+                cmd["params"] = params
+                changed = True
+
+    if not changed:
+        return result
+
+    result = dict(result)
+    result["commands"] = commands
+    proposal = dict(result.get("proposal") or {})
+    proposal["commands"] = commands
+    result["proposal"] = proposal
+    note = (
+        " (Layout-Korrektur: Bett-Kopfende zur Wand und/oder Schrank von der Tür weg.)"
+    )
+    result["reply"] = (result.get("reply") or "").rstrip() + note
+    return result
+
+
+def _maybe_soft_replan(session, settings, messages, result: dict, conversation: str) -> dict:
+    """One LLM replan when dry-run soft warnings remain and no tradeoff was declared."""
+    quality = result.get("quality") if isinstance(result.get("quality"), dict) else {}
+    if not quality.get("has_soft_warnings"):
+        return result
+    if quality.get("has_solid_collisions") or quality.get("blocks_apply"):
+        return result
+    proposal = result.get("proposal") if isinstance(result.get("proposal"), dict) else {}
+    if proposal.get("expected_risks"):
+        return result
+    if not (result.get("commands") or []):
+        return result
+
+    soft = quality.get("soft_summary") or {}
+    types = ",".join(soft.get("types") or []) or "soft warnings"
+    note = SOFT_REPLAN_HINT + f" Soft types: {types}."
+    try:
+        repaired = _finalize_proposal_from_messages(
+            settings, messages, result.get("tool_trace") or [], repair_note=note
+        )
+    except Exception:
+        return result
+    repaired = _apply_deterministic_placement_fixes(conversation, repaired)
+    repaired = _attach_quality_preview(session, repaired)
+    # Prefer fewer soft warnings; otherwise keep original.
+    old_w = int((quality.get("soft_summary") or {}).get("warnings") or 0)
+    new_q = repaired.get("quality") if isinstance(repaired.get("quality"), dict) else {}
+    new_w = int((new_q.get("soft_summary") or {}).get("warnings") or 0)
+    if new_w < old_w:
+        return repaired
+    if new_w == old_w and (repaired.get("commands") or []) != (result.get("commands") or []):
+        # Geometry changed but soft count same — still accept if head_side/wardrobe moved.
+        return repaired
+    return result
+
+
+def _finish_agent_result(session, settings, messages, result: dict, conversation: str) -> dict:
+    result = _maybe_repair_proposal(settings, messages, result, conversation)
+    result = _apply_deterministic_placement_fixes(conversation, result)
+    result = _attach_quality_preview(session, result)
+    result = _maybe_soft_replan(session, settings, messages, result, conversation)
     return result
 
 
@@ -617,8 +804,9 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 fp = _tool_call_fingerprint(tool_calls)
                 if fp in seen_tool_fps:
                     result = _finalize_proposal_from_messages(settings, messages, tool_trace)
-                    result = _maybe_repair_proposal(settings, messages, result, conversation)
-                    return _attach_quality_preview(session, result)
+                    return _finish_agent_result(
+                        session, settings, messages, result, conversation
+                    )
                 seen_tool_fps.add(fp)
 
                 messages.append(
@@ -659,8 +847,9 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 parsed = _extract_json_object(content)
             except Exception:
                 result = _finalize_proposal_from_messages(settings, messages, tool_trace)
-                result = _maybe_repair_proposal(settings, messages, result, conversation)
-                return _attach_quality_preview(session, result)
+                return _finish_agent_result(
+                    session, settings, messages, result, conversation
+                )
 
             normalized = _normalize_proposal(parsed)
             result = {
@@ -674,12 +863,10 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 "commands": normalized["proposal"]["commands"],
                 "tool_trace": tool_trace,
             }
-            result = _maybe_repair_proposal(settings, messages, result, conversation)
-            return _attach_quality_preview(session, result)
+            return _finish_agent_result(session, settings, messages, result, conversation)
 
         result = _finalize_proposal_from_messages(settings, messages, tool_trace)
-        result = _maybe_repair_proposal(settings, messages, result, conversation)
-        return _attach_quality_preview(session, result)
+        return _finish_agent_result(session, settings, messages, result, conversation)
     except Exception as exc:
         demo = _demo_as_agent_result(message)
         if demo:

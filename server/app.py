@@ -23,7 +23,11 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from layoutlab.runtime.agent import run_agent_turn  # noqa: E402
-from layoutlab.runtime.chat import llm_configured, plan_from_message  # noqa: E402
+from layoutlab.runtime.chat import (  # noqa: E402
+    llm_configured,
+    plan_from_message,
+    sanitize_commands,
+)
 from layoutlab.runtime.session import RoomSession  # noqa: E402
 from layoutlab.runtime import session_log  # noqa: E402
 from layoutlab.runtime.tools import TOOL_NAMES, dispatch_tool  # noqa: E402
@@ -187,6 +191,11 @@ class Handler(BaseHTTPRequestHandler):
                 commands = body
             if not isinstance(commands, list):
                 self._json(400, {"ok": False, "error": 'body must include "commands": [...]'})
+                return
+            try:
+                commands = sanitize_commands(commands)
+            except ValueError as exc:
+                self._json(400, {"ok": False, "error": str(exc)})
                 return
             try:
                 result = SESSION.apply_commands(commands)

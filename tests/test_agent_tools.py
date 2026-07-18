@@ -221,6 +221,68 @@ class TestAgentTools(unittest.TestCase):
         self.assertEqual(len(clone.list_rooms()), 0)
         self.assertEqual(self.session.list_rooms()[0]["name"], "KIDS_ROOM")
 
+    def test_validate_accepts_params_collection(self):
+        out = self.dispatch(
+            self.session,
+            "validate_commands",
+            {
+                "commands": [
+                    {
+                        "action": "delete_collection_objects",
+                        "params": {"collection": "layoutlab_room"},
+                    }
+                ]
+            },
+        )
+        self.assertTrue(out["ok"], out)
+
+    def test_deterministic_bed_head_and_wardrobe_nudge(self):
+        from layoutlab.runtime import agent as ag
+
+        result = {
+            "reply": "ok",
+            "commands": [
+                {
+                    "action": "create_room",
+                    "params": {"width": 4.0, "depth": 3.0, "collection": "layoutlab_room"},
+                },
+                {
+                    "action": "add_opening",
+                    "params": {"room": "ROOM", "kind": "door", "wall_side": "east", "width": 0.9},
+                },
+                {
+                    "action": "run_generator",
+                    "generator": "bed_basic",
+                    "params": {
+                        "name": "BED",
+                        "location": [1.0, 0.15, 0],
+                        "head_side": "y_max",
+                        "collection": "layoutlab_room",
+                    },
+                },
+                {
+                    "action": "run_generator",
+                    "generator": "wardrobe_basic",
+                    "params": {
+                        "name": "WARDROBE",
+                        "location": [2.5, 0.15, 0],
+                        "width": 1.0,
+                        "depth": 0.6,
+                        "collection": "layoutlab_room",
+                    },
+                },
+            ],
+            "proposal": {"commands": [], "expected_risks": []},
+        }
+        result["proposal"]["commands"] = result["commands"]
+        fixed = ag._apply_deterministic_placement_fixes(
+            "das bett steht mit dem kopfende in den raum", result
+        )
+        bed = next(c for c in fixed["commands"] if c.get("generator") == "bed_basic")
+        wardrobe = next(c for c in fixed["commands"] if c.get("generator") == "wardrobe_basic")
+        self.assertEqual(bed["params"]["head_side"], "y_min")
+        self.assertLess(float(wardrobe["params"]["location"][0]), 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()

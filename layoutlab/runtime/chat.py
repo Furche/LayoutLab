@@ -99,6 +99,98 @@ def resolve_llm_settings(llm_config: dict | None = None) -> dict:
     return {"api_key": api_key, "base_url": base, "model": model}
 
 
+_GENERATOR_PARAM_KEYS = (
+    "name",
+    "location",
+    "width",
+    "depth",
+    "length",
+    "height",
+    "head_side",
+    "front_side",
+    "collection",
+    "show_clearance",
+    "object_id",
+)
+
+
+def _normalize_command(cmd: dict) -> dict:
+    """Canonicalize LLM/flat command shapes for headless apply.
+
+    Models often emit ``delete_collection_objects`` with ``params.collection``
+    and ``run_generator`` with flat keys (no ``params``). Session apply used to
+    miss those — delete failed and furniture fell back to generator defaults.
+    """
+    action = cmd.get("action")
+    out = dict(cmd)
+    params = out.get("params")
+    params = dict(params) if isinstance(params, dict) else {}
+
+    if action == "delete_collection_objects":
+        collection = out.get("collection") or params.get("collection")
+        if collection:
+            out["collection"] = collection
+        params.pop("collection", None)
+        if params:
+            out["params"] = params
+        else:
+            out.pop("params", None)
+        return out
+
+    if action == "delete_prefix":
+        prefix = out.get("prefix") or params.get("prefix")
+        if prefix:
+            out["prefix"] = prefix
+        params.pop("prefix", None)
+        if params:
+            out["params"] = params
+        else:
+            out.pop("params", None)
+        return out
+
+    if action == "run_generator":
+        for key in _GENERATOR_PARAM_KEYS:
+            if key in out and key not in ("action", "generator", "params"):
+                if key not in params:
+                    params[key] = out[key]
+                del out[key]
+        if params:
+            out["params"] = params
+        return out
+
+    # Room / opening / fixed: prefer params, but keep flat fallback via session.
+    if action in (
+        "create_room",
+        "update_room",
+        "delete_room",
+        "add_opening",
+        "update_opening",
+        "remove_opening",
+        "add_fixed_element",
+        "update_fixed_element",
+        "remove_fixed_element",
+        "analyze_layout",
+    ):
+        flat_keys = [
+            k
+            for k in list(out.keys())
+            if k not in ("action", "params", "generator")
+        ]
+        if flat_keys and not params:
+            for key in flat_keys:
+                params[key] = out.pop(key)
+            out["params"] = params
+        elif flat_keys and params:
+            for key in flat_keys:
+                if key not in params:
+                    params[key] = out[key]
+                del out[key]
+            out["params"] = params
+        return out
+
+    return out
+
+
 def sanitize_commands(commands) -> list:
     if not isinstance(commands, list):
         raise ValueError("commands must be a list")
@@ -109,7 +201,7 @@ def sanitize_commands(commands) -> list:
         action = cmd.get("action")
         if action not in ALLOWED_ACTIONS:
             raise ValueError(f"disallowed action {action!r}")
-        cleaned.append(cmd)
+        cleaned.append(_normalize_command(cmd))
     return cleaned
 
 

@@ -498,24 +498,28 @@ def validate_commands(session, params=None):
                             "action": action,
                         }
                     )
-        if action == "delete_collection_objects" and not cmd.get("collection"):
-            errors.append(
-                {
-                    "index": index,
-                    "code": "missing_collection",
-                    "message": "delete_collection_objects requires collection",
-                    "action": action,
-                }
-            )
-        if action == "delete_prefix" and not cmd.get("prefix"):
-            errors.append(
-                {
-                    "index": index,
-                    "code": "missing_prefix",
-                    "message": "delete_prefix requires prefix",
-                    "action": action,
-                }
-            )
+        if action == "delete_collection_objects":
+            p = _cmd_params(cmd)
+            if not (cmd.get("collection") or p.get("collection")):
+                errors.append(
+                    {
+                        "index": index,
+                        "code": "missing_collection",
+                        "message": "delete_collection_objects requires collection",
+                        "action": action,
+                    }
+                )
+        if action == "delete_prefix":
+            p = _cmd_params(cmd)
+            if not (cmd.get("prefix") or p.get("prefix")):
+                errors.append(
+                    {
+                        "index": index,
+                        "code": "missing_prefix",
+                        "message": "delete_prefix requires prefix",
+                        "action": action,
+                    }
+                )
 
     return {
         "ok": not errors,

@@ -115,9 +115,17 @@ def apply_single_command(context, cmd):
             display_type=cmd.get("display_type", "WIRE"),
         )
     if action == "delete_collection_objects":
-        return delete_collection_objects(cmd["collection"])
+        params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
+        collection = cmd.get("collection") or params.get("collection")
+        if not collection:
+            raise ValueError("delete_collection_objects requires collection")
+        return delete_collection_objects(collection)
     if action == "delete_prefix":
-        return delete_prefix(cmd["prefix"])
+        params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
+        prefix = cmd.get("prefix") or params.get("prefix")
+        if not prefix:
+            raise ValueError("delete_prefix requires prefix")
+        return delete_prefix(prefix)
     if action == "analyze_layout":
         from .layout_analysis import analyze_layout
 
