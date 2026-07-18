@@ -135,6 +135,7 @@ def analyze_session(session, cmd=None):
         raise ValueError(f"analyze_layout unknown include entries: {sorted(unknown)}")
 
     from ..core.soft_metrics import analyze_soft_metrics, soft_summary_from_findings
+    from ..core.solid_collision import analyze_solid_wall_collisions
 
     findings = []
     clearance_count = 0
@@ -150,6 +151,20 @@ def analyze_session(session, cmd=None):
         )
         findings.extend(clearance_result.get("findings") or [])
         clearance_count = clearance_result.get("clearance_count") or 0
+
+    # Always run solid wall checks when analyzing a scene (hard, non-negotiable).
+    if scope in ("scene", "collection"):
+        solid = analyze_solid_wall_collisions(session)
+        if scope == "collection" and collection_name:
+            solid = [
+                f
+                for f in solid
+                if any(
+                    (m.get("collection") or "layoutlab_room") == collection_name
+                    for m in session._rooms.values()
+                )
+            ]
+        findings.extend(solid)
 
     if "soft" in include_set and scope in ("scene", "collection"):
         soft_findings = analyze_soft_metrics(session)

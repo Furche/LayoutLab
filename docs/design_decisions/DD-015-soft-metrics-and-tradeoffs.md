@@ -33,6 +33,9 @@ Emitted by headless `analyze_layout` / `analyze_session` alongside clearance fin
 |---|---|---|
 | `soft_packing` | Furniture XY footprint / room footprint | info ≥ 0.35, warning ≥ 0.48 |
 | `opening_access` | Inward access box in front of door/window overlaps furniture | warning |
+| `solid_wall_penetration` | Furniture AABB intersects wall solid (openings cut out) | **error, non-negotiable** |
+
+`solid_wall_penetration` is **physically invalid**, not a tradeoff — AI must replan; Viewer blocks Apply (`quality.blocks_apply`).
 
 No aesthetics score. No “73% good layout.”
 

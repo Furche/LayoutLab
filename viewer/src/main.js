@@ -307,8 +307,9 @@ function showChatProposal(payload) {
   const risks = payload.proposal?.expected_risks || [];
   const q = payload.quality || {};
   let qualityHint = "";
-  if (q.needs_user_confirm || risks.length || q.has_hard_errors || q.has_soft_warnings) {
+  if (q.needs_user_confirm || risks.length || q.has_hard_errors || q.has_soft_warnings || q.has_solid_collisions) {
     const bits = [];
+    if (q.has_solid_collisions) bits.push("WALL HIT");
     if (q.has_hard_errors) bits.push("hard errors");
     if (q.has_soft_warnings) bits.push("soft warnings");
     if (risks.length) bits.push(`${risks.length} risk(s)`);
@@ -962,6 +963,14 @@ el.btnChatApply?.addEventListener("click", () => {
     return;
   }
   const q = pendingChatQuality || {};
+  if (q.blocks_apply || q.has_solid_collisions) {
+    const msgs = (q.solid_messages || []).slice(0, 3).join("\n") || "Möbel durchdringt Wand.";
+    window.alert(
+      `Apply blockiert — physikalisch ungültig (kein Kompromiss):\n\n${msgs}\n\nBitte neu planen.`,
+    );
+    setStatus("Apply blockiert: Wand-Durchdringung", "error");
+    return;
+  }
   if (q.needs_user_confirm || q.has_hard_errors || q.has_soft_warnings || q.has_expected_risks) {
     const parts = [];
     if (q.has_hard_errors) parts.push("harte Clearance-Fehler");

@@ -128,6 +128,75 @@ class TestSoftMetrics(unittest.TestCase):
         self.assertIn("soft_summary", out)
         self.assertIn("soft_summary", out.get("analysis") or {})
 
+    def test_solid_wall_penetration_is_error(self):
+        from layoutlab.core.solid_collision import CONSTRAINT_TYPE_SOLID_WALL
+
+        # Wardrobe centered on west wall plane → solid penetration
+        self.session.apply_commands(
+            [
+                {
+                    "action": "create_room",
+                    "params": {
+                        "name": "R",
+                        "width": 4.0,
+                        "depth": 3.0,
+                        "height": 2.5,
+                        "collection": "layoutlab_room",
+                    },
+                },
+                {
+                    "action": "run_generator",
+                    "generator": "wardrobe_basic",
+                    "params": {
+                        "name": "WR",
+                        "location": [-0.3, 1.0, 0],
+                        "width": 1.2,
+                        "depth": 0.6,
+                        "height": 2.0,
+                        "collection": "layoutlab_room",
+                    },
+                },
+            ]
+        )
+        result = self.session.apply_command({"action": "analyze_layout", "scope": "scene"})
+        solid = [f for f in result["findings"] if f.get("constraint_type") == CONSTRAINT_TYPE_SOLID_WALL]
+        self.assertTrue(solid, result["findings"])
+        self.assertEqual(solid[0]["severity"], "error")
+        self.assertTrue(solid[0].get("non_negotiable"))
+
+
+class TestObservationQueries(unittest.TestCase):
+    def setUp(self):
+        from layoutlab.runtime.session import RoomSession
+
+        self.session = RoomSession()
+        self.session.apply_commands(
+            [
+                {
+                    "action": "create_room",
+                    "params": {
+                        "name": "BEDROOM",
+                        "width": 4,
+                        "depth": 3,
+                        "height": 2.5,
+                        "collection": "layoutlab_room",
+                    },
+                }
+            ]
+        )
+
+    def test_observation_returns_no_commands(self):
+        from layoutlab.runtime.agent import run_agent_turn
+
+        out = run_agent_turn(
+            self.session,
+            "kannst du die aktuelle scene sehen?",
+            llm_config=None,
+        )
+        self.assertEqual(out["mode"], "observe")
+        self.assertEqual(out["commands"], [])
+        self.assertIn("BEDROOM", out["reply"])
+
 
 if __name__ == "__main__":
     unittest.main()

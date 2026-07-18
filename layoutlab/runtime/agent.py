@@ -26,15 +26,25 @@ Role (compassionate planner):
   If the user already answered or said you may choose, document defaults in proposal.assumes — do not ask again.
 - Soft metrics (packing density, opening_access) are comfort/usability proxies from Core — treat warnings seriously.
 
+Observation vs action (critical):
+- If the user only asks what is in the scene / whether you can see it / to describe the room:
+  answer from the seed/tools, set proposal.commands to [], do NOT rebuild or Apply anything.
+- Only emit mutating commands when the user asks to create, change, clear, or rearrange.
+
+Physics (non-negotiable):
+- Furniture must sit fully inside the room volume. Never place objects inside walls or through doors/windows.
+- solid_wall_penetration errors are physically invalid — NOT a tradeoff. Replan; do not put them in expected_risks.
+
 Context:
 - A scene seed (get_scene_summary + list_generators) is already injected — trust it.
 - Call get_room / list_objects only when you need details the seed lacks.
 - Before a non-empty final proposal, prefer validate_commands then dry_run_commands.
 - On soft warnings (soft_packing, opening_access): replan if possible.
 - On hard clearance errors: try alternatives first.
-- If a compromise is unavoidable (e.g. wardrobe blocks full door swing): keep the proposal,
-  explain the tradeoff in reply, and fill proposal.expected_risks (human language). Never hide it.
-- dry_run does NOT commit — the user must Apply (Apply = consent to documented risks).
+- If a clearance compromise is unavoidable (e.g. wardrobe reduces door swing but does not enter the wall):
+  explain the tradeoff in reply and fill proposal.expected_risks. Never hide it.
+- Wall penetration / impossible geometry: always fix, never waive.
+- dry_run does NOT commit — the user must Apply (Apply = consent only to documented clearance tradeoffs).
 
 Workflow:
 1. Read the seed. Use at most a few extra tools if needed.
@@ -65,7 +75,7 @@ Completeness (critical):
   1) delete_collection_objects collection=layoutlab_room
   2) create_room (width/depth/height in meters, collection=layoutlab_room)
   3) add_opening for EACH door and EACH window
-  4) run_generator for each furniture item (leave circulation; do not block openings)
+  4) run_generator for each furniture item (inside footprint; leave circulation; do not block or enter openings)
 
 Example openings:
 {"action":"add_opening","params":{"room":"ROOM","opening_name":"door_east","kind":"door","wall_side":"east","offset":0.3,"width":0.9,"height":2.0}}
@@ -170,6 +180,90 @@ def _conversation_text(message: str, history: list | None) -> str:
     return "\n".join(parts)
 
 
+def _is_observation_query(message: str) -> bool:
+    """True when the user only wants scene status/description, not mutations."""
+    t = (message or "").strip().lower()
+    if not t:
+        return False
+    # Explicit build/mutate verbs → not observation-only
+    mutate = (
+        "bau",
+        "erstell",
+        "einricht",
+        "lösch",
+        "losch",
+        "clear",
+        "leeren",
+        "platzi",
+        "verschieb",
+        "änder",
+        "ander",
+        "add ",
+        "remove",
+        "put ",
+        "make ",
+        "create",
+        "delete",
+        "move ",
+    )
+    if any(k in t for k in mutate):
+        return False
+    patterns = (
+        r"\b(kannst|kann)\b.*\b(sehen|siehst)\b",
+        r"\bsiehst du\b",
+        r"\bwas (ist|steht|siehst|hast)\b",
+        r"\bbeschreib",
+        r"\baktuell\w*\s+(scene|szene|raum|zimmer)\b",
+        r"\b(scene|szene)\s+(sehen|zeigen|beschreib)",
+        r"\bcurrent scene\b",
+        r"\bwhat('?s| is)\b.*\b(scene|room)\b",
+        r"\bwelche m[oö]bel\b",
+        r"\bwas siehst du\b",
+    )
+    return any(re.search(p, t) for p in patterns)
+
+
+def _observation_reply(session) -> dict:
+    summary = dispatch_tool(session, "get_scene_summary", {})
+    rooms = summary.get("rooms") or []
+    gens = summary.get("generators_present") or []
+    counts = summary.get("object_counts") or {}
+    if not rooms:
+        reply = "Die aktuelle Scene ist leer — kein Raum im Core."
+    else:
+        room_bits = []
+        for r in rooms:
+            room_bits.append(
+                f"{r.get('name')} ({r.get('width')}×{r.get('depth')} m, "
+                f"{r.get('opening_count', 0)} Öffnungen)"
+            )
+        furn = ", ".join(gens) if gens else "keine Generator-Möbel"
+        reply = (
+            "Ja — ich sehe die aktuelle Core-Scene: "
+            + "; ".join(room_bits)
+            + f". Möbel/Generatoren: {furn}. "
+            f"Counts: furniture={counts.get('furniture', 0)}, walls={counts.get('walls', 0)}."
+        )
+    return {
+        "ok": True,
+        "mode": "observe",
+        "reply": reply,
+        "questions": [],
+        "proposal": {
+            "proposal_id": str(uuid.uuid4()),
+            "title": "Scene-Status",
+            "rationale": "Observation-only — no mutations",
+            "assumes": [],
+            "commands": [],
+            "expected_risks": [],
+        },
+        "suggested_next_tools": [],
+        "commands": [],
+        "tool_trace": [{"tool": "get_scene_summary", "arguments": {}, "ok": True, "seed": False}],
+        "scene_summary": summary,
+    }
+
+
 def _proposal_missing_requested(conversation: str, commands: list) -> list:
     """Return list of missing requirement labels for a repair turn."""
     missing = []
@@ -265,22 +359,38 @@ def _attach_quality_preview(session, result: dict) -> dict:
     analysis = dry.get("analysis") or {}
     summary = analysis.get("summary") or {}
     soft = dry.get("soft_summary") or analysis.get("soft_summary") or {}
+    findings = analysis.get("findings") or []
+    solid = [
+        f
+        for f in findings
+        if f.get("constraint_type") == "solid_wall_penetration" or f.get("non_negotiable")
+    ]
     hard_errors = int(summary.get("errors") or 0)
     soft_warnings = int(soft.get("warnings") or 0)
     risks = list((result.get("proposal") or {}).get("expected_risks") or [])
+    has_solid = len(solid) > 0
     result["quality"] = {
-        "ok": bool(dry.get("ok")),
+        "ok": bool(dry.get("ok")) and not has_solid,
         "apply_ok": bool(dry.get("apply_ok")),
         "summary": summary,
         "soft_summary": soft,
-        "findings": analysis.get("findings") or [],
+        "findings": findings,
         "has_hard_errors": hard_errors > 0,
+        "has_solid_collisions": has_solid,
         "has_soft_warnings": soft_warnings > 0,
         "has_expected_risks": len(risks) > 0,
-        "needs_user_confirm": hard_errors > 0 or soft_warnings > 0 or len(risks) > 0,
+        "needs_user_confirm": (hard_errors > 0 or soft_warnings > 0 or len(risks) > 0)
+        and not has_solid,
+        "blocks_apply": has_solid,
+        "solid_messages": [f.get("message") for f in solid[:5]],
     }
-    # Nudge reply if hard errors without documented risks
-    if hard_errors > 0 and not risks:
+    if has_solid:
+        note = (
+            " Hinweis: Physikalisch ungültig (Möbel durchdringt Wand) — "
+            "nicht als Kompromiss akzeptierbar; bitte neu platzieren."
+        )
+        result["reply"] = (result.get("reply") or "").rstrip() + note
+    elif hard_errors > 0 and not risks:
         note = (
             " Hinweis: Dry-Run meldet noch harte Clearance-Fehler — "
             "bitte Tradeoff prüfen oder umplanen (expected_risks setzen wenn Kompromiss)."
@@ -441,6 +551,9 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
     message = (message or "").strip()
     if not message:
         return {"ok": False, "error": "message required", "commands": [], "reply": ""}
+
+    if _is_observation_query(message):
+        return _observation_reply(session)
 
     if not llm_configured(llm_config):
         demo = _demo_as_agent_result(message)

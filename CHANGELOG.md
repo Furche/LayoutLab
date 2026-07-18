@@ -12,6 +12,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 - **Agent-2 tools:** `validate_commands` + `dry_run_commands` (session clone; live session unchanged); automatic scene seed (`get_scene_summary` + `list_generators`) on each LLM agent turn (`agent_tools` 0.2)
 - **DD-015 Soft metrics + tradeoffs (Proposed):** packing density + opening-access findings; dry-run `soft_summary`; agent quality preview; Viewer Apply confirm on hard/soft/risks (`agent_tools` 0.3)
+- **Observation queries + solid wall hits:** scene-status questions return no commands; `solid_wall_penetration` is a non-negotiable error and blocks Apply
 
 ### Changed
 
