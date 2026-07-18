@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Bed size requests:** parse `120x200` as Breite×Länge, apply axis-correct dims; honest noop when already that size; no false „Bett an die Wand“ spam when the recipe bed already hugs the wall
 - **Bed orientation:** normal 120×200 beds with head on south/north use `length=1.2` (along wall) and `width=2.0` (into room); recipe + wall-snap no longer put the 2 m side along the wall
 
 ### Added

@@ -551,6 +551,63 @@ def _user_wants_better_layout(text: str) -> bool:
     )
 
 
+def _parse_bed_size_m(text: str) -> tuple[float, float] | None:
+    """Parse human mattress size as (width, length) in meters.
+
+    '120x200' / '120 × 200' → 1.2 × 2.0 (Breite × Länge). Order matters.
+    """
+    t = (text or "").lower().replace(",", ".")
+    m = re.search(r"(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)", t)
+    if not m:
+        return None
+    a = float(m.group(1))
+    b = float(m.group(2))
+    # cm if both look like centimeters
+    if a >= 10 and b >= 10:
+        a, b = a / 100.0, b / 100.0
+    if a < 0.5 or b < 0.5 or a > 3.5 or b > 3.5:
+        return None
+    return round(a, 3), round(b, 3)
+
+
+def _mattress_to_bed_axes(head_side: str | None, mattress_w: float, mattress_l: float):
+    """Map human width×length onto bed_basic length(X)/width(Y)."""
+    side = (head_side or "y_min").strip().lower()
+    if side in ("x_min", "x_max"):
+        return round(mattress_l, 3), round(mattress_w, 3)
+    return round(mattress_w, 3), round(mattress_l, 3)
+
+
+def _loc_delta(a, b) -> float:
+    try:
+        return max(abs(float(a[0]) - float(b[0])), abs(float(a[1]) - float(b[1])))
+    except (TypeError, ValueError, IndexError):
+        return 999.0
+
+
+def _apply_requested_bed_size(commands: list, mattress_w: float, mattress_l: float) -> bool:
+    """Set bed dims from human mattress size; keep head_side. Returns True if changed."""
+    changed = False
+    for cmd in commands:
+        if cmd.get("action") != "run_generator" or cmd.get("generator") != "bed_basic":
+            continue
+        params = dict(cmd.get("params") or {})
+        head = params.get("head_side") or "y_min"
+        length, width = _mattress_to_bed_axes(head, mattress_w, mattress_l)
+        try:
+            old_l = float(params.get("length") or 0)
+            old_w = float(params.get("width") or 0)
+        except (TypeError, ValueError):
+            old_l, old_w = 0.0, 0.0
+        if abs(old_l - length) < 0.02 and abs(old_w - width) < 0.02:
+            continue
+        params["length"] = length
+        params["width"] = width
+        cmd["params"] = params
+        changed = True
+    return changed
+
+
 def _room_size_from_commands(commands: list) -> tuple[float, float]:
     for cmd in commands or []:
         if cmd.get("action") != "create_room":
@@ -629,6 +686,7 @@ def _snap_bed_to_wall(params: dict, room_w: float, room_d: float, *, prefer: str
     except (TypeError, ValueError):
         length, width = 2.0, 1.2
     margin = 0.08
+    hug = 0.18
     loc = list(params.get("location") or [0, 0, 0])
     try:
         x = float(loc[0])
@@ -651,14 +709,38 @@ def _snap_bed_to_wall(params: dict, room_w: float, room_d: float, *, prefer: str
     # Ensure sleep axis is the longer mattress dimension when dims look swapped.
     swapped = False
     if side in ("y_min", "y_max") and length > width:
-        # Sleep should be along Y (width param); side-to-side along X (length param).
         length, width = width, length
         swapped = True
     elif side in ("x_min", "x_max") and width > length:
         length, width = width, length
         swapped = True
 
-    if side == "y_min":
+    # Recompute gap after possible dim swap.
+    gap = {
+        "y_min": y,
+        "y_max": room_d - (y + width),
+        "x_min": x,
+        "x_max": room_w - (x + length),
+    }
+    already_hugging = gap.get(side, 999) <= hug
+
+    if already_hugging and prefer is None:
+        # Keep placement; only clamp footprint inside the room.
+        x = max(margin, min(room_w - length - margin, x))
+        y = max(margin, min(room_d - width - margin, y))
+        if side == "y_min":
+            y = margin
+            head = "y_min"
+        elif side == "y_max":
+            y = max(margin, room_d - width - margin)
+            head = "y_max"
+        elif side == "x_min":
+            x = margin
+            head = "x_min"
+        else:
+            x = max(margin, room_w - length - margin)
+            head = "x_max"
+    elif side == "y_min":
         x = max(margin, min(room_w - length - margin, (room_w - length) / 2))
         y = margin
         head = "y_min"
@@ -769,14 +851,14 @@ def _separate_furniture_overlaps(commands: list, room_w: float, room_d: float) -
             bloc = bparams.get("location") or [0, 1, 0]
             params = dict(params)
             params["location"] = [
-                round(0.08 + depth / 2, 3),
+                round(0.08, 3),
                 round(
-                    max(0.15, min(float(bloc[1]), room_d - width - 0.15)),
+                    max(0.15, min(float(bloc[1]), room_d - depth - 0.15)),
                     3,
                 ),
                 0.0,
             ]
-            params["front_side"] = "x_max"
+            params["front_side"] = "y_min"
             cmd["params"] = params
             changed = True
     return changed
@@ -805,15 +887,17 @@ def _apply_improved_bedroom_layout(commands: list, room_w: float, room_d: float)
         elif gen == "wardrobe_basic":
             depth = float(params.get("depth") or 0.6)
             width = float(params.get("width") or 1.0)
-            # West wall, north-ish — clear of east door and south window traffic
+            # North wall west — wardrobe_basic only supports y fronts
             loc = [
-                round(margin + depth / 2, 3),
-                round(max(margin, room_d - width - 0.4), 3),
+                round(margin, 3),
+                round(max(margin, room_d - depth - margin), 3),
                 0.0,
             ]
-            if params.get("location") != loc or params.get("front_side") != "x_max":
+            if east_door and loc[0] + width > room_w - 1.0:
+                loc[0] = round(max(margin, room_w - 1.0 - width), 3)
+            if params.get("location") != loc or params.get("front_side") != "y_min":
                 params["location"] = loc
-                params["front_side"] = "x_max"
+                params["front_side"] = "y_min"
                 cmd["params"] = params
                 changed = True
         elif gen == "desk_basic":
@@ -843,8 +927,23 @@ def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dic
     want_head = _user_mentions_bed_head(conversation)
     want_better = _user_wants_better_layout(conversation)
     east_door = _east_door_present(commands)
+    requested_size = _parse_bed_size_m(conversation)
     changed = False
     notes = []
+    bed_size_changed = False
+    bed_size_already_ok = False
+
+    if requested_size is not None:
+        before = [c.get("params") for c in commands if c.get("generator") == "bed_basic"]
+        bed_size_changed = _apply_requested_bed_size(commands, requested_size[0], requested_size[1])
+        if bed_size_changed:
+            changed = True
+            notes.append(
+                f"Bettmaß auf {int(requested_size[0] * 100)}×{int(requested_size[1] * 100)} cm "
+                "(Breite × Länge)."
+            )
+        elif before:
+            bed_size_already_ok = True
 
     if want_better:
         if _apply_improved_bedroom_layout(commands, room_w, room_d):
@@ -863,11 +962,17 @@ def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dic
             if want_head and not want_better:
                 prefer = _nearest_wall_side(params.get("location") or [0, 0, 0], room_w, room_d)
             loc, head, dims = _snap_bed_to_wall(params, room_w, room_d, prefer=prefer)
-            if (
-                params.get("location") != loc
-                or params.get("head_side") != head
-                or (dims and (params.get("length") != dims["length"] or params.get("width") != dims["width"]))
-            ):
+            old_head = params.get("head_side")
+            moved = _loc_delta(params.get("location") or [0, 0, 0], loc) > 0.12
+            head_fix = old_head != head
+            orient_fix = bool(
+                dims
+                and (
+                    abs(float(params.get("length") or 0) - dims["length"]) > 0.02
+                    or abs(float(params.get("width") or 0) - dims["width"]) > 0.02
+                )
+            )
+            if moved or head_fix or orient_fix:
                 params = dict(params)
                 params["location"] = loc
                 params["head_side"] = head
@@ -875,8 +980,12 @@ def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dic
                     params.update(dims)
                 cmd["params"] = params
                 changed = True
-                if "Bett" not in "".join(notes):
-                    notes.append("Layout-Korrektur: Bett an die Wand (head_side).")
+                # Announce only meaningful fixes — not silent re-snap of an already good bed.
+                if moved or (head_fix and old_head not in (None, head)):
+                    if "Bett an die Wand" not in "".join(notes):
+                        notes.append("Layout-Korrektur: Bett an die Wand (head_side).")
+                elif orient_fix and "Orientierung" not in "".join(notes):
+                    notes.append("Layout-Korrektur: Bett-Orientierung (Schlafrichtung).")
         if gen == "wardrobe_basic" and east_door:
             loc = list(params.get("location") or [0, 0, 0])
             try:
@@ -892,7 +1001,8 @@ def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dic
                     y, z = 0.15, 0.0
                 params = dict(params)
                 params["location"] = [max(0.15, depth / 2 + 0.05), max(0.15, y), z]
-                params["front_side"] = "x_max"
+                # wardrobe_basic only supports y_min / y_max
+                params["front_side"] = "y_min"
                 cmd["params"] = params
                 changed = True
                 notes.append("Layout-Korrektur: Schrank von der Ost-Tür weg.")
@@ -923,6 +1033,14 @@ def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dic
     if _separate_furniture_overlaps(commands, room_w, room_d):
         changed = True
         notes.append("Layout-Korrektur: Möbel-Überlappung getrennt (z.B. Tisch aus dem Bett).")
+
+    if bed_size_already_ok and not changed:
+        result = dict(result)
+        w_cm, l_cm = int(requested_size[0] * 100), int(requested_size[1] * 100)
+        result["reply"] = (
+            f"Das Bett ist bereits {w_cm}×{l_cm} cm (Breite × Länge) — keine Änderung nötig."
+        )
+        return result
 
     if not changed:
         return result

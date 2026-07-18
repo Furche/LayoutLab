@@ -424,6 +424,97 @@ class TestAgentTools(unittest.TestCase):
         desk_box = ag._gen_xy_aabb("desk_basic", desk["params"])
         self.assertFalse(ag._aabb_overlap_tuple(bed_box, desk_box), (bed_box, desk_box))
 
+    def test_parse_bed_size_and_apply(self):
+        from layoutlab.runtime import agent as ag
+
+        self.assertEqual(ag._parse_bed_size_m("bett auf 120x200 machen"), (1.2, 2.0))
+        self.assertEqual(ag._parse_bed_size_m("1.4 × 2.0 m"), (1.4, 2.0))
+        self.assertEqual(ag._mattress_to_bed_axes("y_min", 1.2, 2.0), (1.2, 2.0))
+        self.assertEqual(ag._mattress_to_bed_axes("x_max", 1.2, 2.0), (2.0, 1.2))
+
+        result = {
+            "reply": "angepasst",
+            "commands": [
+                {"action": "create_room", "params": {"width": 4.0, "depth": 3.5}},
+                {
+                    "action": "run_generator",
+                    "generator": "bed_basic",
+                    "params": {
+                        "name": "BED",
+                        "location": [0.08, 0.08, 0],
+                        "length": 1.0,
+                        "width": 1.8,
+                        "head_side": "y_min",
+                        "collection": "layoutlab_room",
+                    },
+                },
+            ],
+            "proposal": {"commands": []},
+        }
+        result["proposal"]["commands"] = result["commands"]
+        fixed = ag._apply_deterministic_placement_fixes(
+            "kannst du das bett auf 120x200 machen?", result
+        )
+        bed = next(c for c in fixed["commands"] if c.get("generator") == "bed_basic")
+        self.assertAlmostEqual(float(bed["params"]["length"]), 1.2, places=2)
+        self.assertAlmostEqual(float(bed["params"]["width"]), 2.0, places=2)
+        self.assertIn("120×200", fixed["reply"])
+
+    def test_bed_size_noop_no_false_wall_note(self):
+        from layoutlab.runtime import agent as ag
+
+        result = {
+            "reply": "Ich habe das Bett angepasst.",
+            "commands": [
+                {"action": "create_room", "params": {"width": 4.0, "depth": 3.5}},
+                {
+                    "action": "run_generator",
+                    "generator": "bed_basic",
+                    "params": {
+                        "name": "BED",
+                        "location": [0.08, 0.08, 0],
+                        "length": 1.2,
+                        "width": 2.0,
+                        "head_side": "y_min",
+                        "collection": "layoutlab_room",
+                    },
+                },
+            ],
+            "proposal": {"commands": []},
+        }
+        result["proposal"]["commands"] = result["commands"]
+        fixed = ag._apply_deterministic_placement_fixes(
+            "kannst du das bett auf 120x200 machen?", result
+        )
+        self.assertIn("bereits", fixed["reply"].lower())
+        self.assertNotIn("Layout-Korrektur", fixed["reply"])
+
+    def test_good_recipe_bed_no_wall_spam(self):
+        from layoutlab.runtime import agent as ag
+
+        result = {
+            "reply": "Schlafzimmer geplant.",
+            "commands": [
+                {"action": "create_room", "params": {"width": 4.0, "depth": 3.5}},
+                {
+                    "action": "run_generator",
+                    "generator": "bed_basic",
+                    "params": {
+                        "name": "BED",
+                        "location": [0.08, 0.08, 0],
+                        "length": 1.2,
+                        "width": 2.0,
+                        "head_side": "y_min",
+                        "collection": "layoutlab_room",
+                    },
+                },
+            ],
+            "proposal": {"commands": []},
+        }
+        result["proposal"]["commands"] = result["commands"]
+        fixed = ag._apply_deterministic_placement_fixes("bau ein schlafzimmer", result)
+        self.assertNotIn("Layout-Korrektur", fixed.get("reply") or "")
+
     def test_observation_detects_problems_phrase(self):
         from layoutlab.runtime import agent as ag
 
