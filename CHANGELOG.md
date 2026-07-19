@@ -8,14 +8,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- **DD-011 Accepted:** Planner foundation locked — recipe = goal-oriented strategy; expand → evaluate → select; v1 via `plan_layout` `mode: "candidates"` (2–4 bedroom strategies first)
+- **DD-015 / DD-016 Accepted:** soft metrics + tradeoffs and deterministic layout recipes (`plan_layout` / `bedroom_basic`) locked as architecture
+- **agent.py bedroom heuristics → planning/** (`0.10.21`): intent parsing / counts / sizes live in `planning/intent.py`; placement fixes / fingerprints in `planning/placement.py`; `agent.py` keeps thin underscored re-exports for tests
+
 ### Added
 
 - **DD-011 Proposed:** Layout variants / Planning v1 — a **recipe** is a goal-oriented planning strategy (not only a room type); Core expands candidates, evaluates with analyze + soft metrics, selects winner ([DD-011](docs/design_decisions/DD-011-layout-variants-and-comparison.md))
-
-### Changed
-
-- **DD-015 / DD-016 Accepted:** soft metrics + tradeoffs and deterministic layout recipes (`plan_layout` / `bedroom_basic`) locked as architecture
-- **agent.py bedroom heuristics → planning/** (`0.10.21`): intent parsing / counts / sizes live in `planning/intent.py`; placement fixes / fingerprints in `planning/placement.py`; `agent.py` keeps thin underscored re-exports for tests
 
 ### Fixed
 

@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-20 (DD-011 Proposed — Planning v1 candidates)  
-**Plugin version:** 0.10.22 · **Branch:** `main`
+**Last updated:** 2026-07-20 (v0.10.23 — DD-011 Accepted)  
+**Plugin version:** 0.10.23 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,13 +24,13 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.22.
+Branch: main. Plugin v0.10.23.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-20):
 - DD-016 **Accepted**: plan_layout + bedroom_basic (agent_tools 0.5)
 - DD-015 **Accepted**: soft metrics + tradeoffs
-- DD-011 **Proposed**: recipe → candidates → rank (Planning v1)
+- DD-011 **Accepted**: recipe = Planungsstrategie; Planner = expand → evaluate → select (v1 noch zu bauen)
 - agent.py bedroom heuristics → planning/intent + planning/placement
 - Light agent_state on RoomSession (goal / requirements / last proposal)
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
@@ -122,7 +122,7 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary | **Accepted** |
 | [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Accepted** — MVP shipped v0.9.0 |
 | [DD-014](design_decisions/DD-014-standalone-runtime-path.md) | Standalone runtime path | **Accepted — Phase A + B + B2** |
-| [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) | Variants / Planning v1 candidates | **Proposed** |
+| [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) | Variants / Planning v1 (recipe = strategy) | **Accepted** |
 | [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) | Soft metrics + tradeoffs | **Accepted** |
 | [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) | Layout recipes (Planning v0) | **Accepted** — `plan_layout` + `bedroom_basic` |
 
@@ -169,10 +169,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 1. ~~Entschlacken von `agent.py` (Bedroom-Heuristiken → planning/)~~ ✅ (v0.10.21)  
 2. ~~**Accept DD-016 / DD-015**~~ ✅ (2026-07-20)  
-3. **Review DD-011** (Recipe = Planungsstrategie / Ziel — nicht nur Raumtyp; expand → Rank) — Accept before coding  
-4. More recipes when needed (`kids_room`, …) — not Capture/Cloud/Auth  
+3. ~~**Accept DD-011**~~ ✅ (2026-07-20)  
+4. **Implement Planning v1** per DD-011: recipe registry metadata → `bedroom_basic` candidates → rank → `plan_layout` `mode: "candidates"`  
+5. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth  
 
-DD-015/016 **Accepted** · DD-011 **Proposed** · focus: Accept DD-011 then Planning v1 candidates
+DD-011/015/016 **Accepted** · focus: build Planner v1 (`plan_layout` candidates)
 
 ------------------------------------------------------------------------
 
@@ -269,6 +270,7 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 
 | Date | Change |
 |---|---|
+| 2026-07-20 | DD-011 **Accepted** — Planner foundation; next = implement candidates |
 | 2026-07-20 | DD-011 **Proposed** — recipe as solution space; candidates + rank |
 | 2026-07-20 | DD-015 + DD-016 **Accepted**; next focus recipes on demand |
 | 2026-07-16 | DD-010 Room Model Proposed; next focus Room Model after Accept |

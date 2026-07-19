@@ -1,8 +1,30 @@
 # DD-011 — Layout Variants and Comparison (Planning v1)
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-07-20  
+**Accepted:** 2026-07-20  
 **Related:** [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-015](DD-015-soft-metrics-and-tradeoffs.md) · [DD-016](DD-016-deterministic-layout-recipes.md) · [Future_Ideas.md](../Future_Ideas.md) §5 / §16 · [agent_tool_contract.md](../agent_tool_contract.md)
+
+------------------------------------------------------------------------
+
+## Decision summary (Accepted)
+
+Locks the Planner foundation:
+
+- **Recipe** = goal-oriented **planning strategy** (room-use *or* quality goal) — not one layout, not room-type-only.
+- **Planner** = expand recipe → evaluate (analyze + soft metrics) → select + why.
+- **v1 implementation slice** starts at `bedroom_basic` (keep id; add `kind` + `goals` tags).
+- Full first-class project variants / compare UI (Future_Ideas §16) remain later.
+
+**Resolved defaults:**
+
+| Topic | Lock |
+|---|---|
+| API | Extend `plan_layout` with `mode: "candidates"` (single tool; `mode: "single"` remains) |
+| Candidates / call | 2–4 strategies (not dozens) |
+| AI override | Allowlisted preference keys on requirements only; no free coordinates; recipe **choice** stays AI/requirements |
+| Viewer v1 | Selected winner in `proposal.commands` only; full candidate list in tool result / session log |
+| Naming | Keep `bedroom_basic`; registry `kind` + `goals` tags |
 
 ------------------------------------------------------------------------
 
@@ -23,7 +45,7 @@ Future_Ideas §5 / §16 already describe generate → score → explain. Soft me
 
 ------------------------------------------------------------------------
 
-## Decision (Proposed)
+## Decision (Accepted)
 
 ### 1. Vocabulary (normative)
 
@@ -90,9 +112,8 @@ AI does **not** invent candidate coordinates. AI chooses (or proposes) **which r
    - bed wall: south \| north (and optionally west if the room is deep enough)
    - wardrobe / desk relative order on the opposite or adjacent wall
    - window count / sides still driven by requirements (unchanged)
-2. New Core capability (tool or `plan_layout` mode):  
-   `plan_layout` with `mode: "candidates"` **or** dedicated `plan_candidates`  
-   → returns `{ recipe, candidates: [...], selected_id, selection_reason, score_breakdown }`  
+2. Core capability: extend **`plan_layout`** with `mode: "candidates"` (default for agent bedroom planning once wired; `mode: "single"` keeps v0 one-shot).  
+   Returns `{ recipe, recipe_kind, recipe_goals, candidates: [...], selected_id, selection_reason, score_breakdown }`.  
    Default proposal `commands` = selected candidate.
 3. Each candidate is dry-run / analyze evaluated on a **session clone** (same as today). Discard or demote candidates with hard errors / `solid_wall_penetration`.
 4. Rank using **existing** soft metrics only (no aesthetic ML, no “73% nice”):
@@ -120,6 +141,7 @@ AI does **not** invent candidate coordinates. AI chooses (or proposes) **which r
   "ok": true,
   "recipe": "bedroom_basic",
   "recipe_kind": "room_use",
+  "recipe_goals": ["sleep", "storage"],
   "requirements": { "...": "..." },
   "candidates": [
     {
@@ -187,25 +209,25 @@ User/AI priority overrides (e.g. `prefer_bed_wall: "north"`) force that family o
 2. Factor `bedroom_basic` into shared placement primitives + option matrix → N candidates (commands only, no analyze yet).
 3. Evaluate each on session clone; attach quality / soft_summary.
 4. Deterministic rank + `selection_reason` strings (German templates OK).
-5. Expose via tool (`plan_layout` mode or `plan_candidates`); wire agent + baseline.
+5. Expose via `plan_layout` (`mode: "candidates"`); wire agent + baseline.
 6. Tests + session-log: different strategies appear when metrics differ; identical inputs → identical winner.
 7. Later: more recipes (room-use and/or goal) on the same contract; persist variants / compare UI (Future_Ideas §16) — separate product slice.
 
 ------------------------------------------------------------------------
 
-## Open questions (review)
+## Resolved review questions
 
-1. **API shape:** extend `plan_layout` with `mode: "candidates"` vs new tool `plan_candidates`?
-2. **How many candidates in v1?** Proposed default: 2–4 strategies per recipe call (not dozens).
-3. **May the AI override Core selection?** Proposed: only via allowlisted preference keys on requirements; no free re-pick of coordinates. Recipe **choice** remains an AI/requirements concern.
-4. **Return all candidates to the Viewer in v1?** Proposed: no — selected only in `proposal.commands`; full list in tool result / log for debugging.
-5. **Recipe naming:** ~~keep `bedroom_basic` vs goal alias?~~ → **Resolved:** keep id `bedroom_basic`; add registry metadata tags (e.g. `goals: ["sleep","storage"]`, `kind: "room_use"`). Goal-oriented recipes later get their own ids (`maximize_play_area`, …), not renames of room-use recipes.
+1. **API shape:** `plan_layout` + `mode: "candidates"` (no separate `plan_candidates` tool in v1).
+2. **Candidates / call:** 2–4 strategies per recipe call.
+3. **AI override:** only allowlisted preference keys on requirements; no free coordinates; recipe choice remains AI/requirements.
+4. **Viewer v1:** selected winner only in `proposal.commands`; full list in tool result / session log.
+5. **Recipe naming:** keep id `bedroom_basic`; add registry `kind` + `goals` tags. Goal recipes later get their own ids.
 
 ------------------------------------------------------------------------
 
 ## Acceptance
 
-- [ ] Alexander Accept / Reject / Request changes
+- [x] **Accepted** 2026-07-20 — Alexander (defaults above locked; implement Planning v1 per order).
 
 ------------------------------------------------------------------------
 
@@ -215,3 +237,5 @@ User/AI priority overrides (e.g. `prefer_bed_wall: "north"`) force that family o
 |---|---|---|
 | 0.1 | 2026-07-20 | Proposed — recipe = solution space; Planner = expand → evaluate → select |
 | 0.2 | 2026-07-20 | Recipe = goal-oriented planning strategy (not room-type-only); v1 still starts at `bedroom_basic` |
+| 0.3 | 2026-07-20 | Naming locked: keep `bedroom_basic` id; add `kind` + `goals` tags (no rename) |
+| 1.0 | 2026-07-20 | **Accepted** — review defaults locked; Planner architecture foundation |
