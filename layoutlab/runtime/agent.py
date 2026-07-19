@@ -184,6 +184,33 @@ def _user_wants_bed(text: str) -> bool:
     return any(k in t for k in ("bett", "bed"))
 
 
+def _wants_bedroom_layout(text: str) -> bool:
+    """True when Core should use bedroom recipe, not kids-room demo."""
+    t = (text or "").lower()
+    return "schlafzimmer" in t or "bedroom" in t or _user_wants_bed(t)
+
+
+def _is_retry_request(text: str) -> bool:
+    t = (text or "").lower()
+    return any(
+        k in t
+        for k in ("nochmal", "nochmals", "erneut", "retry", "versuch es noch", "noch einmal")
+    )
+
+
+def _session_wants_bedroom_fallback(session, text: str) -> bool:
+    if _wants_bedroom_layout(text):
+        return True
+    if not _is_retry_request(text):
+        return False
+    state = getattr(session, "agent_state", None) or {}
+    req = state.get("requirements") if isinstance(state, dict) else None
+    if isinstance(req, dict) and str(req.get("room_type") or "").lower() == "bedroom":
+        return True
+    goal = str((state or {}).get("goal") or "").lower()
+    return "schlafzimmer" in goal
+
+
 def _user_wants_door(text: str) -> bool:
     t = text.lower()
     return any(k in t for k in ("tür", "tur", "door", "eingang"))
@@ -734,10 +761,9 @@ def _mattress_to_bed_axes(head_side: str | None, mattress_w: float, mattress_l: 
 
 
 def _loc_delta(a, b) -> float:
-    try:
-        return max(abs(float(a[0]) - float(b[0])), abs(float(a[1]) - float(b[1])))
-    except (TypeError, ValueError, IndexError):
-        return 999.0
+    ax, ay, _az = _as_xyz(a)
+    bx, by, _bz = _as_xyz(b)
+    return max(abs(ax - bx), abs(ay - by))
 
 
 def _apply_requested_bed_size(commands: list, mattress_w: float, mattress_l: float) -> bool:
@@ -778,11 +804,7 @@ def _room_size_from_commands(commands: list) -> tuple[float, float]:
 
 
 def _nearest_wall_side(location, room_w: float, room_d: float) -> str:
-    try:
-        x = float(location[0])
-        y = float(location[1])
-    except (TypeError, ValueError, IndexError):
-        return "y_min"
+    x, y, _z = _as_xyz(location)
     dist = {
         "x_min": x,
         "x_max": max(0.0, room_w - x),
@@ -804,17 +826,41 @@ def _east_door_present(commands: list) -> bool:
     return False
 
 
+def _as_xyz(location) -> list[float]:
+    """Normalize location to [x,y,z] — LLM sometimes emits dicts instead of arrays."""
+    if isinstance(location, dict):
+
+        def _pick(*keys):
+            for k in keys:
+                candidates = (k, str(k)) if isinstance(k, int) else (k,)
+                for key in candidates:
+                    if key in location and location[key] is not None:
+                        try:
+                            return float(location[key])
+                        except (TypeError, ValueError):
+                            continue
+            return 0.0
+
+        return [_pick("x", "X", 0), _pick("y", "Y", 1), _pick("z", "Z", 2)]
+    if isinstance(location, (list, tuple)):
+        out = []
+        for i in range(3):
+            try:
+                out.append(float(location[i]) if i < len(location) else 0.0)
+            except (TypeError, ValueError):
+                out.append(0.0)
+        return out
+    return [0.0, 0.0, 0.0]
+
+
 def _placement_fingerprint(commands: list) -> tuple:
     parts = []
     for cmd in commands or []:
         if cmd.get("action") != "run_generator":
             continue
         params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
-        loc = params.get("location") or []
-        try:
-            loc_t = tuple(round(float(v), 3) for v in loc[:3])
-        except (TypeError, ValueError):
-            loc_t = tuple(loc[:3])
+        loc = _as_xyz(params.get("location"))
+        loc_t = tuple(round(v, 3) for v in loc)
         parts.append(
             (
                 cmd.get("generator"),
@@ -842,13 +888,7 @@ def _snap_bed_to_wall(params: dict, room_w: float, room_d: float, *, prefer: str
         length, width = 2.0, 1.2
     margin = 0.08
     hug = 0.18
-    loc = list(params.get("location") or [0, 0, 0])
-    try:
-        x = float(loc[0])
-        y = float(loc[1])
-        z = float(loc[2]) if len(loc) > 2 else 0.0
-    except (TypeError, ValueError, IndexError):
-        x, y, z = 0.0, 0.0, 0.0
+    x, y, z = _as_xyz(params.get("location"))
 
     gap = {
         "y_min": y,
@@ -916,11 +956,7 @@ def _snap_bed_to_wall(params: dict, room_w: float, room_d: float, *, prefer: str
 
 
 def _gen_xy_aabb(gen: str, params: dict):
-    loc = list(params.get("location") or [0, 0, 0])
-    try:
-        x, y = float(loc[0]), float(loc[1])
-    except (TypeError, ValueError, IndexError):
-        return None
+    x, y, _z = _as_xyz(params.get("location"))
     if gen == "bed_basic":
         try:
             length = float(params.get("length") or 2.0)
@@ -970,8 +1006,7 @@ def _separate_furniture_overlaps(commands: list, room_w: float, room_d: float) -
                 continue
             bw = float(bparams.get("length") or 2.0)
             bh = float(bparams.get("width") or 1.2)
-            bloc = bparams.get("location") or [0, 0, 0]
-            bx, by = float(bloc[0]), float(bloc[1])
+            bx, by, _bz = _as_xyz(bparams.get("location"))
             dw = float(params.get("width") or 1.2)
             dd = float(params.get("depth") or 0.6)
             candidates = [
@@ -1003,12 +1038,12 @@ def _separate_furniture_overlaps(commands: list, room_w: float, room_d: float) -
                 continue
             depth = float(params.get("depth") or 0.6)
             width = float(params.get("width") or 1.0)
-            bloc = bparams.get("location") or [0, 1, 0]
+            _bx, by, _bz = _as_xyz(bparams.get("location"))
             params = dict(params)
             params["location"] = [
                 round(0.08, 3),
                 round(
-                    max(0.15, min(float(bloc[1]), room_d - depth - 0.15)),
+                    max(0.15, min(by, room_d - depth - 0.15)),
                     3,
                 ),
                 0.0,
@@ -1142,18 +1177,11 @@ def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dic
                 elif orient_fix and "Orientierung" not in "".join(notes):
                     notes.append("Layout-Korrektur: Bett-Orientierung (Schlafrichtung).")
         if gen == "wardrobe_basic" and east_door:
-            loc = list(params.get("location") or [0, 0, 0])
-            try:
-                x = float(loc[0])
-            except (TypeError, ValueError):
-                x = 0.0
+            loc = _as_xyz(params.get("location"))
+            x = loc[0]
             if x > room_w * 0.55:
                 depth = float(params.get("depth") or 0.6)
-                try:
-                    y = float(loc[1]) if len(loc) > 1 else 0.15
-                    z = float(loc[2]) if len(loc) > 2 else 0.0
-                except (TypeError, ValueError):
-                    y, z = 0.15, 0.0
+                y, z = loc[1], loc[2]
                 params = dict(params)
                 params["location"] = [max(0.15, depth / 2 + 0.05), max(0.15, y), z]
                 # wardrobe_basic only supports y_min / y_max
@@ -1162,9 +1190,9 @@ def _apply_deterministic_placement_fixes(conversation: str, result: dict) -> dic
                 changed = True
                 notes.append("Layout-Korrektur: Schrank von der Ost-Tür weg.")
         if gen == "desk_basic" and east_door:
-            loc = list(params.get("location") or [0, 0, 0])
+            loc = _as_xyz(params.get("location"))
             try:
-                x = float(loc[0])
+                x = loc[0]
                 width = float(params.get("width") or 1.2)
             except (TypeError, ValueError):
                 x, width = 0.0, 1.2
@@ -1324,7 +1352,102 @@ def _finish_agent_result(
     result = _maybe_hard_replan(session, settings, messages, result, conversation)
     result = _maybe_soft_replan(session, settings, messages, result, conversation)
     result = _maybe_improve_replan(session, settings, messages, result, conversation)
-    _LAST_PLACEMENT_FP = _placement_fingerprint(result.get("commands") or [])
+    fp = _placement_fingerprint(result.get("commands") or [])
+    _LAST_PLACEMENT_FP = fp
+    _update_agent_state(session, result, conversation, last_plan=last_plan, placement_fp=fp)
+    result["agent_state"] = dict(getattr(session, "agent_state", {}) or {})
+    return result
+
+
+def _update_agent_state(
+    session, result: dict, conversation: str, *, last_plan=None, placement_fp=None
+) -> None:
+    state = getattr(session, "agent_state", None)
+    if not isinstance(state, dict):
+        from .session import empty_agent_state
+
+        state = empty_agent_state()
+        session.agent_state = state
+    proposal = result.get("proposal") if isinstance(result.get("proposal"), dict) else {}
+    req = proposal.get("requirements")
+    if not isinstance(req, dict) and last_plan and isinstance(last_plan.get("requirements"), dict):
+        req = last_plan.get("requirements")
+    if isinstance(req, dict):
+        from .planning import normalize_requirements
+
+        state["requirements"] = normalize_requirements(req)
+    if _wants_bedroom_layout(conversation):
+        state["goal"] = state.get("goal") or "Schlafzimmer planen"
+    elif _user_wants_room(conversation):
+        state["goal"] = state.get("goal") or "Raum planen"
+    state["open_questions"] = list(result.get("questions") or [])
+    state["last_proposal_id"] = (proposal.get("proposal_id") if proposal else None) or state.get(
+        "last_proposal_id"
+    )
+    quality = result.get("quality") if isinstance(result.get("quality"), dict) else {}
+    if quality:
+        state["last_analysis_summary"] = {
+            "errors": (quality.get("summary") or {}).get("errors"),
+            "warnings": (quality.get("summary") or {}).get("warnings"),
+            "has_hard_errors": quality.get("has_hard_errors"),
+            "has_soft_warnings": quality.get("has_soft_warnings"),
+        }
+    if placement_fp is not None:
+        state["last_placement_fp"] = list(placement_fp) if placement_fp else None
+    state["last_reply"] = (result.get("reply") or "")[:240]
+
+
+def _bedroom_plan_fallback(session, conversation: str, *, error: str | None = None) -> dict:
+    """Core-only recovery when LLM fails — never fall back to kids-room demo for bedrooms."""
+    from .planning import merge_requirements, normalize_requirements, reconcile_plan_layout_params
+
+    state = getattr(session, "agent_state", {}) or {}
+    base_req = state.get("requirements") if isinstance(state.get("requirements"), dict) else None
+    overlay = {
+        "room_type": "bedroom",
+        "doors": 1,
+        "furniture": ["bed", "wardrobe", "desk"],
+    }
+    wc = _requested_window_count(conversation)
+    if wc > 0:
+        overlay["windows"] = wc
+    elif not base_req:
+        overlay["windows"] = 1
+    size = _parse_room_size_m(conversation)
+    if size:
+        overlay["width"], overlay["depth"] = size
+    bed = _parse_bed_size_m(conversation)
+    if bed:
+        overlay["bed_width"], overlay["bed_length"] = bed
+    req = merge_requirements(base_req, overlay)
+    args = reconcile_plan_layout_params({}, requirements=req)
+    planned = dispatch_tool(session, "plan_layout", args)
+    commands = sanitize_commands(planned.get("commands") or [])
+    reply = "Schlafzimmer über Core-Rezept (plan_layout) geplant."
+    if error:
+        reply = f"(Agent/LLM fehlgeschlagen: {error}) {reply}"
+    result = {
+        "ok": True,
+        "mode": "agent_fallback",
+        "reply": reply,
+        "questions": [],
+        "proposal": {
+            "proposal_id": str(uuid.uuid4()),
+            "title": "Schlafzimmer (Core-Fallback)",
+            "rationale": "LLM unavailable or crashed; requirements → plan_layout",
+            "assumes": list(planned.get("assumes") or req.get("assumes") or []),
+            "requirements": planned.get("requirements") or req,
+            "commands": commands,
+            "expected_risks": [],
+        },
+        "suggested_next_tools": [],
+        "commands": commands,
+        "tool_trace": [{"tool": "plan_layout", "arguments": args, "ok": bool(planned.get("ok"))}],
+        "llm_error": error,
+    }
+    result = _attach_quality_preview(session, result)
+    _update_agent_state(session, result, conversation, last_plan=planned, placement_fp=_placement_fingerprint(commands))
+    result["agent_state"] = dict(getattr(session, "agent_state", {}) or {})
     return result
 
 
@@ -1436,6 +1559,29 @@ def _inject_scene_seed(session, messages: list, tool_trace: list) -> None:
         }
     )
     messages.extend(tool_msgs)
+    _inject_agent_state_hint(session, messages)
+
+
+def _inject_agent_state_hint(session, messages: list) -> None:
+    """Surface light session memory to the LLM (not chat history)."""
+    state = getattr(session, "agent_state", None)
+    if not isinstance(state, dict):
+        return
+    if not any(
+        state.get(k)
+        for k in ("goal", "requirements", "last_proposal_id", "last_analysis_summary", "last_reply")
+    ):
+        return
+    messages.append(
+        {
+            "role": "system",
+            "content": (
+                "Session agent_state (authoritative memory — reuse requirements on retry/"
+                "„nochmal“; do not invent conflicting intent):\n"
+                + json.dumps(state, ensure_ascii=False)
+            ),
+        }
+    )
 
 
 def _extract_json_object(text: str) -> dict:
@@ -1557,6 +1703,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
         return _observation_reply(session)
 
     if not llm_configured(llm_config):
+        if _session_wants_bedroom_fallback(session, message):
+            return _bedroom_plan_fallback(session, message)
         demo = _demo_as_agent_result(message)
         if demo:
             return _attach_quality_preview(session, demo)
@@ -1719,6 +1867,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             session, settings, messages, result, conversation, last_plan=last_plan
         )
     except Exception as exc:
+        if _session_wants_bedroom_fallback(session, conversation):
+            return _bedroom_plan_fallback(session, conversation, error=str(exc))
         demo = _demo_as_agent_result(message)
         if demo:
             demo["reply"] = f"(Agent/LLM fehlgeschlagen: {exc}) {demo['reply']}"

@@ -18,7 +18,23 @@ from .headless_api import execute_generator_headless
 from .mesh_store import MeshStore, triangulate_faces
 
 # Keep in sync with layoutlab/__init__.py bl_info version when bumping the plugin.
-LAYOUTLAB_VERSION = "0.10.8"
+
+AGENT_STATE_SCHEMA = "0.1.0"
+
+
+def empty_agent_state() -> dict:
+    """Lightweight session memory — not chat transcript (agent_tool_contract)."""
+    return {
+        "schema": AGENT_STATE_SCHEMA,
+        "goal": None,
+        "requirements": None,
+        "open_questions": [],
+        "last_proposal_id": None,
+        "last_analysis_summary": None,
+        "last_placement_fp": None,
+        "last_reply": None,
+    }
+LAYOUTLAB_VERSION = "0.10.20"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -293,16 +309,19 @@ class RoomSession:
     def __init__(self):
         self._rooms: dict[str, dict] = {}
         self.mesh_store = MeshStore()
+        self.agent_state = empty_agent_state()
 
     def clear(self):
         self._rooms.clear()
         self.mesh_store.clear()
+        self.agent_state = empty_agent_state()
 
     def clone(self) -> "RoomSession":
         """Independent copy for dry-run (mutations do not touch the live session)."""
         other = RoomSession()
         other._rooms = copy.deepcopy(self._rooms)
         other.mesh_store = self.mesh_store.clone()
+        other.agent_state = copy.deepcopy(self.agent_state)
         return other
 
     def list_rooms(self):

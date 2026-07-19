@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **LLM crash → kids demo:** `location` as dict no longer raises `unhashable type: 'slice'`; bedroom intents fall back to `plan_layout` (not kids-room demo); light `agent_state` persists requirements for „nochmal“ retries
+
 ### Added
 
 - **Mini-Requirements → `plan_layout`:** LLM fills structured `requirements` (room size, door/window counts, furniture, bed size); Core maps to recipe geometry; proposal carries `requirements`

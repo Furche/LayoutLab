@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-19 (v0.10.19 requirements → plan_layout)  
-**Plugin version:** 0.10.19 · **Branch:** `main`
+**Last updated:** 2026-07-19 (v0.10.20 agent state + bedroom fallback)  
+**Plugin version:** 0.10.20 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,11 +24,12 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.19.
+Branch: main. Plugin v0.10.20.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-19):
 - DD-016 Proposed (v0): plan_layout + bedroom_basic recipe (agent_tools 0.5)
+- Light agent_state on RoomSession (goal / requirements / last proposal)
 - DD-015 Proposed: soft metrics + tradeoffs
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
 - Generatoren: bed_basic, wardrobe_basic, desk_basic
@@ -163,12 +164,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-1. Light **agent state** (goal / requirements / last proposal / last analysis)  
-2. Entschlacken von `agent.py` (Bedroom-Heuristiken → planning/)  
-3. **Accept DD-016 / DD-015** after stable viewer runs  
-4. More recipes only after state is solid (`kids_room`, …) — not Capture/Cloud/Auth  
+1. Entschlacken von `agent.py` (Bedroom-Heuristiken → planning/)  
+2. **Accept DD-016 / DD-015** after stable viewer runs  
+3. More recipes only after state is solid (`kids_room`, …) — not Capture/Cloud/Auth  
 
-Mini-**Requirements** → `plan_layout` ✅ (v0.10.19) · baseline enforcement ✅ · focus: Agent↔Core contract
+Light **agent state** ✅ (v0.10.20) · Mini-**Requirements** → `plan_layout` ✅ · baseline enforcement ✅ · focus: Agent↔Core contract
 
 ------------------------------------------------------------------------
 

@@ -24,20 +24,22 @@ DD-009 remains binding: AI plans WHAT; LayoutLab Core executes HOW.
 
 ## Agent state (lightweight)
 
-Not the LLM transcript — a small app/Core state object:
+Not the LLM transcript — a small object on `RoomSession.agent_state` (updated each successful agent turn / bedroom fallback; injected into the LLM seed as a system hint):
 
 ```json
 {
-  "agent_schema": "0.1.0",
-  "goal": "Platz für zwei Kinder",
+  "schema": "0.1.0",
+  "goal": "Schlafzimmer planen",
+  "requirements": { "room_type": "bedroom", "windows": 2 },
   "open_questions": [],
   "last_proposal_id": null,
   "last_analysis_summary": null,
-  "constraints_noted": []
+  "last_placement_fp": null,
+  "last_reply": null
 }
 ```
 
-*(Persistence of this object is still pending — Agent-3.)*
+On LLM failure or missing API key, bedroom intents (and „nochmal“ when `requirements.room_type` is bedroom) use Core `plan_layout` — never the kids-room keyword demo.
 
 ------------------------------------------------------------------------
 
@@ -237,8 +239,9 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 9. `plan_layout` + `bedroom_basic` recipe (DD-016) ✅
 10. **Recipe baseline enforcement** — final proposal uses Core `plan_layout` when called ✅
 11. **Mini-Requirements** object → `plan_layout` (language → structured intent) ✅
-12. Persist light agent state (goal / requirements / last findings) ← next
+12. Persist light agent state (goal / requirements / last findings) ✅
 13. More recipes (`kids_room`, `office`) / variants ← later
+14. Slim `agent.py` (move bedroom heuristics into `planning/`) ← next
 
 ### Requirements (v0)
 

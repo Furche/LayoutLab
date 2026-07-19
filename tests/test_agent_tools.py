@@ -523,6 +523,77 @@ class TestAgentTools(unittest.TestCase):
         self.assertTrue(ag._is_observation_query("siehst du auch, dass der tisch im bett drin steht?"))
         self.assertFalse(ag._is_observation_query("kannst du mir ein layout bauen welches physikalisch möglich ist"))
 
+    def test_placement_fingerprint_accepts_dict_location(self):
+        from layoutlab.runtime import agent as ag
+
+        cmds = [
+            {
+                "action": "run_generator",
+                "generator": "bed_basic",
+                "params": {
+                    "location": {"x": 0.15, "y": 0.2, "z": 0},
+                    "head_side": "y_min",
+                },
+            }
+        ]
+        fp = ag._placement_fingerprint(cmds)
+        self.assertEqual(len(fp), 1)
+        self.assertEqual(fp[0][1], (0.15, 0.2, 0.0))
+
+    def test_bedroom_fallback_not_kids_demo(self):
+        from layoutlab.runtime.agent import run_agent_turn
+        from layoutlab.runtime.session import RoomSession
+
+        session = RoomSession()
+        out = run_agent_turn(
+            session,
+            "beitte einmal ein schlafzimmer gestalten mit 2 fenstern und möbeln",
+            llm_config=None,
+        )
+        self.assertTrue(out["ok"], out)
+        self.assertEqual(out["mode"], "agent_fallback")
+        names = [
+            (c.get("params") or {}).get("name") or c.get("name")
+            for c in out.get("commands") or []
+            if c.get("action") == "create_room"
+        ]
+        self.assertTrue(names)
+        self.assertNotIn("KIDS_ROOM", names)
+        openings = [
+            c
+            for c in out.get("commands") or []
+            if c.get("action") == "add_opening"
+            and str((c.get("params") or {}).get("kind") or c.get("kind") or "").lower()
+            == "window"
+        ]
+        self.assertGreaterEqual(len(openings), 2)
+        state = session.agent_state
+        self.assertEqual(state.get("goal"), "Schlafzimmer planen")
+        self.assertIsInstance(state.get("requirements"), dict)
+        self.assertEqual(state["requirements"].get("windows"), 2)
+
+    def test_bedroom_retry_keeps_window_count_from_state(self):
+        from layoutlab.runtime.agent import run_agent_turn
+        from layoutlab.runtime.session import RoomSession
+
+        session = RoomSession()
+        first = run_agent_turn(
+            session, "schlafzimmer mit 2 fenstern", llm_config=None
+        )
+        self.assertTrue(first["ok"])
+        self.assertEqual(session.agent_state["requirements"]["windows"], 2)
+        second = run_agent_turn(session, "nochmal versuchen", llm_config=None)
+        self.assertTrue(second["ok"], second)
+        self.assertEqual(second["mode"], "agent_fallback")
+        wins = [
+            c
+            for c in second.get("commands") or []
+            if c.get("action") == "add_opening"
+            and str((c.get("params") or {}).get("kind") or c.get("kind") or "").lower()
+            == "window"
+        ]
+        self.assertGreaterEqual(len(wins), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
