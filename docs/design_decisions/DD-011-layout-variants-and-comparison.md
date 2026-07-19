@@ -183,7 +183,7 @@ User/AI priority overrides (e.g. `prefer_bed_wall: "north"`) force that family o
 
 ## Implementation order (after Accept)
 
-1. Document recipe registry metadata (id, kind, goal summary, applicability) — even if only `bedroom_basic` exists.
+1. Document recipe registry metadata (id, kind, goal tags, applicability) — even if only `bedroom_basic` exists (`kind: "room_use"`, e.g. `goals: ["sleep","storage"]`). Do **not** rename `bedroom_basic`.
 2. Factor `bedroom_basic` into shared placement primitives + option matrix → N candidates (commands only, no analyze yet).
 3. Evaluate each on session clone; attach quality / soft_summary.
 4. Deterministic rank + `selection_reason` strings (German templates OK).
@@ -199,7 +199,7 @@ User/AI priority overrides (e.g. `prefer_bed_wall: "north"`) force that family o
 2. **How many candidates in v1?** Proposed default: 2–4 strategies per recipe call (not dozens).
 3. **May the AI override Core selection?** Proposed: only via allowlisted preference keys on requirements; no free re-pick of coordinates. Recipe **choice** remains an AI/requirements concern.
 4. **Return all candidates to the Viewer in v1?** Proposed: no — selected only in `proposal.commands`; full list in tool result / log for debugging.
-5. **Recipe naming:** keep `bedroom_basic` as-is for v1, or introduce an explicit goal alias later (e.g. tag `goals: ["sleep","storage"]`)?
+5. **Recipe naming:** ~~keep `bedroom_basic` vs goal alias?~~ → **Resolved:** keep id `bedroom_basic`; add registry metadata tags (e.g. `goals: ["sleep","storage"]`, `kind: "room_use"`). Goal-oriented recipes later get their own ids (`maximize_play_area`, …), not renames of room-use recipes.
 
 ------------------------------------------------------------------------
 
