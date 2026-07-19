@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- **agent.py bedroom heuristics → planning/** (`0.10.21`): intent parsing / counts / sizes live in `planning/intent.py`; placement fixes / fingerprints in `planning/placement.py`; `agent.py` keeps thin underscored re-exports for tests
+
 ### Fixed
 
 - **LLM crash → kids demo:** `location` as dict no longer raises `unhashable type: 'slice'`; bedroom intents fall back to `plan_layout` (not kids-room demo); light `agent_state` persists requirements for „nochmal“ retries

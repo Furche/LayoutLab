@@ -34,7 +34,7 @@ def empty_agent_state() -> dict:
         "last_placement_fp": None,
         "last_reply": None,
     }
-LAYOUTLAB_VERSION = "0.10.20"
+LAYOUTLAB_VERSION = "0.10.21"
 
 SESSION_ACTIONS = frozenset(
     {

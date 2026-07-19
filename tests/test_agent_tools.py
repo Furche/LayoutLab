@@ -315,8 +315,9 @@ class TestAgentTools(unittest.TestCase):
 
     def test_better_layout_moves_furniture(self):
         from layoutlab.runtime import agent as ag
+        from layoutlab.runtime.planning import placement
 
-        ag._LAST_PLACEMENT_FP = (
+        placement.last_placement_fp = (
             ("bed_basic", (2.0, 1.0, 0.0), None, None),
             ("wardrobe_basic", (0.5, 1.5, 0.0), None, None),
             ("desk_basic", (1.5, 0.5, 0.0), None, None),
@@ -378,7 +379,7 @@ class TestAgentTools(unittest.TestCase):
         self.assertEqual(bed["params"]["head_side"], "y_max")
         self.assertNotEqual(tuple(bed["params"]["location"]), (2.0, 1.0, 0))
         self.assertLess(float(desk["params"]["location"][0]), 1.0)
-        ag._LAST_PLACEMENT_FP = None
+        placement.last_placement_fp = None
 
 
     def test_desk_bed_overlap_separated(self):
