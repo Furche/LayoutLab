@@ -42,12 +42,14 @@ def _opening_offset(wall_side: str, width: float, room_w: float, room_d: float) 
     return round(MARGIN + span * 0.35, 3)
 
 
-def _default_windows_for_count(n: int) -> list[dict]:
-    """Prefer south/north first so two windows do not stack on one wall."""
+def _default_windows_for_count(n: int, *, avoid_side: str | None = None) -> list[dict]:
+    """Prefer south/north first; never put a default window on the door wall."""
     n = max(0, int(n))
     if n == 0:
         return []
-    sides = ["south", "north", "west", "east"]
+    sides = [s for s in ("south", "north", "west", "east") if s != avoid_side]
+    if not sides:
+        sides = ["south", "north", "west", "east"]
     return [
         {"wall_side": sides[i % len(sides)], "width": 1.2, "sill_height": 0.9}
         for i in range(n)
@@ -118,23 +120,32 @@ def plan_bedroom_basic(params: dict | None = None) -> dict[str, Any]:
     collection = str(params.get("collection") or COLLECTION).strip() or COLLECTION
     include_desk = bool(params.get("include_desk", True))
     include_wardrobe = bool(params.get("include_wardrobe", True))
+    include_bed = bool(params.get("include_bed", True))
 
-    door = params.get("door") if isinstance(params.get("door"), dict) else {}
-    door_side = _side(door.get("wall_side"), "east")
-    door_w = max(0.7, _f(door.get("width"), 0.9))
-    door_h = max(1.8, _f(door.get("height"), 2.0))
-    door_off = door.get("offset")
-    if door_off is None:
-        door_off = _opening_offset(door_side, door_w, room_w, room_d)
-    else:
-        door_off = _f(door_off, 0.3)
+    door = params.get("door")
+    if door is False or door is None:
+        door = None
+    elif not isinstance(door, dict):
+        door = {}
+    door_side = _side((door or {}).get("wall_side"), "east") if door is not None else "east"
+    door_w = max(0.7, _f((door or {}).get("width"), 0.9))
+    door_h = max(1.8, _f((door or {}).get("height"), 2.0))
+    door_off = (door or {}).get("offset") if door else None
+    if door is not None:
+        if door_off is None:
+            door_off = _opening_offset(door_side, door_w, room_w, room_d)
+        else:
+            door_off = _f(door_off, 0.3)
 
     windows_in = params.get("windows")
     if params.get("window_count") is not None:
         try:
-            windows_in = _default_windows_for_count(int(params.get("window_count")))
+            windows_in = _default_windows_for_count(
+                int(params.get("window_count")),
+                avoid_side=door_side if door is not None else None,
+            )
         except (TypeError, ValueError):
-            windows_in = _default_windows_for_count(1)
+            windows_in = _default_windows_for_count(1, avoid_side=door_side if door else None)
     elif windows_in is None:
         windows_in = [{"wall_side": "south", "width": 1.2, "sill_height": 0.9}]
     if not isinstance(windows_in, list):
@@ -145,7 +156,9 @@ def plan_bedroom_basic(params: dict | None = None) -> dict[str, Any]:
         assumes.append(f"room width={room_w} m (default)")
     if params.get("depth") is None:
         assumes.append(f"room depth={room_d} m (default)")
-    if params.get("door") is None:
+    if door is None:
+        assumes.append("no door")
+    elif params.get("door") is None and "_requirements" not in params:
         assumes.append(f"door on {door_side} wall")
     if params.get("windows") is None and params.get("window_count") is None:
         assumes.append("one south window")
@@ -166,19 +179,22 @@ def plan_bedroom_basic(params: dict | None = None) -> dict[str, Any]:
                 "collection": collection,
             },
         },
-        {
-            "action": "add_opening",
-            "params": {
-                "room": ROOM_NAME,
-                "opening_name": f"door_{door_side}",
-                "kind": "door",
-                "wall_side": door_side,
-                "offset": round(door_off, 3),
-                "width": round(door_w, 3),
-                "height": round(door_h, 3),
-            },
-        },
     ]
+    if door is not None:
+        commands.append(
+            {
+                "action": "add_opening",
+                "params": {
+                    "room": ROOM_NAME,
+                    "opening_name": f"door_{door_side}",
+                    "kind": "door",
+                    "wall_side": door_side,
+                    "offset": round(door_off, 3),
+                    "width": round(door_w, 3),
+                    "height": round(door_h, 3),
+                },
+            }
+        )
 
     win_cmds, win_south = _spaced_window_commands(windows_in, room_w, room_d, ROOM_NAME)
     commands.extend(win_cmds)
@@ -197,27 +213,33 @@ def plan_bedroom_basic(params: dict | None = None) -> dict[str, Any]:
         else:
             bed_x = MARGIN  # still west; window soft access may warn
     bed_y = MARGIN
-    commands.append(
-        {
-            "action": "run_generator",
-            "generator": "bed_basic",
-            "params": {
-                "name": "BED",
-                "location": [round(bed_x, 3), round(bed_y, 3), 0],
-                "length": round(axis_x, 3),
-                "width": round(axis_y, 3),
-                "head_side": "y_min",
-                "collection": collection,
-            },
-        }
-    )
-    bed_box = (bed_x, bed_y, bed_x + axis_x, bed_y + axis_y)
+    bed_box = None
+    if include_bed:
+        commands.append(
+            {
+                "action": "run_generator",
+                "generator": "bed_basic",
+                "params": {
+                    "name": "BED",
+                    "location": [round(bed_x, 3), round(bed_y, 3), 0],
+                    "length": round(axis_x, 3),
+                    "width": round(axis_y, 3),
+                    "head_side": "y_min",
+                    "collection": collection,
+                },
+            }
+        )
+        bed_box = (bed_x, bed_y, bed_x + axis_x, bed_y + axis_y)
 
     notes = [
-        "Bed on south wall (head_side=y_min): mattress "
-        f"{axis_x:.2f}m wide × {axis_y:.2f}m long (sleep along +Y).",
         "Circulation kept toward east door when door is east.",
     ]
+    if include_bed:
+        notes.insert(
+            0,
+            "Bed on south wall (head_side=y_min): mattress "
+            f"{axis_x:.2f}m wide × {axis_y:.2f}m long (sleep along +Y).",
+        )
 
     # --- Wardrobe: north wall, west, doors face south ---
     if include_wardrobe:
@@ -226,7 +248,7 @@ def plan_bedroom_basic(params: dict | None = None) -> dict[str, Any]:
         wx = MARGIN
         wy = room_d - wd - MARGIN
         # Keep out of east door strip
-        if door_side == "east" and wx + ww > room_w - DOOR_ACCESS_KEEP:
+        if door is not None and door_side == "east" and wx + ww > room_w - DOOR_ACCESS_KEEP:
             wx = max(MARGIN, room_w - DOOR_ACCESS_KEEP - ww)
         commands.append(
             {
@@ -260,7 +282,7 @@ def plan_bedroom_basic(params: dict | None = None) -> dict[str, Any]:
         else:
             dx = MARGIN
         # Keep east door strip free
-        if door_side == "east":
+        if door is not None and door_side == "east":
             max_x = room_w - DOOR_ACCESS_KEEP - dw
             if dx > max_x:
                 dx = max(MARGIN, max_x)

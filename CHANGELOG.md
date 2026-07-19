@@ -8,17 +8,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **Mini-Requirements → `plan_layout`:** LLM fills structured `requirements` (room size, door/window counts, furniture, bed size); Core maps to recipe geometry; proposal carries `requirements`
+- **DD-016 Planning recipes (`agent_tools` 0.5):** tool `plan_layout` + recipe `bedroom_basic` — Core places standard bedroom furniture deterministically; agent prefers recipes over free xy; dry-run target = 0 hard errors on 4×3.5 / 4×4
+- **Layout sketch (`agent_tools` 0.4):** `get_layout_sketch` top-down ASCII + `bounds_xy`; included in dry-run, scene seed, quality preview, and session log — spatial eyes for the agent without the 3D viewport
+
 ### Fixed
 
+- **Windows vs door wall:** default window placement skips the door wall (avoids east door+window overlap)
 - **plan_layout baseline:** after `plan_layout` in a turn, Core re-applies the recipe (reconciled with room size / window_count / bed size from the conversation) so the LLM cannot ship duplicate/overlapping openings
 - **Bedroom windows:** `window_count` places non-overlapping windows (south/north first)
 - **Bed size requests:** parse `120x200` as Breite×Länge, apply axis-correct dims; honest noop when already that size; no false „Bett an die Wand“ spam when the recipe bed already hugs the wall
 - **Bed orientation:** normal 120×200 beds with head on south/north use `length=1.2` (along wall) and `width=2.0` (into room); recipe + wall-snap no longer put the 2 m side along the wall
-
-### Added
-
-- **DD-016 Planning recipes (`agent_tools` 0.5):** tool `plan_layout` + recipe `bedroom_basic` — Core places standard bedroom furniture deterministically; agent prefers recipes over free xy; dry-run target = 0 hard errors on 4×3.5 / 4×4
-- **Layout sketch (`agent_tools` 0.4):** `get_layout_sketch` top-down ASCII + `bounds_xy`; included in dry-run, scene seed, quality preview, and session log — spatial eyes for the agent without the 3D viewport
 - **Clearance zones in sketch:** `+` preferred / `*` required painted into ASCII + structured `rooms[].clearances` (default on)
 - **Session reset on Viewer refresh:** `POST /v1/session/reset` archives the log and clears the Core scene; Viewer calls it on full page load; `LAST_SESSION.md` header shows `core_version`
 - **Viewer Core version badge:** top bar shows live Core version from `/health` (or `offline`)

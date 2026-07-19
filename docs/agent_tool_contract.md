@@ -236,9 +236,33 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 8. Layout sketch (top-down ASCII) in seed + dry_run + quality ✅
 9. `plan_layout` + `bedroom_basic` recipe (DD-016) ✅
 10. **Recipe baseline enforcement** — final proposal uses Core `plan_layout` when called ✅
-11. Persist light agent state (goal / questions / last findings) ← next
-12. Mini-Requirements object → `plan_layout` ← next
+11. **Mini-Requirements** object → `plan_layout` (language → structured intent) ✅
+12. Persist light agent state (goal / requirements / last findings) ← next
 13. More recipes (`kids_room`, `office`) / variants ← later
+
+### Requirements (v0)
+
+Preferred `plan_layout` input:
+
+```json
+{
+  "requirements": {
+    "room_type": "bedroom",
+    "width": 4.0,
+    "depth": 3.5,
+    "doors": 1,
+    "windows": 2,
+    "furniture": ["bed", "wardrobe", "desk"],
+    "bed_width": 1.2,
+    "bed_length": 2.0,
+    "door_wall": "east",
+    "assumes": []
+  }
+}
+```
+
+LLM fills requirements from language; Core owns geometry. Final proposals should echo
+`proposal.requirements`.
 
 ------------------------------------------------------------------------
 

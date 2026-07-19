@@ -21,14 +21,17 @@ AI decides WHAT (goals, recipe, tradeoffs); LayoutLab Core decides WHERE for sta
 via plan_layout recipes, and HOW via generators. You invent no meshes, bpy, or free Python.
 
 Planning recipes (DD-016 — prefer this):
-- For a normal bedroom (bed ± wardrobe ± desk, door + window): call plan_layout with
-  recipe="bedroom_basic" and the room size / openings the user gave (or defaults).
-  Prefer window_count for the number of windows (Core places them without overlap).
-- Use the returned commands as the proposal baseline. Then validate_commands + dry_run_commands.
-- Do NOT invent free location/head_side or duplicate openings when plan_layout covers the request.
-  Core will re-apply the recipe baseline if your final commands diverge from plan_layout.
-- Free-form run_generator placement is only for custom overrides ("Tisch genau hier")
+- For a normal bedroom: extract structured requirements from the user language, then call
+  plan_layout with requirements={...}. Example:
+  {"requirements":{"room_type":"bedroom","width":4,"depth":3.5,"doors":1,"windows":2,
+   "furniture":["bed","wardrobe","desk"],"bed_width":1.2,"bed_length":2.0,"door_wall":"east"}}
+- You translate language → requirements (numbers, counts). Core translates requirements → geometry.
+- Put the same requirements object into proposal.requirements in your final JSON.
+- Do NOT invent free location/head_side or duplicate openings. Core re-applies plan_layout
+  from requirements if your commands diverge.
+- Free-form run_generator placement only for custom overrides ("Tisch genau hier")
   after a recipe baseline, or when no recipe fits.
+- If size/openings are unknown, ask briefly OR document defaults in requirements.assumes.
 
 Spatial perception (critical):
 - You cannot see the 3D viewport. Your eyes are tools: get_layout_sketch and dry_run_commands.layout_sketch.
@@ -81,6 +84,7 @@ Workflow:
     "title": "short title",
     "rationale": "why this plan",
     "assumes": [],
+    "requirements": { /* structured intent for plan_layout */ },
     "commands": [ /* full LayoutLab commands */ ],
     "expected_risks": []
   },
@@ -665,20 +669,32 @@ def _apply_plan_layout_baseline(
 
     from .planning import reconcile_plan_layout_params
 
+    proposal = result.get("proposal") if isinstance(result.get("proposal"), dict) else {}
+    req = None
+    if isinstance(proposal.get("requirements"), dict):
+        req = proposal.get("requirements")
+    elif isinstance(last_plan.get("requirements"), dict):
+        req = last_plan.get("requirements")
+    elif isinstance((last_plan.get("arguments") or {}).get("requirements"), dict):
+        req = (last_plan.get("arguments") or {}).get("requirements")
+
     args = reconcile_plan_layout_params(
         last_plan.get("arguments") or {},
         window_count=_requested_window_count(conversation),
         room_size=_parse_room_size_m(conversation),
         bed_size=_parse_bed_size_m(conversation),
         wants_door=_user_wants_door(conversation) or True,
+        requirements=req,
     )
     planned = dispatch_tool(session, "plan_layout", args)
     if planned.get("ok") and planned.get("commands"):
         cmds = planned["commands"]
         assumes = list(planned.get("assumes") or [])
+        req_out = planned.get("requirements")
     else:
         cmds = list(last_plan.get("commands") or [])
         assumes = list(last_plan.get("assumes") or [])
+        req_out = last_plan.get("requirements")
         planned = last_plan
 
     llm_fp = _layout_shell_fingerprint(commands)
@@ -688,8 +704,10 @@ def _apply_plan_layout_baseline(
     result = dict(result)
     result["commands"] = cmds
     result["questions"] = []
-    proposal = dict(result.get("proposal") or {})
+    proposal = dict(proposal)
     proposal["commands"] = cmds
+    if isinstance(req_out, dict):
+        proposal["requirements"] = req_out
     merged_assumes = list(proposal.get("assumes") or [])
     for a in assumes:
         if a not in merged_assumes:
@@ -700,7 +718,7 @@ def _apply_plan_layout_baseline(
     result["plan_layout_args"] = args
     if replaced:
         note = (
-            " (Layout aus plan_layout übernommen — Core-Rezept statt freier "
+            " (Layout aus plan_layout/requirements übernommen — Core-Rezept statt freier "
             "Agent-Koordinaten/Öffnungen.)"
         )
         result["reply"] = (result.get("reply") or "").rstrip() + note
@@ -1446,17 +1464,27 @@ def _normalize_proposal(parsed: dict) -> dict:
         proposal = {}
     commands = sanitize_commands(proposal.get("commands") or parsed.get("commands") or [])
     proposal_id = proposal.get("proposal_id") or str(uuid.uuid4())
+    requirements = proposal.get("requirements")
+    if requirements is not None and not isinstance(requirements, dict):
+        requirements = None
+    if requirements is None and isinstance(parsed.get("requirements"), dict):
+        requirements = parsed.get("requirements")
+    out_proposal = {
+        "proposal_id": proposal_id,
+        "title": str(proposal.get("title") or "Vorschlag").strip(),
+        "rationale": str(proposal.get("rationale") or "").strip(),
+        "assumes": list(proposal.get("assumes") or []),
+        "commands": commands,
+        "expected_risks": list(proposal.get("expected_risks") or []),
+    }
+    if requirements is not None:
+        from .planning import normalize_requirements
+
+        out_proposal["requirements"] = normalize_requirements(requirements)
     return {
         "reply": str(parsed.get("reply") or "Vorschlag bereit.").strip(),
         "questions": list(parsed.get("questions") or []),
-        "proposal": {
-            "proposal_id": proposal_id,
-            "title": str(proposal.get("title") or "Vorschlag").strip(),
-            "rationale": str(proposal.get("rationale") or "").strip(),
-            "assumes": list(proposal.get("assumes") or []),
-            "commands": commands,
-            "expected_risks": list(proposal.get("expected_risks") or []),
-        },
+        "proposal": out_proposal,
         "suggested_next_tools": list(parsed.get("suggested_next_tools") or []),
     }
 
@@ -1638,6 +1666,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                             "assumes": tool_result.get("assumes") or [],
                             "notes": tool_result.get("notes") or [],
                             "recipe": tool_result.get("recipe"),
+                            "requirements": tool_result.get("requirements")
+                            or args.get("requirements"),
                         }
                     messages.append(
                         {

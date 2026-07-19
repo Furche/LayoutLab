@@ -816,44 +816,53 @@ def openai_tool_definitions():
             "function": {
                 "name": "plan_layout",
                 "description": (
-                    "DD-016 deterministic layout recipe. Prefer this for standard "
-                    "bedrooms instead of inventing free location/head_side. "
-                    "Returns full LayoutLab commands (room + openings + furniture). "
-                    "Then validate + dry_run those commands. Live session unchanged."
+                    "DD-016 deterministic layout from structured requirements. "
+                    "Prefer params.requirements (LLM fills language → numbers). "
+                    "Do NOT invent free location/head_side or duplicate openings. "
+                    "Returns commands; then validate + dry_run. Live session unchanged."
                 ),
                 "parameters": {
                     "type": "object",
                     "properties": {
+                        "requirements": {
+                            "type": "object",
+                            "description": (
+                                "Structured intent: room_type, width, depth, height, "
+                                "doors, windows, furniture[], bed_width, bed_length, "
+                                "door_wall, assumes[]"
+                            ),
+                            "properties": {
+                                "room_type": {"type": "string"},
+                                "width": {"type": "number"},
+                                "depth": {"type": "number"},
+                                "height": {"type": "number"},
+                                "doors": {"type": "integer"},
+                                "windows": {"type": "integer"},
+                                "furniture": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                },
+                                "bed_width": {"type": "number"},
+                                "bed_length": {"type": "number"},
+                                "door_wall": {"type": "string"},
+                                "assumes": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                },
+                            },
+                        },
                         "recipe": {
                             "type": "string",
-                            "description": "Recipe id. v0: bedroom_basic",
+                            "description": "Recipe id. v0: bedroom_basic (usually inferred)",
                         },
                         "width": {"type": "number"},
                         "depth": {"type": "number"},
                         "height": {"type": "number"},
-                        "door": {
-                            "type": "object",
-                            "description": "{wall_side, width?, height?, offset?}",
-                        },
-                        "windows": {
-                            "type": "array",
-                            "items": {"type": "object"},
-                            "description": "[{wall_side, width?, sill_height?, offset?}]",
-                        },
+                        "window_count": {"type": "integer"},
                         "include_desk": {"type": "boolean"},
                         "include_wardrobe": {"type": "boolean"},
-                        "window_count": {
-                            "type": "integer",
-                            "description": "Number of windows (Core places them without overlap)",
-                        },
-                        "bed_width": {
-                            "type": "number",
-                            "description": "Mattress side-to-side in meters (e.g. 1.2 for 120 cm)",
-                        },
-                        "bed_length": {
-                            "type": "number",
-                            "description": "Mattress head-to-foot in meters (e.g. 2.0 for 200 cm)",
-                        },
+                        "bed_width": {"type": "number"},
+                        "bed_length": {"type": "number"},
                         "collection": {"type": "string"},
                     },
                 },
