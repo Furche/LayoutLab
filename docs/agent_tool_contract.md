@@ -1,8 +1,8 @@
 # LayoutLab Agent Tool Contract
 
-**Status:** Design + implementing (Agent-2.3 plan_layout recipes)  
+**Status:** Active (`agent_tools` 0.5 — DD-015/016 Accepted)  
 **Version:** `agent_tools` 0.5  
-**Date:** 2026-07-19  
+**Date:** 2026-07-20  
 **Related:** [DD-009](design_decisions/DD-009-ai-execution-boundary.md) · [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) · [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) · [json_protocol.md](json_protocol.md) · [DD-014](design_decisions/DD-014-standalone-runtime-path.md)
 
 ------------------------------------------------------------------------

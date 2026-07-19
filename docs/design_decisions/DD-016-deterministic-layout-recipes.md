@@ -1,8 +1,17 @@
 # DD-016 — Deterministic Layout Recipes (Planning Layer v0)
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-07-19  
+**Accepted:** 2026-07-20  
 **Related:** [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-015](DD-015-soft-metrics-and-tradeoffs.md) · [Future_Ideas.md](../Future_Ideas.md) §5 / §9 · [agent_tool_contract.md](../agent_tool_contract.md)
+
+------------------------------------------------------------------------
+
+## Decision summary (Accepted)
+
+Locks Planning Layer v0: **AI chooses recipe / requirements**; **Core owns standard bedroom geometry** via `plan_layout` + `bedroom_basic`. Free LLM xy remains only for custom overrides after a recipe baseline.
+
+Shipped beyond the original v0 sketch: mini-`requirements` object, recipe baseline enforcement, light `agent_state`, bedroom intent/placement helpers under `layoutlab/runtime/planning/`. Further recipes (`kids_room`, …) stay future work — not authorized by this accept alone.
 
 ------------------------------------------------------------------------
 
@@ -120,14 +129,23 @@ Exact numbers live in code + tests; this DD locks the **intent** of the rules.
 
 ## Implementation order
 
-1. `layoutlab/runtime/planning/bedroom_basic.py` + tests (dry-run hard errors = 0 on 4×4 / 4×3.5).
-2. Tool `plan_layout` + contract docs.
-3. Agent system prompt: prefer `plan_layout` for bedroom intents.
-4. Slim down or gate aggressive free-placement “fixes” once recipe path is default.
+1. ~~`layoutlab/runtime/planning/bedroom_basic.py` + tests (dry-run hard errors = 0 on 4×4 / 4×3.5).~~ ✅
+2. ~~Tool `plan_layout` + contract docs.~~ ✅
+3. ~~Agent system prompt: prefer `plan_layout` for bedroom intents.~~ ✅
+4. ~~Slim down free-placement heuristics into `planning/` (intent + placement).~~ ✅ (v0.10.21)
 5. Later: more recipes (`kids_room`, `office`) → variants (DD-011).
 
 ------------------------------------------------------------------------
 
 ## Acceptance
 
-- [ ] Alexander Accept / Reject / Request changes
+- [x] **Accepted** 2026-07-20 — Viewer/Core runs show recipe bedrooms with dry-run hard errors = 0 (e.g. furnished bedroom apply on Core 0.10.21).
+
+------------------------------------------------------------------------
+
+## History
+
+| Ver | Date | Note |
+|---|---|---|
+| 0.1 | 2026-07-19 | Proposed (v0 scope) |
+| 1.0 | 2026-07-20 | **Accepted** — `plan_layout` + `bedroom_basic` + requirements/baseline locked |

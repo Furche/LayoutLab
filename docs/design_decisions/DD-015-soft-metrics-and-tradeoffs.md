@@ -1,8 +1,17 @@
 # DD-015 — Soft Metrics and Rule Tradeoffs (AI ↔ LayoutLab)
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-07-18  
+**Accepted:** 2026-07-20  
 **Related:** [DD-007](DD-007-clearance-zones.md) · [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [agent_tool_contract.md](../agent_tool_contract.md)
+
+------------------------------------------------------------------------
+
+## Decision summary (Accepted)
+
+Locks the split: **Core measures** soft usability proxies + non-negotiable solid collisions; **AI chooses/explains** tradeoffs via `expected_risks`; **User consents** on Apply. v1 does not server-block Apply on soft/hard findings (Viewer warns; `solid_wall_penetration` blocks Apply in the Viewer).
+
+Shipped: `soft_packing`, `opening_access`, `solid_wall_penetration`; dry-run `soft_summary`; agent `quality` preview; Viewer confirm UX.
 
 ------------------------------------------------------------------------
 
@@ -71,3 +80,12 @@ No aesthetics score. No “73% good layout.”
 - Soft analysis lives in headless path first (`layoutlab/runtime` + `layoutlab/core`).  
 - `dry_run_commands` returns `soft_summary` plus slim findings.  
 - Agent turn may attach a `quality` preview from an automatic dry-run of the final proposal.
+
+------------------------------------------------------------------------
+
+## History
+
+| Ver | Date | Note |
+|---|---|---|
+| 0.1 | 2026-07-18 | Proposed |
+| 1.0 | 2026-07-20 | **Accepted** — soft metrics + tradeoff contract locked; shipped in Core/Viewer |

@@ -21,8 +21,8 @@ New decisions use the next sequential number: `DD-006`, `DD-007`, …
 | [DD-009](DD-009-ai-execution-boundary.md) | AI execution boundary; plugin responsibility | Accepted | 2026-07-12 |
 | [DD-010](DD-010-room-model.md) | Room Model (single space) — editable space, not room generator | **Accepted** | 2026-07-16 |
 | [DD-014](DD-014-standalone-runtime-path.md) | Standalone runtime path (viewer → write adapter) | **Accepted — Phase A + B + B2** | 2026-07-17 |
-| [DD-015](DD-015-soft-metrics-and-tradeoffs.md) | Soft metrics and rule tradeoffs (AI ↔ LayoutLab) | **Proposed** | 2026-07-18 |
-| [DD-016](DD-016-deterministic-layout-recipes.md) | Deterministic layout recipes (Planning Layer v0) | **Proposed** (v0 implemented) | 2026-07-19 |
+| [DD-015](DD-015-soft-metrics-and-tradeoffs.md) | Soft metrics and rule tradeoffs (AI ↔ LayoutLab) | **Accepted** | 2026-07-20 |
+| [DD-016](DD-016-deterministic-layout-recipes.md) | Deterministic layout recipes (Planning Layer v0) | **Accepted** | 2026-07-20 |
 
 When implementing anything that touches APIs, JSON protocol, generator behaviour,
 or UI patterns — check this index first.

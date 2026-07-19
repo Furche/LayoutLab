@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **DD-015 / DD-016 Accepted:** soft metrics + tradeoffs and deterministic layout recipes (`plan_layout` / `bedroom_basic`) locked as architecture
 - **agent.py bedroom heuristics → planning/** (`0.10.21`): intent parsing / counts / sizes live in `planning/intent.py`; placement fixes / fingerprints in `planning/placement.py`; `agent.py` keeps thin underscored re-exports for tests
 
 ### Fixed

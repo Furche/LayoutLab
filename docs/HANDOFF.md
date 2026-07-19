@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-19 (v0.10.21 agent heuristics → planning/)  
-**Plugin version:** 0.10.21 · **Branch:** `main`
+**Last updated:** 2026-07-20 (v0.10.22 — DD-015/016 Accepted)  
+**Plugin version:** 0.10.22 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,14 +24,14 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.21.
+Branch: main. Plugin v0.10.22.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
-Aktueller Stand (2026-07-19):
-- DD-016 Proposed (v0): plan_layout + bedroom_basic recipe (agent_tools 0.5)
-- agent.py bedroom heuristics → planning/intent + planning/placement (v0.10.21)
+Aktueller Stand (2026-07-20):
+- DD-016 **Accepted**: plan_layout + bedroom_basic (agent_tools 0.5)
+- DD-015 **Accepted**: soft metrics + tradeoffs
+- agent.py bedroom heuristics → planning/intent + planning/placement
 - Light agent_state on RoomSession (goal / requirements / last proposal)
-- DD-015 Proposed: soft metrics + tradeoffs
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
 - Generatoren: bed_basic, wardrobe_basic, desk_basic
 - Core: python3 -m server (:8765); Viewer Vite (:5173)
@@ -121,8 +121,8 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | [DD-009](design_decisions/DD-009-ai-execution-boundary.md) | AI execution boundary | **Accepted** |
 | [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Accepted** — MVP shipped v0.9.0 |
 | [DD-014](design_decisions/DD-014-standalone-runtime-path.md) | Standalone runtime path | **Accepted — Phase A + B + B2** |
-| [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) | Soft metrics + tradeoffs | **Proposed** |
-| [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) | Layout recipes (Planning v0) | **Proposed** — `plan_layout` + `bedroom_basic` shipped |
+| [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) | Soft metrics + tradeoffs | **Accepted** |
+| [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) | Layout recipes (Planning v0) | **Accepted** — `plan_layout` + `bedroom_basic` |
 
 ### DD-007 (key points)
 
@@ -166,10 +166,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 # Next steps (agreed order)
 
 1. ~~Entschlacken von `agent.py` (Bedroom-Heuristiken → planning/)~~ ✅ (v0.10.21)  
-2. **Accept DD-016 / DD-015** after stable viewer runs  
-3. More recipes only after state is solid (`kids_room`, …) — not Capture/Cloud/Auth  
+2. ~~**Accept DD-016 / DD-015**~~ ✅ (2026-07-20)  
+3. More recipes when needed (`kids_room`, …) — not Capture/Cloud/Auth  
+4. Optional: further Agent↔Core hardening from session logs (quality notes, prompt noise)
 
-Light **agent state** ✅ (v0.10.20) · Mini-**Requirements** → `plan_layout` ✅ · baseline enforcement ✅ · `agent.py` heuristics → `planning/` ✅ · focus: Accept DD-016/015
+DD-015/016 **Accepted** · Planning v0 + soft metrics locked · focus: next recipe only with clear user need
 
 ------------------------------------------------------------------------
 
@@ -266,6 +267,7 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 
 | Date | Change |
 |---|---|
+| 2026-07-20 | DD-015 + DD-016 **Accepted**; next focus recipes on demand |
 | 2026-07-16 | DD-010 Room Model Proposed; next focus Room Model after Accept |
 | 2026-07-16 | Future Vision standalone/spatial/capture (docs only); focus stays Execution Layer |
 | 2026-07-12 | Handoff prompt + recent milestones; `.cursor/rules/` note |
