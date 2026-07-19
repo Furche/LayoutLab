@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **DD-011 Proposed:** Layout variants / Planning v1 — recipe describes solution space; Core expands candidates, evaluates with analyze + soft metrics, selects winner ([DD-011](docs/design_decisions/DD-011-layout-variants-and-comparison.md))
+
 ### Changed
 
 - **DD-015 / DD-016 Accepted:** soft metrics + tradeoffs and deterministic layout recipes (`plan_layout` / `bedroom_basic`) locked as architecture

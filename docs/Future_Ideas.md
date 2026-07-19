@@ -218,7 +218,7 @@ Beyond placing one layout, LayoutLab could:
 
 Depends on: stable `analyze_layout` (DD-008 **Implemented**), richer evaluation rules, Intent/Planning layers (§9).
 
-Variants should become **first-class objects** of the Spatial Project Model — not accidental full-scene copies. See §16 and possible later **DD-011**.
+Variants should become **first-class objects** of the Spatial Project Model — not accidental full-scene copies. See §16 and **[DD-011](design_decisions/DD-011-layout-variants-and-comparison.md)** (Proposed: Planning v1 candidates + rank; full project variants later).
 
 ### Evaluation Engine
 
@@ -748,7 +748,7 @@ Capture and import must write into a **validation / confirmation** state — not
 
 # 16. Layout Variants as First-Class Objects
 
-**Status:** Future Vision — possible later **DD-011**
+**Status:** Future Vision — **DD-011 Proposed** (Planning v1 = ephemeral candidates + rank; full first-class project variants / compare UI still later)
 
 The user should be able to ask: “Show me several sensible solutions.”
 
@@ -765,7 +765,7 @@ A variant may describe, among other things:
 
 **Conceptually:** shared base space + different layout states — not random full Blender scene clones. Temporary side-by-side display in a viewport is fine for UX.
 
-Related: §5 Planning and Evaluation.
+Related: §5 Planning and Evaluation · [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md).
 
 ------------------------------------------------------------------------
 
@@ -806,10 +806,10 @@ Do **not** implement from this vision until separate DDs and explicit product ne
 | ID | Title | Status |
 |---|---|---|
 | [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Accepted** (2026-07-16) — MVP in plugin v0.9.0 |
-| DD-011 | Layout Variants and Comparison | **Not created** — reserve when implementing §16 |
+| [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) | Layout Variants and Comparison | **Proposed** (2026-07-20) — Planning v1: recipe → candidates → rank |
 | DD-012 | Integrated AI Product Experience | **Not created** — reserve when implementing §7 / §12 |
 | DD-013 | Capture and Reconstruction Pipeline | **Not created** — reserve when implementing §14–§15 |
-| DD-014 | Standalone Runtime Path (viewer → write) | **Accepted — Phase A only** — [DD-014](design_decisions/DD-014-standalone-runtime-path.md); Phase B later; multi-space Spatial Project still later |
+| DD-014 | Standalone Runtime Path (viewer → write) | **Accepted — Phase A + B + B2** — [DD-014](design_decisions/DD-014-standalone-runtime-path.md); multi-space Spatial Project still later |
 
 Align numbering with [design_decisions/README.md](design_decisions/README.md) when filing. Do not auto-Accept.
 

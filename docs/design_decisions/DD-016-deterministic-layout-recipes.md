@@ -133,7 +133,9 @@ Exact numbers live in code + tests; this DD locks the **intent** of the rules.
 2. ~~Tool `plan_layout` + contract docs.~~ ✅
 3. ~~Agent system prompt: prefer `plan_layout` for bedroom intents.~~ ✅
 4. ~~Slim down free-placement heuristics into `planning/` (intent + placement).~~ ✅ (v0.10.21)
-5. Later: more recipes (`kids_room`, `office`) → variants (DD-011).
+5. Later: more recipes (`kids_room`, `office`) → multi-candidate planning ([DD-011](DD-011-layout-variants-and-comparison.md) Proposed).
+
+See also: recipe vs solution space clarified in DD-011.
 
 ------------------------------------------------------------------------
 
