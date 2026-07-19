@@ -10,7 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
-- **DD-011 Proposed:** Layout variants / Planning v1 — recipe describes solution space; Core expands candidates, evaluates with analyze + soft metrics, selects winner ([DD-011](docs/design_decisions/DD-011-layout-variants-and-comparison.md))
+- **DD-011 Proposed:** Layout variants / Planning v1 — a **recipe** is a goal-oriented planning strategy (not only a room type); Core expands candidates, evaluates with analyze + soft metrics, selects winner ([DD-011](docs/design_decisions/DD-011-layout-variants-and-comparison.md))
 
 ### Changed
 

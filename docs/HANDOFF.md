@@ -169,7 +169,7 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 1. ~~Entschlacken von `agent.py` (Bedroom-Heuristiken → planning/)~~ ✅ (v0.10.21)  
 2. ~~**Accept DD-016 / DD-015**~~ ✅ (2026-07-20)  
-3. **Review DD-011** (recipe = Lösungsraum → Kandidaten → Rank) — Accept before coding  
+3. **Review DD-011** (Recipe = Planungsstrategie / Ziel — nicht nur Raumtyp; expand → Rank) — Accept before coding  
 4. More recipes when needed (`kids_room`, …) — not Capture/Cloud/Auth  
 
 DD-015/016 **Accepted** · DD-011 **Proposed** · focus: Accept DD-011 then Planning v1 candidates
