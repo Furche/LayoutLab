@@ -42,6 +42,73 @@ def _opening_offset(wall_side: str, width: float, room_w: float, room_d: float) 
     return round(MARGIN + span * 0.35, 3)
 
 
+def _default_windows_for_count(n: int) -> list[dict]:
+    """Prefer south/north first so two windows do not stack on one wall."""
+    n = max(0, int(n))
+    if n == 0:
+        return []
+    sides = ["south", "north", "west", "east"]
+    return [
+        {"wall_side": sides[i % len(sides)], "width": 1.2, "sill_height": 0.9}
+        for i in range(n)
+    ]
+
+
+def _spaced_window_commands(windows_in: list, room_w: float, room_d: float, room_name: str) -> tuple[list[dict], tuple | None]:
+    """Emit add_opening commands with non-overlapping offsets per wall."""
+    groups: dict[str, list[dict]] = {}
+    for win in windows_in:
+        if not isinstance(win, dict):
+            continue
+        side = _side(win.get("wall_side"), "south")
+        groups.setdefault(side, []).append(win)
+
+    commands = []
+    win_south = None
+    idx = 0
+    for side, wins in groups.items():
+        along = room_d if side in ("east", "west") else room_w
+        n = len(wins)
+        widths = [max(0.6, _f(w.get("width"), 1.2)) for w in wins]
+        # Equal slots along the wall; center each window in its slot.
+        usable = max(0.2, along - 2 * MARGIN)
+        slot = usable / n if n else usable
+        for i, win in enumerate(wins):
+            w_w = widths[i]
+            w_h = max(0.8, _f(win.get("height"), 1.2))
+            sill = max(0.4, _f(win.get("sill_height"), 0.9))
+            if win.get("offset") is not None and n == 1:
+                w_off = _f(win.get("offset"), 0.5)
+            else:
+                w_off = MARGIN + i * slot + max(0.0, (slot - w_w) / 2)
+            w_off = max(MARGIN, min(along - w_w - MARGIN, w_off))
+            # Nudge forward if still overlapping previous on this wall
+            if i > 0:
+                prev = commands[-1]["params"]
+                prev_end = float(prev["offset"]) + float(prev["width"]) + 0.05
+                if w_off < prev_end:
+                    w_off = min(along - w_w - MARGIN, prev_end)
+            idx += 1
+            commands.append(
+                {
+                    "action": "add_opening",
+                    "params": {
+                        "room": room_name,
+                        "opening_name": f"win_{side}_{idx}",
+                        "kind": "window",
+                        "wall_side": side,
+                        "offset": round(w_off, 3),
+                        "width": round(w_w, 3),
+                        "height": round(w_h, 3),
+                        "sill_height": round(sill, 3),
+                    },
+                }
+            )
+            if side == "south" and win_south is None:
+                win_south = (w_off, w_w)
+    return commands, win_south
+
+
 def plan_bedroom_basic(params: dict | None = None) -> dict[str, Any]:
     """Return {ok, recipe, commands, assumes, notes} for a rectangular bedroom."""
     params = params or {}
@@ -63,7 +130,12 @@ def plan_bedroom_basic(params: dict | None = None) -> dict[str, Any]:
         door_off = _f(door_off, 0.3)
 
     windows_in = params.get("windows")
-    if windows_in is None:
+    if params.get("window_count") is not None:
+        try:
+            windows_in = _default_windows_for_count(int(params.get("window_count")))
+        except (TypeError, ValueError):
+            windows_in = _default_windows_for_count(1)
+    elif windows_in is None:
         windows_in = [{"wall_side": "south", "width": 1.2, "sill_height": 0.9}]
     if not isinstance(windows_in, list):
         windows_in = []
@@ -75,8 +147,10 @@ def plan_bedroom_basic(params: dict | None = None) -> dict[str, Any]:
         assumes.append(f"room depth={room_d} m (default)")
     if params.get("door") is None:
         assumes.append(f"door on {door_side} wall")
-    if params.get("windows") is None:
+    if params.get("windows") is None and params.get("window_count") is None:
         assumes.append("one south window")
+    elif params.get("window_count") is not None:
+        assumes.append(f"{len(windows_in)} window(s) from window_count")
 
     commands: list[dict] = [
         {"action": "delete_collection_objects", "collection": collection},
@@ -106,38 +180,8 @@ def plan_bedroom_basic(params: dict | None = None) -> dict[str, Any]:
         },
     ]
 
-    win_south = None
-    for i, win in enumerate(windows_in):
-        if not isinstance(win, dict):
-            continue
-        w_side = _side(win.get("wall_side"), "south")
-        w_w = max(0.6, _f(win.get("width"), 1.2))
-        w_h = max(0.8, _f(win.get("height"), 1.2))
-        sill = max(0.4, _f(win.get("sill_height"), 0.9))
-        w_off = win.get("offset")
-        if w_off is None:
-            w_off = _opening_offset(w_side, w_w, room_w, room_d)
-        else:
-            w_off = _f(w_off, 0.5)
-        commands.append(
-            {
-                "action": "add_opening",
-                "params": {
-                    "room": ROOM_NAME,
-                    "opening_name": f"win_{w_side}_{i + 1}",
-                    "kind": "window",
-                    "wall_side": w_side,
-                    "offset": round(w_off, 3),
-                    "width": round(w_w, 3),
-                    "height": round(w_h, 3),
-                    "sill_height": round(sill, 3),
-                },
-            }
-        )
-        if w_side == "south" and win_south is None:
-            win_south = (w_off, w_w)
-
-    # --- Bed: south wall, head against south ---
+    win_cmds, win_south = _spaced_window_commands(windows_in, room_w, room_d, ROOM_NAME)
+    commands.extend(win_cmds)
     # bed_basic axes are fixed: length=X, width=Y. With head_side=y_min/y_max,
     # sleeping is along Y → X = mattress width, Y = mattress length (120×200 → 1.2×2.0).
     mattress_w = max(0.8, _f(params.get("bed_width"), BED_MATTRESS_WIDTH))

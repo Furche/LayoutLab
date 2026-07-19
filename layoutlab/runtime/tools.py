@@ -842,6 +842,10 @@ def openai_tool_definitions():
                         },
                         "include_desk": {"type": "boolean"},
                         "include_wardrobe": {"type": "boolean"},
+                        "window_count": {
+                            "type": "integer",
+                            "description": "Number of windows (Core places them without overlap)",
+                        },
                         "bed_width": {
                             "type": "number",
                             "description": "Mattress side-to-side in meters (e.g. 1.2 for 120 cm)",

@@ -235,8 +235,10 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 7. Soft metrics + quality preview + tradeoff prompt (DD-015) ✅
 8. Layout sketch (top-down ASCII) in seed + dry_run + quality ✅
 9. `plan_layout` + `bedroom_basic` recipe (DD-016) ✅
-10. Persist light agent state (goal / questions / last findings) ← next
-11. More recipes (`kids_room`, `office`) / variants ← later
+10. **Recipe baseline enforcement** — final proposal uses Core `plan_layout` when called ✅
+11. Persist light agent state (goal / questions / last findings) ← next
+12. Mini-Requirements object → `plan_layout` ← next
+13. More recipes (`kids_room`, `office`) / variants ← later
 
 ------------------------------------------------------------------------
 

@@ -23,8 +23,10 @@ via plan_layout recipes, and HOW via generators. You invent no meshes, bpy, or f
 Planning recipes (DD-016 — prefer this):
 - For a normal bedroom (bed ± wardrobe ± desk, door + window): call plan_layout with
   recipe="bedroom_basic" and the room size / openings the user gave (or defaults).
+  Prefer window_count for the number of windows (Core places them without overlap).
 - Use the returned commands as the proposal baseline. Then validate_commands + dry_run_commands.
-- Do NOT invent free location/head_side for standard bedrooms when plan_layout covers the request.
+- Do NOT invent free location/head_side or duplicate openings when plan_layout covers the request.
+  Core will re-apply the recipe baseline if your final commands diverge from plan_layout.
 - Free-form run_generator placement is only for custom overrides ("Tisch genau hier")
   after a recipe baseline, or when no recipe fits.
 
@@ -555,6 +557,7 @@ def _parse_bed_size_m(text: str) -> tuple[float, float] | None:
     """Parse human mattress size as (width, length) in meters.
 
     '120x200' / '120 × 200' → 1.2 × 2.0 (Breite × Länge). Order matters.
+    Does not treat room sizes like '3x5m' as mattress dims.
     """
     t = (text or "").lower().replace(",", ".")
     m = re.search(r"(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)", t)
@@ -562,12 +565,146 @@ def _parse_bed_size_m(text: str) -> tuple[float, float] | None:
         return None
     a = float(m.group(1))
     b = float(m.group(2))
-    # cm if both look like centimeters
+    # Centimeters (typical mattress labels)
     if a >= 10 and b >= 10:
         a, b = a / 100.0, b / 100.0
-    if a < 0.5 or b < 0.5 or a > 3.5 or b > 3.5:
+        if a < 0.5 or b < 0.5 or a > 3.5 or b > 3.5:
+            return None
+        return round(a, 3), round(b, 3)
+    # Meter mattress only when the user is talking about a bed
+    if not any(k in t for k in ("bett", "bed", "matratze", "mattress")):
+        return None
+    if a < 0.8 or b < 1.5 or a > 3.0 or b > 3.0:
         return None
     return round(a, 3), round(b, 3)
+
+
+def _parse_room_size_m(text: str) -> tuple[float, float] | None:
+    """Parse room size as (width, depth) in meters from phrases like '3x5m' / '3 x 5 m'.
+
+    First number → width (X), second → depth (Y). Does not treat bed cm sizes
+    (both ≥ 10 without 'm' and looking like mattress) — those go to _parse_bed_size_m.
+    """
+    t = (text or "").lower().replace(",", ".")
+    # Prefer explicit meter markers
+    m = re.search(
+        r"(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)\s*m\b",
+        t,
+    )
+    if not m:
+        m = re.search(
+            r"(\d+(?:\.\d+)?)\s*m\s*[x×]\s*(\d+(?:\.\d+)?)\s*m\b",
+            t,
+        )
+    if not m:
+        # '3x5' / '4.0 x 3.5' only when values look like room meters (not 120x200)
+        m = re.search(r"(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)", t)
+        if not m:
+            return None
+        a, b = float(m.group(1)), float(m.group(2))
+        if a >= 10 or b >= 10:
+            return None
+    else:
+        a, b = float(m.group(1)), float(m.group(2))
+    if a < 2.0 or b < 2.0 or a > 20 or b > 20:
+        return None
+    return round(a, 3), round(b, 3)
+
+
+def _layout_shell_fingerprint(commands: list) -> tuple:
+    """Compare room shell + openings + generators (ignore tiny float noise)."""
+    parts = []
+    for cmd in commands or []:
+        action = cmd.get("action")
+        params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
+        if action == "create_room":
+            parts.append(
+                (
+                    "room",
+                    round(float(params.get("width") or cmd.get("width") or 0), 2),
+                    round(float(params.get("depth") or cmd.get("depth") or 0), 2),
+                )
+            )
+        elif action == "add_opening":
+            parts.append(
+                (
+                    "open",
+                    params.get("kind") or cmd.get("kind"),
+                    params.get("wall_side") or cmd.get("wall_side"),
+                    round(float(params.get("width") or cmd.get("width") or 0), 2),
+                )
+            )
+        elif action == "run_generator":
+            parts.append(("gen", cmd.get("generator")))
+    return tuple(parts)
+
+
+def _proposal_wants_layout(commands: list, conversation: str, questions: list) -> bool:
+    if questions and not commands:
+        return False
+    actions = {c.get("action") for c in commands or []}
+    if "create_room" in actions or "run_generator" in actions or "add_opening" in actions:
+        return True
+    if not commands and (
+        _user_wants_room(conversation) or _user_wants_bed(conversation)
+    ):
+        return True
+    return False
+
+
+def _apply_plan_layout_baseline(
+    session, result: dict, conversation: str, last_plan: dict | None
+) -> dict:
+    """When plan_layout ran this turn, Core recipe commands win over free LLM edits."""
+    if not last_plan or not last_plan.get("commands"):
+        return result
+    commands = list(result.get("commands") or [])
+    questions = list(result.get("questions") or [])
+    if not _proposal_wants_layout(commands, conversation, questions):
+        return result
+
+    from .planning import reconcile_plan_layout_params
+
+    args = reconcile_plan_layout_params(
+        last_plan.get("arguments") or {},
+        window_count=_requested_window_count(conversation),
+        room_size=_parse_room_size_m(conversation),
+        bed_size=_parse_bed_size_m(conversation),
+        wants_door=_user_wants_door(conversation) or True,
+    )
+    planned = dispatch_tool(session, "plan_layout", args)
+    if planned.get("ok") and planned.get("commands"):
+        cmds = planned["commands"]
+        assumes = list(planned.get("assumes") or [])
+    else:
+        cmds = list(last_plan.get("commands") or [])
+        assumes = list(last_plan.get("assumes") or [])
+        planned = last_plan
+
+    llm_fp = _layout_shell_fingerprint(commands)
+    core_fp = _layout_shell_fingerprint(cmds)
+    replaced = bool(commands) and llm_fp != core_fp
+
+    result = dict(result)
+    result["commands"] = cmds
+    result["questions"] = []
+    proposal = dict(result.get("proposal") or {})
+    proposal["commands"] = cmds
+    merged_assumes = list(proposal.get("assumes") or [])
+    for a in assumes:
+        if a not in merged_assumes:
+            merged_assumes.append(a)
+    proposal["assumes"] = merged_assumes
+    result["proposal"] = proposal
+    result["plan_layout_enforced"] = True
+    result["plan_layout_args"] = args
+    if replaced:
+        note = (
+            " (Layout aus plan_layout übernommen — Core-Rezept statt freier "
+            "Agent-Koordinaten/Öffnungen.)"
+        )
+        result["reply"] = (result.get("reply") or "").rstrip() + note
+    return result
 
 
 def _mattress_to_bed_axes(head_side: str | None, mattress_w: float, mattress_l: float):
@@ -1158,9 +1295,12 @@ def _maybe_soft_replan(session, settings, messages, result: dict, conversation: 
     return result
 
 
-def _finish_agent_result(session, settings, messages, result: dict, conversation: str) -> dict:
+def _finish_agent_result(
+    session, settings, messages, result: dict, conversation: str, *, last_plan=None
+) -> dict:
     global _LAST_PLACEMENT_FP
     result = _maybe_repair_proposal(settings, messages, result, conversation)
+    result = _apply_plan_layout_baseline(session, result, conversation, last_plan)
     result = _apply_deterministic_placement_fixes(conversation, result)
     result = _attach_quality_preview(session, result)
     result = _maybe_hard_replan(session, settings, messages, result, conversation)
@@ -1430,6 +1570,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
     messages.append({"role": "user", "content": message})
 
     tool_trace = []
+    last_plan = None
     _inject_scene_seed(session, messages, tool_trace)
     seen_tool_fps = set()
     try:
@@ -1451,7 +1592,12 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 if fp in seen_tool_fps:
                     result = _finalize_proposal_from_messages(settings, messages, tool_trace)
                     return _finish_agent_result(
-                        session, settings, messages, result, conversation
+                        session,
+                        settings,
+                        messages,
+                        result,
+                        conversation,
+                        last_plan=last_plan,
                     )
                 seen_tool_fps.add(fp)
 
@@ -1472,17 +1618,32 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                     if not isinstance(args, dict):
                         args = {}
                     try:
-                        result = dispatch_tool(session, name, args)
+                        tool_result = dispatch_tool(session, name, args)
                         err = None
                     except Exception as exc:
-                        result = {"ok": False, "error": str(exc)}
+                        tool_result = {"ok": False, "error": str(exc)}
                         err = str(exc)
-                    tool_trace.append({"tool": name, "arguments": args, "ok": err is None, "error": err})
+                    tool_trace.append(
+                        {"tool": name, "arguments": args, "ok": err is None, "error": err}
+                    )
+                    if (
+                        name == "plan_layout"
+                        and err is None
+                        and tool_result.get("ok")
+                        and tool_result.get("commands")
+                    ):
+                        last_plan = {
+                            "arguments": args,
+                            "commands": tool_result.get("commands"),
+                            "assumes": tool_result.get("assumes") or [],
+                            "notes": tool_result.get("notes") or [],
+                            "recipe": tool_result.get("recipe"),
+                        }
                     messages.append(
                         {
                             "role": "tool",
                             "tool_call_id": call.get("id") or name,
-                            "content": json.dumps(result, ensure_ascii=False),
+                            "content": json.dumps(tool_result, ensure_ascii=False),
                         }
                     )
                 continue
@@ -1494,7 +1655,12 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             except Exception:
                 result = _finalize_proposal_from_messages(settings, messages, tool_trace)
                 return _finish_agent_result(
-                    session, settings, messages, result, conversation
+                    session,
+                    settings,
+                    messages,
+                    result,
+                    conversation,
+                    last_plan=last_plan,
                 )
 
             normalized = _normalize_proposal(parsed)
@@ -1509,10 +1675,19 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 "commands": normalized["proposal"]["commands"],
                 "tool_trace": tool_trace,
             }
-            return _finish_agent_result(session, settings, messages, result, conversation)
+            return _finish_agent_result(
+                session,
+                settings,
+                messages,
+                result,
+                conversation,
+                last_plan=last_plan,
+            )
 
         result = _finalize_proposal_from_messages(settings, messages, tool_trace)
-        return _finish_agent_result(session, settings, messages, result, conversation)
+        return _finish_agent_result(
+            session, settings, messages, result, conversation, last_plan=last_plan
+        )
     except Exception as exc:
         demo = _demo_as_agent_result(message)
         if demo:

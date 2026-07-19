@@ -428,7 +428,8 @@ class TestAgentTools(unittest.TestCase):
         from layoutlab.runtime import agent as ag
 
         self.assertEqual(ag._parse_bed_size_m("bett auf 120x200 machen"), (1.2, 2.0))
-        self.assertEqual(ag._parse_bed_size_m("1.4 × 2.0 m"), (1.4, 2.0))
+        self.assertEqual(ag._parse_bed_size_m("bett 1.4 × 2.0 m"), (1.4, 2.0))
+        self.assertIsNone(ag._parse_bed_size_m("3x 5m groß"))
         self.assertEqual(ag._mattress_to_bed_axes("y_min", 1.2, 2.0), (1.2, 2.0))
         self.assertEqual(ag._mattress_to_bed_axes("x_max", 1.2, 2.0), (2.0, 1.2))
 

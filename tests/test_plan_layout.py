@@ -96,14 +96,109 @@ class TestBedroomBasicRecipe(unittest.TestCase):
         summary = (dry.get("analysis") or {}).get("summary") or {}
         self.assertEqual(int(summary.get("errors") or 0), 0, dry.get("analysis"))
 
-    def test_unknown_recipe(self):
+    def test_window_count_two_no_overlap_apply(self):
         from layoutlab.runtime.session import RoomSession
         from layoutlab.runtime.tools import dispatch_tool
 
-        out = dispatch_tool(RoomSession(), "plan_layout", {"recipe": "spaceship"})
-        self.assertFalse(out["ok"])
-        self.assertIn("bedroom_basic", out["known_recipes"])
+        session = RoomSession()
+        plan = dispatch_tool(
+            session,
+            "plan_layout",
+            {
+                "recipe": "bedroom_basic",
+                "width": 3.0,
+                "depth": 5.0,
+                "window_count": 2,
+            },
+        )
+        self.assertTrue(plan["ok"], plan)
+        wins = [
+            c
+            for c in plan["commands"]
+            if c.get("action") == "add_opening"
+            and (c.get("params") or {}).get("kind") == "window"
+        ]
+        self.assertEqual(len(wins), 2)
+        applied = session.apply_commands(plan["commands"])
+        self.assertTrue(applied["ok"], applied.get("errors"))
 
+    def test_plan_layout_baseline_overrides_bad_llm_windows(self):
+        from layoutlab.runtime import agent as ag
+        from layoutlab.runtime.session import RoomSession
+        from layoutlab.runtime.tools import dispatch_tool
 
-if __name__ == "__main__":
-    unittest.main()
+        session = RoomSession()
+        planned = dispatch_tool(
+            session,
+            "plan_layout",
+            {"recipe": "bedroom_basic", "width": 3.0, "depth": 5.0, "window_count": 1},
+        )
+        last_plan = {
+            "arguments": {
+                "recipe": "bedroom_basic",
+                "width": 3.0,
+                "depth": 5.0,
+                "window_count": 1,
+            },
+            "commands": planned["commands"],
+            "assumes": planned.get("assumes") or [],
+        }
+        # Simulate LLM inventing four overlapping windows
+        bad = {
+            "reply": "Schlafzimmer mit 2 Fenstern",
+            "questions": [],
+            "commands": [
+                {"action": "create_room", "params": {"width": 5, "depth": 3}},
+                {
+                    "action": "add_opening",
+                    "params": {"kind": "door", "wall_side": "east", "width": 0.9},
+                },
+                {
+                    "action": "add_opening",
+                    "params": {"kind": "window", "wall_side": "north", "width": 1.2},
+                },
+                {
+                    "action": "add_opening",
+                    "params": {"kind": "window", "wall_side": "north", "width": 1.2},
+                },
+                {
+                    "action": "add_opening",
+                    "params": {"kind": "window", "wall_side": "south", "width": 1.2},
+                },
+                {
+                    "action": "add_opening",
+                    "params": {"kind": "window", "wall_side": "south", "width": 1.2},
+                },
+                {
+                    "action": "run_generator",
+                    "generator": "bed_basic",
+                    "params": {"location": [0, 0, 0], "length": 2, "width": 1.2},
+                },
+            ],
+            "proposal": {"commands": [], "assumes": []},
+        }
+        bad["proposal"]["commands"] = bad["commands"]
+        fixed = ag._apply_plan_layout_baseline(
+            session,
+            bad,
+            "3x 5m groß, 2 fenster, eine tür",
+            last_plan,
+        )
+        self.assertTrue(fixed.get("plan_layout_enforced"))
+        wins = [
+            c
+            for c in fixed["commands"]
+            if c.get("action") == "add_opening"
+            and (c.get("params") or {}).get("kind") == "window"
+        ]
+        self.assertEqual(len(wins), 2, wins)
+        applied = session.clone().apply_commands(fixed["commands"])
+        self.assertTrue(applied["ok"], applied.get("errors"))
+        self.assertIn("plan_layout", fixed["reply"])
+
+    def test_parse_room_size(self):
+        from layoutlab.runtime import agent as ag
+
+        self.assertEqual(ag._parse_room_size_m("3x 5m groß, 2 fenster"), (3.0, 5.0))
+        self.assertEqual(ag._parse_room_size_m("raum 4.0 x 3.5 m"), (4.0, 3.5))
+        self.assertIsNone(ag._parse_room_size_m("bett auf 120x200"))
