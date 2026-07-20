@@ -4,6 +4,22 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-21 — DD-017 Accepted: collaborative planning and candidate evaluation
+
+**Why:** One-shot AI command proposals exposed invalid attempts to users and had no durable model
+for furniture preferences, contextual roles, signed penalties, or aesthetic comparison.
+
+**Decision:** Core validates and produces a deterministic functional shortlist; AI may iterate only
+through allowlisted semantic intentions, optionally compares aesthetics among functionally
+equivalent viable candidates, and recommends; User selects and controls Apply. Semantic capability
+and preference profiles survive generation, while roles and room context determine importance.
+
+**Guardrails:** Invalidity is non-compensable; severe penalties require veto/waiver behavior;
+aesthetics remains probabilistic and outside Core metrics. DD-011 and DD-015 received narrow
+amendments. No code or evaluation schema shipped in this documentation milestone.
+
+------------------------------------------------------------------------
+
 ## 2026-07-19 — DD-016 Planning recipes v0 (`plan_layout`)
 
 **Why:** Endless agent prompt/heuristic patches (sketch, soft/hard replan, AABB nudges)

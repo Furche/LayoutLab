@@ -3,7 +3,7 @@
 **Status:** Accepted  
 **Date:** 2026-07-18  
 **Accepted:** 2026-07-20  
-**Related:** [DD-007](DD-007-clearance-zones.md) · [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [agent_tool_contract.md](../agent_tool_contract.md)
+**Related:** [DD-007](DD-007-clearance-zones.md) · [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-017](DD-017-collaborative-planning-and-contextual-evaluation.md) · [agent_tool_contract.md](../agent_tool_contract.md)
 
 ------------------------------------------------------------------------
 
@@ -12,6 +12,18 @@
 Locks the split: **Core measures** soft usability proxies + non-negotiable solid collisions; **AI chooses/explains** tradeoffs via `expected_risks`; **User consents** on Apply. v1 does not server-block Apply on soft/hard findings (Viewer warns; `solid_wall_penetration` blocks Apply in the Viewer).
 
 Shipped: `soft_packing`, `opening_access`, `solid_wall_penetration`; dry-run `soft_summary`; agent `quality` preview; Viewer confirm UX.
+
+### Amendment — 2026-07-21 (DD-017 Accepted)
+
+“No aesthetics score” remains binding for **deterministic Core metrics**. DD-017 adds a separate,
+optional, probabilistic AI-aesthetics channel only after validity and functional shortlisting. It
+cannot compensate for invalidity, unwaived severe-veto findings, or materially worse functional
+quality. The Core continues to own measurable findings and signed/context-weighted score components;
+the AI channel owns rubric-based visual comparison, confidence, provenance, and explanation.
+
+Existing v1 soft metrics and Apply behavior remain unchanged until the DD-017 evaluation schema is
+implemented. Signed components, veto thresholds, and functional-equivalence bands require their
+versioned implementation contract rather than ad-hoc prompt values.
 
 ------------------------------------------------------------------------
 
