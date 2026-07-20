@@ -1,0 +1,26 @@
+---
+description: GitHub pull request workflow when the user asks to create a PR
+alwaysApply: true
+---
+
+# Pull requests
+
+Use `gh` for all GitHub tasks. Only create PRs when explicitly asked.
+
+**Before creating a PR**, run in parallel: `git status`, `git diff`, branch tracking status, `git log` and `git diff [base]...HEAD`.
+
+**Steps:** push with `-u` if needed, then `gh pr create` with HEREDOC body:
+
+```bash
+gh pr create --title "title" --body "$(cat <<'EOF'
+## Summary
+- ...
+
+## Test plan
+- [ ] ...
+
+EOF
+)"
+```
+
+Return the PR URL. Never update git config.

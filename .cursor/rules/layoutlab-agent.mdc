@@ -1,0 +1,16 @@
+---
+description: LayoutLab project context and agent conventions
+alwaysApply: true
+---
+
+# LayoutLab agent conventions
+
+**Mental model:** Read `AI_CONTEXT.md` before architecture or product-direction questions. Current phase = Execution Layer (generators, JSON protocol, clearances, `analyze_layout`). Long-term vision lives in `docs/Future_Ideas.md` — do not skip Idea → DD → Architecture.
+
+**Key docs:** `CHANGELOG.md` (recent changes), `docs/ARCHITECTURE.md`, `docs/json_protocol.md`, `docs/design_decisions/`.
+
+**Diagnostics:** When reporting LayoutLab diagnostics, reference the report file or paste only failing checks — not the full 18-check dump inline.
+
+**Code:** Minimize scope; match existing conventions; no over-engineering; comments only for non-obvious logic.
+
+**Blender addon:** Python under `layoutlab/`, tests in `tests/`. Plugin version in `layoutlab/__init__.py`.
