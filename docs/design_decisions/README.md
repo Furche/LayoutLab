@@ -24,6 +24,7 @@ New decisions use the next sequential number: `DD-006`, `DD-007`, …
 | [DD-014](DD-014-standalone-runtime-path.md) | Standalone runtime path (viewer → write adapter) | **Accepted — Phase A + B + B2** | 2026-07-17 |
 | [DD-015](DD-015-soft-metrics-and-tradeoffs.md) | Soft metrics and rule tradeoffs (AI ↔ LayoutLab) | **Accepted** | 2026-07-20 |
 | [DD-016](DD-016-deterministic-layout-recipes.md) | Deterministic layout recipes (Planning Layer v0) | **Accepted** | 2026-07-20 |
+| [DD-017](DD-017-collaborative-planning-and-contextual-evaluation.md) | Collaborative planning and contextual candidate evaluation | **Accepted** | 2026-07-21 |
 
 When implementing anything that touches APIs, JSON protocol, generator behaviour,
 or UI patterns — check this index first.

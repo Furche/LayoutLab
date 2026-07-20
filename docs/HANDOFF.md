@@ -3,7 +3,7 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-20 (v0.10.23 — DD-011 Accepted)  
+**Last updated:** 2026-07-21 (DD-017 Accepted; DD-011/DD-015 amended)
 **Plugin version:** 0.10.23 · **Branch:** `main`
 
 ------------------------------------------------------------------------
@@ -27,10 +27,11 @@ Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
 Branch: main. Plugin v0.10.23.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
-Aktueller Stand (2026-07-20):
+Aktueller Stand (2026-07-21):
 - DD-016 **Accepted**: plan_layout + bedroom_basic (agent_tools 0.5)
 - DD-015 **Accepted**: soft metrics + tradeoffs
 - DD-011 **Accepted**: recipe = Planungsstrategie; Planner = expand → evaluate → select (v1 noch zu bauen)
+- DD-017 **Accepted**: Core functional shortlist → AI recommendation → User selection; contextual evaluation contract locked
 - agent.py bedroom heuristics → planning/intent + planning/placement
 - Light agent_state on RoomSession (goal / requirements / last proposal)
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
@@ -125,6 +126,7 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) | Variants / Planning v1 (recipe = strategy) | **Accepted** |
 | [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) | Soft metrics + tradeoffs | **Accepted** |
 | [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) | Layout recipes (Planning v0) | **Accepted** — `plan_layout` + `bedroom_basic` |
+| [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) | Collaborative planning + contextual candidate evaluation | **Accepted** — DD-011/DD-015 amended; implementation staged |
 
 ### DD-007 (key points)
 
@@ -170,10 +172,13 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 1. ~~Entschlacken von `agent.py` (Bedroom-Heuristiken → planning/)~~ ✅ (v0.10.21)  
 2. ~~**Accept DD-016 / DD-015**~~ ✅ (2026-07-20)  
 3. ~~**Accept DD-011**~~ ✅ (2026-07-20)  
-4. **Implement Planning v1** per DD-011: recipe registry metadata → `bedroom_basic` candidates → rank → `plan_layout` `mode: "candidates"`  
-5. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth  
+4. ~~**Accept DD-017 + amend DD-011/DD-015**~~ ✅ (2026-07-21)
+5. Continue DD-011 candidate expansion + existing soft ranking
+6. Define the minimal DD-017 schema contract: profiles/capabilities, roles/intentions, signed categories and veto thresholds
+7. Implement Core functional shortlisting and bounded internal revision before optional AI aesthetics
+8. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
 
-DD-011/015/016 **Accepted** · focus: build Planner v1 (`plan_layout` candidates)
+DD-011/015/016/017 **Accepted** · next: candidate expansion plus minimal DD-017 evaluation schema
 
 ------------------------------------------------------------------------
 

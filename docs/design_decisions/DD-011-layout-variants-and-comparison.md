@@ -3,7 +3,7 @@
 **Status:** Accepted  
 **Date:** 2026-07-20  
 **Accepted:** 2026-07-20  
-**Related:** [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-015](DD-015-soft-metrics-and-tradeoffs.md) · [DD-016](DD-016-deterministic-layout-recipes.md) · [Future_Ideas.md](../Future_Ideas.md) §5 / §16 · [agent_tool_contract.md](../agent_tool_contract.md)
+**Related:** [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-015](DD-015-soft-metrics-and-tradeoffs.md) · [DD-016](DD-016-deterministic-layout-recipes.md) · [DD-017](DD-017-collaborative-planning-and-contextual-evaluation.md) · [Future_Ideas.md](../Future_Ideas.md) §5 / §16 · [agent_tool_contract.md](../agent_tool_contract.md)
 
 ------------------------------------------------------------------------
 
@@ -25,6 +25,20 @@ Locks the Planner foundation:
 | AI override | Allowlisted preference keys on requirements only; no free coordinates; recipe **choice** stays AI/requirements |
 | Viewer v1 | Selected winner in `proposal.commands` only; full candidate list in tool result / session log |
 | Naming | Keep `bedroom_basic`; registry `kind` + `goals` tags |
+
+### Amendment — 2026-07-21 (DD-017 Accepted)
+
+DD-011's deterministic Core-selected winner remains the supported Planning-v1 baseline. The
+accepted target selection architecture is now layered:
+
+1. Core expands, validates, scores, and returns a deterministic **functional shortlist**.
+2. Optional AI aesthetics may compare only functionally equivalent shortlist members.
+3. The AI recommends and explains; the user makes the final selection and controls Apply.
+
+Until that layered path is implemented, `selected_id` and `proposal.commands` may continue to use
+the deterministic Core winner. When implemented, internally rejected or invalid candidates must
+never reach `proposal.commands`; semantic revisions remain allowlisted and free coordinates remain
+an explicit custom override. Full contract: DD-017.
 
 ------------------------------------------------------------------------
 
