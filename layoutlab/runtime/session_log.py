@@ -171,6 +171,7 @@ def _slim_planning(result: dict) -> dict | None:
             "recipe": planning.get("recipe"),
             "mode": planning.get("mode"),
             "selected_id": planning.get("selected_id"),
+            "selected_label_de": planning.get("selected_label_de"),
             "strategy": planning.get("strategy"),
             "selection_reason": planning.get("selection_reason") or "",
             "shortlist_ids": list(planning.get("shortlist_ids") or []),
@@ -300,7 +301,13 @@ def _rewrite_markdown_unlocked() -> None:
                 if planning.get("recipe"):
                     lines.append(f"- recipe: `{planning.get('recipe')}`")
                 if planning.get("selected_id"):
-                    lines.append(f"- selected: `{planning.get('selected_id')}`")
+                    label = planning.get("selected_label_de")
+                    if label:
+                        lines.append(
+                            f"- selected: `{planning.get('selected_id')}` · {label}"
+                        )
+                    else:
+                        lines.append(f"- selected: `{planning.get('selected_id')}`")
                 if planning.get("strategy"):
                     lines.append(f"- strategy: `{planning.get('strategy')}`")
                 shortlist = planning.get("shortlist_ids") or []
@@ -323,6 +330,7 @@ def _rewrite_markdown_unlocked() -> None:
                         if not isinstance(c, dict):
                             continue
                         cid = c.get("candidate_id") or "?"
+                        label = c.get("label_de") or ""
                         strat = c.get("strategy") or ""
                         soft_w = c.get("soft_warnings")
                         hard = c.get("has_hard_errors")
@@ -332,7 +340,8 @@ def _rewrite_markdown_unlocked() -> None:
                         if hard:
                             extra.append("hard")
                         suffix = f" ({', '.join(extra)})" if extra else ""
-                        lines.append(f"  - `{cid}`{f' · {strat}' if strat else ''}{suffix}")
+                        name = f" · {label}" if label else (f" · {strat}" if strat else "")
+                        lines.append(f"  - `{cid}`{name}{suffix}")
                 lines.append("")
             qs = ev.get("questions") or []
             if qs:

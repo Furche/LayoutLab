@@ -386,7 +386,11 @@ function proposalMetaText(payload, commands) {
     if (risks.length) bits.push(`${risks.length} risk(s)`);
     qualityHint = ` · ⚠ ${bits.join(", ") || "review"}`;
   }
-  const selHint = selected ? ` · ${selected}` : "";
+  const selectedLabel =
+    payload.planning?.selected_label_de ||
+    pendingShortlist?.find((c) => c.candidate_id === selected)?.label_de ||
+    selected;
+  const selHint = selectedLabel ? ` · ${selectedLabel}` : "";
   return `${commands.length} command${commands.length === 1 ? "" : "s"}${title}${selHint} · mode=${mode}${tools ? ` · ${tools} tools` : ""}${qualityHint}`;
 }
 
@@ -402,13 +406,29 @@ function renderShortlistButtons() {
   items.forEach((item, idx) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "chat-shortlist-btn";
+    btn.className = "chat-shortlist-card";
     const id = item.candidate_id || `option-${idx + 1}`;
     if (id === pendingSelectedId) btn.classList.add("is-selected");
+    const label = item.label_de || item.strategy || id;
     const soft = item.quality?.soft_warnings;
-    const softHint = soft != null ? ` · soft ${soft}` : "";
-    btn.textContent = `${idx + 1}. ${id}${softHint}`;
-    btn.title = item.strategy || id;
+    const title = document.createElement("p");
+    title.className = "chat-shortlist-card-title";
+    title.textContent = `${idx + 1}. ${label}`;
+    btn.appendChild(title);
+    const meta = document.createElement("p");
+    meta.className = "chat-shortlist-card-meta";
+    const bits = [];
+    if (item.recommended || id === pendingSelectedId) bits.push("Vorschlag");
+    if (soft != null) bits.push(soft === 0 ? "keine Soft-Warnungen" : `${soft} Soft`);
+    meta.textContent = bits.join(" · ") || "Shortlist";
+    btn.appendChild(meta);
+    if (item.sketch_ascii) {
+      const pre = document.createElement("pre");
+      pre.className = "chat-shortlist-card-sketch";
+      pre.textContent = item.sketch_ascii;
+      btn.appendChild(pre);
+    }
+    btn.title = id;
     btn.addEventListener("click", () => selectShortlistCandidate(id));
     el.chatShortlist.appendChild(btn);
   });
@@ -424,6 +444,7 @@ function selectShortlistCandidate(candidateId) {
   pendingSelectedId = candidateId;
   pendingChatCommands = chosen.commands;
   if (chosen.quality) pendingChatQuality = chosen.quality;
+  const label = chosen.label_de || chosen.strategy || candidateId;
   if (pendingChatProposalPayload) {
     pendingChatProposalPayload = {
       ...pendingChatProposalPayload,
@@ -432,13 +453,14 @@ function selectShortlistCandidate(candidateId) {
       proposal: {
         ...(pendingChatProposalPayload.proposal || {}),
         commands: chosen.commands,
-        title: `Shortlist: ${candidateId}`,
+        title: label,
       },
       quality: chosen.quality || pendingChatProposalPayload.quality,
       planning: {
         ...(pendingChatProposalPayload.planning || {}),
         selected_id: candidateId,
-        selection_reason: `Nutzerwahl: ${candidateId}`,
+        selected_label_de: label,
+        selection_reason: `Nutzerwahl: ${label}`,
       },
       shortlist: items.map((c) => ({
         ...c,
@@ -453,7 +475,7 @@ function selectShortlistCandidate(candidateId) {
     )} — bereit zum Apply`;
   }
   renderShortlistButtons();
-  setStatus(`Variante gewählt: ${candidateId} — Apply zum Ausführen`, "ok");
+  setStatus(`Variante gewählt: ${label} — Apply zum Ausführen`, "ok");
 }
 
 function showChatProposal(payload) {

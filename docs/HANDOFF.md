@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-21 (shortlist selection)  
-**Plugin version:** 0.10.29 · **Branch:** `main`
+**Last updated:** 2026-07-21 (shortlist sketch cards)  
+**Plugin version:** 0.10.30 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.29.
+Branch: main. Plugin v0.10.30.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-21):
@@ -33,10 +33,11 @@ Aktueller Stand (2026-07-21):
 - DD-011 **Accepted** + **candidates v1 shipped**: `plan_layout` mode=candidates (2–4 bedroom strategies, soft rank)
 - DD-017 **Accepted** + **Evaluation schema v0.1**: profiles/roles/intentions, signed components, severe veto + functional shortlist (`shortlist_ids`)
 - DD-017 **bounded revision** ✅ (`0.10.26`): up to 2 allowlisted Core revision rounds before proposal
-- **Core recipe force path** ✅ (`0.10.27`): `recipe_routing` + `_ensure_core_recipe_plan` — furnished intents always via Core plan_layout (candidates); bedroom first registry entry
-- **Planning selection surfacing** ✅ (`0.10.28`): reply + LAST_SESSION show selected/shortlist/reason; plan_layout in tool_trace when enforced
-- **Shortlist selection** ✅ (`0.10.29`): chat „nimm Variante 2“ / Viewer shortlist buttons; Apply remains explicit
-- Nächste Arbeit: optional AI aesthetics (flag); more recipes on demand
+- **Core recipe force path** ✅ (`0.10.27`): `recipe_routing` + `_ensure_core_recipe_plan`
+- **Planning selection surfacing** ✅ (`0.10.28`)
+- **Shortlist selection** ✅ (`0.10.29`): chat + Viewer pick before Apply
+- **Shortlist sketch cards** ✅ (`0.10.30`): `label_de` + top-down ASCII cards in Viewer
+- Nächste Arbeit: optional AI aesthetics (flag); 3D thumbnail previews; more recipes on demand
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
 - Core: python3 -m server (:8765); Viewer Vite (:5173)
 
@@ -181,9 +182,10 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 8. ~~Core recipe force path (generic registry)~~ ✅ (`0.10.27` — bedroom first mapping)
 9. ~~Planning selection surfacing (reply + session log)~~ ✅ (`0.10.28`)
 10. ~~Shortlist selection (chat + Viewer)~~ ✅ (`0.10.29`)
-11. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
+11. ~~Shortlist sketch cards (labels + ASCII)~~ ✅ (`0.10.30`)
+12. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
 
-DD-011/015/016/017 **Accepted** · shortlist selection shipped · next: optional aesthetics / more recipes
+DD-011/015/016/017 **Accepted** · sketch cards shipped · next: optional aesthetics / 3D thumbnails / more recipes
 
 ------------------------------------------------------------------------
 
@@ -277,8 +279,9 @@ Living product track — keep in sync with *Next steps* above.
 8. ✅ Core recipe force path / `recipe_routing` (`0.10.27`)  
 9. ✅ Planning selection surfacing (`0.10.28`)  
 10. ✅ Shortlist selection chat + Viewer (`0.10.29`)  
-11. 📋 Optional experimental AI aesthetics (behind flag) · more recipes on demand  
-12. 📋 Bridge / capture / multi-space / persisted variants — Future Ideas, separate DDs  
+11. ✅ Shortlist sketch cards (`0.10.30`)  
+12. 📋 Optional experimental AI aesthetics (behind flag) · 3D thumbnails · more recipes on demand  
+13. 📋 Bridge / capture / multi-space / persisted variants — Future Ideas, separate DDs  
 
 Binding order for agents: **Next steps** (this file) · detail in [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) implementation order.
 
@@ -288,6 +291,7 @@ Binding order for agents: **Next steps** (this file) · detail in [DD-017](desig
 
 | Date | Change |
 |---|---|
+| 2026-07-21 | Shortlist sketch cards (`0.10.30`): label_de + ASCII cards in Viewer |
 | 2026-07-21 | Shortlist selection (`0.10.29`): chat + Viewer pick before Apply |
 | 2026-07-21 | Planning selection surfacing (`0.10.28`): reply + LAST_SESSION Planning block |
 | 2026-07-21 | Core recipe force path (`0.10.27`): recipe_routing + ensure plan_layout |

@@ -62,6 +62,7 @@ from .selection_surface import (
     shortlist_entries_from_planned,
     slim_candidates,
     stored_shortlist,
+    strategy_label_de,
     strip_planning_notes,
     wants_shortlist_selection,
 )
@@ -282,5 +283,6 @@ __all__ = [
     "resolve_shortlist_selection",
     "shortlist_entries_from_planned",
     "stored_shortlist",
+    "strategy_label_de",
     "wants_shortlist_selection",
 ]

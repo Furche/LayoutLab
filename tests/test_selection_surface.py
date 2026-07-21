@@ -44,7 +44,7 @@ class TestSelectionSurface(unittest.TestCase):
             },
             enforced=True,
         )
-        self.assertIn("Core-Vorschlag: bed_west__storage_south", note)
+        self.assertIn("Core-Vorschlag: Bett Westwand", note)
         self.assertIn("Shortlist 2/3", note)
 
         out = merge_planning_into_result(
@@ -55,7 +55,9 @@ class TestSelectionSurface(unittest.TestCase):
         self.assertTrue(out.get("plan_layout_enforced"))
         self.assertIn("Core-Vorschlag:", out["reply"])
         self.assertNotIn("plan_layout/mode=candidates", out["reply"])
+        self.assertIn("Bett", out["reply"])
         self.assertEqual(out["planning"]["selected_id"], "bed_west__storage_south")
+        self.assertTrue(out["planning"].get("selected_label_de"))
         self.assertEqual(len(out["planning"]["candidates"]), 3)
 
 

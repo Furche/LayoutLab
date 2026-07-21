@@ -820,13 +820,21 @@ def _update_agent_state(
     shortlist = result.get("shortlist")
     if isinstance(shortlist, list) and shortlist:
         # Persist commands for follow-up "nimm Variante 2" / Viewer pick
+        from .planning.selection_surface import strategy_label_de
+
         state["last_shortlist"] = [
             {
                 "candidate_id": c.get("candidate_id"),
                 "strategy": c.get("strategy"),
+                "label_de": c.get("label_de")
+                or strategy_label_de(c.get("strategy") or c.get("candidate_id")),
                 "commands": list(c.get("commands") or []),
                 "recommended": bool(c.get("recommended")),
                 "quality": c.get("quality") if isinstance(c.get("quality"), dict) else None,
+                "sketch_ascii": c.get("sketch_ascii"),
+                "sketch_legend": c.get("sketch_legend")
+                if isinstance(c.get("sketch_legend"), dict)
+                else None,
             }
             for c in shortlist
             if isinstance(c, dict) and c.get("candidate_id") and c.get("commands")

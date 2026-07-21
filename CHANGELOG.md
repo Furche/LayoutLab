@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Shortlist sketch cards (`0.10.30`):** each shortlist entry carries `label_de` (e.g. „Bett Nordwand, Stauraum Süd“) + top-down `sketch_ascii`; Viewer shows selectable sketch cards; agent reply uses labels instead of raw strategy ids.
 - **Shortlist selection (`0.10.29`):** DD-017 user pick before Apply — agent persists `shortlist[]` (commands + quality) in `agent_state`; chat intents (`nimm Variante 2`, candidate id, „andere“); Viewer proposal bar shows shortlist buttons; Apply stays explicit.
 - **Planning selection surfacing (`0.10.28`):** agent reply shows Core choice (`selected_id`, Shortlist n/m, `selection_reason`); `LAST_SESSION.md` / jsonl get a **Planning** block (candidates slim, shortlist, revision, enforced); force path appends `plan_layout` to `tool_trace`.
 - **Core recipe force path (`0.10.27`):** generic `planning/recipe_routing.py` maps room_type/intent → recipe (`bedroom` → `bedroom_basic` today); agent `_ensure_core_recipe_plan` always runs Core `plan_layout` with `mode=candidates` for furnished-room intents even when the LLM emits free xy; skips deterministic placement-fix spam when enforced; observation turns stay unforced.

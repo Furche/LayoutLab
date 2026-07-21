@@ -270,35 +270,66 @@ button:hover {
 }
 
 .chat-shortlist {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
+  gap: 0.45rem;
 }
 
 .chat-shortlist[hidden] {
   display: none;
 }
 
-.chat-shortlist-btn {
+.chat-shortlist-card {
+  display: grid;
+  gap: 0.3rem;
+  text-align: left;
   border: 1px solid var(--border);
   background: #0e1116;
   color: var(--text);
-  border-radius: 6px;
-  padding: 0.28rem 0.5rem;
+  border-radius: 8px;
+  padding: 0.4rem 0.45rem 0.45rem;
   font: inherit;
-  font-size: 0.72rem;
   cursor: pointer;
   max-width: 100%;
 }
 
-.chat-shortlist-btn:hover {
+.chat-shortlist-card:hover {
   border-color: #5a6a80;
 }
 
-.chat-shortlist-btn.is-selected {
+.chat-shortlist-card.is-selected {
   border-color: #6aa0ff;
   background: #1a2433;
-  color: #dce8ff;
+  box-shadow: inset 0 0 0 1px rgba(106, 160, 255, 0.35);
+}
+
+.chat-shortlist-card-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.chat-shortlist-card-meta {
+  margin: 0;
+  font-size: 0.65rem;
+  color: var(--muted, #9aa4b2);
+  line-height: 1.25;
+}
+
+.chat-shortlist-card-sketch {
+  margin: 0;
+  padding: 0.25rem;
+  overflow: auto;
+  max-height: 7.5rem;
+  border-radius: 4px;
+  background: #080a0e;
+  border: 1px solid #1c2330;
+  color: #b7c0cc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.42rem;
+  line-height: 1.05;
+  white-space: pre;
 }
 
 .chat-proposal-actions {

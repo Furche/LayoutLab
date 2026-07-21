@@ -22,18 +22,66 @@ _ORDINAL_DE = {
     4: ("4", "vierte", "vierter", "viertes", "vier"),
 }
 
+_WALL_DE = {
+    "north": "Nord",
+    "south": "Süd",
+    "east": "Ost",
+    "west": "West",
+}
+
+
+def strategy_label_de(strategy: str | None) -> str:
+    """Readable German label for recipe strategy / candidate ids."""
+    s = str(strategy or "").strip().lower()
+    if not s:
+        return "Variante"
+
+    bed_wall = None
+    for wall in ("north", "south", "east", "west"):
+        if f"bed_{wall}" in s:
+            bed_wall = wall
+            break
+
+    if "storage_swapped" in s:
+        storage = "Schrank eher Ost"
+    elif "wardrobe_east" in s:
+        storage = "Schrank Ost"
+    elif "wardrobe_west" in s:
+        storage = "Schrank West"
+    elif "storage_north" in s:
+        storage = "Stauraum Nord"
+    elif "storage_south" in s:
+        storage = "Stauraum Süd"
+    elif "storage_east" in s:
+        storage = "Stauraum Ost"
+    elif "storage_west" in s:
+        storage = "Stauraum West"
+    else:
+        storage = None
+
+    if bed_wall and storage:
+        return f"Bett {_WALL_DE[bed_wall]}wand, {storage}"
+    if bed_wall:
+        return f"Bett {_WALL_DE[bed_wall]}wand"
+    if storage:
+        return storage
+    # Fallback: humanize raw id
+    return s.replace("__", " · ").replace("_", " ")
+
 
 def slim_candidates(candidates: list | None, *, limit: int = 8) -> list[dict[str, Any]]:
-    """Compact candidate rows for logs (no full command lists)."""
+    """Compact candidate rows for logs (no full command lists / sketches)."""
     out: list[dict[str, Any]] = []
     for c in (candidates or [])[:limit]:
         if not isinstance(c, dict):
             continue
         q = c.get("quality") if isinstance(c.get("quality"), dict) else {}
         soft = q.get("soft_summary") if isinstance(q.get("soft_summary"), dict) else {}
+        sid = c.get("strategy") or c.get("candidate_id")
         entry: dict[str, Any] = {
             "candidate_id": c.get("candidate_id"),
             "strategy": c.get("strategy"),
+            "label_de": c.get("label_de") or strategy_label_de(sid),
         }
         if q:
             entry["has_hard_errors"] = bool(q.get("has_hard_errors"))
@@ -69,8 +117,20 @@ def _slim_quality_preview(quality: dict | None) -> dict[str, Any] | None:
     }
 
 
+def _sketch_from_candidate(c: dict) -> tuple[str | None, dict | None]:
+    sketch = c.get("layout_sketch")
+    if not isinstance(sketch, dict):
+        q = c.get("quality") if isinstance(c.get("quality"), dict) else {}
+        sketch = q.get("layout_sketch") if isinstance(q.get("layout_sketch"), dict) else None
+    if not isinstance(sketch, dict):
+        return None, None
+    ascii_map = sketch.get("ascii")
+    legend = sketch.get("legend") if isinstance(sketch.get("legend"), dict) else None
+    return (str(ascii_map) if ascii_map else None), legend
+
+
 def shortlist_entries_from_planned(planned: dict | None) -> list[dict[str, Any]]:
-    """Shortlist members with commands — for Viewer/agent re-selection (DD-017)."""
+    """Shortlist members with commands + DE label + sketch — Viewer cards (DD-017)."""
     if not isinstance(planned, dict):
         return []
     shortlist_ids = list(planned.get("shortlist_ids") or [])
@@ -90,12 +150,20 @@ def shortlist_entries_from_planned(planned: dict | None) -> list[dict[str, Any]]
         cmds = list(c.get("commands") or [])
         if not cmds:
             continue
+        strategy = c.get("strategy") or cid
+        label = c.get("label_de") or strategy_label_de(strategy)
+        ascii_map, legend = _sketch_from_candidate(c)
         entry: dict[str, Any] = {
             "candidate_id": cid,
-            "strategy": c.get("strategy") or cid,
+            "strategy": strategy,
+            "label_de": label,
             "commands": cmds,
             "recommended": cid == selected,
         }
+        if ascii_map:
+            entry["sketch_ascii"] = ascii_map
+        if legend:
+            entry["sketch_legend"] = legend
         q = _slim_quality_preview(c.get("quality") if isinstance(c.get("quality"), dict) else None)
         if q:
             entry["quality"] = q
@@ -116,10 +184,20 @@ def planning_summary_from_planned(planned: dict | None) -> dict[str, Any] | None
         return None
     candidates = slim_candidates(planned.get("candidates"))
     shortlist = list(planned.get("shortlist_ids") or [])
+    selected = planned.get("selected_id")
+    selected_label = None
+    if selected:
+        for c in candidates:
+            if c.get("candidate_id") == selected:
+                selected_label = c.get("label_de")
+                break
+        if not selected_label:
+            selected_label = strategy_label_de(planned.get("strategy") or selected)
     return {
         "recipe": planned.get("recipe"),
         "mode": planned.get("mode") or "candidates",
-        "selected_id": planned.get("selected_id"),
+        "selected_id": selected,
+        "selected_label_de": selected_label,
         "strategy": planned.get("strategy"),
         "selection_reason": planned.get("selection_reason") or "",
         "shortlist_ids": shortlist,
@@ -134,28 +212,34 @@ def format_planning_reply_note(summary: dict | None, *, enforced: bool = False) 
     if not isinstance(summary, dict):
         return ""
     selected = summary.get("selected_id")
+    selected_label = summary.get("selected_label_de") or strategy_label_de(
+        summary.get("strategy") or selected
+    )
     shortlist = list(summary.get("shortlist_ids") or [])
     n_cand = int(summary.get("candidate_count") or 0) or len(summary.get("candidates") or [])
     reason = str(summary.get("selection_reason") or "").strip()
     rounds = int(summary.get("revision_rounds") or 0)
+    by_id = {
+        c.get("candidate_id"): c.get("label_de") or strategy_label_de(c.get("strategy"))
+        for c in (summary.get("candidates") or [])
+        if isinstance(c, dict) and c.get("candidate_id")
+    }
 
     parts: list[str] = []
     if enforced and not selected:
         parts.append("Layout vom Core-Rezept.")
     if selected:
+        label = selected_label or selected
         if shortlist and n_cand:
             parts.append(
-                f"Core-Vorschlag: {selected} "
+                f"Core-Vorschlag: {label} "
                 f"(Shortlist {len(shortlist)}/{n_cand})."
             )
         elif shortlist:
-            parts.append(
-                f"Core-Vorschlag: {selected} (Shortlist {len(shortlist)})."
-            )
+            parts.append(f"Core-Vorschlag: {label} (Shortlist {len(shortlist)}).")
         else:
-            parts.append(f"Core-Vorschlag: {selected}.")
+            parts.append(f"Core-Vorschlag: {label}.")
     if reason:
-        # Drop redundant "Gewählt aus Shortlist: <id> — …" prefix.
         cleaned = reason
         if selected and cleaned.startswith("Gewählt aus Shortlist:"):
             if "—" in cleaned:
@@ -167,10 +251,16 @@ def format_planning_reply_note(summary: dict | None, *, enforced: bool = False) 
     if rounds > 0 and "Revision" not in reason:
         parts.append(f"Revision: {rounds} Runde(n).")
     if shortlist and len(shortlist) > 1:
-        others = [s for s in shortlist if s != selected][:3]
+        others = []
+        for sid in shortlist:
+            if sid == selected:
+                continue
+            others.append(by_id.get(sid) or strategy_label_de(sid))
+            if len(others) >= 3:
+                break
         if others:
             parts.append(
-                "Alternativen: " + ", ".join(others) + " (sagen oder im Viewer wählen)."
+                "Alternativen: " + "; ".join(others) + " (Viewer oder „Variante 2“)."
             )
     return " ".join(parts).strip()
 
@@ -270,6 +360,12 @@ def resolve_shortlist_selection(
         if cid.lower() in t:
             return cid
 
+    # German label match (e.g. "bett nordwand")
+    for c in items:
+        label = str(c.get("label_de") or "").strip().lower()
+        if label and len(label) >= 8 and label in t:
+            return c["candidate_id"]
+
     # "variante 2" / "option 2" / "die zweite" / "nimm 2"
     for idx, words in _ORDINAL_DE.items():
         if idx > len(items):
@@ -336,6 +432,9 @@ def apply_shortlist_selection(
     commands = list(chosen["commands"])
     ids = [str(c.get("candidate_id")) for c in items if c.get("candidate_id")]
     quality = chosen.get("quality") if isinstance(chosen.get("quality"), dict) else None
+    label = chosen.get("label_de") or strategy_label_de(
+        chosen.get("strategy") or candidate_id
+    )
     # Refresh recommended flags
     refreshed = []
     for c in items:
@@ -343,10 +442,12 @@ def apply_shortlist_selection(
             continue
         row = dict(c)
         row["recommended"] = row.get("candidate_id") == candidate_id
+        if not row.get("label_de"):
+            row["label_de"] = strategy_label_de(row.get("strategy") or row.get("candidate_id"))
         refreshed.append(row)
 
     reply = (
-        f"Gewählt: {candidate_id} "
+        f"Gewählt: {label} "
         f"(Shortlist {len(ids)}). Apply übernimmt diese Variante."
     )
     result: dict[str, Any] = {
@@ -356,7 +457,7 @@ def apply_shortlist_selection(
         "questions": [],
         "commands": commands,
         "proposal": {
-            "title": f"Shortlist: {candidate_id}",
+            "title": label,
             "rationale": "User/AI selection from Core functional shortlist (DD-017)",
             "assumes": [],
             "commands": commands,
@@ -364,18 +465,21 @@ def apply_shortlist_selection(
         },
         "selected_id": candidate_id,
         "shortlist_ids": ids,
-        "selection_reason": f"Nutzerwahl: {candidate_id}",
+        "selection_reason": f"Nutzerwahl: {label}",
         "shortlist": refreshed,
         "planning": {
             "selected_id": candidate_id,
+            "selected_label_de": label,
             "strategy": chosen.get("strategy") or candidate_id,
-            "selection_reason": f"Nutzerwahl: {candidate_id}",
+            "selection_reason": f"Nutzerwahl: {label}",
             "shortlist_ids": ids,
             "candidate_count": len(ids),
             "candidates": [
                 {
                     "candidate_id": c.get("candidate_id"),
                     "strategy": c.get("strategy"),
+                    "label_de": c.get("label_de")
+                    or strategy_label_de(c.get("strategy") or c.get("candidate_id")),
                     "soft_warnings": int(
                         ((c.get("quality") or {}).get("soft_warnings"))
                         or ((c.get("quality") or {}).get("soft_summary") or {}).get("warnings")

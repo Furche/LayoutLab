@@ -78,6 +78,9 @@ def evaluate_candidate_commands(session, commands) -> dict[str, Any]:
         "findings": findings,
         "analysis": analysis,
         "errors": dry.get("errors") or [],
+        "layout_sketch": dry.get("layout_sketch")
+        if isinstance(dry.get("layout_sketch"), dict)
+        else None,
     }
 
 
@@ -184,6 +187,8 @@ def _evaluate_raw_candidates(session, raw_candidates: list) -> list[dict]:
                 "commands": cand["commands"],
                 "assumes": cand.get("assumes") or [],
                 "notes": cand.get("notes") or [],
+                "label_de": _strategy_label_de(cand.get("strategy") or cand.get("candidate_id")),
+                "layout_sketch": quality.get("layout_sketch"),
                 "quality": {
                     "apply_ok": quality["apply_ok"],
                     "valid": quality["valid"],
@@ -198,6 +203,13 @@ def _evaluate_raw_candidates(session, raw_candidates: list) -> list[dict]:
             }
         )
     return evaluated
+
+
+def _strategy_label_de(strategy: str | None) -> str:
+    """Human German label for bedroom strategy ids (Viewer / reply)."""
+    from .selection_surface import strategy_label_de
+
+    return strategy_label_de(strategy)
 
 
 def _merge_evaluated(
