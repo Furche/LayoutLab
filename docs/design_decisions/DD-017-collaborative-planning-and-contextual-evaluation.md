@@ -108,8 +108,9 @@ Selection is layered:
 3. The AI compares aesthetics within the viable shortlist and recommends an option.
 4. The user makes the final selection and controls Apply.
 
-DD-011's deterministic Core winner remains the valid v1 fallback until DD-017 is accepted and
-DD-011 is explicitly amended. DD-017 describes the intended target architecture.
+DD-011's deterministic Core winner remains the supported Planning-v1 fallback until the layered
+shortlist path (DD-017) is implemented. DD-011/DD-015 amendments for the target architecture are
+already in place.
 
 This extends DD-009 without weakening it: AI decides **what to try and why**; Core decides
 **how it is represented, whether it is physically valid, and what measurable consequences it has**.
