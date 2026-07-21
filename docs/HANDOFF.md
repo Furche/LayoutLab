@@ -3,7 +3,7 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-21 (DD-017 Accepted; DD-011/DD-015 amended)
+**Last updated:** 2026-07-21 (roadmap synced after DD-017 Accept)  
 **Plugin version:** 0.10.23 · **Branch:** `main`
 
 ------------------------------------------------------------------------
@@ -29,13 +29,11 @@ Branch: main. Plugin v0.10.23.
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-21):
 - DD-016 **Accepted**: plan_layout + bedroom_basic (agent_tools 0.5)
-- DD-015 **Accepted**: soft metrics + tradeoffs
-- DD-011 **Accepted**: recipe = Planungsstrategie; Planner = expand → evaluate → select (v1 noch zu bauen)
-- DD-017 **Accepted**: Core functional shortlist → AI recommendation → User selection; contextual evaluation contract locked
-- agent.py bedroom heuristics → planning/intent + planning/placement
-- Light agent_state on RoomSession (goal / requirements / last proposal)
+- DD-015 **Accepted**: soft metrics + tradeoffs (Ästhetik ≠ Core-Metrik)
+- DD-011 **Accepted**: recipe = Planungsstrategie; Candidate Expansion als nächster Bau-Schritt
+- DD-017 **Accepted**: Core Shortlist → AI-Empfehlung → User Apply; Evaluation-Schema folgt
+- Nächste Arbeit: candidates + soft rank, dann minimales DD-017-Schema (Profile/Roles/Vetos)
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
-- Generatoren: bed_basic, wardrobe_basic, desk_basic
 - Core: python3 -m server (:8765); Viewer Vite (:5173)
 
 Bitte auf Deutsch antworten. Keine vollen Diagnostic-Reports inline — nur fehlgeschlagene Checks oder Dateireferenz.
@@ -260,14 +258,18 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 
 # User roadmap priority (Alexander)
 
+Living product track — keep in sync with *Next steps* above.
+
 1. ✅ Generator docs, API, modular plugin, browser, regenerate  
-2. ✅ Clearance (DD-007 implemented)  
-3. 🔄 Constraints + analyze_layout (DD-008) — **v0.8.0 shipped**  
-4. ✅ `bed_basic` multi-zone clearances — **v0.6.0 shipped**  
-5. ✅ New generators after constraint track — **desk_basic v0.1.0 shipped**  
-6. ✅ **DD-010 Room Model** — **Accepted + MVP v0.9.0**  
-7. ⏳ Room-aware analyze / tiered clearances (after room export)  
-8. 📋 Bridge / standalone / capture (Future — separate DDs)
+2. ✅ Clearance (DD-007) · Constraints / analyze (DD-008) · Room Model (DD-010)  
+3. ✅ Standalone Core + Viewer (DD-014) · Soft metrics (DD-015) · Recipes (DD-016)  
+4. ✅ Planning foundation: recipes as strategies (DD-011) · collaborative evaluation (DD-017)  
+5. 🔄 **Now:** DD-011 candidate expansion + soft ranking; minimal DD-017 evaluation schema  
+6. ⏳ Core functional shortlist + bounded revision; Viewer candidate breakdown  
+7. 📋 Optional experimental AI aesthetics (behind flag) · more recipes on demand  
+8. 📋 Bridge / capture / multi-space / persisted variants — Future Ideas, separate DDs  
+
+Binding order for agents: **Next steps** (this file) · detail in [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) implementation order.
 
 ------------------------------------------------------------------------
 
@@ -275,6 +277,8 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 
 | Date | Change |
 |---|---|
+| 2026-07-21 | Roadmap sync: User priority + Next steps reflect DD-017 Accepted staging |
+| 2026-07-21 | DD-017 **Accepted**; DD-011/DD-015 amended; Planner evaluation staged |
 | 2026-07-20 | DD-011 **Accepted** — Planner foundation; next = implement candidates |
 | 2026-07-20 | DD-011 **Proposed** — recipe as solution space; candidates + rank |
 | 2026-07-20 | DD-015 + DD-016 **Accepted**; next focus recipes on demand |

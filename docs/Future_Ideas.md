@@ -218,7 +218,7 @@ Beyond placing one layout, LayoutLab could:
 
 Depends on: stable `analyze_layout` (DD-008 **Implemented**), richer evaluation rules, Intent/Planning layers (§9).
 
-Variants should become **first-class objects** of the Spatial Project Model — not accidental full-scene copies. See §16 and **[DD-011](design_decisions/DD-011-layout-variants-and-comparison.md)** (**Accepted**: Planning v1 ephemeral candidates + rank; full project variants later).
+Variants should become **first-class objects** of the Spatial Project Model — not accidental full-scene copies. See §16, **[DD-011](design_decisions/DD-011-layout-variants-and-comparison.md)** and **[DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md)** (**Accepted**: ephemeral candidates + collaborative evaluation; full project variants / compare UI still later).
 
 ### Evaluation Engine
 
@@ -568,7 +568,7 @@ A later **own viewport** would use an **existing 3D technology** — **not** a c
 | Topic | Possible later DD |
 |---|---|
 | Project / multi-room / multi-floor model | **DD-010** — Project and Spatial Model |
-| Variants as first-class objects | **DD-011** — Layout Variants and Comparison |
+| Variants as first-class objects | **DD-011** + **DD-017** — candidates now; persisted project variants later |
 | In-app AI product experience | **DD-012** — Integrated AI Product Experience |
 | Capture / reconstruction pipeline | **DD-013** — Capture and Reconstruction Pipeline |
 | Neutral authoring model + second write runtime | **DD-014** — [Accepted — Phase A](design_decisions/DD-014-standalone-runtime-path.md) (web viewer next; Phase B later) |
@@ -639,7 +639,7 @@ Integrated AI behaviour: §7. Spatial hierarchy: §13. Capture paths: §14.
 
 # 13. Spatial Project Model
 
-**Status:** Future Vision — **not** a binding schema; single-space Room Model → [DD-010](design_decisions/DD-010-room-model.md) (**Proposed**)
+**Status:** Future Vision — **not** a binding schema; single-space Room Model → [DD-010](design_decisions/DD-010-room-model.md) (**Accepted**)
 
 LayoutLab must not assume a project is always exactly one room. **DD-010** starts with
 **one editable space** (Room Model). The hierarchy below remains the longer-term target.
@@ -748,7 +748,7 @@ Capture and import must write into a **validation / confirmation** state — not
 
 # 16. Layout Variants as First-Class Objects
 
-**Status:** Future Vision — **DD-011 Accepted** (Planning v1 = ephemeral candidates + rank; full first-class project variants / compare UI still later)
+**Status:** Future Vision — **DD-011 + DD-017 Accepted** (ephemeral candidates + collaborative evaluation; full first-class project variants / compare UI still later)
 
 The user should be able to ask: “Show me several sensible solutions.”
 
@@ -765,7 +765,7 @@ A variant may describe, among other things:
 
 **Conceptually:** shared base space + different layout states — not random full Blender scene clones. Temporary side-by-side display in a viewport is fine for UX.
 
-Related: §5 Planning and Evaluation · [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md).
+Related: §5 Planning and Evaluation · [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) · [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md).
 
 ------------------------------------------------------------------------
 
@@ -775,7 +775,7 @@ Related: §5 Planning and Evaluation · [DD-011](design_decisions/DD-011-layout-
 
 | Stage | Scope (illustrative) |
 |---|---|
-| **1 — Room Builder** | Single rectangular/polygonal room; height; walls; doors; windows; radiators; fixed obstacles; measures and simple edit — **DD-010 Proposed** (Room Model, not room generator) |
+| **1 — Room Builder** | Single rectangular/polygonal room; height; walls; doors; windows; radiators; fixed obstacles; measures and simple edit — **DD-010 Accepted** (Room Model, not room generator) |
 | **2 — Apartment Model** | Connected rooms; shared walls; passages; corridors; variants per room or whole apartment; furniture redistributable across rooms |
 | **3 — Building Model** | Multiple floors; stairs; storey heights; shafts; roof slopes; fixed/changeable fabric; outdoor areas later optional |
 
@@ -806,7 +806,8 @@ Do **not** implement from this vision until separate DDs and explicit product ne
 | ID | Title | Status |
 |---|---|---|
 | [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Accepted** (2026-07-16) — MVP in plugin v0.9.0 |
-| [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) | Layout Variants and Comparison | **Accepted** (2026-07-20) — Planning v1: recipe → candidates → rank; implement next |
+| [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) | Layout Variants and Comparison | **Accepted** (2026-07-20) — Planning v1; amended by DD-017 (shortlist → AI recommend → User) |
+| [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) | Collaborative Planning + Contextual Evaluation | **Accepted** (2026-07-21) — implement schema + shortlist after candidate expansion |
 | DD-012 | Integrated AI Product Experience | **Not created** — reserve when implementing §7 / §12 |
 | DD-013 | Capture and Reconstruction Pipeline | **Not created** — reserve when implementing §14–§15 |
 | DD-014 | Standalone Runtime Path (viewer → write) | **Accepted — Phase A + B + B2** — [DD-014](design_decisions/DD-014-standalone-runtime-path.md); multi-space Spatial Project still later |

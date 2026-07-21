@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **Docs roadmap sync:** HANDOFF user priority, Future_Ideas §19, and agent tool contract ordered for post–DD-017 staging (candidates → evaluation schema → shortlist)
 - **DD-017 Accepted:** collaborative planning and contextual candidate evaluation contract locked; DD-011 amended to Core functional shortlist → AI recommendation → User selection, and DD-015 clarified that aesthetics remains outside deterministic Core metrics
 - **DD-011 Accepted:** Planner foundation locked — recipe = goal-oriented strategy; expand → evaluate → select; v1 via `plan_layout` `mode: "candidates"` (2–4 bedroom strategies first)
 - **DD-015 / DD-016 Accepted:** soft metrics + tradeoffs and deterministic layout recipes (`plan_layout` / `bedroom_basic`) locked as architecture

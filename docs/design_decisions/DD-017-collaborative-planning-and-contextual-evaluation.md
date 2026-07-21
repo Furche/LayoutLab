@@ -493,13 +493,11 @@ The user may then apply, compare, request a different priority, or relax a requi
 |---|---|
 | **DD-008** | Supplies deterministic findings and severity; DD-017 adds ordered candidate evaluation around them. |
 | **DD-009** | Boundary remains: AI plans; Core executes and validates. AI iteration uses allowlisted semantic intentions, not unrestricted geometry. |
-| **DD-011** | Recipe remains a strategy, not a solution. DD-011's deterministic Core winner remains v1 fallback; DD-017 targets Core functional shortlist → AI recommendation → User selection and therefore requires a later amendment when accepted. |
-| **DD-015** | Existing soft metrics remain deterministic v1 proxies. “No aesthetics score” continues to mean no aesthetics as a Core metric; DD-017 adds a separate, optional probabilistic AI channel and requires an amendment when accepted. |
+| **DD-011** | Recipe remains a strategy, not a solution. Amended 2026-07-21: Core functional shortlist → AI recommendation → User selection is the target; deterministic Core winner remains the supported Planning-v1 fallback until that path ships. |
+| **DD-015** | Soft metrics remain deterministic Core proxies. Amended 2026-07-21: “No aesthetics score” means no aesthetics as a Core metric; optional probabilistic AI aesthetics is a separate DD-017 channel. |
 | **DD-016** | Recipes remain deterministic Core tools and one source of candidate intentions. They need not contain every room type, aesthetic rule, or user negotiation. |
 
-If accepted, implementation may require amendments to DD-011 and DD-015 where their v1 wording
-currently excludes aesthetic ranking or assigns all default selection to Core. Those accepted v1
-contracts remain valid until the amendments and schemas are explicitly reviewed.
+Narrow DD-011/DD-015 amendments are in place. Remaining work is staged implementation (candidate expansion → evaluation schema → shortlist/revision → optional aesthetics), not further architecture Accept gates.
 
 ------------------------------------------------------------------------
 
@@ -548,10 +546,10 @@ contracts remain valid until the amendments and schemas are explicitly reviewed.
 
 ------------------------------------------------------------------------
 
-## Proposed implementation order (not authorized until Accepted)
+## Implementation order (staged after Accept)
 
-1. Continue DD-011 candidate expansion and existing soft ranking without introducing DD-017 schemas.
-2. Review and accept/amend DD-017; then add narrow DD-011/DD-015 amendments.
+1. ~~Continue DD-011 candidate expansion and existing soft ranking without introducing DD-017 schemas.~~ ← **current**
+2. ~~Review and accept/amend DD-017; then add narrow DD-011/DD-015 amendments.~~ ✅
 3. Define a minimal semantic capability/preference-profile, role, and intention allowlist schema.
 4. Add signed deterministic score components, veto rules, and context weights.
 5. Implement bounded internal revision and Core functional shortlisting before user-facing proposals.
