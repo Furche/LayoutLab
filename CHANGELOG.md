@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Shortlist blueprint SVG (`0.10.33`):** Viewer cards use top-down floor-plan SVG (walls with door/window gaps, door swing, window marks, furniture blocks, N marker) instead of hard-to-read 3D thumbs; ASCII remains fallback.
 - **Shortlist thumbnail UX (`0.10.32`):** orthographic top-down camera fitted to the room; proposal bar scrolls shortlist above sticky Apply actions (no overflow under status footer).
 - **Shortlist 3D thumbnails (`0.10.31`):** candidate dry-run attaches slim AABB `viewer_preview` (no mesh verts); Viewer renders iso WebGL thumbs on shortlist cards (ASCII fallback); `dry_run_commands` supports `include_export`.
 - **Shortlist sketch cards (`0.10.30`):** each shortlist entry carries `label_de` (e.g. „Bett Nordwand, Stauraum Süd“) + top-down `sketch_ascii`; Viewer shows selectable sketch cards; agent reply uses labels instead of raw strategy ids.

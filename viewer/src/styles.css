@@ -332,9 +332,20 @@ button:hover {
   height: auto;
   aspect-ratio: 4 / 3;
   max-height: 9.5rem;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 4px;
   background: #080a0e;
+  border: 1px solid #1c2330;
+  display: block;
+}
+
+.chat-shortlist-card-plan {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  max-height: 11rem;
+  border-radius: 4px;
+  background: #0e1116;
   border: 1px solid #1c2330;
   display: block;
 }

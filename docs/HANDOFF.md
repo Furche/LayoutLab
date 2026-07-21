@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-21 (shortlist 3D thumbnails)  
-**Plugin version:** 0.10.31 · **Branch:** `main`
+**Last updated:** 2026-07-22 (shortlist blueprint SVG)  
+**Plugin version:** 0.10.33 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -179,10 +179,11 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 9. ~~Planning selection surfacing (reply + session log)~~ ✅ (`0.10.28`)
 10. ~~Shortlist selection (chat + Viewer)~~ ✅ (`0.10.29`)
 11. ~~Shortlist sketch cards (labels + ASCII)~~ ✅ (`0.10.30`)
-12. ~~Shortlist 3D thumbnails~~ ✅ (`0.10.31`)
-13. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
+12. ~~Shortlist 3D thumbnails~~ ✅ (`0.10.31`) → replaced by blueprint SVG
+13. ~~Shortlist blueprint SVG~~ ✅ (`0.10.33`)
+14. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
 
-DD-011/015/016/017 **Accepted** · 3D shortlist thumbs shipped · next: optional aesthetics / more recipes
+DD-011/015/016/017 **Accepted** · blueprint shortlist cards shipped · next: optional aesthetics / more recipes
 
 ------------------------------------------------------------------------
 
