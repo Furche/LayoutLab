@@ -180,7 +180,7 @@ def _slim_planning(result: dict) -> dict | None:
             "revision_rounds": int(planning.get("revision_rounds") or 0),
             "aesthetic": {
                 key: planning["aesthetic"].get(key)
-                for key in ("recommended_id", "confidence", "summary_de")
+                for key in ("recommended_id", "confidence", "summary_de", "evidence_kind", "rubric_version")
             }
             if isinstance(planning.get("aesthetic"), dict)
             else None,

@@ -49,6 +49,40 @@ class TestAesthetics(unittest.TestCase):
         self.assertEqual(unchanged["selected_id"], "a")
         self.assertNotIn("aesthetic", unchanged)
 
+    def test_blueprint_png_from_shortlist_preview(self):
+        from layoutlab.runtime import agent as ag
+        from layoutlab.runtime.planning.blueprint_png import (
+            evidence_from_candidate,
+            render_blueprint_png,
+        )
+        from layoutlab.runtime.session import RoomSession
+
+        session = RoomSession()
+        bad = {
+            "ok": True,
+            "reply": "x",
+            "questions": [],
+            "commands": [
+                {
+                    "action": "run_generator",
+                    "params": {"generator": "bed_basic", "location": {"x": 0, "y": 0, "z": 0}},
+                }
+            ],
+            "proposal": {"commands": [], "assumes": []},
+            "tool_trace": [],
+        }
+        bad["proposal"]["commands"] = list(bad["commands"])
+        out = ag._ensure_core_recipe_plan(
+            session, bad, "schönes schlafzimmer", last_plan=None
+        )
+        row = (out.get("shortlist") or [])[0]
+        png = render_blueprint_png(row.get("viewer_preview"))
+        self.assertIsNotNone(png)
+        self.assertTrue(png.startswith(b"\x89PNG"))
+        ev = evidence_from_candidate(row)
+        self.assertEqual(ev["evidence_kind"], "blueprint_png")
+        self.assertTrue(ev["image_data_url"].startswith("data:image/png;base64,"))
+
 
 if __name__ == "__main__":
     unittest.main()
