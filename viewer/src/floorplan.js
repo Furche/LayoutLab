@@ -79,45 +79,39 @@ function openingSpan(roomW, roomD, opening) {
   return null;
 }
 
-function doorSwingPath(span, roomW, roomD, toSvg) {
-  // Quarter-circle into the room from the hinge at lower offset end.
+function doorSwingPath(span, _roomW, _roomD, toSvg) {
+  // Blueprint quarter-circle: hinge at offset start, leaf closed along wall, open into room.
   const side = span.side;
-  const [sx, sy] = toSvg(span.x0, span.y0);
-  const [ex, ey] = toSvg(span.x1, span.y1);
-  const width = Math.hypot(ex - sx, ey - sy);
-  if (width < 0.05) return "";
-  // Hinge at start (offset end); swing into interior
-  let hx = sx;
-  let hy = sy;
-  let sweep = 1;
-  let dx = 0;
-  let dy = 0;
+  const [hx, hy] = toSvg(span.x0, span.y0); // hinge
+  const [cx, cy] = toSvg(span.x1, span.y1); // closed tip on wall
+  const r = Math.hypot(cx - hx, cy - hy);
+  if (r < 0.05) return "";
+
+  // Open tip = 90° into the room from the hinge (not along the wall).
+  let ox = hx;
+  let oy = hy;
   if (side === "east") {
-    // wall at max X, interior -X; SVG x decreases into room
-    dx = -width;
-    dy = 0;
-    sweep = 1;
+    ox = hx - r;
+    oy = hy;
   } else if (side === "west") {
-    dx = width;
-    dy = 0;
-    sweep = 0;
+    ox = hx + r;
+    oy = hy;
   } else if (side === "south") {
-    // wall at y=0 → SVG bottom; interior toward north = -svgY
-    dx = 0;
-    dy = -width;
-    sweep = 0;
+    ox = hx;
+    oy = hy - r; // north in SVG
   } else if (side === "north") {
-    dx = 0;
-    dy = width;
-    sweep = 1;
+    ox = hx;
+    oy = hy + r; // south in SVG
   }
-  const mx = hx + dx;
-  const my = hy + dy;
-  // Arc from leaf end (ex,ey) approx — draw from hinge along wall to swing tip
+
+  // SVG sweep-flag: 1 = clockwise. Choose the short arc that matches hinge→closed→open.
+  const cross = (cx - hx) * (oy - hy) - (cy - hy) * (ox - hx);
+  const sweep = cross > 0 ? 1 : 0;
+
   return (
     `<path class="fp-door-swing" d="M ${hx.toFixed(2)} ${hy.toFixed(2)} ` +
-    `L ${ex.toFixed(2)} ${ey.toFixed(2)} ` +
-    `A ${width.toFixed(2)} ${width.toFixed(2)} 0 0 ${sweep} ${mx.toFixed(2)} ${my.toFixed(2)} Z" />`
+    `L ${cx.toFixed(2)} ${cy.toFixed(2)} ` +
+    `A ${r.toFixed(2)} ${r.toFixed(2)} 0 0 ${sweep} ${ox.toFixed(2)} ${oy.toFixed(2)} Z" />`
   );
 }
 
