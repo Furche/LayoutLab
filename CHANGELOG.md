@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Experimental AI aesthetics (`0.10.34`):** opt-in `LAYOUTLAB_AI_AESTHETICS=1` (or `aesthetics: true`) compares only the Core functional shortlist using candidate ASCII sketches; records provider/model, rubric, confidence and German rationale, and may recommend — never validate or promote — a shortlist member before explicit Apply.
 - **Shortlist blueprint SVG (`0.10.33`):** Viewer cards use top-down floor-plan SVG (walls with door/window gaps, door swing, window marks, furniture blocks, N marker) instead of hard-to-read 3D thumbs; ASCII remains fallback.
 - **Shortlist thumbnail UX (`0.10.32`):** orthographic top-down camera fitted to the room; proposal bar scrolls shortlist above sticky Apply actions (no overflow under status footer).
 - **Shortlist 3D thumbnails (`0.10.31`):** candidate dry-run attaches slim AABB `viewer_preview` (no mesh verts); Viewer renders iso WebGL thumbs on shortlist cards (ASCII fallback); `dry_run_commands` supports `include_export`.

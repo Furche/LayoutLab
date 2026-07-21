@@ -420,6 +420,7 @@ function renderShortlistButtons() {
     meta.className = "chat-shortlist-card-meta";
     const bits = [];
     if (item.recommended || id === pendingSelectedId) bits.push("Vorschlag");
+    if (item.aesthetic_recommended) bits.push("Ästhetik");
     if (soft != null) bits.push(soft === 0 ? "keine Soft-Warnungen" : `${soft} Soft`);
     meta.textContent = bits.join(" · ") || "Shortlist";
     btn.appendChild(meta);

@@ -478,8 +478,36 @@ def _maybe_repair_proposal(settings, messages, result, conversation: str) -> dic
     return result
 
 
+def _apply_optional_aesthetics(planned: dict, params: dict, llm_config: dict | None) -> dict:
+    """Optionally compare only the Core functional shortlist; failures stay invisible."""
+    from .planning.aesthetics import (
+        aesthetics_enabled,
+        apply_aesthetic_recommendation,
+        assess_shortlist_aesthetics,
+    )
+
+    if not aesthetics_enabled(params, llm_config):
+        return planned
+    shortlist_ids = {str(cid) for cid in planned.get("shortlist_ids") or []}
+    candidates = [
+        candidate
+        for candidate in planned.get("candidates") or []
+        if isinstance(candidate, dict) and str(candidate.get("candidate_id") or "") in shortlist_ids
+    ]
+    if not candidates:
+        return planned
+    requirements = params.get("requirements") if isinstance(params.get("requirements"), dict) else {}
+    style_context = str(params.get("style_context") or requirements.get("style_context") or "ohne spezifischen Stilkontext")
+    aesthetic = assess_shortlist_aesthetics(
+        shortlist_candidates=candidates,
+        style_context=style_context,
+        llm_settings=resolve_llm_settings(llm_config),
+    )
+    return apply_aesthetic_recommendation(planned, aesthetic) if aesthetic else planned
+
+
 def _apply_plan_layout_baseline(
-    session, result: dict, conversation: str, last_plan: dict | None
+    session, result: dict, conversation: str, last_plan: dict | None, *, llm_config: dict | None = None
 ) -> dict:
     """When plan_layout ran this turn, Core recipe commands win over free LLM edits."""
     if not last_plan or not last_plan.get("commands"):
@@ -539,6 +567,9 @@ def _apply_plan_layout_baseline(
     proposal["assumes"] = merged_assumes
     result["proposal"] = proposal
     result["plan_layout_args"] = args
+    planned = _apply_optional_aesthetics(planned, args, llm_config)
+    result["commands"] = list(planned.get("commands") or [])
+    result["proposal"]["commands"] = list(planned.get("commands") or [])
     from .planning.selection_surface import append_plan_layout_trace, merge_planning_into_result
 
     result = merge_planning_into_result(result, planned, enforced=True)
@@ -547,7 +578,7 @@ def _apply_plan_layout_baseline(
 
 
 def _ensure_core_recipe_plan(
-    session, result: dict, conversation: str, last_plan: dict | None = None
+    session, result: dict, conversation: str, last_plan: dict | None = None, *, llm_config: dict | None = None
 ) -> dict:
     """Force Core plan_layout (mode=candidates) when a known recipe matches the intent.
 
@@ -644,6 +675,9 @@ def _ensure_core_recipe_plan(
     proposal["assumes"] = assumes
     result["proposal"] = proposal
     result["plan_layout_args"] = args
+    planned = _apply_optional_aesthetics(planned, args, llm_config)
+    result["commands"] = list(planned.get("commands") or [])
+    result["proposal"]["commands"] = list(planned.get("commands") or [])
     from .planning.selection_surface import append_plan_layout_trace, merge_planning_into_result
 
     result = merge_planning_into_result(result, planned, enforced=True)
@@ -755,11 +789,11 @@ def _maybe_soft_replan(session, settings, messages, result: dict, conversation: 
 
 
 def _finish_agent_result(
-    session, settings, messages, result: dict, conversation: str, *, last_plan=None
+    session, settings, messages, result: dict, conversation: str, *, last_plan=None, llm_config: dict | None = None
 ) -> dict:
     result = _maybe_repair_proposal(settings, messages, result, conversation)
-    result = _ensure_core_recipe_plan(session, result, conversation, last_plan)
-    result = _apply_plan_layout_baseline(session, result, conversation, last_plan)
+    result = _ensure_core_recipe_plan(session, result, conversation, last_plan, llm_config=llm_config)
+    result = _apply_plan_layout_baseline(session, result, conversation, last_plan, llm_config=llm_config)
     if not result.get("plan_layout_enforced"):
         result = _apply_deterministic_placement_fixes(conversation, result)
     result = _attach_quality_preview(session, result)
@@ -848,7 +882,9 @@ def _update_agent_state(
     state["last_reply"] = (result.get("reply") or "")[:240]
 
 
-def _recipe_plan_fallback(session, conversation: str, *, error: str | None = None) -> dict:
+def _recipe_plan_fallback(
+    session, conversation: str, *, error: str | None = None, llm_config: dict | None = None
+) -> dict:
     """Core-only recovery when LLM fails — use mapped recipe, never kids-room demo."""
     from .planning import (
         RECIPE_ROOM_TYPES,
@@ -909,6 +945,10 @@ def _recipe_plan_fallback(session, conversation: str, *, error: str | None = Non
         "llm_error": error,
         "plan_layout_enforced": True,
     }
+    planned = _apply_optional_aesthetics(planned, args, llm_config)
+    commands = sanitize_commands(planned.get("commands") or [])
+    result["commands"] = commands
+    result["proposal"]["commands"] = commands
     from .planning.selection_surface import append_plan_layout_trace, merge_planning_into_result
 
     result = merge_planning_into_result(result, planned, enforced=True)
@@ -1269,6 +1309,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                         result,
                         conversation,
                         last_plan=last_plan,
+                        llm_config=llm_config,
                     )
                 seen_tool_fps.add(fp)
 
@@ -1334,6 +1375,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                     result,
                     conversation,
                     last_plan=last_plan,
+                    llm_config=llm_config,
                 )
 
             normalized = _normalize_proposal(parsed)
@@ -1355,15 +1397,16 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 result,
                 conversation,
                 last_plan=last_plan,
+                llm_config=llm_config,
             )
 
         result = _finalize_proposal_from_messages(settings, messages, tool_trace)
         return _finish_agent_result(
-            session, settings, messages, result, conversation, last_plan=last_plan
+            session, settings, messages, result, conversation, last_plan=last_plan, llm_config=llm_config
         )
     except Exception as exc:
         if _session_wants_recipe_planning(session, conversation):
-            return _recipe_plan_fallback(session, conversation, error=str(exc))
+            return _recipe_plan_fallback(session, conversation, error=str(exc), llm_config=llm_config)
         demo = _demo_as_agent_result(message)
         if demo:
             demo["reply"] = f"(Agent/LLM fehlgeschlagen: {exc}) {demo['reply']}"

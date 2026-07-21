@@ -158,8 +158,11 @@ def shortlist_entries_from_planned(planned: dict | None) -> list[dict[str, Any]]
             "strategy": strategy,
             "label_de": label,
             "commands": cmds,
-            "recommended": cid == selected,
+            "recommended": bool(c.get("recommended")) or cid == selected,
         }
+        aesthetic = planned.get("aesthetic") if isinstance(planned.get("aesthetic"), dict) else {}
+        if aesthetic.get("recommended_id") == cid:
+            entry["aesthetic_recommended"] = True
         if ascii_map:
             entry["sketch_ascii"] = ascii_map
         if legend:
@@ -207,6 +210,7 @@ def planning_summary_from_planned(planned: dict | None) -> dict[str, Any] | None
         "candidate_count": len(planned.get("candidates") or candidates),
         "candidates": candidates,
         "revision_rounds": int(planned.get("revision_rounds") or 0),
+        "aesthetic": planned.get("aesthetic") if isinstance(planned.get("aesthetic"), dict) else None,
     }
 
 
@@ -253,6 +257,9 @@ def format_planning_reply_note(summary: dict | None, *, enforced: bool = False) 
             parts.append(cleaned)
     if rounds > 0 and "Revision" not in reason:
         parts.append(f"Revision: {rounds} Runde(n).")
+    aesthetic = summary.get("aesthetic") if isinstance(summary.get("aesthetic"), dict) else None
+    if aesthetic and aesthetic.get("summary_de"):
+        parts.append(f"Ästhetik (experimentell): {aesthetic['summary_de']}")
     if shortlist and len(shortlist) > 1:
         others = []
         for sid in shortlist:
@@ -292,6 +299,7 @@ def merge_planning_into_result(
             "revision_rounds",
             "strategy",
             "recipe",
+            "aesthetic",
         ):
             if key in planned:
                 result[key] = planned[key]

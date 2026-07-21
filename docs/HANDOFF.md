@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-22 (shortlist blueprint SVG)  
-**Plugin version:** 0.10.33 · **Branch:** `main`
+**Last updated:** 2026-07-22 (experimental AI aesthetics)
+**Plugin version:** 0.10.34 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.33.
+Branch: main. Plugin v0.10.34.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-22):
@@ -32,8 +32,8 @@ Aktueller Stand (2026-07-22):
 - DD-015 **Accepted**: soft metrics + tradeoffs (Ästhetik ≠ Core-Metrik)
 - DD-011 **Accepted** + **candidates v1 shipped**: `plan_layout` mode=candidates
 - DD-017 **Accepted** + evaluation schema + shortlist + revision + force path
-- **Shortlist selection** ✅ (`0.10.29`) · **blueprint SVG cards** ✅ (`0.10.33`, Tür/Fenster/Möbel)
-- Nächste Arbeit: optional AI aesthetics (flag); more recipes on demand
+- **Shortlist selection** ✅ (`0.10.29`) · **blueprint SVG cards** ✅ (`0.10.33`, Tür/Fenster/Möbel) · **optionale AI-Ästhetik** ✅ (`0.10.34`, Flag)
+- Nächste Arbeit: weitere Rezepte nach Bedarf
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
 - Core: python3 -m server (:8765); Viewer Vite (:5173)
 

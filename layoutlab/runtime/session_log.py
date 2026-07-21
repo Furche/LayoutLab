@@ -178,6 +178,12 @@ def _slim_planning(result: dict) -> dict | None:
             "candidate_count": planning.get("candidate_count"),
             "candidates": planning.get("candidates") or [],
             "revision_rounds": int(planning.get("revision_rounds") or 0),
+            "aesthetic": {
+                key: planning["aesthetic"].get(key)
+                for key in ("recommended_id", "confidence", "summary_de")
+            }
+            if isinstance(planning.get("aesthetic"), dict)
+            else None,
             "enforced": bool(result.get("plan_layout_enforced")),
         }
     if not (
