@@ -244,7 +244,7 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 14. **DD-017 Accepted** — collaborative evaluation contract + DD-011/015 amendments ✅  
 15. **DD-011 Planning v1:** `plan_layout` `mode: "candidates"` — expand + soft rank ✅ (`0.10.24`; no DD-017 scores yet)  
 16. Minimal DD-017 schema (profiles/roles/intentions, signed scores, veto) ✅ (`0.10.25`)  
-17. Core functional shortlist ✅ (`shortlist_ids`); bounded revision ✅ (`0.10.26`, ≤2 allowlisted rounds); **recipe force path** ✅ (`0.10.27`, `recipe_routing` + `_ensure_core_recipe_plan`); optional AI aesthetics (flag) ← **next** (aesthetics)  
+17. Core functional shortlist ✅ (`shortlist_ids`); bounded revision ✅ (`0.10.26`, ≤2 allowlisted rounds); **recipe force path** ✅ (`0.10.27`); **selection surfacing** ✅ (`0.10.28`, reply + LAST_SESSION Planning block); optional AI aesthetics (flag) ← **next** (aesthetics)  
 18. More recipes (room-use and/or goal strategies) ← on demand  
 19. Persisted project variants / compare UI (Future_Ideas §16) ← later
 

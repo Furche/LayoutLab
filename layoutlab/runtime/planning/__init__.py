@@ -52,6 +52,14 @@ from .recipe_routing import (
     wants_bedroom_layout,
     wants_layout_planning,
 )
+from .selection_surface import (
+    append_plan_layout_trace,
+    format_planning_reply_note,
+    merge_planning_into_result,
+    planning_summary_from_planned,
+    slim_candidates,
+    strip_planning_notes,
+)
 from .placement import (
     aabb_overlap_tuple,
     apply_deterministic_placement_fixes,
@@ -249,8 +257,10 @@ __all__ = [
     "score_breakdown",
     "session_wants_bedroom_fallback",
     "session_wants_recipe_planning",
+    "slim_candidates",
     "snap_bed_to_wall",
     "soft_findings_to_components",
+    "strip_planning_notes",
     "user_mentions_bed_head",
     "user_wants_bed",
     "user_wants_better_layout",
@@ -259,4 +269,8 @@ __all__ = [
     "validate_intention",
     "wants_bedroom_layout",
     "wants_layout_planning",
+    "append_plan_layout_trace",
+    "format_planning_reply_note",
+    "merge_planning_into_result",
+    "planning_summary_from_planned",
 ]

@@ -194,7 +194,8 @@ class TestBedroomBasicRecipe(unittest.TestCase):
         self.assertEqual(len(wins), 2, wins)
         applied = session.clone().apply_commands(fixed["commands"])
         self.assertTrue(applied["ok"], applied.get("errors"))
-        self.assertIn("plan_layout", fixed["reply"])
+        self.assertIn("Core-Vorschlag:", fixed["reply"])
+        self.assertTrue(fixed.get("selected_id") or fixed.get("planning"))
 
     def test_parse_room_size(self):
         from layoutlab.runtime import agent as ag

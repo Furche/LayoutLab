@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-21 (Core recipe force path)  
-**Plugin version:** 0.10.27 · **Branch:** `main`
+**Last updated:** 2026-07-21 (planning selection surfacing)  
+**Plugin version:** 0.10.28 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.27.
+Branch: main. Plugin v0.10.28.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-21):
@@ -34,6 +34,7 @@ Aktueller Stand (2026-07-21):
 - DD-017 **Accepted** + **Evaluation schema v0.1**: profiles/roles/intentions, signed components, severe veto + functional shortlist (`shortlist_ids`)
 - DD-017 **bounded revision** ✅ (`0.10.26`): up to 2 allowlisted Core revision rounds before proposal
 - **Core recipe force path** ✅ (`0.10.27`): `recipe_routing` + `_ensure_core_recipe_plan` — furnished intents always via Core plan_layout (candidates); bedroom first registry entry
+- **Planning selection surfacing** ✅ (`0.10.28`): reply + LAST_SESSION show selected/shortlist/reason; plan_layout in tool_trace when enforced
 - Nächste Arbeit: optional AI aesthetics (flag); Viewer candidate breakdown; more recipes on demand
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
 - Core: python3 -m server (:8765); Viewer Vite (:5173)
@@ -177,9 +178,10 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 6. ~~Define the minimal DD-017 schema contract: profiles/capabilities, roles/intentions, signed categories and veto thresholds~~ ✅ (`0.10.25`)
 7. ~~Core functional shortlisting + bounded internal revision~~ ✅ (`0.10.25` shortlist; `0.10.26` revision ≤2 rounds)
 8. ~~Core recipe force path (generic registry)~~ ✅ (`0.10.27` — bedroom first mapping)
-9. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
+9. ~~Planning selection surfacing (reply + session log)~~ ✅ (`0.10.28`)
+10. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
 
-DD-011/015/016/017 **Accepted** · evaluation schema + shortlist + bounded revision + force path shipped · next: optional aesthetics / more recipes
+DD-011/015/016/017 **Accepted** · force path + selection surfacing shipped · next: optional aesthetics / more recipes / Viewer breakdown
 
 ------------------------------------------------------------------------
 
@@ -271,8 +273,9 @@ Living product track — keep in sync with *Next steps* above.
 6. ✅ Minimal DD-017 evaluation schema (profiles/roles/vetos) (`0.10.25`)  
 7. ✅ Core functional shortlist + bounded revision (`0.10.26`)  
 8. ✅ Core recipe force path / `recipe_routing` (`0.10.27`)  
-9. 📋 Optional experimental AI aesthetics (behind flag) · Viewer candidate breakdown · more recipes on demand  
-10. 📋 Bridge / capture / multi-space / persisted variants — Future Ideas, separate DDs  
+9. ✅ Planning selection surfacing (`0.10.28`)  
+10. 📋 Optional experimental AI aesthetics (behind flag) · Viewer candidate breakdown · more recipes on demand  
+11. 📋 Bridge / capture / multi-space / persisted variants — Future Ideas, separate DDs  
 
 Binding order for agents: **Next steps** (this file) · detail in [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) implementation order.
 
@@ -282,6 +285,7 @@ Binding order for agents: **Next steps** (this file) · detail in [DD-017](desig
 
 | Date | Change |
 |---|---|
+| 2026-07-21 | Planning selection surfacing (`0.10.28`): reply + LAST_SESSION Planning block |
 | 2026-07-21 | Core recipe force path (`0.10.27`): recipe_routing + ensure plan_layout |
 | 2026-07-21 | DD-017 bounded internal revision (`0.10.26`): ≤2 allowlisted rounds |
 | 2026-07-21 | DD-017 evaluation schema v0.1 + functional shortlist (`0.10.25`) |

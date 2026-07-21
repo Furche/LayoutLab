@@ -525,10 +525,6 @@ def _apply_plan_layout_baseline(
         req_out = last_plan.get("requirements")
         planned = last_plan
 
-    llm_fp = _layout_shell_fingerprint(commands)
-    core_fp = _layout_shell_fingerprint(cmds)
-    replaced = bool(commands) and llm_fp != core_fp
-
     result = dict(result)
     result["commands"] = cmds
     result["questions"] = []
@@ -542,17 +538,11 @@ def _apply_plan_layout_baseline(
             merged_assumes.append(a)
     proposal["assumes"] = merged_assumes
     result["proposal"] = proposal
-    result["plan_layout_enforced"] = True
     result["plan_layout_args"] = args
-    for key in ("selected_id", "shortlist_ids", "selection_reason", "revision_rounds"):
-        if key in planned:
-            result[key] = planned[key]
-    if replaced:
-        note = (
-            " (Layout aus plan_layout/requirements übernommen — Core-Rezept statt freier "
-            "Agent-Koordinaten/Öffnungen.)"
-        )
-        result["reply"] = (result.get("reply") or "").rstrip() + note
+    from .planning.selection_surface import append_plan_layout_trace, merge_planning_into_result
+
+    result = merge_planning_into_result(result, planned, enforced=True)
+    result = append_plan_layout_trace(result, args, ok=True, enforced=True)
     return result
 
 
@@ -653,16 +643,11 @@ def _ensure_core_recipe_plan(
             assumes.append(a)
     proposal["assumes"] = assumes
     result["proposal"] = proposal
-    result["plan_layout_enforced"] = True
     result["plan_layout_args"] = args
-    for key in ("selected_id", "shortlist_ids", "selection_reason", "revision_rounds"):
-        if key in planned:
-            result[key] = planned[key]
-    note = (
-        " (Layout über Core-Rezept plan_layout/mode=candidates erzwungen — "
-        "keine freien Agent-Koordinaten.)"
-    )
-    result["reply"] = (result.get("reply") or "").rstrip() + note
+    from .planning.selection_surface import append_plan_layout_trace, merge_planning_into_result
+
+    result = merge_planning_into_result(result, planned, enforced=True)
+    result = append_plan_layout_trace(result, args, ok=True, enforced=True)
     return result
 
 
@@ -824,6 +809,14 @@ def _update_agent_state(
         }
     if placement_fp is not None:
         state["last_placement_fp"] = list(placement_fp) if placement_fp else None
+    planning = result.get("planning") if isinstance(result.get("planning"), dict) else None
+    if planning:
+        state["last_planning"] = {
+            "selected_id": planning.get("selected_id"),
+            "shortlist_ids": list(planning.get("shortlist_ids") or []),
+            "selection_reason": planning.get("selection_reason"),
+            "revision_rounds": planning.get("revision_rounds"),
+        }
     state["last_reply"] = (result.get("reply") or "")[:240]
 
 
@@ -888,9 +881,10 @@ def _recipe_plan_fallback(session, conversation: str, *, error: str | None = Non
         "llm_error": error,
         "plan_layout_enforced": True,
     }
-    for key in ("selected_id", "shortlist_ids", "selection_reason", "revision_rounds"):
-        if key in planned:
-            result[key] = planned[key]
+    from .planning.selection_surface import append_plan_layout_trace, merge_planning_into_result
+
+    result = merge_planning_into_result(result, planned, enforced=True)
+    result = append_plan_layout_trace(result, args, ok=bool(planned.get("ok")), enforced=True)
     result = _attach_quality_preview(session, result)
     _update_agent_state(session, result, conversation, last_plan=planned, placement_fp=_placement_fingerprint(commands))
     result["agent_state"] = dict(getattr(session, "agent_state", {}) or {})

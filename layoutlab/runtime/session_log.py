@@ -164,6 +164,38 @@ def log_event(event_type: str, **payload) -> None:
         _rewrite_markdown_unlocked()
 
 
+def _slim_planning(result: dict) -> dict | None:
+    planning = result.get("planning") if isinstance(result.get("planning"), dict) else None
+    if planning:
+        return {
+            "recipe": planning.get("recipe"),
+            "mode": planning.get("mode"),
+            "selected_id": planning.get("selected_id"),
+            "strategy": planning.get("strategy"),
+            "selection_reason": planning.get("selection_reason") or "",
+            "shortlist_ids": list(planning.get("shortlist_ids") or []),
+            "candidate_count": planning.get("candidate_count"),
+            "candidates": planning.get("candidates") or [],
+            "revision_rounds": int(planning.get("revision_rounds") or 0),
+            "enforced": bool(result.get("plan_layout_enforced")),
+        }
+    if not (
+        result.get("selected_id")
+        or result.get("shortlist_ids")
+        or result.get("plan_layout_enforced")
+    ):
+        return None
+    return {
+        "recipe": result.get("recipe"),
+        "selected_id": result.get("selected_id"),
+        "strategy": result.get("strategy"),
+        "selection_reason": result.get("selection_reason") or "",
+        "shortlist_ids": list(result.get("shortlist_ids") or []),
+        "revision_rounds": int(result.get("revision_rounds") or 0),
+        "enforced": bool(result.get("plan_layout_enforced")),
+    }
+
+
 def log_agent_turn(*, message: str, history_len: int, result: dict) -> None:
     proposal = result.get("proposal") if isinstance(result.get("proposal"), dict) else {}
     commands = result.get("commands") or proposal.get("commands") or []
@@ -182,6 +214,7 @@ def log_agent_turn(*, message: str, history_len: int, result: dict) -> None:
         command_count=len(commands),
         tools_used=[t.get("tool") for t in tool_trace if isinstance(t, dict)],
         quality=_slim_quality(result.get("quality") if isinstance(result.get("quality"), dict) else None),
+        planning=_slim_planning(result),
         ok=result.get("ok"),
         error=result.get("error"),
     )
@@ -261,6 +294,46 @@ def _rewrite_markdown_unlocked() -> None:
             lines.append("")
             lines.append(f"**AI:** {ev.get('reply') or ''}")
             lines.append("")
+            planning = ev.get("planning") if isinstance(ev.get("planning"), dict) else None
+            if planning:
+                lines.append("**Planning:**")
+                if planning.get("recipe"):
+                    lines.append(f"- recipe: `{planning.get('recipe')}`")
+                if planning.get("selected_id"):
+                    lines.append(f"- selected: `{planning.get('selected_id')}`")
+                if planning.get("strategy"):
+                    lines.append(f"- strategy: `{planning.get('strategy')}`")
+                shortlist = planning.get("shortlist_ids") or []
+                if shortlist:
+                    lines.append(
+                        f"- shortlist ({len(shortlist)}): "
+                        + ", ".join(f"`{s}`" for s in shortlist)
+                    )
+                if planning.get("selection_reason"):
+                    lines.append(f"- reason: {planning.get('selection_reason')}")
+                rounds = int(planning.get("revision_rounds") or 0)
+                if rounds:
+                    lines.append(f"- revision_rounds: `{rounds}`")
+                if planning.get("enforced"):
+                    lines.append("- enforced: `true`")
+                cands = planning.get("candidates") or []
+                if cands:
+                    lines.append("- candidates:")
+                    for c in cands:
+                        if not isinstance(c, dict):
+                            continue
+                        cid = c.get("candidate_id") or "?"
+                        strat = c.get("strategy") or ""
+                        soft_w = c.get("soft_warnings")
+                        hard = c.get("has_hard_errors")
+                        extra = []
+                        if soft_w is not None:
+                            extra.append(f"soft_w={soft_w}")
+                        if hard:
+                            extra.append("hard")
+                        suffix = f" ({', '.join(extra)})" if extra else ""
+                        lines.append(f"  - `{cid}`{f' · {strat}' if strat else ''}{suffix}")
+                lines.append("")
             qs = ev.get("questions") or []
             if qs:
                 lines.append("**Questions:**")
