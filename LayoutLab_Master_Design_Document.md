@@ -271,7 +271,7 @@ DD-005 Generatoren besitzen Metadaten.
 
 **Reserviert / in Arbeit:**
 
-- [DD-010](design_decisions/DD-010-room-model.md) Room Model (single space) — **Proposed** 2026-07-16
+- [DD-010](docs/design_decisions/DD-010-room-model.md) Room Model (single space) — **Accepted** 2026-07-16
 - DD-011 … DD-014 — Variants, Integrated AI, Capture, Standalone/multi-space — siehe `docs/Future_Ideas.md` §19
 
 DD-009 KI plant — LayoutLab führt über stabile API aus (Plugin bleibt Pfad). **Accepted** 2026-07-12.
@@ -409,6 +409,22 @@ Phase 4
 □ automatische Vorschläge
 
 □ komplette Wohnungsplanung
+
+### Feature Concept workstream
+
+Detailed cross-cutting capabilities are tracked as stable Feature Concepts and
+split into roadmap work packages. Work packages reference the concept instead of
+copying its behavioural specification.
+
+| Work package | Scope | Status |
+|---|---|---|
+| [FC-001/WP-01](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Architecture package: transactions/authority, semantic direct manipulation, Spatial Project | **Next — DDs required** |
+| [FC-001/WP-02](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Transaction/revision foundation, preview/commit, Undo/Redo, stale-proposal protection | Waiting for WP-01 |
+| [FC-001/WP-03–05](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Direct furniture editing, parametric resize, room-boundary editing | Waiting for foundation |
+| [FC-001/WP-06](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Independent multi-room Spatial Project and whole-room operations | Waiting for Spatial Project DD |
+| [FC-001/WP-07](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Advanced support surfaces and stacking | Later |
+
+The ordered current implementation focus remains in `docs/HANDOFF.md`.
 
 ------------------------------------------------------------------------
 

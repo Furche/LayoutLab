@@ -115,13 +115,23 @@ Never introduce new architecture casually.
 
 If a new concept is required:
 
-1.  Describe it.
+1.  Describe it. If it spans several subsystems or user flows, create a stable
+    **Feature Concept (`docs/concepts/FC-xxx`)** instead of expanding
+    `Future_Ideas.md` indefinitely.
 
 2.  Explain why.
 
 3.  Explain alternatives.
 
-4.  Wait for approval if the change is significant.
+4.  Derive separate DDs for significant architectural choices.
+
+5.  Wait for approval if the change is significant.
+
+Lifecycle for larger features:
+
+```text
+Future Idea -> Feature Concept -> Design Decision(s) -> roadmap work packages -> implementation
+```
 
 ------------------------------------------------------------------------
 
@@ -157,16 +167,20 @@ After **every** code change, actively walk this list. Mark each item **yes**
 | 10 | **docs/ARCHITECTURE.md** | Modules, layers, migration phases, exceptions, as-built map |
 | 11 | **docs/object_model.md** | Custom properties, object grouping, semantic export |
 | 12 | **docs/units_and_coordinates.md** | Scale, axes, placement conventions |
-| 13 | **docs/documentation_map.md** | New doc file added, or document responsibility moved |
-| 14 | **AI_CONTEXT.md** | Vocabulary, mental model, team workflow, project philosophy for agents |
-| 15 | **LayoutLab_Master_Design_Document.md** | Roadmap phases, product scope (rare) |
-| 16 | **Design Decision (DD-xxx)** | Significant fork: new DD + index in `docs/design_decisions/README.md` |
+| 13 | **docs/concepts/FC-xxx-*.md** | Product behaviour or scope of a cross-cutting feature changes; roadmap work package derived |
+| 14 | **docs/documentation_map.md** | New doc file added, or document responsibility moved |
+| 15 | **AI_CONTEXT.md** | Vocabulary, mental model, team workflow, project philosophy for agents |
+| 16 | **LayoutLab_Master_Design_Document.md** | Roadmap phases, product scope (rare) |
+| 17 | **Design Decision (DD-xxx)** | Significant fork: new DD + index in `docs/design_decisions/README.md` |
 
 **Minimum for most commits:** CHANGELOG (**yes**) + every other row explicitly
 **yes** or **no** in your completion summary.
 
 If a new design principle appears with real alternatives: create **DD-xxx** before
 or with the implementation (see Design Decisions below).
+
+A Feature Concept is not a substitute for a DD. It owns the coherent user-facing
+capability; DDs own the architectural choices required to implement it.
 
 ------------------------------------------------------------------------
 

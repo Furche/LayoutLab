@@ -5,12 +5,14 @@
 
 ## Purpose
 
-This document captures promising concepts before they become architecture or code.
+This document captures promising ideas before they become complete Feature Concepts,
+architecture or code. Mature cross-cutting concepts live in
+[docs/concepts/](concepts/README.md).
 
 **Rule:**
 
 ```
-Idea → Discussion → Design Decision → Architecture → Implementation
+Idea → Discussion → Feature Concept → Design Decision(s) → Architecture → Implementation
 ```
 
 Never skip these steps.
@@ -25,6 +27,7 @@ LayoutLab is evolving quickly. Cursor can implement ideas faster than we fully u
 |---|---|
 | **Implemented** | Exists in plugin/code today (may reference a DD) |
 | **Planned** | Agreed direction with a DD (Proposed or Accepted), not yet built |
+| **Feature Concept** | Coherent cross-cutting capability in `docs/concepts/`, ready to split into DDs/work packages |
 | **Future Vision** | Long-term product direction — no DD, no implementation yet |
 | **Experimental Idea** | Exploratory — may be rejected or merged later |
 
@@ -555,6 +558,10 @@ A later **own viewport** would use an **existing 3D technology** — **not** a c
 - **Phase A (DD-014 Accepted):** read-only **web** viewer of export JSON (Three.js or Babylon); show findings when present. Contract: `json_protocol.md` §6.4; fixture `reference_kids_room_export.json`.
 - **Long-term product:** full LayoutLab application with authoring, integrated AI, variants, and analysis — not “viewer only” (Phase B+).
 
+Direct semantic room/furniture editing, Undo/Redo and the transition to multiple
+independent rooms are refined in
+[FC-001 — Semantic Direct Manipulation and Multi-Room Editing](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md).
+
 ### Explicitly out of scope now
 
 - Phase B write adapter (until separate Accept)
@@ -567,7 +574,8 @@ A later **own viewport** would use an **existing 3D technology** — **not** a c
 
 | Topic | Possible later DD |
 |---|---|
-| Project / multi-room / multi-floor model | **DD-010** — Project and Spatial Model |
+| Project / multi-room model | [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) → future Spatial Project DD; **DD-010 remains single-space only** |
+| Multi-floor / building model | Separate later DD after the independent multi-room milestone |
 | Variants as first-class objects | **DD-011** + **DD-017** — candidates now; persisted project variants later |
 | In-app AI product experience | **DD-012** — Integrated AI Product Experience |
 | Capture / reconstruction pipeline | **DD-013** — Capture and Reconstruction Pipeline |
@@ -639,7 +647,7 @@ Integrated AI behaviour: §7. Spatial hierarchy: §13. Capture paths: §14.
 
 # 13. Spatial Project Model
 
-**Status:** Future Vision — **not** a binding schema; single-space Room Model → [DD-010](design_decisions/DD-010-room-model.md) (**Accepted**)
+**Status:** Future Vision — **not** a binding schema; single-space Room Model → [DD-010](design_decisions/DD-010-room-model.md) (**Accepted**); direct editing and independent multi-room MVP → [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) (**Ready for decomposition**)
 
 LayoutLab must not assume a project is always exactly one room. **DD-010** starts with
 **one editable space** (Room Model). The hierarchy below remains the longer-term target.
@@ -776,7 +784,7 @@ Related: §5 Planning and Evaluation · [DD-011](design_decisions/DD-011-layout-
 | Stage | Scope (illustrative) |
 |---|---|
 | **1 — Room Builder** | Single rectangular/polygonal room; height; walls; doors; windows; radiators; fixed obstacles; measures and simple edit — **DD-010 Accepted** (Room Model, not room generator) |
-| **2 — Apartment Model** | Connected rooms; shared walls; passages; corridors; variants per room or whole apartment; furniture redistributable across rooms |
+| **2 — Apartment Model** | Independent multi-room authoring first ([FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md)); connected rooms, shared walls, passages and corridors later; variants per room or whole apartment |
 | **3 — Building Model** | Multiple floors; stairs; storey heights; shafts; roof slopes; fixed/changeable fabric; outdoor areas later optional |
 
 These stages describe **how far** the Spatial Model might grow. They do **not** replace the current Execution Layer roadmap.

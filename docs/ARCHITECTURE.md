@@ -162,6 +162,12 @@ Concrete Project / Spatial / Variant schemas beyond a single room require dedica
 **before** implementation. **DD-010** Room Model and **DD-014** Phase A/B (viewer + room
 write service) are Accepted; generators without Blender remain Phase B2.
 
+The coherent target behaviour for direct semantic editing and an independent
+multi-room MVP is captured in
+[FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md).
+Its work packages are planning references, not permission to bypass the required
+transaction/direct-manipulation/Spatial-Project DDs or the Core command boundary.
+
 ### Runtime coupling inventory `[AS-BUILT]` (2026-07-12)
 
 | Coupling | Modules | Notes |

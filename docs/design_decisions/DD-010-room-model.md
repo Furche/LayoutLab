@@ -4,7 +4,7 @@
 **Date:** 2026-07-16  
 **Accepted:** 2026-07-16
 **Version:** 1.0  
-**Related:** [DD-003](DD-003-json-only-communication.md) · [DD-006](DD-006-parts-and-finalization.md) · [DD-007](DD-007-clearance-zones.md) · [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [Future_Ideas.md](../Future_Ideas.md) §13 / §17 · [room_model.md](../room_model.md)
+**Related:** [DD-003](DD-003-json-only-communication.md) · [DD-006](DD-006-parts-and-finalization.md) · [DD-007](DD-007-clearance-zones.md) · [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [Future_Ideas.md](../Future_Ideas.md) §13 / §17 · [room_model.md](../room_model.md) · [FC-001](../concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md)
 
 ------------------------------------------------------------------------
 
@@ -78,6 +78,11 @@ operations must scale** without a second architecture.
 
 Furniture generators (`bed_basic`, …) stay unchanged: they create furniture
 objects *inside* a space; they do not own walls or openings.
+
+**Follow-on concept:** FC-001 specifies the product behaviour for semantic wall
+editing, temporary invalid states, Undo/Redo and multiple independent rooms. It
+extends this accepted single-space foundation and requires separate DDs before
+implementation; it does not amend DD-010's current contract.
 
 ### 2. Responsibility split
 

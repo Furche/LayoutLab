@@ -44,9 +44,15 @@ Do **not** duplicate content across documents. Link instead.
 | [LayoutLab_Manifest.md](../LayoutLab_Manifest.md) | Why the project exists — belief and problem statement | Everyone | Mission, problem framing, non-goals at vision level | Fundamental product direction changes (rare) | Pivot from “Blender addon” to broader platform |
 | [LayoutLab_Master_Design_Document.md](../LayoutLab_Master_Design_Document.md) | Vision, roadmap phases, product architecture overview | PO, architect, senior contributors | Long-term roadmap, phase definitions, product-level architecture | Roadmap phase completed/added; major product scope change | Phase C marked complete; Phase D scope defined |
 | [docs/Future_Ideas.md](Future_Ideas.md) | **Ideas backlog** — vision concepts before DD/architecture | PO, architect, team | Problem-first vision, **standalone end-to-end experience**, Spatial Project Model, capture/LiDAR, variants, confidence, runtime independence (§11), bridge — **single file** | Vision sharpened; capture/standalone note; idea promoted to DD | §12–§19 standalone / spatial / capture (2026-07-16) |
+| [docs/concepts/README.md](concepts/README.md) | Index and lifecycle for complete Feature Concepts | PO, architect, implementers | Stable `FC-xxx` catalogue between Future Ideas and binding DDs | Concept added, status changed, work package or resulting DD linked | `FC-001` added; status becomes Active |
+| [docs/concepts/FC-xxx-*.md](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) | One coherent cross-cutting product capability | PO, UX, architect, implementers | User flows, domain behaviour, invariants, boundaries, decomposition and stable work-package IDs | Agreed behaviour/scope changes; DD or roadmap item derived; MVP implemented | Direct manipulation semantics; multi-room behaviour; `FC-001/WP-03` |
 | [docs/HANDOFF.md](HANDOFF.md) | **Session handoff** — current status, next steps, pitfalls for new agents | New chat sessions, Cursor, ChatGPT | Version, DD status (incl. Proposed awaiting review), git path, workflow, next steps, technical gotchas | Milestone completed; DD accepted; version bump; next-steps change; DD review package synced | DD-009 Proposed, review pending |
 
 **Boundary:** Manifest = *why*. MDD = *where we are going*. Neither lists JSON command fields — that is `json_protocol.md`.
+
+**Concept boundary:** Future Ideas = early or broad possibilities. Feature Concepts = one complete,
+stable capability ready to split into DDs and work packages. DDs = binding architectural choices.
+Roadmap/tickets reference an `FC-xxx` concept; they do not duplicate it.
 
 ------------------------------------------------------------------------
 
@@ -121,6 +127,7 @@ Do **not** duplicate content across documents. Link instead.
 | Generator authoring rules | `LayoutLab_Generator_Specification.md` | how_to_write_generators: workflow/examples only |
 | Generator how-to & examples | `docs/how_to_write_generators.md` | Spec: rules only; API: signatures only |
 | Roadmap phases | `LayoutLab_Master_Design_Document.md` | README: short table + link |
+| Cross-cutting feature behaviour | `docs/concepts/FC-xxx-*.md` | Future Ideas / DD / roadmap: summary + link only |
 | Migration phase status | `ARCHITECTURE.md` §9 | MDD: high-level only |
 
 If two documents disagree, **stop** — fix the doc or the code before continuing.
@@ -139,6 +146,7 @@ If two documents disagree, **stop** — fix the doc or the code before continuin
 | Panel / operator UI | `README.md` (if user-visible), `CHANGELOG.md` |
 | Custom property on mesh | `object_model.md`, `json_protocol.md` (export), `CHANGELOG.md` |
 | Architecture alternative chosen | New DD + `ARCHITECTURE.md` + `DEVLOG.md` |
+| Cross-cutting feature concept agreed | `docs/concepts/FC-xxx-*.md`, concepts index, MDD roadmap work package, `HANDOFF.md` |
 | Phase gate completed | `ARCHITECTURE.md`, `README.md` roadmap, `DEVLOG.md` |
 
 ------------------------------------------------------------------------

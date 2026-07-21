@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-22 (experimental AI aesthetics)
-**Plugin version:** 0.10.34 · **Branch:** `main`
+**Last updated:** 2026-07-22 (FC-001 direct manipulation + multi-room concept)
+**Plugin version:** 0.10.35 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -12,9 +12,10 @@
 
 1. Read [00_READ_THIS_FIRST.md](../00_READ_THIS_FIRST.md) (team roles, doc checklist).
 2. Read [AI_CONTEXT.md](../AI_CONTEXT.md) (mental model).
-3. Check [design_decisions/README.md](design_decisions/README.md) (DD index — **before** coding).
-4. Read this file for **current** status and next steps.
-5. Respond to Alexander in **German**.
+3. Check [concepts/README.md](concepts/README.md) and the Feature Concept referenced by the current work package.
+4. Check [design_decisions/README.md](design_decisions/README.md) (DD index — **before** coding).
+5. Read this file for **current** status and next steps.
+6. Respond to Alexander in **German**.
 
 **Repo path:** `/Users/allex/Documents/00_codin/BlenderAddons/LayoutLab`  
 **Remote:** `https://github.com/Furche/LayoutLab.git`
@@ -24,7 +25,7 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.34.
+Branch: main. Plugin v0.10.35.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-22):
@@ -32,8 +33,8 @@ Aktueller Stand (2026-07-22):
 - DD-015 **Accepted**: soft metrics + tradeoffs (Ästhetik ≠ Core-Metrik)
 - DD-011 **Accepted** + **candidates v1 shipped**: `plan_layout` mode=candidates
 - DD-017 **Accepted** + evaluation schema + shortlist + revision + force path
-- **Shortlist selection** ✅ (`0.10.29`) · **blueprint SVG cards** ✅ (`0.10.33`, Tür/Fenster/Möbel) · **optionale AI-Ästhetik** ✅ (`0.10.34`, Flag)
-- Nächste Arbeit: weitere Rezepte nach Bedarf
+- **Shortlist selection** ✅ (`0.10.29`) · **blueprint SVG cards** ✅ (`0.10.33`, Tür/Fenster/Möbel) · **optionale AI-Ästhetik + visuelle Evidenz** ✅ (`0.10.34` / `0.10.35`)
+- Nächste Arbeit: [FC-001/WP-01](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) Architekturpaket; noch keine direkte Implementierung
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
 - Core: python3 -m server (:8765); Viewer Vite (:5173)
 
@@ -72,7 +73,7 @@ User Intent → Generator (rules) → Parts API → Blender scene
 | Topic | Rule |
 |---|---|
 | Language | **German** for user communication |
-| Architecture | Idea → **DD** → docs → code. Don't skip DD for big decisions. |
+| Architecture | Idea → **Feature Concept** → **DD(s)** → work packages → code. Don't skip DD for binding choices. |
 | Separation | Clearance (DD-007) ≠ Constraints (DD-008) ≠ AI boundary (DD-009) ≠ Runtime (Blender = first adapter, §Future_Ideas §11) |
 | Commits | Commit/push when user asks or at clear milestone — **not** every tiny edit unasked |
 | Cursor role | Implements; does **not** silently change architecture |
@@ -89,12 +90,12 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 | Component | Version |
 |---|---|
-| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.10.3** |
+| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.10.35** |
 | `bed_basic` | **0.7.0** — raised frame construction (`BedConstruction`) + optional `bed_entry` clearances; sizes in meters |
 | `wardrobe_basic` | **0.7.0** — `front_side` (`y_min` \| `y_max`), `create_clearance`, part `clearance_front_access`; sizes in meters |
 | `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance (`required`); sizes in meters |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.10.3.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.35.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -181,9 +182,13 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 11. ~~Shortlist sketch cards (labels + ASCII)~~ ✅ (`0.10.30`)
 12. ~~Shortlist 3D thumbnails~~ ✅ (`0.10.31`) → replaced by blueprint SVG
 13. ~~Shortlist blueprint SVG~~ ✅ (`0.10.33`)
-14. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
+14. ~~Optional AI aesthetics + standardized evidence~~ ✅ (`0.10.34` / `0.10.35`)
+15. ~~Capture coherent direct manipulation + multi-room product behaviour~~ ✅ ([FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md))
+16. **FC-001/WP-01:** derive and review separate DDs for transactions/authority, semantic direct manipulation and Spatial Project
+17. After acceptance: implement FC-001/WP-02 first; then WP-03–05; WP-06 remains a separate multi-room milestone
+18. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
 
-DD-011/015/016/017 **Accepted** · blueprint shortlist cards shipped · next: optional aesthetics / more recipes
+DD-011/015/016/017 **Accepted** · planning shortlist shipped · next architectural track: **FC-001/WP-01**
 
 ------------------------------------------------------------------------
 
@@ -279,10 +284,12 @@ Living product track — keep in sync with *Next steps* above.
 10. ✅ Shortlist selection chat + Viewer (`0.10.29`)  
 11. ✅ Shortlist sketch cards (`0.10.30`)  
 12. ✅ Shortlist 3D thumbnails (`0.10.31`)  
-13. 📋 Optional experimental AI aesthetics (behind flag) · more recipes on demand  
-14. 📋 Bridge / capture / multi-space / persisted variants — Future Ideas, separate DDs  
+13. ✅ Optional experimental AI aesthetics + visual evidence (`0.10.34` / `0.10.35`)
+14. ✅ Direct manipulation + multi-room behaviour captured as [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md)
+15. 📋 FC-001/WP-01 architecture package; then transactions → direct editing → room editing → independent multi-room
+16. 📋 Bridge / capture / connected spaces / persisted variants — Future Ideas, separate DDs
 
-Binding order for agents: **Next steps** (this file) · detail in [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) implementation order.
+Binding order for agents: **Next steps** (this file) · feature behaviour in [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · binding architecture only after resulting DDs are accepted.
 
 ------------------------------------------------------------------------
 

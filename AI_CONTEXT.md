@@ -23,6 +23,15 @@ The core asset is knowledge. Furniture is a *means*, not the end goal.
 See [docs/Future_Ideas.md](docs/Future_Ideas.md) §1 for the sharpened product vision.
 **Current work** (generators, JSON, clearances, analysis) is the correct Execution Layer foundation.
 
+Large cross-cutting features mature through a stable concept layer:
+
+```text
+Future Idea -> Feature Concept (docs/concepts/) -> DD(s) -> work packages -> code
+```
+
+Feature Concepts own coherent product behaviour and user flows. DDs own binding
+architectural choices; as-built contracts own implemented fields and commands.
+
 ------------------------------------------------------------------------
 
 # Core Mental Model

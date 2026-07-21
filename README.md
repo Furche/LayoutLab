@@ -146,9 +146,10 @@ Read in this order:
 | 8 | [docs/generator_api.md](docs/generator_api.md) | Generator API reference (`api` dict) |
 | 9 | [docs/object_model.md](docs/object_model.md) | Semantic object representation in scenes |
 | 10 | [docs/units_and_coordinates.md](docs/units_and_coordinates.md) | Scale, axes, placement conventions |
-| 11 | [docs/design_decisions/](docs/design_decisions/) | Formal architecture decisions (DD-001+) |
-| 12 | [LayoutLab_Generator_Specification.md](LayoutLab_Generator_Specification.md) | Normative generator standard |
-| 13 | [docs/how_to_write_generators.md](docs/how_to_write_generators.md) | **How to write generators** — guide, examples, debugging |
+| 11 | [docs/concepts/](docs/concepts/) | Complete Feature Concepts (`FC-xxx`) before DD and implementation decomposition |
+| 12 | [docs/design_decisions/](docs/design_decisions/) | Formal architecture decisions (DD-001+) |
+| 13 | [LayoutLab_Generator_Specification.md](LayoutLab_Generator_Specification.md) | Normative generator standard |
+| 14 | [docs/how_to_write_generators.md](docs/how_to_write_generators.md) | **How to write generators** — guide, examples, debugging |
 
 ------------------------------------------------------------------------
 
@@ -187,6 +188,8 @@ LayoutLab/                          # repository root
     ├── how_to_write_generators.md
     ├── object_model.md
     ├── units_and_coordinates.md
+    ├── concepts/
+    │   └── FC-001 …
     └── design_decisions/
         └── DD-001 … DD-005
 ```
