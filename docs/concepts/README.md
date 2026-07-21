@@ -66,4 +66,3 @@ field names and commands belong in the appropriate contract documents.
 - Do not duplicate the full concept in `Future_Ideas.md`, a DD or a ticket.
 - When implementation ships, update the relevant as-built contracts; the concept
   remains the product rationale and behaviour overview.
-

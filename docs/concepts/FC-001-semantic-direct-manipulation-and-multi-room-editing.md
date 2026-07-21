@@ -1,8 +1,8 @@
 # FC-001 — Semantic Direct Manipulation and Multi-Room Editing
 
-**Status:** Ready for decomposition  
-**Date:** 2026-07-22  
-**Owner:** Product / Architecture  
+**Status:** Ready for decomposition
+**Date:** 2026-07-22
+**Owner:** Product / Architecture
 **Related:** [DD-009](../design_decisions/DD-009-ai-execution-boundary.md) · [DD-010](../design_decisions/DD-010-room-model.md) · [DD-014](../design_decisions/DD-014-standalone-runtime-path.md) · [Room Model](../room_model.md) · [Spatial Project vision](../Future_Ideas.md#13-spatial-project-model)
 
 ------------------------------------------------------------------------
