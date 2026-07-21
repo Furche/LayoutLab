@@ -1,4 +1,4 @@
-"""DD-011 Planning v1 — expand candidates, dry-run evaluate, soft rank."""
+"""DD-011 Planning v1 — expand candidates, dry-run evaluate, soft rank + DD-017 shortlist."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from .bedroom_basic import (
     enumerate_bedroom_candidates,
 )
 from .requirements import normalize_requirements, requirements_to_plan_params
+from .schema import EVALUATION_SCHEMA, SCHEMA_VERSION, build_evaluation
 
 
 def _flat_plan_params(params: dict | None) -> tuple[dict, dict | None]:
@@ -52,6 +53,7 @@ def evaluate_candidate_commands(session, commands) -> dict[str, Any]:
         "info": 0,
         "types": [],
     }
+    findings = analysis.get("findings") or []
     hard_errors = int(summary.get("errors") or 0)
     apply_ok = bool(dry.get("apply_ok"))
     valid = bool(validation.get("ok", True)) and apply_ok
@@ -70,6 +72,8 @@ def evaluate_candidate_commands(session, commands) -> dict[str, Any]:
         "soft_info": int(soft.get("info") or 0),
         "summary": summary,
         "soft_summary": soft,
+        "findings": findings,
+        "analysis": analysis,
         "errors": dry.get("errors") or [],
     }
 
@@ -92,42 +96,74 @@ def rank_candidates(evaluated: list) -> list:
     return sorted(list(evaluated or []), key=_rank_key)
 
 
-def _selection_reason_de(selected: dict, ranked: list) -> str:
-    """Short German why-string from soft/hard comparison."""
+def _functional_shortlist(ranked: list) -> list:
+    """Candidates without hard errors and without severe_veto (default shortlist)."""
+    out = []
+    for c in ranked:
+        q = c.get("quality") or {}
+        ev = c.get("evaluation") or {}
+        if q.get("has_hard_errors"):
+            continue
+        if ev.get("severe_veto"):
+            continue
+        out.append(c)
+    return out
+
+
+def _selection_reason_de(
+    selected: dict,
+    ranked: list,
+    *,
+    shortlist: list,
+    fallback_risk: bool,
+) -> str:
+    """Short German why-string from soft/hard comparison + shortlist/veto."""
     q = selected.get("quality") or {}
+    ev = selected.get("evaluation") or {}
     strategy = selected.get("strategy") or selected.get("candidate_id") or "?"
     if q.get("has_hard_errors"):
         return (
             f"Keine fehlerfreie Variante; gewählt: {strategy} "
             f"({int(q.get('hard_errors') or 0)} Hard-Fehler)."
         )
+    if fallback_risk and ev.get("severe_veto"):
+        return (
+            f"Shortlist leer (alle mit Hard-Fehler oder severe_veto); "
+            f"gewählt trotz Veto: {strategy}."
+        )
     soft_w = int(q.get("soft_warnings") or 0)
     soft_i = int(q.get("soft_info") or 0)
     others = [c for c in ranked if c.get("candidate_id") != selected.get("candidate_id")]
+    shortlist_note = ""
+    if shortlist:
+        shortlist_note = f" Shortlist {len(shortlist)} ohne Veto."
     if not others:
-        return f"Einzige Variante: {strategy} (0 Hard-Fehler)."
+        return f"Einzige Variante: {strategy} (0 Hard-Fehler).{shortlist_note}"
     best_other = others[0]
     oq = best_other.get("quality") or {}
     if soft_w < int(oq.get("soft_warnings") or 0):
         return (
-            f"Gewählt: {strategy} — weniger Soft-Warnungen "
-            f"({soft_w} vs {int(oq.get('soft_warnings') or 0)})."
+            f"Gewählt aus Shortlist: {strategy} — weniger Soft-Warnungen "
+            f"({soft_w} vs {int(oq.get('soft_warnings') or 0)}).{shortlist_note}"
         )
     if soft_i < int(oq.get("soft_info") or 0):
         return (
-            f"Gewählt: {strategy} — bessere Packungs-/Info-Metriken "
-            f"({soft_i} vs {int(oq.get('soft_info') or 0)} Info)."
+            f"Gewählt aus Shortlist: {strategy} — bessere Packungs-/Info-Metriken "
+            f"({soft_i} vs {int(oq.get('soft_info') or 0)} Info).{shortlist_note}"
         )
     if soft_w == 0 and soft_i == 0:
-        return f"Gewählt: {strategy} — 0 Hard-Fehler, keine Soft-Warnungen."
+        return (
+            f"Gewählt aus Shortlist: {strategy} — 0 Hard-Fehler, "
+            f"keine Soft-Warnungen.{shortlist_note}"
+        )
     return (
-        f"Gewählt: {strategy} — 0 Hard-Fehler, "
-        f"{soft_w} Soft-Warnung(en), {soft_i} Soft-Info."
+        f"Gewählt aus Shortlist: {strategy} — 0 Hard-Fehler, "
+        f"{soft_w} Soft-Warnung(en), {soft_i} Soft-Info.{shortlist_note}"
     )
 
 
 def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any]:
-    """Enumerate → evaluate on session clones → rank → select winner."""
+    """Enumerate → evaluate on session clones → shortlist → rank → select winner."""
     flat, requirements = _flat_plan_params(params)
     recipe = str(flat.get("recipe") or RECIPE_NAME).strip().lower()
     if recipe != RECIPE_NAME:
@@ -145,12 +181,22 @@ def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any
             "recipe_kind": RECIPE_KIND,
             "recipe_goals": list(RECIPE_GOALS),
             "requirements": requirements,
+            "schema_version": SCHEMA_VERSION,
+            "evaluation_schema": EVALUATION_SCHEMA,
+            "shortlist_ids": [],
         }
 
     raw_candidates = enumerate_bedroom_candidates(flat)
     evaluated: list[dict] = []
     for cand in raw_candidates:
         quality = evaluate_candidate_commands(session, cand.get("commands") or [])
+        evaluation = build_evaluation(
+            has_hard_errors=quality["has_hard_errors"],
+            soft_warnings=quality["soft_warnings"],
+            analysis=quality.get("analysis"),
+            soft_summary=quality.get("soft_summary"),
+            findings=quality.get("findings"),
+        )
         evaluated.append(
             {
                 "candidate_id": cand["candidate_id"],
@@ -168,6 +214,7 @@ def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any
                     "summary": quality["summary"],
                     "soft_summary": quality["soft_summary"],
                 },
+                "evaluation": evaluation,
             }
         )
 
@@ -175,10 +222,36 @@ def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any
     for i, item in enumerate(ranked):
         item["rank"] = i + 1
 
-    valid = [c for c in ranked if not (c.get("quality") or {}).get("has_hard_errors")]
-    selected = valid[0] if valid else (ranked[0] if ranked else None)
+    shortlist = _functional_shortlist(ranked)
+    shortlist_ids = [c["candidate_id"] for c in shortlist]
+    fallback_risk = False
+    expected_risks: list[str] = []
+
+    if shortlist:
+        # Prefer best among shortlist; soft rank already orders ranked best-first.
+        selected = shortlist[0]
+    else:
+        # All candidates have severe_veto and/or hard errors — pick best overall.
+        fallback_risk = True
+        no_hard = [c for c in ranked if not (c.get("quality") or {}).get("has_hard_errors")]
+        selected = no_hard[0] if no_hard else (ranked[0] if ranked else None)
+        if selected:
+            hints = list((selected.get("evaluation") or {}).get("expected_risk_hints") or [])
+            if hints:
+                expected_risks = hints
+            elif (selected.get("evaluation") or {}).get("severe_veto"):
+                expected_risks = ["severe_veto: default shortlist empty"]
+            elif (selected.get("quality") or {}).get("has_hard_errors"):
+                expected_risks = ["hard_errors: no valid candidate"]
+
     selected_id = selected["candidate_id"] if selected else None
-    reason = _selection_reason_de(selected, ranked) if selected else "Keine Kandidaten."
+    reason = (
+        _selection_reason_de(
+            selected, ranked, shortlist=shortlist, fallback_risk=fallback_risk
+        )
+        if selected
+        else "Keine Kandidaten."
+    )
 
     room = None
     if selected:
@@ -208,7 +281,12 @@ def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any
         "notes": list(selected.get("notes") or []) if selected else [],
         "strategy": selected.get("strategy") if selected else None,
         "room": room,
+        "schema_version": SCHEMA_VERSION,
+        "evaluation_schema": EVALUATION_SCHEMA,
+        "shortlist_ids": shortlist_ids,
     }
+    if expected_risks:
+        out["expected_risks"] = expected_risks
     if requirements is not None:
         out["requirements"] = requirements
         assumes = list(requirements.get("assumes") or [])
