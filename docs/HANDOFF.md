@@ -24,15 +24,15 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.31.
+Branch: main. Plugin v0.10.33.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
-Aktueller Stand (2026-07-21):
+Aktueller Stand (2026-07-22):
 - DD-016 **Accepted**: plan_layout + bedroom_basic (agent_tools 0.5)
 - DD-015 **Accepted**: soft metrics + tradeoffs (Ästhetik ≠ Core-Metrik)
 - DD-011 **Accepted** + **candidates v1 shipped**: `plan_layout` mode=candidates
 - DD-017 **Accepted** + evaluation schema + shortlist + revision + force path
-- **Shortlist selection** ✅ (`0.10.29`) · **sketch cards** ✅ (`0.10.30`) · **3D thumbnails** ✅ (`0.10.31`)
+- **Shortlist selection** ✅ (`0.10.29`) · **blueprint SVG cards** ✅ (`0.10.33`, Tür/Fenster/Möbel)
 - Nächste Arbeit: optional AI aesthetics (flag); more recipes on demand
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
 - Core: python3 -m server (:8765); Viewer Vite (:5173)
