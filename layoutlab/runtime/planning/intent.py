@@ -31,9 +31,10 @@ def user_wants_bed(text: str) -> bool:
 
 
 def wants_bedroom_layout(text: str) -> bool:
-    """True when Core should use bedroom recipe, not kids-room demo."""
-    t = (text or "").lower()
-    return "schlafzimmer" in t or "bedroom" in t or user_wants_bed(t)
+    """Back-compat wrapper — recipe resolution lives in recipe_routing."""
+    from .recipe_routing import wants_bedroom_layout as _resolve
+
+    return _resolve(text)
 
 
 def is_retry_request(text: str) -> bool:
@@ -45,16 +46,10 @@ def is_retry_request(text: str) -> bool:
 
 
 def session_wants_bedroom_fallback(session, text: str) -> bool:
-    if wants_bedroom_layout(text):
-        return True
-    if not is_retry_request(text):
-        return False
-    state = getattr(session, "agent_state", None) or {}
-    req = state.get("requirements") if isinstance(state, dict) else None
-    if isinstance(req, dict) and str(req.get("room_type") or "").lower() == "bedroom":
-        return True
-    goal = str((state or {}).get("goal") or "").lower()
-    return "schlafzimmer" in goal
+    """Back-compat wrapper — see session_wants_recipe_planning."""
+    from .recipe_routing import session_wants_recipe_planning
+
+    return session_wants_recipe_planning(session, text)
 
 
 def user_wants_door(text: str) -> bool:

@@ -34,6 +34,11 @@ _user_wants_better_layout = intent.user_wants_better_layout
 _parse_bed_size_m = intent.parse_bed_size_m
 _parse_room_size_m = intent.parse_room_size_m
 
+
+def _session_wants_recipe_planning(session, text: str) -> bool:
+    from .planning.recipe_routing import session_wants_recipe_planning
+
+    return session_wants_recipe_planning(session, text)
 _mattress_to_bed_axes = placement.mattress_to_bed_axes
 _loc_delta = placement.loc_delta
 _apply_requested_bed_size = placement.apply_requested_bed_size
@@ -56,9 +61,11 @@ AI decides WHAT (goals, recipe, tradeoffs); LayoutLab Core decides WHERE for sta
 via plan_layout recipes, and HOW via generators. You invent no meshes, bpy, or free Python.
 
 Planning recipes (DD-016 / DD-011 — prefer this):
-- For a normal bedroom: extract structured requirements from the user language, then call
-  plan_layout with mode="candidates" and requirements={...} (preferred over mode="single").
-  Example:
+- For ANY furnished room / layout intent (bedroom today; more recipes later): extract structured
+  requirements from the user language, then call plan_layout with mode="candidates" and
+  requirements={...}. Core owns geometry — free xy only for explicit custom overrides
+  ("Tisch genau hier") after a recipe baseline, or when no recipe fits.
+- Example bedroom:
   {"mode":"candidates","requirements":{"room_type":"bedroom","width":4,"depth":3.5,"doors":1,
    "windows":2,"furniture":["bed","wardrobe","desk"],"bed_width":1.2,"bed_length":2.0,
    "door_wall":"east"}}
@@ -68,8 +75,6 @@ Planning recipes (DD-016 / DD-011 — prefer this):
 - Put the same requirements object into proposal.requirements in your final JSON.
 - Do NOT invent free location/head_side or duplicate openings. Core re-applies plan_layout
   from requirements if your commands diverge.
-- Free-form run_generator placement only for custom overrides ("Tisch genau hier")
-  after a recipe baseline, or when no recipe fits.
 - If size/openings are unknown, ask briefly OR document defaults in requirements.assumes.
 
 Spatial perception (critical):
@@ -111,7 +116,7 @@ Context:
 - dry_run does NOT commit — the user must Apply (Apply = consent only to documented clearance tradeoffs).
 
 Workflow:
-1. Read the seed. For bedroom intents → plan_layout first.
+1. Read the seed. For room layout intents with a known recipe → plan_layout first (mode=candidates).
 2. validate + dry_run the recipe commands; read the sketch.
 3. Do NOT loop tools forever. After you understand the plan, STOP tools and output final JSON.
 4. Finish with ONLY a JSON object (no markdown fences):
@@ -484,7 +489,7 @@ def _apply_plan_layout_baseline(
     if not _proposal_wants_layout(commands, conversation, questions):
         return result
 
-    from .planning import reconcile_plan_layout_params
+    from .planning import reconcile_plan_layout_params, resolve_recipe_id
 
     proposal = result.get("proposal") if isinstance(result.get("proposal"), dict) else {}
     req = None
@@ -495,6 +500,10 @@ def _apply_plan_layout_baseline(
     elif isinstance((last_plan.get("arguments") or {}).get("requirements"), dict):
         req = (last_plan.get("arguments") or {}).get("requirements")
 
+    recipe = resolve_recipe_id(
+        conversation=conversation, requirements=req, session=session
+    ) or last_plan.get("recipe") or (last_plan.get("arguments") or {}).get("recipe")
+
     args = reconcile_plan_layout_params(
         last_plan.get("arguments") or {},
         window_count=_requested_window_count(conversation),
@@ -502,7 +511,9 @@ def _apply_plan_layout_baseline(
         bed_size=_parse_bed_size_m(conversation),
         wants_door=_user_wants_door(conversation) or True,
         requirements=req,
+        recipe=recipe,
     )
+    args["mode"] = "candidates"
     planned = dispatch_tool(session, "plan_layout", args)
     if planned.get("ok") and planned.get("commands"):
         cmds = planned["commands"]
@@ -533,12 +544,125 @@ def _apply_plan_layout_baseline(
     result["proposal"] = proposal
     result["plan_layout_enforced"] = True
     result["plan_layout_args"] = args
+    for key in ("selected_id", "shortlist_ids", "selection_reason", "revision_rounds"):
+        if key in planned:
+            result[key] = planned[key]
     if replaced:
         note = (
             " (Layout aus plan_layout/requirements übernommen — Core-Rezept statt freier "
             "Agent-Koordinaten/Öffnungen.)"
         )
         result["reply"] = (result.get("reply") or "").rstrip() + note
+    return result
+
+
+def _ensure_core_recipe_plan(
+    session, result: dict, conversation: str, last_plan: dict | None = None
+) -> dict:
+    """Force Core plan_layout (mode=candidates) when a known recipe matches the intent.
+
+    Runs even if the LLM skipped plan_layout and emitted free xy / dict locations.
+    """
+    from .planning import (
+        RECIPE_ROOM_TYPES,
+        merge_requirements,
+        reconcile_plan_layout_params,
+        resolve_recipe_id,
+        session_wants_recipe_planning,
+        wants_layout_planning,
+    )
+
+    proposal = result.get("proposal") if isinstance(result.get("proposal"), dict) else {}
+    req = None
+    if isinstance(proposal.get("requirements"), dict):
+        req = proposal.get("requirements")
+    elif last_plan and isinstance(last_plan.get("requirements"), dict):
+        req = last_plan.get("requirements")
+    elif last_plan and isinstance((last_plan.get("arguments") or {}).get("requirements"), dict):
+        req = (last_plan.get("arguments") or {}).get("requirements")
+    else:
+        state = getattr(session, "agent_state", None) or {}
+        if isinstance(state, dict) and isinstance(state.get("requirements"), dict):
+            req = state.get("requirements")
+
+    recipe_id = resolve_recipe_id(
+        conversation=conversation, requirements=req, session=session
+    )
+    if recipe_id is None:
+        return result
+
+    last_plan_recipe = None
+    if last_plan:
+        last_plan_recipe = last_plan.get("recipe") or (last_plan.get("arguments") or {}).get(
+            "recipe"
+        )
+
+    if (
+        not wants_layout_planning(conversation)
+        and not session_wants_recipe_planning(session, conversation)
+        and not last_plan_recipe
+    ):
+        return result
+
+    # If plan_layout already ran this turn, baseline will re-apply — skip double work
+    # unless the LLM also emitted free geometry that we must replace when last_plan is absent.
+    if last_plan and last_plan.get("commands"):
+        return result
+
+    overlay: dict = {"room_type": RECIPE_ROOM_TYPES.get(recipe_id, "bedroom")}
+    wc = _requested_window_count(conversation)
+    if wc > 0:
+        overlay["windows"] = wc
+    size = _parse_room_size_m(conversation)
+    if size:
+        overlay["width"], overlay["depth"] = size
+    bed = _parse_bed_size_m(conversation)
+    if bed:
+        overlay["bed_width"], overlay["bed_length"] = bed
+    if _user_wants_door(conversation) or True:
+        overlay["doors"] = max(1, int((req or {}).get("doors") or 1)) if isinstance(req, dict) else 1
+
+    merged = merge_requirements(req, overlay)
+    args = reconcile_plan_layout_params(
+        {},
+        window_count=wc,
+        room_size=size,
+        bed_size=bed,
+        wants_door=True,
+        requirements=merged,
+        recipe=recipe_id,
+    )
+    args["mode"] = "candidates"
+    planned = dispatch_tool(session, "plan_layout", args)
+    if not (planned.get("ok") and planned.get("commands")):
+        return result
+
+    cmds = planned["commands"]
+    result = dict(result)
+    result["commands"] = cmds
+    result["questions"] = []
+    proposal = dict(proposal)
+    proposal["commands"] = cmds
+    if isinstance(planned.get("requirements"), dict):
+        proposal["requirements"] = planned["requirements"]
+    elif isinstance(merged, dict):
+        proposal["requirements"] = merged
+    assumes = list(proposal.get("assumes") or [])
+    for a in planned.get("assumes") or []:
+        if a not in assumes:
+            assumes.append(a)
+    proposal["assumes"] = assumes
+    result["proposal"] = proposal
+    result["plan_layout_enforced"] = True
+    result["plan_layout_args"] = args
+    for key in ("selected_id", "shortlist_ids", "selection_reason", "revision_rounds"):
+        if key in planned:
+            result[key] = planned[key]
+    note = (
+        " (Layout über Core-Rezept plan_layout/mode=candidates erzwungen — "
+        "keine freien Agent-Koordinaten.)"
+    )
+    result["reply"] = (result.get("reply") or "").rstrip() + note
     return result
 
 
@@ -649,12 +773,15 @@ def _finish_agent_result(
     session, settings, messages, result: dict, conversation: str, *, last_plan=None
 ) -> dict:
     result = _maybe_repair_proposal(settings, messages, result, conversation)
+    result = _ensure_core_recipe_plan(session, result, conversation, last_plan)
     result = _apply_plan_layout_baseline(session, result, conversation, last_plan)
-    result = _apply_deterministic_placement_fixes(conversation, result)
+    if not result.get("plan_layout_enforced"):
+        result = _apply_deterministic_placement_fixes(conversation, result)
     result = _attach_quality_preview(session, result)
-    result = _maybe_hard_replan(session, settings, messages, result, conversation)
-    result = _maybe_soft_replan(session, settings, messages, result, conversation)
-    result = _maybe_improve_replan(session, settings, messages, result, conversation)
+    if not result.get("plan_layout_enforced"):
+        result = _maybe_hard_replan(session, settings, messages, result, conversation)
+        result = _maybe_soft_replan(session, settings, messages, result, conversation)
+        result = _maybe_improve_replan(session, settings, messages, result, conversation)
     fp = _placement_fingerprint(result.get("commands") or [])
     placement.last_placement_fp = fp
     _update_agent_state(session, result, conversation, last_plan=last_plan, placement_fp=fp)
@@ -700,17 +827,27 @@ def _update_agent_state(
     state["last_reply"] = (result.get("reply") or "")[:240]
 
 
-def _bedroom_plan_fallback(session, conversation: str, *, error: str | None = None) -> dict:
-    """Core-only recovery when LLM fails — never fall back to kids-room demo for bedrooms."""
-    from .planning import merge_requirements, normalize_requirements, reconcile_plan_layout_params
+def _recipe_plan_fallback(session, conversation: str, *, error: str | None = None) -> dict:
+    """Core-only recovery when LLM fails — use mapped recipe, never kids-room demo."""
+    from .planning import (
+        RECIPE_ROOM_TYPES,
+        merge_requirements,
+        reconcile_plan_layout_params,
+        resolve_recipe_id,
+    )
 
     state = getattr(session, "agent_state", {}) or {}
     base_req = state.get("requirements") if isinstance(state.get("requirements"), dict) else None
+    recipe_id = resolve_recipe_id(
+        conversation=conversation, requirements=base_req, session=session
+    ) or "bedroom_basic"
+    room_type = RECIPE_ROOM_TYPES.get(recipe_id, "bedroom")
     overlay = {
-        "room_type": "bedroom",
+        "room_type": room_type,
         "doors": 1,
-        "furniture": ["bed", "wardrobe", "desk"],
     }
+    if room_type == "bedroom":
+        overlay["furniture"] = ["bed", "wardrobe", "desk"]
     wc = _requested_window_count(conversation)
     if wc > 0:
         overlay["windows"] = wc
@@ -723,10 +860,12 @@ def _bedroom_plan_fallback(session, conversation: str, *, error: str | None = No
     if bed:
         overlay["bed_width"], overlay["bed_length"] = bed
     req = merge_requirements(base_req, overlay)
-    args = reconcile_plan_layout_params({}, requirements=req)
+    args = reconcile_plan_layout_params({}, requirements=req, recipe=recipe_id)
+    args["mode"] = "candidates"
     planned = dispatch_tool(session, "plan_layout", args)
     commands = sanitize_commands(planned.get("commands") or [])
-    reply = "Schlafzimmer über Core-Rezept (plan_layout) geplant."
+    title = "Schlafzimmer" if room_type == "bedroom" else room_type.replace("_", " ").title()
+    reply = f"{title} über Core-Rezept (plan_layout) geplant."
     if error:
         reply = f"(Agent/LLM fehlgeschlagen: {error}) {reply}"
     result = {
@@ -736,7 +875,7 @@ def _bedroom_plan_fallback(session, conversation: str, *, error: str | None = No
         "questions": [],
         "proposal": {
             "proposal_id": str(uuid.uuid4()),
-            "title": "Schlafzimmer (Core-Fallback)",
+            "title": f"{title} (Core-Fallback)",
             "rationale": "LLM unavailable or crashed; requirements → plan_layout",
             "assumes": list(planned.get("assumes") or req.get("assumes") or []),
             "requirements": planned.get("requirements") or req,
@@ -747,12 +886,20 @@ def _bedroom_plan_fallback(session, conversation: str, *, error: str | None = No
         "commands": commands,
         "tool_trace": [{"tool": "plan_layout", "arguments": args, "ok": bool(planned.get("ok"))}],
         "llm_error": error,
+        "plan_layout_enforced": True,
     }
+    for key in ("selected_id", "shortlist_ids", "selection_reason", "revision_rounds"):
+        if key in planned:
+            result[key] = planned[key]
     result = _attach_quality_preview(session, result)
     _update_agent_state(session, result, conversation, last_plan=planned, placement_fp=_placement_fingerprint(commands))
     result["agent_state"] = dict(getattr(session, "agent_state", {}) or {})
     return result
 
+
+def _bedroom_plan_fallback(session, conversation: str, *, error: str | None = None) -> dict:
+    """Back-compat alias for tests — delegates to generic recipe fallback."""
+    return _recipe_plan_fallback(session, conversation, error=error)
 
 def _attach_quality_preview(session, result: dict) -> dict:
     """Dry-run final proposal commands for hard/soft findings (live session unchanged)."""
@@ -1006,8 +1153,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
         return _observation_reply(session)
 
     if not llm_configured(llm_config):
-        if _session_wants_bedroom_fallback(session, message):
-            return _bedroom_plan_fallback(session, message)
+        if _session_wants_recipe_planning(session, message):
+            return _recipe_plan_fallback(session, message)
         demo = _demo_as_agent_result(message)
         if demo:
             return _attach_quality_preview(session, demo)
@@ -1170,8 +1317,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             session, settings, messages, result, conversation, last_plan=last_plan
         )
     except Exception as exc:
-        if _session_wants_bedroom_fallback(session, conversation):
-            return _bedroom_plan_fallback(session, conversation, error=str(exc))
+        if _session_wants_recipe_planning(session, conversation):
+            return _recipe_plan_fallback(session, conversation, error=str(exc))
         demo = _demo_as_agent_result(message)
         if demo:
             demo["reply"] = f"(Agent/LLM fehlgeschlagen: {exc}) {demo['reply']}"

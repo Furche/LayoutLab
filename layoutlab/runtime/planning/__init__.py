@@ -37,13 +37,20 @@ from .intent import (
     parse_bed_size_m,
     parse_room_size_m,
     requested_window_count,
-    session_wants_bedroom_fallback,
     user_mentions_bed_head,
     user_wants_bed,
     user_wants_better_layout,
     user_wants_door,
     user_wants_room,
+)
+from .recipe_routing import (
+    RECIPE_ROOM_TYPES,
+    ROOM_TYPE_RECIPES,
+    resolve_recipe_id,
+    session_wants_bedroom_fallback,
+    session_wants_recipe_planning,
     wants_bedroom_layout,
+    wants_layout_planning,
 )
 from .placement import (
     aabb_overlap_tuple,
@@ -130,6 +137,7 @@ def reconcile_plan_layout_params(
     bed_size: tuple[float, float] | None = None,
     wants_door: bool = True,
     requirements: dict | None = None,
+    recipe: str | None = None,
 ) -> dict:
     """Build plan_layout args from requirements and/or conversation fallbacks."""
     args = dict(args or {})
@@ -151,17 +159,28 @@ def reconcile_plan_layout_params(
     if wants_door and (base_req is None or base_req.get("doors", 1) < 1):
         overlay["doors"] = 1
 
+    recipe_id = (
+        recipe
+        or (str(args.get("recipe") or "").strip().lower() or None)
+        or (
+            ROOM_TYPE_RECIPES.get(str((base_req or {}).get("room_type") or "").lower())
+            if base_req
+            else None
+        )
+        or BEDROOM_BASIC
+    )
+
     if base_req is not None or overlay:
         req = merge_requirements(base_req, overlay if overlay else None)
         return {
             "requirements": req,
-            "recipe": "bedroom_basic",
+            "recipe": recipe_id,
             "mode": "candidates",
         }
 
     # Legacy flat-arg path
     out = dict(args)
-    out.setdefault("recipe", BEDROOM_BASIC)
+    out["recipe"] = recipe_id
     out.setdefault("mode", "candidates")
     if room_size is not None:
         out["width"] = float(room_size[0])
@@ -186,8 +205,10 @@ __all__ = [
     "INTENTIONS",
     "MAX_REVISION_ROUNDS",
     "PROFILES",
+    "RECIPE_ROOM_TYPES",
     "REQUIREMENTS_SCHEMA",
     "ROLES",
+    "ROOM_TYPE_RECIPES",
     "SCHEMA_VERSION",
     "SCORE_CATEGORIES",
     "SEVERE_VETO_THRESHOLD",
@@ -224,8 +245,10 @@ __all__ = [
     "requested_window_count",
     "requirements_to_plan_params",
     "resolve_profile_id",
+    "resolve_recipe_id",
     "score_breakdown",
     "session_wants_bedroom_fallback",
+    "session_wants_recipe_planning",
     "snap_bed_to_wall",
     "soft_findings_to_components",
     "user_mentions_bed_head",
@@ -235,4 +258,5 @@ __all__ = [
     "user_wants_room",
     "validate_intention",
     "wants_bedroom_layout",
+    "wants_layout_planning",
 ]

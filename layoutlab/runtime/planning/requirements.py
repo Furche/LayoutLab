@@ -97,10 +97,13 @@ def normalize_requirements(raw: dict | None, *, room_type_default: str = "bedroo
 
 def requirements_to_plan_params(requirements: dict | None) -> dict[str, Any]:
     """Map normalized requirements → plan_layout / recipe kwargs."""
+    from .recipe_routing import ROOM_TYPE_RECIPES
+
     req = normalize_requirements(requirements)
     furniture = set(req.get("furniture") or [])
+    recipe = ROOM_TYPE_RECIPES.get(req["room_type"]) or "bedroom_basic"
     params: dict[str, Any] = {
-        "recipe": "bedroom_basic" if req["room_type"] == "bedroom" else "bedroom_basic",
+        "recipe": recipe,
         "width": req["width"],
         "depth": req["depth"],
         "height": req["height"],
