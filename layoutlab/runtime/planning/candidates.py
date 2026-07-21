@@ -13,6 +13,9 @@ from .bedroom_basic import (
 from .requirements import normalize_requirements, requirements_to_plan_params
 from .schema import EVALUATION_SCHEMA, SCHEMA_VERSION, build_evaluation
 
+# DD-017 interactive default: at most two internal revision rounds after first evaluate.
+MAX_REVISION_ROUNDS = 2
+
 
 def _flat_plan_params(params: dict | None) -> tuple[dict, dict | None]:
     """Map requirements{} → flat recipe params (same rules as plan_layout)."""
@@ -110,6 +113,120 @@ def _functional_shortlist(ranked: list) -> list:
     return out
 
 
+def _needs_revision(shortlist, ranked) -> bool:
+    """True when Core should run a bounded revision pass (allowlisted overlays only)."""
+    ranked = list(ranked or [])
+    shortlist = list(shortlist or [])
+    if not ranked:
+        return False
+    if shortlist:
+        # Happy path: clean preferred shortlist — no revision.
+        return False
+    if all((c.get("quality") or {}).get("has_hard_errors") for c in ranked):
+        return True
+    # Empty shortlist (e.g. all severe_veto) with ranked candidates.
+    return True
+
+
+def _majority_failing_bed_wall(ranked: list) -> str:
+    """Dominant bed wall among failing candidates: 'south' or 'north'."""
+    failing = [
+        c
+        for c in ranked
+        if (c.get("quality") or {}).get("has_hard_errors")
+        or (c.get("evaluation") or {}).get("severe_veto")
+    ]
+    if not failing:
+        failing = list(ranked)
+    south = 0
+    north = 0
+    for c in failing:
+        sid = str(c.get("strategy") or c.get("candidate_id") or "")
+        if "bed_south" in sid:
+            south += 1
+        elif "bed_north" in sid:
+            north += 1
+    if south >= north:
+        return "south"
+    return "north"
+
+
+def _revision_overlay(round_num: int, ranked: list) -> tuple[dict[str, Any], str]:
+    """Allowlisted param overlay + intention id for one revision round (1-based)."""
+    if round_num == 1:
+        majority = _majority_failing_bed_wall(ranked)
+        wall = "north" if majority == "south" else "south"
+        return (
+            {"prefer_bed_wall": wall, "bed_wall": wall},
+            f"prefer_bed_wall_{wall}",
+        )
+    if round_num == 2:
+        return {"include_desk": False}, "omit_desk"
+    return {}, ""
+
+
+def _evaluate_raw_candidates(session, raw_candidates: list) -> list[dict]:
+    """Dry-run evaluate enumerated raw candidates into ranked-ready dicts."""
+    evaluated: list[dict] = []
+    for cand in raw_candidates:
+        quality = evaluate_candidate_commands(session, cand.get("commands") or [])
+        evaluation = build_evaluation(
+            has_hard_errors=quality["has_hard_errors"],
+            soft_warnings=quality["soft_warnings"],
+            analysis=quality.get("analysis"),
+            soft_summary=quality.get("soft_summary"),
+            findings=quality.get("findings"),
+        )
+        evaluated.append(
+            {
+                "candidate_id": cand["candidate_id"],
+                "strategy": cand["strategy"],
+                "commands": cand["commands"],
+                "assumes": cand.get("assumes") or [],
+                "notes": cand.get("notes") or [],
+                "quality": {
+                    "apply_ok": quality["apply_ok"],
+                    "valid": quality["valid"],
+                    "has_hard_errors": quality["has_hard_errors"],
+                    "hard_errors": quality["hard_errors"],
+                    "soft_warnings": quality["soft_warnings"],
+                    "soft_info": quality["soft_info"],
+                    "summary": quality["summary"],
+                    "soft_summary": quality["soft_summary"],
+                },
+                "evaluation": evaluation,
+            }
+        )
+    return evaluated
+
+
+def _merge_evaluated(
+    pool: list[dict], newcomers: list[dict]
+) -> tuple[list[dict], list[str]]:
+    """Merge newcomers into pool; skip same id+commands; replace if commands differ."""
+    by_id: dict[str, dict] = {str(c.get("candidate_id")): c for c in pool}
+    order = [str(c.get("candidate_id")) for c in pool]
+    added: list[str] = []
+    for item in newcomers:
+        cid = str(item.get("candidate_id") or "")
+        if not cid:
+            continue
+        existing = by_id.get(cid)
+        if existing is not None and existing.get("commands") == item.get("commands"):
+            continue
+        if existing is None:
+            order.append(cid)
+        by_id[cid] = item
+        added.append(cid)
+    return [by_id[cid] for cid in order if cid in by_id], added
+
+
+def _assign_ranks(ranked: list) -> list:
+    for i, item in enumerate(ranked):
+        item["rank"] = i + 1
+    return ranked
+
+
 def _selection_reason_de(
     selected: dict,
     ranked: list,
@@ -162,8 +279,28 @@ def _selection_reason_de(
     )
 
 
+def _pick_selected(ranked: list, shortlist: list) -> tuple[dict | None, bool, list[str]]:
+    """Select winner from shortlist or fallback; return (selected, fallback_risk, risks)."""
+    fallback_risk = False
+    expected_risks: list[str] = []
+    if shortlist:
+        return shortlist[0], False, []
+    fallback_risk = True
+    no_hard = [c for c in ranked if not (c.get("quality") or {}).get("has_hard_errors")]
+    selected = no_hard[0] if no_hard else (ranked[0] if ranked else None)
+    if selected:
+        hints = list((selected.get("evaluation") or {}).get("expected_risk_hints") or [])
+        if hints:
+            expected_risks = hints
+        elif (selected.get("evaluation") or {}).get("severe_veto"):
+            expected_risks = ["severe_veto: default shortlist empty"]
+        elif (selected.get("quality") or {}).get("has_hard_errors"):
+            expected_risks = ["hard_errors: no valid candidate"]
+    return selected, fallback_risk, expected_risks
+
+
 def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any]:
-    """Enumerate → evaluate on session clones → shortlist → rank → select winner."""
+    """Enumerate → evaluate → shortlist; up to MAX_REVISION_ROUNDS allowlisted revisions."""
     flat, requirements = _flat_plan_params(params)
     recipe = str(flat.get("recipe") or RECIPE_NAME).strip().lower()
     if recipe != RECIPE_NAME:
@@ -184,65 +321,46 @@ def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any
             "schema_version": SCHEMA_VERSION,
             "evaluation_schema": EVALUATION_SCHEMA,
             "shortlist_ids": [],
+            "revision_rounds": 0,
+            "revision_trace": [],
         }
 
-    raw_candidates = enumerate_bedroom_candidates(flat)
-    evaluated: list[dict] = []
-    for cand in raw_candidates:
-        quality = evaluate_candidate_commands(session, cand.get("commands") or [])
-        evaluation = build_evaluation(
-            has_hard_errors=quality["has_hard_errors"],
-            soft_warnings=quality["soft_warnings"],
-            analysis=quality.get("analysis"),
-            soft_summary=quality.get("soft_summary"),
-            findings=quality.get("findings"),
+    working_flat = dict(flat)
+    evaluated = _evaluate_raw_candidates(
+        session, enumerate_bedroom_candidates(working_flat)
+    )
+    ranked = _assign_ranks(rank_candidates(evaluated))
+    shortlist = _functional_shortlist(ranked)
+
+    revision_trace: list[dict[str, Any]] = []
+    revision_rounds = 0
+
+    while revision_rounds < MAX_REVISION_ROUNDS and _needs_revision(shortlist, ranked):
+        round_num = revision_rounds + 1
+        overlay, intention = _revision_overlay(round_num, ranked)
+        if not overlay or not intention:
+            break
+        working_flat = {**working_flat, **overlay}
+        newcomers = _evaluate_raw_candidates(
+            session, enumerate_bedroom_candidates(working_flat)
         )
-        evaluated.append(
+        evaluated, added_ids = _merge_evaluated(evaluated, newcomers)
+        ranked = _assign_ranks(rank_candidates(evaluated))
+        shortlist = _functional_shortlist(ranked)
+        revision_rounds = round_num
+        revision_trace.append(
             {
-                "candidate_id": cand["candidate_id"],
-                "strategy": cand["strategy"],
-                "commands": cand["commands"],
-                "assumes": cand.get("assumes") or [],
-                "notes": cand.get("notes") or [],
-                "quality": {
-                    "apply_ok": quality["apply_ok"],
-                    "valid": quality["valid"],
-                    "has_hard_errors": quality["has_hard_errors"],
-                    "hard_errors": quality["hard_errors"],
-                    "soft_warnings": quality["soft_warnings"],
-                    "soft_info": quality["soft_info"],
-                    "summary": quality["summary"],
-                    "soft_summary": quality["soft_summary"],
-                },
-                "evaluation": evaluation,
+                "round": round_num,
+                "intention": intention,
+                "added_candidate_ids": added_ids,
+                "shortlist_after": len(shortlist),
             }
         )
+        if shortlist:
+            break
 
-    ranked = rank_candidates(evaluated)
-    for i, item in enumerate(ranked):
-        item["rank"] = i + 1
-
-    shortlist = _functional_shortlist(ranked)
+    selected, fallback_risk, expected_risks = _pick_selected(ranked, shortlist)
     shortlist_ids = [c["candidate_id"] for c in shortlist]
-    fallback_risk = False
-    expected_risks: list[str] = []
-
-    if shortlist:
-        # Prefer best among shortlist; soft rank already orders ranked best-first.
-        selected = shortlist[0]
-    else:
-        # All candidates have severe_veto and/or hard errors — pick best overall.
-        fallback_risk = True
-        no_hard = [c for c in ranked if not (c.get("quality") or {}).get("has_hard_errors")]
-        selected = no_hard[0] if no_hard else (ranked[0] if ranked else None)
-        if selected:
-            hints = list((selected.get("evaluation") or {}).get("expected_risk_hints") or [])
-            if hints:
-                expected_risks = hints
-            elif (selected.get("evaluation") or {}).get("severe_veto"):
-                expected_risks = ["severe_veto: default shortlist empty"]
-            elif (selected.get("quality") or {}).get("has_hard_errors"):
-                expected_risks = ["hard_errors: no valid candidate"]
 
     selected_id = selected["candidate_id"] if selected else None
     reason = (
@@ -252,10 +370,13 @@ def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any
         if selected
         else "Keine Kandidaten."
     )
+    if revision_rounds > 0 and shortlist:
+        reason = f"{reason} Nach Revision ({revision_rounds} Runde(n))."
+    elif revision_rounds > 0 and selected:
+        reason = f"{reason} Nach Revision ({revision_rounds} Runde(n), Shortlist weiter leer)."
 
     room = None
     if selected:
-        # Reconstruct room dims from create_room if present
         for cmd in selected.get("commands") or []:
             if cmd.get("action") == "create_room":
                 p = cmd.get("params") or {}
@@ -284,6 +405,8 @@ def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any
         "schema_version": SCHEMA_VERSION,
         "evaluation_schema": EVALUATION_SCHEMA,
         "shortlist_ids": shortlist_ids,
+        "revision_rounds": revision_rounds,
+        "revision_trace": revision_trace,
     }
     if expected_risks:
         out["expected_risks"] = expected_risks

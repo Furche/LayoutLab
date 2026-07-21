@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-21 (DD-017 evaluation schema v0.1 + shortlist)  
-**Plugin version:** 0.10.25 · **Branch:** `main`
+**Last updated:** 2026-07-21 (DD-017 bounded internal revision)  
+**Plugin version:** 0.10.26 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.25.
+Branch: main. Plugin v0.10.26.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-21):
@@ -32,7 +32,8 @@ Aktueller Stand (2026-07-21):
 - DD-015 **Accepted**: soft metrics + tradeoffs (Ästhetik ≠ Core-Metrik)
 - DD-011 **Accepted** + **candidates v1 shipped**: `plan_layout` mode=candidates (2–4 bedroom strategies, soft rank)
 - DD-017 **Accepted** + **Evaluation schema v0.1**: profiles/roles/intentions, signed components, severe veto + functional shortlist (`shortlist_ids`)
-- Nächste Arbeit: bounded internal revision; optional AI aesthetics (flag)
+- DD-017 **bounded revision** ✅ (`0.10.26`): up to 2 allowlisted Core revision rounds before proposal
+- Nächste Arbeit: optional AI aesthetics (flag); Viewer candidate breakdown
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
 - Core: python3 -m server (:8765); Viewer Vite (:5173)
 
@@ -173,10 +174,10 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 4. ~~**Accept DD-017 + amend DD-011/DD-015**~~ ✅ (2026-07-21)
 5. ~~DD-011 candidate expansion + soft ranking~~ ✅ (`0.10.24` — `mode: "candidates"`)
 6. ~~Define the minimal DD-017 schema contract: profiles/capabilities, roles/intentions, signed categories and veto thresholds~~ ✅ (`0.10.25`)
-7. 🔄 Core functional shortlisting ✅ (`shortlist_ids` / veto); bounded internal revision still pending before optional AI aesthetics
+7. ~~Core functional shortlisting + bounded internal revision~~ ✅ (`0.10.25` shortlist; `0.10.26` revision ≤2 rounds)
 8. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
 
-DD-011/015/016/017 **Accepted** · evaluation schema v0.1 + shortlist shipped · next: bounded revision
+DD-011/015/016/017 **Accepted** · evaluation schema + shortlist + bounded revision shipped · next: optional aesthetics / more recipes
 
 ------------------------------------------------------------------------
 
@@ -266,8 +267,8 @@ Living product track — keep in sync with *Next steps* above.
 4. ✅ Planning foundation: recipes as strategies (DD-011) · collaborative evaluation (DD-017)  
 5. ✅ DD-011 candidate expansion + soft ranking (`0.10.24`)  
 6. ✅ Minimal DD-017 evaluation schema (profiles/roles/vetos) (`0.10.25`)  
-7. 🔄 Core functional shortlist ✅; bounded revision ⏳; Viewer candidate breakdown ⏳  
-8. 📋 Optional experimental AI aesthetics (behind flag) · more recipes on demand  
+7. ✅ Core functional shortlist + bounded revision (`0.10.26`)  
+8. 📋 Optional experimental AI aesthetics (behind flag) · Viewer candidate breakdown · more recipes on demand  
 9. 📋 Bridge / capture / multi-space / persisted variants — Future Ideas, separate DDs  
 
 Binding order for agents: **Next steps** (this file) · detail in [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) implementation order.
@@ -278,6 +279,7 @@ Binding order for agents: **Next steps** (this file) · detail in [DD-017](desig
 
 | Date | Change |
 |---|---|
+| 2026-07-21 | DD-017 bounded internal revision (`0.10.26`): ≤2 allowlisted rounds |
 | 2026-07-21 | DD-017 evaluation schema v0.1 + functional shortlist (`0.10.25`) |
 | 2026-07-21 | DD-011 candidates v1 shipped (`0.10.24`): expand + soft rank |
 | 2026-07-21 | Roadmap sync: User priority + Next steps reflect DD-017 Accepted staging |

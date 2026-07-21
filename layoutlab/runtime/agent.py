@@ -63,7 +63,8 @@ Planning recipes (DD-016 / DD-011 — prefer this):
    "windows":2,"furniture":["bed","wardrobe","desk"],"bed_width":1.2,"bed_length":2.0,
    "door_wall":"east"}}
 - You translate language → requirements (numbers, counts). Core expands candidates, ranks with
-  soft metrics, returns commands = selected winner, and maps requirements → geometry.
+  soft metrics, may revise internally up to 2 allowlisted rounds, returns commands = selected
+  winner, and maps requirements → geometry. Prefer mode=candidates; do not re-call with random xy.
 - Put the same requirements object into proposal.requirements in your final JSON.
 - Do NOT invent free location/head_side or duplicate openings. Core re-applies plan_layout
   from requirements if your commands diverge.

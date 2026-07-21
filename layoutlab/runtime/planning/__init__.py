@@ -8,7 +8,7 @@ from .bedroom_basic import RECIPE_GOALS as BEDROOM_BASIC_GOALS
 from .bedroom_basic import RECIPE_KIND as BEDROOM_BASIC_KIND
 from .bedroom_basic import RECIPE_NAME as BEDROOM_BASIC
 from .bedroom_basic import enumerate_bedroom_candidates, plan_bedroom_basic
-from .candidates import plan_layout_candidates, rank_candidates
+from .candidates import MAX_REVISION_ROUNDS, plan_layout_candidates, rank_candidates
 from .schema import (
     EVALUATION_SCHEMA,
     HIGH_IMPACT_ROLES,
@@ -153,11 +153,16 @@ def reconcile_plan_layout_params(
 
     if base_req is not None or overlay:
         req = merge_requirements(base_req, overlay if overlay else None)
-        return {"requirements": req, "recipe": "bedroom_basic"}
+        return {
+            "requirements": req,
+            "recipe": "bedroom_basic",
+            "mode": "candidates",
+        }
 
     # Legacy flat-arg path
     out = dict(args)
     out.setdefault("recipe", BEDROOM_BASIC)
+    out.setdefault("mode", "candidates")
     if room_size is not None:
         out["width"] = float(room_size[0])
         out["depth"] = float(room_size[1])
@@ -179,6 +184,7 @@ __all__ = [
     "EVALUATION_SCHEMA",
     "HIGH_IMPACT_ROLES",
     "INTENTIONS",
+    "MAX_REVISION_ROUNDS",
     "PROFILES",
     "REQUIREMENTS_SCHEMA",
     "ROLES",

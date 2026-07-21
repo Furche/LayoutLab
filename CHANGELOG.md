@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **DD-017 bounded internal revision (`0.10.26`):** after the first candidates evaluate/shortlist pass, Core may run up to 2 allowlisted revision rounds (`prefer_bed_wall_*`, then `omit_desk`) when the functional shortlist is empty; returns `revision_rounds` + `revision_trace`; bedroom baseline/`reconcile_plan_layout_params` defaults to `mode: "candidates"`.
 - **DD-017 Evaluation schema v0.1 + shortlist (`0.10.25`):** package `layoutlab/runtime/planning/schema/` (profiles/capabilities, allowlisted roles & intentions, signed score categories, severe veto threshold); `plan_layout` `mode: "candidates"` attaches per-candidate `evaluation` and returns `schema_version`, `evaluation_schema`, `shortlist_ids` — default selection prefers shortlist (no hard errors, no severe_veto); soft rank remains tie-break.
 - **DD-011 Planning v1 candidates (`0.10.24`):** `plan_layout` `mode: "candidates"` expands `bedroom_basic` into 2–4 strategies, dry-run evaluates on a session clone, soft-ranks (hard errors → soft warnings → soft info), returns `candidates[]` + `selected_id` + German `selection_reason`; `commands` = winner. Recipe tags: `recipe_kind=room_use`, `recipe_goals=[sleep, storage]`. Default mode remains `single`.
 

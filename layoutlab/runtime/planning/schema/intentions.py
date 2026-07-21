@@ -8,6 +8,7 @@ INTENTIONS = frozenset(
         "plan_layout_single",
         "prefer_bed_wall_south",
         "prefer_bed_wall_north",
+        "omit_desk",
         "recipe_bedroom_basic",
         "assign_role",  # value must be allowlisted role
     }
