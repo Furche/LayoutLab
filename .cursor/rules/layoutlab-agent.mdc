@@ -5,9 +5,9 @@ alwaysApply: true
 
 # LayoutLab agent conventions
 
-**Mental model:** Read `AI_CONTEXT.md` before architecture or product-direction questions. Current phase = Execution Layer (generators, JSON protocol, clearances, `analyze_layout`). Long-term vision lives in `docs/Future_Ideas.md` — do not skip Idea → DD → Architecture.
+**Mental model:** Read `AI_CONTEXT.md` before architecture or product-direction questions. Current phase = Execution Layer (generators, JSON protocol, clearances, `analyze_layout`). Long-term vision lives in `docs/Future_Ideas.md`; coherent cross-cutting capabilities live in `docs/concepts/`. Do not skip Idea → Feature Concept → DD(s) → work packages → implementation.
 
-**Key docs:** `CHANGELOG.md` (recent changes), `docs/ARCHITECTURE.md`, `docs/json_protocol.md`, `docs/design_decisions/`.
+**Key docs:** `CHANGELOG.md` (recent changes), `docs/HANDOFF.md` (ordered work), `docs/ARCHITECTURE.md`, `docs/concepts/`, `docs/json_protocol.md`, `docs/design_decisions/`.
 
 **Diagnostics:** When reporting LayoutLab diagnostics, reference the report file or paste only failing checks — not the full 18-check dump inline.
 

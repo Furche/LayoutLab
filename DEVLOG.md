@@ -4,6 +4,23 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — Feature Concepts between Future Ideas and Design Decisions
+
+**Problem:** Direct viewport manipulation, parametric furniture editing, multi-room state,
+Undo/Redo and AI authority form one product capability but cross several architectural
+decisions. `Future_Ideas.md` was too broad for the complete behaviour, while one giant DD
+would mix independent choices and implementation order.
+
+**Decision:** Add `docs/concepts/` with stable `FC-xxx` identifiers. A Feature Concept owns
+the coherent user flow, domain behaviour and decomposition; resulting DDs own binding
+architecture, and roadmap work packages reference the concept instead of copying it.
+
+**First concept:** FC-001 locks the agreed behaviour, including preserved furniture world
+positions during wall resize, visible invalid furniture, reversible inactive openings,
+valid-only participation in whole-room moves, semantic regeneration and AI-safe transactions.
+
+------------------------------------------------------------------------
+
 ## 2026-07-21 — DD-017 Accepted: collaborative planning and candidate evaluation
 
 **Why:** One-shot AI command proposals exposed invalid attempts to users and had no durable model

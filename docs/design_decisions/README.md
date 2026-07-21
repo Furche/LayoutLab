@@ -8,6 +8,11 @@ New decisions use the next sequential number: `DD-006`, `DD-007`, …
 
 **When to create a DD:** see [docs/documentation_map.md](../documentation_map.md) (Design decisions section).
 
+Complete cross-cutting capabilities are described first as stable
+[Feature Concepts](../concepts/README.md). A Feature Concept may lead to several
+DDs; it does not make architectural choices binding by itself. Current example:
+[FC-001 — Semantic Direct Manipulation and Multi-Room Editing](../concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md).
+
 | ID | Title | Status | Date |
 |---|---|---|---|
 | [DD-001](DD-001-generators-are-parametric-assets.md) | Generators are parametric assets | Accepted | 2026-07-09 |
@@ -31,6 +36,7 @@ or UI patterns — check this index first.
 
 **Reserved (not created):** Future_Ideas §19 may later use DD-012 … DD-013 for
 Integrated AI and Capture Pipeline. **DD-011** + **DD-017** are **Accepted** (candidate expansion next; then evaluation schema / shortlist). **DD-014** is the Standalone Runtime
-path (Phase A + B room write + B2 generators Accepted; multi-space Spatial Project remains a later DD).
+path (Phase A + B room write + B2 generators Accepted; multi-space Spatial Project is
+tracked by FC-001 and remains a later DD).
 Agent tools: see [../agent_tool_contract.md](../agent_tool_contract.md).
 Do not invent files for remaining reserved IDs until an actual proposal is written.
