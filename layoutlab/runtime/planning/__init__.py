@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from .bedroom_basic import RECIPE_GOALS as BEDROOM_BASIC_GOALS
+from .bedroom_basic import RECIPE_KIND as BEDROOM_BASIC_KIND
 from .bedroom_basic import RECIPE_NAME as BEDROOM_BASIC
-from .bedroom_basic import plan_bedroom_basic
+from .bedroom_basic import enumerate_bedroom_candidates, plan_bedroom_basic
+from .candidates import plan_layout_candidates, rank_candidates
 from .intent import (
     WORD_COUNTS,
     count_requested_noun,
@@ -83,6 +86,11 @@ def plan_layout(params: dict | None = None) -> dict[str, Any]:
             "requirements": requirements,
         }
     out = handler(params)
+    out.setdefault("recipe_kind", BEDROOM_BASIC_KIND if recipe == BEDROOM_BASIC else None)
+    out.setdefault(
+        "recipe_goals",
+        list(BEDROOM_BASIC_GOALS) if recipe == BEDROOM_BASIC else [],
+    )
     if requirements is not None:
         out["requirements"] = requirements
         # Prefer requirements assumes + recipe assumes
@@ -146,6 +154,8 @@ def reconcile_plan_layout_params(
 
 __all__ = [
     "BEDROOM_BASIC",
+    "BEDROOM_BASIC_GOALS",
+    "BEDROOM_BASIC_KIND",
     "REQUIREMENTS_SCHEMA",
     "WORD_COUNTS",
     "aabb_overlap_tuple",
@@ -153,6 +163,7 @@ __all__ = [
     "apply_improved_bedroom_layout",
     "as_xyz",
     "count_requested_noun",
+    "enumerate_bedroom_candidates",
     "gen_xy_aabb",
     "is_retry_request",
     "last_placement_fp",
@@ -166,7 +177,9 @@ __all__ = [
     "parse_room_size_m",
     "placement_fingerprint",
     "plan_layout",
+    "plan_layout_candidates",
     "proposal_wants_layout",
+    "rank_candidates",
     "reconcile_plan_layout_params",
     "requested_window_count",
     "requirements_to_plan_params",

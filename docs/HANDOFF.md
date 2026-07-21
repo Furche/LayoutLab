@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-21 (roadmap synced after DD-017 Accept)  
-**Plugin version:** 0.10.23 · **Branch:** `main`
+**Last updated:** 2026-07-21 (DD-011 candidates expand + soft rank)  
+**Plugin version:** 0.10.24 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,15 +24,15 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.23.
+Branch: main. Plugin v0.10.24.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-21):
 - DD-016 **Accepted**: plan_layout + bedroom_basic (agent_tools 0.5)
 - DD-015 **Accepted**: soft metrics + tradeoffs (Ästhetik ≠ Core-Metrik)
-- DD-011 **Accepted**: recipe = Planungsstrategie; Candidate Expansion als nächster Bau-Schritt
+- DD-011 **Accepted** + **candidates v1 shipped**: `plan_layout` mode=candidates (2–4 bedroom strategies, soft rank)
 - DD-017 **Accepted**: Core Shortlist → AI-Empfehlung → User Apply; Evaluation-Schema folgt
-- Nächste Arbeit: candidates + soft rank, dann minimales DD-017-Schema (Profile/Roles/Vetos)
+- Nächste Arbeit: minimales DD-017-Schema (Profile/Roles/Vetos), dann functional shortlist
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
 - Core: python3 -m server (:8765); Viewer Vite (:5173)
 
@@ -171,12 +171,12 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 2. ~~**Accept DD-016 / DD-015**~~ ✅ (2026-07-20)  
 3. ~~**Accept DD-011**~~ ✅ (2026-07-20)  
 4. ~~**Accept DD-017 + amend DD-011/DD-015**~~ ✅ (2026-07-21)
-5. Continue DD-011 candidate expansion + existing soft ranking
+5. ~~DD-011 candidate expansion + soft ranking~~ ✅ (`0.10.24` — `mode: "candidates"`)
 6. Define the minimal DD-017 schema contract: profiles/capabilities, roles/intentions, signed categories and veto thresholds
 7. Implement Core functional shortlisting and bounded internal revision before optional AI aesthetics
 8. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
 
-DD-011/015/016/017 **Accepted** · next: candidate expansion plus minimal DD-017 evaluation schema
+DD-011/015/016/017 **Accepted** · candidates expand shipped · next: minimal DD-017 evaluation schema
 
 ------------------------------------------------------------------------
 
@@ -264,10 +264,11 @@ Living product track — keep in sync with *Next steps* above.
 2. ✅ Clearance (DD-007) · Constraints / analyze (DD-008) · Room Model (DD-010)  
 3. ✅ Standalone Core + Viewer (DD-014) · Soft metrics (DD-015) · Recipes (DD-016)  
 4. ✅ Planning foundation: recipes as strategies (DD-011) · collaborative evaluation (DD-017)  
-5. 🔄 **Now:** DD-011 candidate expansion + soft ranking; minimal DD-017 evaluation schema  
-6. ⏳ Core functional shortlist + bounded revision; Viewer candidate breakdown  
-7. 📋 Optional experimental AI aesthetics (behind flag) · more recipes on demand  
-8. 📋 Bridge / capture / multi-space / persisted variants — Future Ideas, separate DDs  
+5. ✅ DD-011 candidate expansion + soft ranking (`0.10.24`)  
+6. 🔄 **Now:** minimal DD-017 evaluation schema (profiles/roles/vetos)  
+7. ⏳ Core functional shortlist + bounded revision; Viewer candidate breakdown  
+8. 📋 Optional experimental AI aesthetics (behind flag) · more recipes on demand  
+9. 📋 Bridge / capture / multi-space / persisted variants — Future Ideas, separate DDs  
 
 Binding order for agents: **Next steps** (this file) · detail in [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) implementation order.
 
@@ -277,6 +278,7 @@ Binding order for agents: **Next steps** (this file) · detail in [DD-017](desig
 
 | Date | Change |
 |---|---|
+| 2026-07-21 | DD-011 candidates v1 shipped (`0.10.24`): expand + soft rank |
 | 2026-07-21 | Roadmap sync: User priority + Next steps reflect DD-017 Accepted staging |
 | 2026-07-21 | DD-017 **Accepted**; DD-011/DD-015 amended; Planner evaluation staged |
 | 2026-07-20 | DD-011 **Accepted** — Planner foundation; next = implement candidates |

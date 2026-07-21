@@ -1,6 +1,6 @@
 # LayoutLab Agent Tool Contract
 
-**Status:** Active (`agent_tools` 0.5 — DD-011/015/016/017 Accepted; candidates + evaluation schema pending)  
+**Status:** Active (`agent_tools` 0.5 — DD-011/015/016/017 Accepted; candidates expand shipped; evaluation schema pending)  
 **Version:** `agent_tools` 0.5  
 **Date:** 2026-07-21  
 **Related:** [DD-009](design_decisions/DD-009-ai-execution-boundary.md) · [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) · [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) · [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) · [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) · [json_protocol.md](json_protocol.md) · [DD-014](design_decisions/DD-014-standalone-runtime-path.md)
@@ -242,8 +242,8 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 12. Persist light agent state (goal / requirements / last findings) ✅
 13. Slim `agent.py` (move bedroom heuristics into `planning/`) ✅
 14. **DD-017 Accepted** — collaborative evaluation contract + DD-011/015 amendments ✅  
-15. **DD-011 Planning v1:** `plan_layout` `mode: "candidates"` — expand + soft rank ← **next**  
-16. Minimal DD-017 schema (profiles/roles/intentions, signed scores, veto) ← after candidates land  
+15. **DD-011 Planning v1:** `plan_layout` `mode: "candidates"` — expand + soft rank ✅ (`0.10.24`; no DD-017 scores yet)  
+16. Minimal DD-017 schema (profiles/roles/intentions, signed scores, veto) ← **next**  
 17. Core functional shortlist + bounded revision; optional AI aesthetics (flag) ← later  
 18. More recipes (room-use and/or goal strategies) ← on demand  
 19. Persisted project variants / compare UI (Future_Ideas §16) ← later

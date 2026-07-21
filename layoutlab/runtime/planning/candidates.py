@@ -1,0 +1,219 @@
+"""DD-011 Planning v1 — expand candidates, dry-run evaluate, soft rank."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from .bedroom_basic import (
+    RECIPE_GOALS,
+    RECIPE_KIND,
+    RECIPE_NAME,
+    enumerate_bedroom_candidates,
+)
+from .requirements import normalize_requirements, requirements_to_plan_params
+
+
+def _flat_plan_params(params: dict | None) -> tuple[dict, dict | None]:
+    """Map requirements{} → flat recipe params (same rules as plan_layout)."""
+    params = dict(params or {})
+    requirements = None
+    if isinstance(params.get("requirements"), dict):
+        requirements = normalize_requirements(params.get("requirements"))
+        mapped = requirements_to_plan_params(requirements)
+        for key, value in params.items():
+            if key in ("requirements", "recipe", "mode") or value is None:
+                continue
+            if key.startswith("_"):
+                continue
+            mapped[key] = value
+        if params.get("recipe"):
+            mapped["recipe"] = params["recipe"]
+        mapped["_requirements"] = requirements
+        return mapped, requirements
+    # Drop mode from recipe kwargs
+    flat = {k: v for k, v in params.items() if k != "mode"}
+    return flat, None
+
+
+def evaluate_candidate_commands(session, commands) -> dict[str, Any]:
+    """Clone session → dry-run commands → extract hard/soft quality summary."""
+    from ..tools import dry_run_commands
+
+    dry = dry_run_commands(
+        session,
+        {"commands": commands, "analyze": True, "stop_on_invalid": True},
+    )
+    validation = dry.get("validation") or {}
+    analysis = dry.get("analysis") or {}
+    summary = analysis.get("summary") or {}
+    soft = dry.get("soft_summary") or analysis.get("soft_summary") or {
+        "count": 0,
+        "warnings": 0,
+        "info": 0,
+        "types": [],
+    }
+    hard_errors = int(summary.get("errors") or 0)
+    apply_ok = bool(dry.get("apply_ok"))
+    valid = bool(validation.get("ok", True)) and apply_ok
+    has_hard = (not valid) or hard_errors > 0 or not apply_ok
+    # Count apply/validation failures as hard errors for ranking.
+    if not apply_ok or not validation.get("ok", True):
+        hard_errors = max(hard_errors, 1)
+
+    return {
+        "ok": bool(dry.get("ok")) and valid and hard_errors == 0,
+        "apply_ok": apply_ok,
+        "valid": bool(validation.get("ok", True)),
+        "has_hard_errors": has_hard,
+        "hard_errors": hard_errors,
+        "soft_warnings": int(soft.get("warnings") or 0),
+        "soft_info": int(soft.get("info") or 0),
+        "summary": summary,
+        "soft_summary": soft,
+        "errors": dry.get("errors") or [],
+    }
+
+
+def _rank_key(item: dict) -> tuple:
+    """Best-first sort key: valid first, fewer hard/soft issues, stable id."""
+    q = item.get("quality") or {}
+    invalid = 1 if q.get("has_hard_errors") or not q.get("apply_ok") else 0
+    return (
+        invalid,
+        int(q.get("hard_errors") or 0),
+        int(q.get("soft_warnings") or 0),
+        int(q.get("soft_info") or 0),
+        str(item.get("candidate_id") or ""),
+    )
+
+
+def rank_candidates(evaluated: list) -> list:
+    """Sort evaluated candidates best-first (deterministic)."""
+    return sorted(list(evaluated or []), key=_rank_key)
+
+
+def _selection_reason_de(selected: dict, ranked: list) -> str:
+    """Short German why-string from soft/hard comparison."""
+    q = selected.get("quality") or {}
+    strategy = selected.get("strategy") or selected.get("candidate_id") or "?"
+    if q.get("has_hard_errors"):
+        return (
+            f"Keine fehlerfreie Variante; gewählt: {strategy} "
+            f"({int(q.get('hard_errors') or 0)} Hard-Fehler)."
+        )
+    soft_w = int(q.get("soft_warnings") or 0)
+    soft_i = int(q.get("soft_info") or 0)
+    others = [c for c in ranked if c.get("candidate_id") != selected.get("candidate_id")]
+    if not others:
+        return f"Einzige Variante: {strategy} (0 Hard-Fehler)."
+    best_other = others[0]
+    oq = best_other.get("quality") or {}
+    if soft_w < int(oq.get("soft_warnings") or 0):
+        return (
+            f"Gewählt: {strategy} — weniger Soft-Warnungen "
+            f"({soft_w} vs {int(oq.get('soft_warnings') or 0)})."
+        )
+    if soft_i < int(oq.get("soft_info") or 0):
+        return (
+            f"Gewählt: {strategy} — bessere Packungs-/Info-Metriken "
+            f"({soft_i} vs {int(oq.get('soft_info') or 0)} Info)."
+        )
+    if soft_w == 0 and soft_i == 0:
+        return f"Gewählt: {strategy} — 0 Hard-Fehler, keine Soft-Warnungen."
+    return (
+        f"Gewählt: {strategy} — 0 Hard-Fehler, "
+        f"{soft_w} Soft-Warnung(en), {soft_i} Soft-Info."
+    )
+
+
+def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any]:
+    """Enumerate → evaluate on session clones → rank → select winner."""
+    flat, requirements = _flat_plan_params(params)
+    recipe = str(flat.get("recipe") or RECIPE_NAME).strip().lower()
+    if recipe != RECIPE_NAME:
+        return {
+            "ok": False,
+            "mode": "candidates",
+            "error": f"candidates mode not implemented for recipe {recipe!r}",
+            "commands": [],
+            "candidates": [],
+            "selected_id": None,
+            "selection_reason": "",
+            "assumes": [],
+            "notes": [],
+            "recipe": recipe,
+            "recipe_kind": RECIPE_KIND,
+            "recipe_goals": list(RECIPE_GOALS),
+            "requirements": requirements,
+        }
+
+    raw_candidates = enumerate_bedroom_candidates(flat)
+    evaluated: list[dict] = []
+    for cand in raw_candidates:
+        quality = evaluate_candidate_commands(session, cand.get("commands") or [])
+        evaluated.append(
+            {
+                "candidate_id": cand["candidate_id"],
+                "strategy": cand["strategy"],
+                "commands": cand["commands"],
+                "assumes": cand.get("assumes") or [],
+                "notes": cand.get("notes") or [],
+                "quality": {
+                    "apply_ok": quality["apply_ok"],
+                    "valid": quality["valid"],
+                    "has_hard_errors": quality["has_hard_errors"],
+                    "hard_errors": quality["hard_errors"],
+                    "soft_warnings": quality["soft_warnings"],
+                    "soft_info": quality["soft_info"],
+                    "summary": quality["summary"],
+                    "soft_summary": quality["soft_summary"],
+                },
+            }
+        )
+
+    ranked = rank_candidates(evaluated)
+    for i, item in enumerate(ranked):
+        item["rank"] = i + 1
+
+    valid = [c for c in ranked if not (c.get("quality") or {}).get("has_hard_errors")]
+    selected = valid[0] if valid else (ranked[0] if ranked else None)
+    selected_id = selected["candidate_id"] if selected else None
+    reason = _selection_reason_de(selected, ranked) if selected else "Keine Kandidaten."
+
+    room = None
+    if selected:
+        # Reconstruct room dims from create_room if present
+        for cmd in selected.get("commands") or []:
+            if cmd.get("action") == "create_room":
+                p = cmd.get("params") or {}
+                room = {
+                    "width": p.get("width"),
+                    "depth": p.get("depth"),
+                    "height": p.get("height"),
+                    "name": p.get("name") or "BEDROOM",
+                }
+                break
+
+    out = {
+        "ok": bool(selected) and not (selected.get("quality") or {}).get("has_hard_errors"),
+        "mode": "candidates",
+        "recipe": RECIPE_NAME,
+        "recipe_kind": RECIPE_KIND,
+        "recipe_goals": list(RECIPE_GOALS),
+        "commands": list(selected.get("commands") or []) if selected else [],
+        "candidates": ranked,
+        "selected_id": selected_id,
+        "selection_reason": reason,
+        "assumes": list(selected.get("assumes") or []) if selected else [],
+        "notes": list(selected.get("notes") or []) if selected else [],
+        "strategy": selected.get("strategy") if selected else None,
+        "room": room,
+    }
+    if requirements is not None:
+        out["requirements"] = requirements
+        assumes = list(requirements.get("assumes") or [])
+        for a in out.get("assumes") or []:
+            if a not in assumes:
+                assumes.append(a)
+        out["assumes"] = assumes
+    return out

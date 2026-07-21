@@ -10,6 +10,7 @@ from .analyze import analyze_session, world_bounds_for_target
 from .headless_api import bundled_generators_dir
 from .mesh_store import MeshObject
 from .planning import list_recipes, plan_layout as run_plan_layout
+from .planning import plan_layout_candidates
 from .session import SESSION_ACTIONS
 
 TOOL_NAMES = frozenset(
@@ -615,13 +616,25 @@ def get_layout_sketch(session, params=None):
 
 
 def plan_layout(session, params=None):
-    """Deterministic layout recipe → commands (DD-016). Does not mutate session."""
-    del session  # recipes are pure; session reserved for future room-aware planning
-    out = run_plan_layout(params or {})
+    """Deterministic layout recipe → commands (DD-016 / DD-011). Does not mutate session."""
+    params = params or {}
+    mode = str(params.get("mode") or "single").strip().lower()
+    if mode == "candidates":
+        out = plan_layout_candidates(session, params)
+        out["known_recipes"] = list_recipes()
+        out["note"] = (
+            "Planning candidates (DD-011) — live session unchanged. "
+            "commands = selected winner; full list in candidates[]. "
+            "Put commands into validate_commands / dry_run_commands, then proposal for Apply."
+        )
+        return out
+    out = run_plan_layout(params)
+    out.setdefault("mode", "single")
     out["known_recipes"] = list_recipes()
     out["note"] = (
         "Planning only — live session unchanged. Put returned commands into "
-        "validate_commands / dry_run_commands, then proposal.commands for Apply."
+        "validate_commands / dry_run_commands, then proposal.commands for Apply. "
+        "Prefer mode='candidates' for bedrooms (DD-011)."
     )
     return out
 
@@ -816,14 +829,25 @@ def openai_tool_definitions():
             "function": {
                 "name": "plan_layout",
                 "description": (
-                    "DD-016 deterministic layout from structured requirements. "
+                    "DD-016/DD-011 deterministic layout from structured requirements. "
+                    "Prefer mode='candidates' for bedrooms (expand 2–4 strategies, soft-rank). "
                     "Prefer params.requirements (LLM fills language → numbers). "
                     "Do NOT invent free location/head_side or duplicate openings. "
-                    "Returns commands; then validate + dry_run. Live session unchanged."
+                    "Returns commands (= selected when candidates); then validate + dry_run. "
+                    "Live session unchanged."
                 ),
                 "parameters": {
                     "type": "object",
                     "properties": {
+                        "mode": {
+                            "type": "string",
+                            "enum": ["single", "candidates"],
+                            "description": (
+                                "single = one layout (default, backward compatible). "
+                                "candidates = preferred for bedrooms (DD-011): expand, "
+                                "evaluate, rank; commands = selected winner."
+                            ),
+                        },
                         "requirements": {
                             "type": "object",
                             "description": (
@@ -854,6 +878,16 @@ def openai_tool_definitions():
                         "recipe": {
                             "type": "string",
                             "description": "Recipe id. v0: bedroom_basic (usually inferred)",
+                        },
+                        "prefer_bed_wall": {
+                            "type": "string",
+                            "enum": ["south", "north"],
+                            "description": "Optional preference: prefer bed against this wall when ranking candidates",
+                        },
+                        "bed_wall": {
+                            "type": "string",
+                            "enum": ["south", "north"],
+                            "description": "Optional bed wall for single mode or candidate filter",
                         },
                         "width": {"type": "number"},
                         "depth": {"type": "number"},
