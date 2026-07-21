@@ -61,6 +61,42 @@ class TestShortlistCards(unittest.TestCase):
             self.assertIn("Bett", row["label_de"])
             self.assertTrue(row.get("sketch_ascii"), "expected top-down sketch on card")
             self.assertIn("room=", row["sketch_ascii"])
+            preview = row.get("viewer_preview")
+            self.assertIsInstance(preview, dict, row.get("candidate_id"))
+            self.assertTrue(preview.get("rooms") or preview.get("objects"))
+            for obj in preview.get("objects") or []:
+                viewer = obj.get("viewer") or {}
+                self.assertNotIn("vertices", viewer)
+                self.assertNotIn("faces", viewer)
+
+
+class TestSlimViewerPreview(unittest.TestCase):
+    def test_drops_mesh_and_clearances(self):
+        from layoutlab.runtime.planning.viewer_preview import slim_viewer_preview
+
+        raw = {
+            "viewer_schema": "0.1.1",
+            "rooms": [{"name": "BEDROOM", "footprint": {"width": 4, "depth": 3.5}}],
+            "objects": [
+                {
+                    "name": "BED",
+                    "layoutlab": {"role": "bed_mattress"},
+                    "world_bbox_corners": [[0, 0, 0], [1, 0, 0], [1, 2, 0], [0, 2, 0], [0, 0, 0.5], [1, 0, 0.5], [1, 2, 0.5], [0, 2, 0.5]],
+                    "viewer": {"primitive": "mesh", "vertices": [[0, 0, 0]], "faces": [[0, 0, 0]]},
+                },
+                {
+                    "name": "CLR",
+                    "layoutlab": {"role": "clearance"},
+                    "viewer": {"primitive": "box", "display": "wire"},
+                },
+            ],
+            "analysis": {"summary": {"errors": 0}},
+        }
+        slim = slim_viewer_preview(raw)
+        self.assertEqual(len(slim["objects"]), 1)
+        self.assertEqual(slim["objects"][0]["viewer"]["primitive"], "box")
+        self.assertNotIn("vertices", slim["objects"][0]["viewer"])
+        self.assertNotIn("analysis", slim)
 
 
 if __name__ == "__main__":

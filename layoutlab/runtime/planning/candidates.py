@@ -42,10 +42,16 @@ def _flat_plan_params(params: dict | None) -> tuple[dict, dict | None]:
 def evaluate_candidate_commands(session, commands) -> dict[str, Any]:
     """Clone session → dry-run commands → extract hard/soft quality summary."""
     from ..tools import dry_run_commands
+    from .viewer_preview import slim_viewer_preview
 
     dry = dry_run_commands(
         session,
-        {"commands": commands, "analyze": True, "stop_on_invalid": True},
+        {
+            "commands": commands,
+            "analyze": True,
+            "stop_on_invalid": True,
+            "include_export": True,
+        },
     )
     validation = dry.get("validation") or {}
     analysis = dry.get("analysis") or {}
@@ -81,6 +87,7 @@ def evaluate_candidate_commands(session, commands) -> dict[str, Any]:
         "layout_sketch": dry.get("layout_sketch")
         if isinstance(dry.get("layout_sketch"), dict)
         else None,
+        "viewer_preview": slim_viewer_preview(dry.get("export")),
     }
 
 
@@ -189,6 +196,7 @@ def _evaluate_raw_candidates(session, raw_candidates: list) -> list[dict]:
                 "notes": cand.get("notes") or [],
                 "label_de": _strategy_label_de(cand.get("strategy") or cand.get("candidate_id")),
                 "layout_sketch": quality.get("layout_sketch"),
+                "viewer_preview": quality.get("viewer_preview"),
                 "quality": {
                     "apply_ok": quality["apply_ok"],
                     "valid": quality["valid"],

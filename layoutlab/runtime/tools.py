@@ -589,6 +589,8 @@ def dry_run_commands(session, params=None):
             "Read layout_sketch.ascii before revising placement."
         ),
     }
+    if params.get("include_export"):
+        out["export"] = applied.get("export")
     if do_analyze:
         analysis = analyze_session(
             clone, {"scope": "scene", "include": ["clearances", "soft"]}

@@ -244,7 +244,7 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 14. **DD-017 Accepted** — collaborative evaluation contract + DD-011/015 amendments ✅  
 15. **DD-011 Planning v1:** `plan_layout` `mode: "candidates"` — expand + soft rank ✅ (`0.10.24`; no DD-017 scores yet)  
 16. Minimal DD-017 schema (profiles/roles/intentions, signed scores, veto) ✅ (`0.10.25`)  
-17. Core functional shortlist ✅; … **user shortlist pick** ✅ (`0.10.29`); **sketch cards** ✅ (`0.10.30`, label_de + ASCII); optional AI aesthetics / 3D thumbnails ← **next**  
+17. … **sketch cards** ✅ (`0.10.30`); **3D thumbnails** ✅ (`0.10.31`, slim `viewer_preview`); optional AI aesthetics ← **next**  
 18. More recipes (room-use and/or goal strategies) ← on demand  
 19. Persisted project variants / compare UI (Future_Ideas §16) ← later
 

@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.  
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-21 (shortlist sketch cards)  
-**Plugin version:** 0.10.30 · **Branch:** `main`
+**Last updated:** 2026-07-21 (shortlist 3D thumbnails)  
+**Plugin version:** 0.10.31 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -24,20 +24,16 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.30.
+Branch: main. Plugin v0.10.31.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-21):
 - DD-016 **Accepted**: plan_layout + bedroom_basic (agent_tools 0.5)
 - DD-015 **Accepted**: soft metrics + tradeoffs (Ästhetik ≠ Core-Metrik)
-- DD-011 **Accepted** + **candidates v1 shipped**: `plan_layout` mode=candidates (2–4 bedroom strategies, soft rank)
-- DD-017 **Accepted** + **Evaluation schema v0.1**: profiles/roles/intentions, signed components, severe veto + functional shortlist (`shortlist_ids`)
-- DD-017 **bounded revision** ✅ (`0.10.26`): up to 2 allowlisted Core revision rounds before proposal
-- **Core recipe force path** ✅ (`0.10.27`): `recipe_routing` + `_ensure_core_recipe_plan`
-- **Planning selection surfacing** ✅ (`0.10.28`)
-- **Shortlist selection** ✅ (`0.10.29`): chat + Viewer pick before Apply
-- **Shortlist sketch cards** ✅ (`0.10.30`): `label_de` + top-down ASCII cards in Viewer
-- Nächste Arbeit: optional AI aesthetics (flag); 3D thumbnail previews; more recipes on demand
+- DD-011 **Accepted** + **candidates v1 shipped**: `plan_layout` mode=candidates
+- DD-017 **Accepted** + evaluation schema + shortlist + revision + force path
+- **Shortlist selection** ✅ (`0.10.29`) · **sketch cards** ✅ (`0.10.30`) · **3D thumbnails** ✅ (`0.10.31`)
+- Nächste Arbeit: optional AI aesthetics (flag); more recipes on demand
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
 - Core: python3 -m server (:8765); Viewer Vite (:5173)
 
@@ -183,9 +179,10 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 9. ~~Planning selection surfacing (reply + session log)~~ ✅ (`0.10.28`)
 10. ~~Shortlist selection (chat + Viewer)~~ ✅ (`0.10.29`)
 11. ~~Shortlist sketch cards (labels + ASCII)~~ ✅ (`0.10.30`)
-12. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
+12. ~~Shortlist 3D thumbnails~~ ✅ (`0.10.31`)
+13. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
 
-DD-011/015/016/017 **Accepted** · sketch cards shipped · next: optional aesthetics / 3D thumbnails / more recipes
+DD-011/015/016/017 **Accepted** · 3D shortlist thumbs shipped · next: optional aesthetics / more recipes
 
 ------------------------------------------------------------------------
 
@@ -280,8 +277,9 @@ Living product track — keep in sync with *Next steps* above.
 9. ✅ Planning selection surfacing (`0.10.28`)  
 10. ✅ Shortlist selection chat + Viewer (`0.10.29`)  
 11. ✅ Shortlist sketch cards (`0.10.30`)  
-12. 📋 Optional experimental AI aesthetics (behind flag) · 3D thumbnails · more recipes on demand  
-13. 📋 Bridge / capture / multi-space / persisted variants — Future Ideas, separate DDs  
+12. ✅ Shortlist 3D thumbnails (`0.10.31`)  
+13. 📋 Optional experimental AI aesthetics (behind flag) · more recipes on demand  
+14. 📋 Bridge / capture / multi-space / persisted variants — Future Ideas, separate DDs  
 
 Binding order for agents: **Next steps** (this file) · detail in [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) implementation order.
 
@@ -291,6 +289,7 @@ Binding order for agents: **Next steps** (this file) · detail in [DD-017](desig
 
 | Date | Change |
 |---|---|
+| 2026-07-21 | Shortlist 3D thumbnails (`0.10.31`): slim viewer_preview + WebGL cards |
 | 2026-07-21 | Shortlist sketch cards (`0.10.30`): label_de + ASCII cards in Viewer |
 | 2026-07-21 | Shortlist selection (`0.10.29`): chat + Viewer pick before Apply |
 | 2026-07-21 | Planning selection surfacing (`0.10.28`): reply + LAST_SESSION Planning block |

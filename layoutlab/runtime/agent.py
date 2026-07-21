@@ -835,6 +835,9 @@ def _update_agent_state(
                 "sketch_legend": c.get("sketch_legend")
                 if isinstance(c.get("sketch_legend"), dict)
                 else None,
+                "viewer_preview": c.get("viewer_preview")
+                if isinstance(c.get("viewer_preview"), dict)
+                else None,
             }
             for c in shortlist
             if isinstance(c, dict) and c.get("candidate_id") and c.get("commands")

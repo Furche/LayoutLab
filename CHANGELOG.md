@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Shortlist 3D thumbnails (`0.10.31`):** candidate dry-run attaches slim AABB `viewer_preview` (no mesh verts); Viewer renders iso WebGL thumbs on shortlist cards (ASCII fallback); `dry_run_commands` supports `include_export`.
 - **Shortlist sketch cards (`0.10.30`):** each shortlist entry carries `label_de` (e.g. „Bett Nordwand, Stauraum Süd“) + top-down `sketch_ascii`; Viewer shows selectable sketch cards; agent reply uses labels instead of raw strategy ids.
 - **Shortlist selection (`0.10.29`):** DD-017 user pick before Apply — agent persists `shortlist[]` (commands + quality) in `agent_state`; chat intents (`nimm Variante 2`, candidate id, „andere“); Viewer proposal bar shows shortlist buttons; Apply stays explicit.
 - **Planning selection surfacing (`0.10.28`):** agent reply shows Core choice (`selected_id`, Shortlist n/m, `selection_reason`); `LAST_SESSION.md` / jsonl get a **Planning** block (candidates slim, shortlist, revision, enforced); force path appends `plan_layout` to `tool_trace`.

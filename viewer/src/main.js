@@ -8,6 +8,7 @@ import {
   getFitViewPose,
   getPresetPose,
 } from "./scene.js";
+import { renderShortlistThumbnail } from "./thumbnail.js";
 import kidsRoomFixture from "../../tests/fixtures/reference_kids_room_export.json";
 import kidsRoomFindings from "../../tests/fixtures/reference_kids_room_export_findings.json";
 
@@ -422,7 +423,10 @@ function renderShortlistButtons() {
     if (soft != null) bits.push(soft === 0 ? "keine Soft-Warnungen" : `${soft} Soft`);
     meta.textContent = bits.join(" · ") || "Shortlist";
     btn.appendChild(meta);
-    if (item.sketch_ascii) {
+    if (item.viewer_preview) {
+      const thumb = renderShortlistThumbnail(item.viewer_preview);
+      if (thumb) btn.appendChild(thumb);
+    } else if (item.sketch_ascii) {
       const pre = document.createElement("pre");
       pre.className = "chat-shortlist-card-sketch";
       pre.textContent = item.sketch_ascii;

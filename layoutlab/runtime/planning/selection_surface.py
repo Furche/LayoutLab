@@ -164,6 +164,9 @@ def shortlist_entries_from_planned(planned: dict | None) -> list[dict[str, Any]]
             entry["sketch_ascii"] = ascii_map
         if legend:
             entry["sketch_legend"] = legend
+        preview = c.get("viewer_preview")
+        if isinstance(preview, dict) and (preview.get("rooms") or preview.get("objects")):
+            entry["viewer_preview"] = preview
         q = _slim_quality_preview(c.get("quality") if isinstance(c.get("quality"), dict) else None)
         if q:
             entry["quality"] = q

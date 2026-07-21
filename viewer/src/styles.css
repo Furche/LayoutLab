@@ -271,7 +271,7 @@ button:hover {
 
 .chat-shortlist {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
   gap: 0.45rem;
 }
 
@@ -315,6 +315,16 @@ button:hover {
   font-size: 0.65rem;
   color: var(--muted, #9aa4b2);
   line-height: 1.25;
+}
+
+.chat-shortlist-card-thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 220 / 150;
+  border-radius: 4px;
+  background: #080a0e;
+  border: 1px solid #1c2330;
+  display: block;
 }
 
 .chat-shortlist-card-sketch {
