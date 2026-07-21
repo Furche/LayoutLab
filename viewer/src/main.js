@@ -43,6 +43,7 @@ const el = {
   chatInput: document.getElementById("chat-input"),
   chatProposalBar: document.getElementById("chat-proposal-bar"),
   chatProposalMeta: document.getElementById("chat-proposal-meta"),
+  chatShortlist: document.getElementById("chat-shortlist"),
   btnChatApply: document.getElementById("btn-chat-apply"),
   btnChatView: document.getElementById("btn-chat-view"),
   btnChatDiscard: document.getElementById("btn-chat-discard"),
@@ -317,6 +318,8 @@ let lastExportData = null;
 let pendingChatCommands = null;
 let pendingChatQuality = null;
 let pendingChatProposalPayload = null;
+let pendingShortlist = null;
+let pendingSelectedId = null;
 
 function sceneSummaryForChat() {
   const data = lastExportData;
@@ -349,8 +352,14 @@ function clearChatProposal() {
   pendingChatCommands = null;
   pendingChatQuality = null;
   pendingChatProposalPayload = null;
+  pendingShortlist = null;
+  pendingSelectedId = null;
   if (el.chatProposalBar) el.chatProposalBar.hidden = true;
   if (el.chatProposalMeta) el.chatProposalMeta.textContent = "";
+  if (el.chatShortlist) {
+    el.chatShortlist.hidden = true;
+    el.chatShortlist.innerHTML = "";
+  }
   if (el.commandsViewDialog?.open) el.commandsViewDialog.close();
 }
 
@@ -360,6 +369,8 @@ function proposalMetaText(payload, commands) {
   const title = payload.proposal?.title ? ` · ${payload.proposal.title}` : "";
   const risks = payload.proposal?.expected_risks || [];
   const q = payload.quality || {};
+  const selected =
+    payload.selected_id || payload.planning?.selected_id || pendingSelectedId || "";
   let qualityHint = "";
   if (
     q.needs_user_confirm ||
@@ -375,7 +386,74 @@ function proposalMetaText(payload, commands) {
     if (risks.length) bits.push(`${risks.length} risk(s)`);
     qualityHint = ` · ⚠ ${bits.join(", ") || "review"}`;
   }
-  return `${commands.length} command${commands.length === 1 ? "" : "s"}${title} · mode=${mode}${tools ? ` · ${tools} tools` : ""}${qualityHint}`;
+  const selHint = selected ? ` · ${selected}` : "";
+  return `${commands.length} command${commands.length === 1 ? "" : "s"}${title}${selHint} · mode=${mode}${tools ? ` · ${tools} tools` : ""}${qualityHint}`;
+}
+
+function renderShortlistButtons() {
+  if (!el.chatShortlist) return;
+  const items = Array.isArray(pendingShortlist) ? pendingShortlist : [];
+  el.chatShortlist.innerHTML = "";
+  if (items.length < 2) {
+    el.chatShortlist.hidden = true;
+    return;
+  }
+  el.chatShortlist.hidden = false;
+  items.forEach((item, idx) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "chat-shortlist-btn";
+    const id = item.candidate_id || `option-${idx + 1}`;
+    if (id === pendingSelectedId) btn.classList.add("is-selected");
+    const soft = item.quality?.soft_warnings;
+    const softHint = soft != null ? ` · soft ${soft}` : "";
+    btn.textContent = `${idx + 1}. ${id}${softHint}`;
+    btn.title = item.strategy || id;
+    btn.addEventListener("click", () => selectShortlistCandidate(id));
+    el.chatShortlist.appendChild(btn);
+  });
+}
+
+function selectShortlistCandidate(candidateId) {
+  const items = Array.isArray(pendingShortlist) ? pendingShortlist : [];
+  const chosen = items.find((c) => c.candidate_id === candidateId);
+  if (!chosen?.commands?.length) {
+    setStatus(`Shortlist-Variante nicht gefunden: ${candidateId}`, "warn");
+    return;
+  }
+  pendingSelectedId = candidateId;
+  pendingChatCommands = chosen.commands;
+  if (chosen.quality) pendingChatQuality = chosen.quality;
+  if (pendingChatProposalPayload) {
+    pendingChatProposalPayload = {
+      ...pendingChatProposalPayload,
+      selected_id: candidateId,
+      commands: chosen.commands,
+      proposal: {
+        ...(pendingChatProposalPayload.proposal || {}),
+        commands: chosen.commands,
+        title: `Shortlist: ${candidateId}`,
+      },
+      quality: chosen.quality || pendingChatProposalPayload.quality,
+      planning: {
+        ...(pendingChatProposalPayload.planning || {}),
+        selected_id: candidateId,
+        selection_reason: `Nutzerwahl: ${candidateId}`,
+      },
+      shortlist: items.map((c) => ({
+        ...c,
+        recommended: c.candidate_id === candidateId,
+      })),
+    };
+  }
+  if (el.chatProposalMeta) {
+    el.chatProposalMeta.textContent = `${proposalMetaText(
+      pendingChatProposalPayload || {},
+      pendingChatCommands,
+    )} — bereit zum Apply`;
+  }
+  renderShortlistButtons();
+  setStatus(`Variante gewählt: ${candidateId} — Apply zum Ausführen`, "ok");
 }
 
 function showChatProposal(payload) {
@@ -383,11 +461,19 @@ function showChatProposal(payload) {
   pendingChatCommands = commands;
   pendingChatQuality = payload.quality || null;
   pendingChatProposalPayload = payload;
+  pendingShortlist = Array.isArray(payload.shortlist) ? payload.shortlist : null;
+  pendingSelectedId =
+    payload.selected_id ||
+    payload.planning?.selected_id ||
+    pendingShortlist?.find((c) => c.recommended)?.candidate_id ||
+    pendingShortlist?.[0]?.candidate_id ||
+    null;
   if (!el.chatProposalBar) return;
   el.chatProposalBar.hidden = false;
   if (el.chatProposalMeta) {
     el.chatProposalMeta.textContent = `${proposalMetaText(payload, commands)} — bereit zum Apply`;
   }
+  renderShortlistButtons();
 }
 
 function openCommandsView() {

@@ -269,6 +269,38 @@ button:hover {
   line-height: 1.35;
 }
 
+.chat-shortlist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.chat-shortlist[hidden] {
+  display: none;
+}
+
+.chat-shortlist-btn {
+  border: 1px solid var(--border);
+  background: #0e1116;
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.28rem 0.5rem;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.chat-shortlist-btn:hover {
+  border-color: #5a6a80;
+}
+
+.chat-shortlist-btn.is-selected {
+  border-color: #6aa0ff;
+  background: #1a2433;
+  color: #dce8ff;
+}
+
 .chat-proposal-actions {
   display: flex;
   flex-wrap: wrap;

@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Shortlist selection (`0.10.29`):** DD-017 user pick before Apply — agent persists `shortlist[]` (commands + quality) in `agent_state`; chat intents (`nimm Variante 2`, candidate id, „andere“); Viewer proposal bar shows shortlist buttons; Apply stays explicit.
 - **Planning selection surfacing (`0.10.28`):** agent reply shows Core choice (`selected_id`, Shortlist n/m, `selection_reason`); `LAST_SESSION.md` / jsonl get a **Planning** block (candidates slim, shortlist, revision, enforced); force path appends `plan_layout` to `tool_trace`.
 - **Core recipe force path (`0.10.27`):** generic `planning/recipe_routing.py` maps room_type/intent → recipe (`bedroom` → `bedroom_basic` today); agent `_ensure_core_recipe_plan` always runs Core `plan_layout` with `mode=candidates` for furnished-room intents even when the LLM emits free xy; skips deterministic placement-fix spam when enforced; observation turns stay unforced.
 - **DD-017 bounded internal revision (`0.10.26`):** after the first candidates evaluate/shortlist pass, Core may run up to 2 allowlisted revision rounds (`prefer_bed_wall_*`, then `omit_desk`) when the functional shortlist is empty; returns `revision_rounds` + `revision_trace`; bedroom baseline/`reconcile_plan_layout_params` defaults to `mode: "candidates"`.

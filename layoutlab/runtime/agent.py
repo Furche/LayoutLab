@@ -817,6 +817,23 @@ def _update_agent_state(
             "selection_reason": planning.get("selection_reason"),
             "revision_rounds": planning.get("revision_rounds"),
         }
+    shortlist = result.get("shortlist")
+    if isinstance(shortlist, list) and shortlist:
+        # Persist commands for follow-up "nimm Variante 2" / Viewer pick
+        state["last_shortlist"] = [
+            {
+                "candidate_id": c.get("candidate_id"),
+                "strategy": c.get("strategy"),
+                "commands": list(c.get("commands") or []),
+                "recommended": bool(c.get("recommended")),
+                "quality": c.get("quality") if isinstance(c.get("quality"), dict) else None,
+            }
+            for c in shortlist
+            if isinstance(c, dict) and c.get("candidate_id") and c.get("commands")
+        ]
+        state["last_selected_id"] = result.get("selected_id") or state.get("last_selected_id")
+    elif result.get("selected_id"):
+        state["last_selected_id"] = result.get("selected_id")
     state["last_reply"] = (result.get("reply") or "")[:240]
 
 
@@ -1145,6 +1162,29 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
 
     if _is_observation_query(message):
         return _observation_reply(session)
+
+    # DD-017: choose among Core functional shortlist before a new plan
+    from .planning.selection_surface import (
+        apply_shortlist_selection,
+        resolve_shortlist_selection,
+        stored_shortlist,
+    )
+
+    existing_shortlist = stored_shortlist(session)
+    pick_id = resolve_shortlist_selection(message, existing_shortlist)
+    if pick_id:
+        selected = apply_shortlist_selection(
+            session=session, candidate_id=pick_id, shortlist=existing_shortlist
+        )
+        if selected.get("ok") and selected.get("commands"):
+            selected = _attach_quality_preview(session, selected)
+            fp = _placement_fingerprint(selected.get("commands") or [])
+            placement.last_placement_fp = fp
+            _update_agent_state(
+                session, selected, message, last_plan=None, placement_fp=fp
+            )
+            selected["agent_state"] = dict(getattr(session, "agent_state", {}) or {})
+        return selected
 
     if not llm_configured(llm_config):
         if _session_wants_recipe_planning(session, message):

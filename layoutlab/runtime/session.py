@@ -33,8 +33,12 @@ def empty_agent_state() -> dict:
         "last_analysis_summary": None,
         "last_placement_fp": None,
         "last_reply": None,
+        "last_shortlist": None,
+        "last_selected_id": None,
     }
-LAYOUTLAB_VERSION = "0.10.26"
+
+
+LAYOUTLAB_VERSION = "0.10.29"
 
 SESSION_ACTIONS = frozenset(
     {

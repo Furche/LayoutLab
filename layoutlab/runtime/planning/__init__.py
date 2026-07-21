@@ -54,11 +54,16 @@ from .recipe_routing import (
 )
 from .selection_surface import (
     append_plan_layout_trace,
+    apply_shortlist_selection,
     format_planning_reply_note,
     merge_planning_into_result,
     planning_summary_from_planned,
+    resolve_shortlist_selection,
+    shortlist_entries_from_planned,
     slim_candidates,
+    stored_shortlist,
     strip_planning_notes,
+    wants_shortlist_selection,
 )
 from .placement import (
     aabb_overlap_tuple,
@@ -270,7 +275,12 @@ __all__ = [
     "wants_bedroom_layout",
     "wants_layout_planning",
     "append_plan_layout_trace",
+    "apply_shortlist_selection",
     "format_planning_reply_note",
     "merge_planning_into_result",
     "planning_summary_from_planned",
+    "resolve_shortlist_selection",
+    "shortlist_entries_from_planned",
+    "stored_shortlist",
+    "wants_shortlist_selection",
 ]
