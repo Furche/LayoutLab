@@ -59,6 +59,7 @@ Scene export includes top-level `rooms[]` with `layoutlab.room`-equivalent field
 
 ## Not in MVP
 
-Polygon footprints, free `add_wall`/`move_wall`, multi-room (follow-up).
+Polygon footprints, free `add_wall`, multi-room (WP-06 / DD-020).
 Boolean modifiers are intentionally unused — openings use constructive panel splits.
 `analyze_layout` treats `room_wall` / `room_fixed` as blockers; floor/opening wires are excluded.
+Openings/fixed elements may be `ACTIVE` or `INACTIVE_OUTSIDE_WALL` (data kept; inactive hidden in viewer).
