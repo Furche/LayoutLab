@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -39,6 +40,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -68,6 +70,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -81,6 +84,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -120,6 +124,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -139,6 +144,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -157,6 +163,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -165,6 +172,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -259,6 +267,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -284,6 +293,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -304,6 +314,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -321,6 +332,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -439,6 +451,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -458,6 +471,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -482,6 +496,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
@@ -514,6 +529,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).

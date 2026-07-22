@@ -42,7 +42,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.52"
+LAYOUTLAB_VERSION = "0.10.53"
 
 SESSION_ACTIONS = frozenset(
     {

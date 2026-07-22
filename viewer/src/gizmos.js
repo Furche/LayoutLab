@@ -1,8 +1,6 @@
 /**
  * Selection-based transform gizmos (FC-001):
- * - Move arrows (XY)
- * - Rotate ring (Z)
- * - Scale böppel (walls/corners for rooms; width/depth for furniture)
+ * Flat 2D overlay look (arrows / ring / discs) in the Blender XY plane.
  *
  * Coordinates are Blender Z-up (parented under the scene world root).
  */
@@ -15,8 +13,9 @@ const MOVE_XY = 0xe5c07b;
 const ROTATE = 0xc678dd;
 const SCALE = 0x5b9fd4;
 const CORNER = 0xe5c07b;
-const HANDLE_Z = 0.06;
+const HANDLE_Z = 0.08;
 const OUTSET = 0.14;
+const GIZMO_RENDER_ORDER = 1000;
 
 /**
  * @param {object} room
@@ -89,56 +88,108 @@ export function furnitureBounds(exportData, objectId) {
   };
 }
 
-function mat(color, opts = {}) {
-  return new THREE.MeshStandardMaterial({
+function fillMat(color, opts = {}) {
+  return new THREE.MeshBasicMaterial({
     color,
-    emissive: color,
-    emissiveIntensity: opts.emissiveIntensity ?? 0.28,
-    roughness: 0.4,
-    metalness: 0.1,
-    transparent: Boolean(opts.opacity && opts.opacity < 1),
-    opacity: opts.opacity ?? 1,
-    depthTest: true,
+    transparent: true,
+    opacity: opts.opacity ?? 0.92,
+    depthTest: false,
+    depthWrite: false,
     side: THREE.DoubleSide,
   });
+}
+
+function lineMat(color, opts = {}) {
+  return new THREE.LineBasicMaterial({
+    color,
+    transparent: true,
+    opacity: opts.opacity ?? 1,
+    depthTest: false,
+    depthWrite: false,
+  });
+}
+
+function styleOverlay(obj) {
+  obj.renderOrder = GIZMO_RENDER_ORDER;
+  obj.frustumCulled = false;
+  return obj;
 }
 
 function tag(mesh, meta) {
   mesh.userData = { gizmo: true, ...meta };
   mesh.name = meta.label || meta.kind || "gizmo";
+  return styleOverlay(mesh);
+}
+
+function invisibleHit(geo) {
+  const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ visible: false }));
+  styleOverlay(mesh);
   return mesh;
 }
 
-function makeSphere(color, radius, meta) {
-  return tag(new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 12), mat(color)), meta);
+/** Flat disc in XY (scale / wall / corner handles). */
+function makeDisc(color, radius, meta, opts = {}) {
+  const group = new THREE.Group();
+  const fill = new THREE.Mesh(
+    new THREE.CircleGeometry(radius, 28),
+    fillMat(color, { opacity: opts.fillOpacity ?? 0.88 }),
+  );
+  const rim = new THREE.LineLoop(
+    new THREE.BufferGeometry().setFromPoints(
+      new THREE.EllipseCurve(0, 0, radius, radius, 0, Math.PI * 2, false, 0).getPoints(40),
+    ),
+    lineMat(0xffffff, { opacity: 0.55 }),
+  );
+  rim.position.z = 0.002;
+  const hit = invisibleHit(new THREE.CircleGeometry(radius * 1.55, 16));
+  group.add(fill, rim, hit);
+  tag(group, meta);
+  group.traverse((o) => {
+    if (o.isMesh || o.isLine) o.userData = { ...group.userData };
+  });
+  return group;
 }
 
-/** Arrow along Blender +X or +Y from local origin. */
+/** Flat 2D arrow along Blender +X or +Y. */
 function makeArrow(axis, color, meta) {
   const group = new THREE.Group();
-  const shaftLen = 0.5;
+  const shaftLen = 0.48;
+  const shaftW = 0.045;
+  const headLen = 0.16;
+  const headW = 0.13;
+
   const shaft = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.028, 0.028, shaftLen, 10),
-    mat(color),
+    new THREE.PlaneGeometry(axis === "x" ? shaftLen : shaftW, axis === "x" ? shaftW : shaftLen),
+    fillMat(color),
   );
-  const head = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.16, 12), mat(color));
+  if (axis === "x") shaft.position.set(shaftLen / 2, 0, 0);
+  else shaft.position.set(0, shaftLen / 2, 0);
+
+  const headShape = new THREE.Shape();
   if (axis === "x") {
-    shaft.rotation.z = -Math.PI / 2;
-    shaft.position.x = shaftLen / 2;
-    head.rotation.z = -Math.PI / 2;
-    head.position.x = shaftLen + 0.06;
+    headShape.moveTo(0, -headW / 2);
+    headShape.lineTo(headLen, 0);
+    headShape.lineTo(0, headW / 2);
+    headShape.closePath();
   } else {
-    shaft.position.y = shaftLen / 2;
-    head.position.y = shaftLen + 0.06;
+    headShape.moveTo(-headW / 2, 0);
+    headShape.lineTo(0, headLen);
+    headShape.lineTo(headW / 2, 0);
+    headShape.closePath();
   }
-  group.add(shaft, head);
-  // Invisible pick capsule
-  const hit = new THREE.Mesh(
-    new THREE.SphereGeometry(0.16, 10, 8),
-    new THREE.MeshBasicMaterial({ visible: false }),
+  const head = new THREE.Mesh(new THREE.ShapeGeometry(headShape), fillMat(color));
+  if (axis === "x") head.position.set(shaftLen, 0, 0.001);
+  else head.position.set(0, shaftLen, 0.001);
+
+  const hit = invisibleHit(
+    axis === "x"
+      ? new THREE.PlaneGeometry(shaftLen + headLen + 0.08, 0.28)
+      : new THREE.PlaneGeometry(0.28, shaftLen + headLen + 0.08),
   );
-  hit.position.copy(head.position);
-  group.add(hit);
+  if (axis === "x") hit.position.set((shaftLen + headLen) / 2, 0, 0);
+  else hit.position.set(0, (shaftLen + headLen) / 2, 0);
+
+  group.add(shaft, head, hit);
   tag(group, meta);
   group.traverse((o) => {
     if (o.isMesh) o.userData = { ...group.userData };
@@ -146,42 +197,59 @@ function makeArrow(axis, color, meta) {
   return group;
 }
 
-/** 3ds-Max-style XY plane square between the two move arrows. */
+/** Flat XY plane square between the move arrows. */
 function makePlaneHandle(color, size, meta) {
-  const geo = new THREE.PlaneGeometry(size, size);
-  const mesh = new THREE.Mesh(
-    geo,
-    mat(color, { opacity: 0.55, emissiveIntensity: 0.45 }),
-  );
-  // PlaneGeometry is XY-facing (+Z normal) — correct for Blender floor plane.
-  mesh.position.set(size * 0.55, size * 0.55, 0.01);
-  tag(mesh, meta);
-  return mesh;
-}
-
-function makeRotateRing(radius, color, meta) {
-  const torus = new THREE.Mesh(
-    new THREE.TorusGeometry(radius, 0.035, 10, 48),
-    mat(color, { emissiveIntensity: 0.4 }),
-  );
-  // Torus lies in XY → rotation about Blender Z. Good.
-  tag(torus, meta);
-  const hit = new THREE.Mesh(
-    new THREE.TorusGeometry(radius, 0.1, 8, 32),
-    new THREE.MeshBasicMaterial({ visible: false }),
-  );
-  tag(hit, meta);
   const group = new THREE.Group();
-  group.add(torus, hit);
+  const fill = new THREE.Mesh(
+    new THREE.PlaneGeometry(size, size),
+    fillMat(color, { opacity: 0.45 }),
+  );
+  const half = size / 2;
+  const rim = new THREE.LineLoop(
+    new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-half, -half, 0.002),
+      new THREE.Vector3(half, -half, 0.002),
+      new THREE.Vector3(half, half, 0.002),
+      new THREE.Vector3(-half, half, 0.002),
+    ]),
+    lineMat(color, { opacity: 0.95 }),
+  );
+  const hit = invisibleHit(new THREE.PlaneGeometry(size * 1.25, size * 1.25));
+  group.add(fill, rim, hit);
+  group.position.set(size * 0.55, size * 0.55, 0.01);
   tag(group, meta);
   group.traverse((o) => {
-    if (o.isMesh) o.userData = { ...meta, gizmo: true };
+    if (o.isMesh || o.isLine) o.userData = { ...group.userData };
+  });
+  return group;
+}
+
+/** Flat annular ring for Z rotation. */
+function makeRotateRing(radius, color, meta) {
+  const group = new THREE.Group();
+  const inner = Math.max(radius - 0.04, radius * 0.88);
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(inner, radius, 64),
+    fillMat(color, { opacity: 0.75 }),
+  );
+  const outerRim = new THREE.LineLoop(
+    new THREE.BufferGeometry().setFromPoints(
+      new THREE.EllipseCurve(0, 0, radius, radius, 0, Math.PI * 2, false, 0).getPoints(64),
+    ),
+    lineMat(0xffffff, { opacity: 0.4 }),
+  );
+  outerRim.position.z = 0.002;
+  const hit = invisibleHit(new THREE.RingGeometry(Math.max(inner - 0.08, 0.05), radius + 0.1, 48));
+  group.add(ring, outerRim, hit);
+  tag(group, meta);
+  group.traverse((o) => {
+    if (o.isMesh || o.isLine) o.userData = { ...group.userData };
   });
   return group;
 }
 
 /**
- * Furniture: move arrows + rotate ring + scale böppel at ±X / ±Y.
+ * Furniture: move arrows + rotate ring + scale discs at ±X / ±Y.
  * @param {object} bounds from furnitureBounds
  * @param {string} objectId
  */
@@ -237,7 +305,7 @@ export function buildFurnitureGizmo(bounds, objectId) {
     ["y", 1, 0, hy],
     ["y", -1, 0, -hy],
   ]) {
-    const b = makeSphere(SCALE, 0.1, {
+    const b = makeDisc(SCALE, 0.09, {
       ...base,
       kind: "scale_axis",
       axis,
@@ -254,7 +322,7 @@ export function buildFurnitureGizmo(bounds, objectId) {
 }
 
 /**
- * Room: move arrows at center + wall/corner scale böppel + rotate ring.
+ * Room: move arrows at center + wall/corner discs.
  * @param {object} room
  */
 export function buildRoomGizmo(room) {
@@ -297,7 +365,7 @@ export function buildRoomGizmo(room) {
     { side: "east", x: ox + w + OUTSET, y: oy + d * 0.5 },
   ];
   for (const wall of walls) {
-    const mesh = makeSphere(SCALE, 0.11, {
+    const mesh = makeDisc(SCALE, 0.1, {
       ...base,
       kind: "wall",
       wallSide: wall.side,
@@ -314,7 +382,7 @@ export function buildRoomGizmo(room) {
     { corner: "ne", x: ox + w + OUTSET * 0.6, y: oy + d + OUTSET * 0.6 },
   ];
   for (const c of corners) {
-    const mesh = makeSphere(CORNER, 0.12, {
+    const mesh = makeDisc(CORNER, 0.11, {
       ...base,
       kind: "corner",
       corner: c.corner,
