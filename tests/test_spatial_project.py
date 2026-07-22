@@ -132,6 +132,86 @@ class SpatialProjectTests(unittest.TestCase):
         self.assertAlmostEqual(local[0], vx0, places=3)
         self.assertAlmostEqual(local[1], vy0, places=3)
 
+    def test_move_room_openings_and_fixed_follow(self):
+        """Pure translation keeps wall-local offsets; fabric markers move with origin."""
+        from layoutlab.core import room as room_core
+
+        room = self._create_room(location=(0, 0, 0), width=4.0, depth=3.0)
+        rid = room["room_id"]
+        self.session.apply_command(
+            {
+                "action": "add_opening",
+                "params": {
+                    "room_id": rid,
+                    "wall_side": "west",
+                    "kind": "window",
+                    "opening_name": "win_west",
+                    "offset": 0.8,
+                    "width": 1.2,
+                    "height": 1.4,
+                    "sill_height": 0.9,
+                },
+            }
+        )
+        self.session.apply_command(
+            {
+                "action": "add_opening",
+                "params": {
+                    "room_id": rid,
+                    "wall_side": "east",
+                    "kind": "door",
+                    "opening_name": "door_east",
+                    "offset": 0.4,
+                    "width": 0.9,
+                    "height": 2.0,
+                },
+            }
+        )
+        self.session.apply_command(
+            {
+                "action": "add_fixed_element",
+                "params": {
+                    "room_id": rid,
+                    "wall_side": "west",
+                    "kind": "radiator",
+                    "fixed_name": "rad_west",
+                    "offset": 1.0,
+                    "width": 1.0,
+                    "depth": 0.12,
+                    "height": 0.7,
+                },
+            }
+        )
+        model = self.session.get_by_id(rid)
+        win = next(o for o in model["openings"] if o["name"] == "win_west")
+        door = next(o for o in model["openings"] if o["name"] == "door_east")
+        fixed = next(f for f in model["fixed_elements"] if f["name"] == "rad_west")
+        win_off0 = float(win["offset"])
+        door_off0 = float(door["offset"])
+        fixed_off0 = float(fixed["offset"])
+        win_loc0, _ = room_core.opening_world_box(model, win)
+        door_loc0, _ = room_core.opening_world_box(model, door)
+        fixed_loc0, _ = room_core.fixed_element_world_box(model, fixed)
+
+        dx, dy = 2.5, 1.25
+        self.session.apply_command({"action": "move_room", "room_id": rid, "dx": dx, "dy": dy})
+        model = self.session.get_by_id(rid)
+        win = next(o for o in model["openings"] if o["name"] == "win_west")
+        door = next(o for o in model["openings"] if o["name"] == "door_east")
+        fixed = next(f for f in model["fixed_elements"] if f["name"] == "rad_west")
+        self.assertAlmostEqual(float(win["offset"]), win_off0, places=5)
+        self.assertAlmostEqual(float(door["offset"]), door_off0, places=5)
+        self.assertAlmostEqual(float(fixed["offset"]), fixed_off0, places=5)
+        win_loc1, _ = room_core.opening_world_box(model, win)
+        door_loc1, _ = room_core.opening_world_box(model, door)
+        fixed_loc1, _ = room_core.fixed_element_world_box(model, fixed)
+        self.assertAlmostEqual(win_loc1[0], win_loc0[0] + dx, places=4)
+        self.assertAlmostEqual(win_loc1[1], win_loc0[1] + dy, places=4)
+        self.assertAlmostEqual(door_loc1[0], door_loc0[0] + dx, places=4)
+        self.assertAlmostEqual(door_loc1[1], door_loc0[1] + dy, places=4)
+        self.assertAlmostEqual(fixed_loc1[0], fixed_loc0[0] + dx, places=4)
+        self.assertAlmostEqual(fixed_loc1[1], fixed_loc0[1] + dy, places=4)
+
     def test_duplicate_room_includes_invalid_and_inactive(self):
         from layoutlab.core import room as room_core
 

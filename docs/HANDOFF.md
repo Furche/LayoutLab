@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-23 (Default bedroom `0.10.49`)
-**Plugin / Core version:** 0.10.49 · **Branch:** `main`
+**Last updated:** 2026-07-23 (Body drag / room fabric `0.10.50`)
+**Plugin / Core version:** 0.10.50 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -25,14 +25,14 @@
 ```
 LayoutLab — semantic interior planning (Standalone Viewer + Core).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Core/plugin v0.10.49.
+Branch: main. Core/plugin v0.10.50.
 
 Lies zuerst AI_CONTEXT.md (Mental Model — Viewer first). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-22):
 - **Produktfokus: Standalone Web Viewer** (`viewer/`) + Core HTTP (`server/`) — nicht Blender-Plugin-UX
 - Planning slice DD-011/015/016/017 ✅
 - **FC-001/WP-01…WP-06** ✅ Core (`0.10.36`–`0.10.40`)
-- **`0.10.41`–`0.10.49`:** Viewer multi-room + gizmos; default furnished bedroom on boot
+- **`0.10.41`–`0.10.50`:** Viewer multi-room + gizmos; default furnished bedroom on boot
 - Nächste Arbeit: **Viewer UX** — planning feedback polish; room Z-rotate
 - Blender = Runtime-Adapter (Generator-QA), kein Default für neue Features
 - Core: python3 -m server (:8765); Viewer: cd viewer && npm run dev (:5173)

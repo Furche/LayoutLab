@@ -189,7 +189,14 @@ def update_room_model(model, params):
         model["wall_thickness"] = _f(params["wall_thickness"], DEFAULT_WALL_THICKNESS)
 
     _apply_rectangle_footprint(model, existing=model.get("walls"))
-    _reconcile_wall_attachments(model, prev)
+    # Wall-resize must re-anchor openings/fixed in world-U. Pure origin translation
+    # must keep wall-local offsets so windows/doors/radiators move with the room.
+    size_changed = (
+        abs(prev["width"] - footprint["width"]) > 1e-9
+        or abs(prev["depth"] - footprint["depth"]) > 1e-9
+    )
+    if size_changed:
+        _reconcile_wall_attachments(model, prev)
     return model
 
 

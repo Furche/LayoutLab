@@ -2100,47 +2100,7 @@ async function startGesture(ev, mesh) {
       },
     };
   } else if (kind === "move_axis") {
-    const target = ud.target;
-    const axis = ud.axis;
-    if (target === "furniture") {
-      const pose = poseFromExport(lastExportData, ud.objectId);
-      if (!pose) {
-        setStatus("Object not found in export", "error");
-        return false;
-      }
-      gesture = {
-        kind: "move_axis",
-        target: "furniture",
-        axis,
-        objectId: ud.objectId,
-        startPose: pose,
-        startFloor: floor,
-        startClientX: ev.clientX,
-        lastLocal: { x: 0, y: 0 },
-        started: false,
-        _beginning: false,
-        commands() {
-          const loc = this._location || this.startPose.location;
-          return [moveCommand(this.objectId, loc)];
-        },
-      };
-    } else {
-      gesture = {
-        kind: "move_axis",
-        target: "room",
-        axis,
-        roomId: ud.roomId,
-        startFloor: floor,
-        startClientX: ev.clientX,
-        _dx: 0,
-        _dy: 0,
-        started: false,
-        _beginning: false,
-        commands() {
-          return [roomMoveCommand(this.roomId, this._dx || 0, this._dy || 0)];
-        },
-      };
-    }
+    if (!beginMoveAxisGesture(ud.target, ud.axis, ud, floor, ev.clientX)) return false;
   } else if (kind === "rotate_z") {
     const pose = poseFromExport(lastExportData, ud.objectId);
     if (!pose) {
@@ -2194,6 +2154,98 @@ async function startGesture(ev, mesh) {
   }
 
   selectMesh(mesh, { skipTarget: true, quiet: true });
+  controls.enabled = false;
+  return true;
+}
+
+/** Furniture body or room floor → free XY move (same preview path as plane handle). */
+function pickBodyDragTarget(clientX, clientY) {
+  // Avoid pickObject's gizmo preference when gizmos already handled separately.
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(collectMeshes(), false);
+  if (!hits.length) return null;
+  const furn = hits.find((h) => isFurnitureMesh(h.object) && h.object.userData?.object_id);
+  if (furn) {
+    return { type: "furniture", mesh: furn.object, objectId: furn.object.userData.object_id };
+  }
+  const floor = hits.find((h) => h.object?.userData?.role === "room_floor" && h.object.userData.room_id);
+  if (floor) {
+    return { type: "room", mesh: floor.object, roomId: floor.object.userData.room_id };
+  }
+  return null;
+}
+
+function beginMoveAxisGesture(target, axis, ids, floor, clientX) {
+  if (target === "furniture") {
+    const objectId = ids.objectId || ids.object_id;
+    const pose = poseFromExport(lastExportData, objectId);
+    if (!pose) {
+      setStatus("Object not found in export", "error");
+      return false;
+    }
+    gesture = {
+      kind: "move_axis",
+      target: "furniture",
+      axis,
+      objectId,
+      startPose: pose,
+      startFloor: floor,
+      startClientX: clientX,
+      lastLocal: { x: 0, y: 0 },
+      started: false,
+      _beginning: false,
+      commands() {
+        const loc = this._location || this.startPose.location;
+        return [moveCommand(this.objectId, loc)];
+      },
+    };
+    return true;
+  }
+  const roomId = ids.roomId || ids.room_id;
+  if (!roomId) {
+    setStatus("Room id missing", "error");
+    return false;
+  }
+  gesture = {
+    kind: "move_axis",
+    target: "room",
+    axis,
+    roomId,
+    startFloor: floor,
+    startClientX: clientX,
+    _dx: 0,
+    _dy: 0,
+    started: false,
+    _beginning: false,
+    commands() {
+      return [roomMoveCommand(this.roomId, this._dx || 0, this._dy || 0)];
+    },
+  };
+  return true;
+}
+
+async function startBodyMoveGesture(ev, target) {
+  if (!liveCoreSession) {
+    setStatus("Drag-move needs a Core scene", "warn");
+    return false;
+  }
+  const floor = hitBlenderFloorXY(
+    raycaster,
+    camera,
+    sceneRoot,
+    ev.clientX,
+    ev.clientY,
+    renderer.domElement,
+  );
+  const ok =
+    target.type === "furniture"
+      ? beginMoveAxisGesture("furniture", "xy", { objectId: target.objectId }, floor, ev.clientX)
+      : beginMoveAxisGesture("room", "xy", { roomId: target.roomId }, floor, ev.clientX);
+  if (!ok) return false;
+  selectMesh(target.mesh, { quiet: true });
   controls.enabled = false;
   return true;
 }
@@ -2336,14 +2388,25 @@ renderer.domElement.addEventListener(
     if (ev.button !== 0) return;
     pointerDown = { x: ev.clientX, y: ev.clientY };
     const gizmoHit = pickGizmo(ev.clientX, ev.clientY);
-    if (!gizmoHit) return;
-    // Stop OrbitControls before it can leave orthographic top view.
+    if (gizmoHit) {
+      // Stop OrbitControls before it can leave orthographic top view.
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      controls.enabled = false;
+      orthoOrbitArmed = false;
+      renderer.domElement.setPointerCapture?.(ev.pointerId);
+      startGesture(ev, gizmoHit).catch((err) => setStatus(err.message, "error"));
+      return;
+    }
+    if (!liveCoreSession) return;
+    const body = pickBodyDragTarget(ev.clientX, ev.clientY);
+    if (!body) return;
     ev.preventDefault();
     ev.stopImmediatePropagation();
     controls.enabled = false;
     orthoOrbitArmed = false;
     renderer.domElement.setPointerCapture?.(ev.pointerId);
-    startGesture(ev, gizmoHit).catch((err) => setStatus(err.message, "error"));
+    startBodyMoveGesture(ev, body).catch((err) => setStatus(err.message, "error"));
   },
   true,
 );
