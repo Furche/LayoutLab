@@ -1,6 +1,6 @@
 # AI_CONTEXT.md
 
-Version: 1.0
+Version: 1.1 · Updated: 2026-07-22
 
 > This document is not a specification. It is the mental model behind
 > LayoutLab. Read this to understand how the project "thinks".
@@ -21,7 +21,10 @@ The core asset is knowledge. Furniture is a *means*, not the end goal.
 > LayoutLab optimizes spatial solutions for human needs — not furniture for its own sake.
 
 See [docs/Future_Ideas.md](docs/Future_Ideas.md) §1 for the sharpened product vision.
-**Current work** (generators, JSON, clearances, analysis) is the correct Execution Layer foundation.
+
+**Product surface today:** the **standalone web viewer** (`viewer/`) talking to **LayoutLab Core**
+(`layoutlab/` + `server/`) over HTTP/JSON ([DD-014](docs/design_decisions/DD-014-standalone-runtime-path.md)).
+Blender remains a supported **runtime adapter**, not the primary place we ship UX.
 
 Large cross-cutting features mature through a stable concept layer:
 
@@ -49,11 +52,15 @@ Object knowledge still sits under execution:
 
 Object Knowledge → Generator → Components → Geometry → Mesh
 
-**Today** most interaction still flows through generators and JSON in Blender —
-that is correct for the current phase. **Long-term**, intent, spatial project,
-and planning layers sit above execution. Spatial Project / Property / Building
-vocabulary is **Future Vision** — not yet implemented or binding (see
-[docs/Future_Ideas.md](docs/Future_Ideas.md) §13).
+**Today** the user-facing loop is:
+
+```text
+Viewer (UX)  ←→  Core HTTP API  ←→  Spatial Project (rooms[], revision, analysis)
+```
+
+Planning (candidates / shortlist / chat) and semantic edit commands already run against Core.
+Direct-manipulation gestures in the Viewer (gizmos, drag → preview/commit) are the next
+product work — Core already owns transactions and furniture/room ops ([FC-001](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md)).
 
 Geometry is the final step, not the first.
 
@@ -131,26 +138,21 @@ zones.
 
 ------------------------------------------------------------------------
 
-# Future Vocabulary (not implemented)
+# Product vocabulary (partially shipped)
 
-> These terms appear in the long-term product vision
-> ([docs/Future_Ideas.md](docs/Future_Ideas.md) §12–§17).
-> They are **not** binding schemas and are **not** all present in code.
+> Spatial Project / independent rooms are **implemented** in Core ([DD-020](docs/design_decisions/DD-020-spatial-project-independent-rooms.md), `0.10.40`).
+> Multi-floor buildings, shared walls, and persisted named variants remain Future Vision.
 
-| Term | Rough meaning |
-|---|---|
-| **Project** | Top-level planning container |
-| **Property** | Site / dwelling / building context |
-| **Building** | Structure with one or more floors |
-| **Floor** | Storey within a building |
-| **Space / Room** | Occupiable area with function |
-| **Opening** | Door, window, or passage |
-| **Fixed Element** | Radiator, column, shaft, built-in — not freely moved |
-| **Requirement** | Derived need or constraint from user intent |
-| **Capability** | What an object or layout provides (e.g. sleeping place) |
-| **Variant** | First-class alternative layout state |
-| **Capture Source** | Photo, scan, CAD, conversation measures, … |
-| **Confidence** | Trust / certainty attached to reconstructed facts |
+| Term | Status | Rough meaning |
+|---|---|---|
+| **Spatial Project** | Shipped (MVP) | Authoring root: `project_id`, `revision`, `rooms[]` |
+| **Room** | Shipped (DD-010) | Independent rectangle space + fabric + furniture membership |
+| **Opening / Fixed Element** | Shipped | Wall-hosted; may be `ACTIVE` / `INACTIVE_OUTSIDE_WALL` |
+| **Requirement / Capability** | Planning slice | Used in recipes / evaluation — not a full requirements UI |
+| **Variant (ephemeral)** | Shipped | Planning candidates + shortlist (DD-011/017) |
+| **Variant (persisted)** | Future | Named project/room alternatives |
+| **Property / Building / Floor** | Future | Multi-storey / site model |
+| **Capture Source / Confidence** | Future | Scan/photo reconstruction trust |
 
 ------------------------------------------------------------------------
 
@@ -164,20 +166,26 @@ This difference affects every architectural decision.
 
 ------------------------------------------------------------------------
 
-# Blender's Role
+# Runtimes: Viewer first, Blender as adapter
 
-Blender is the **first LayoutLab runtime** — primary editor and development platform today.
+| Layer | Role today |
+|---|---|
+| **`viewer/`** | **Primary product surface** — inspect, chat/plan, apply commands, iterate layouts |
+| **`server/` + `layoutlab/` Core** | Authority: Spatial Project, generators, analyze, transactions, Undo |
+| **Blender addon** | First/legacy runtime adapter — still useful for mesh QA and generator authoring; **not** where new UX lands by default |
 
-It is NOT the permanent product centre, and it is NOT the only possible long-term host.
-
-The **LayoutLab Core** (generators, object model, protocols, analysis) should stay as
+The **LayoutLab Core** (generators, object model, protocols, analysis, room ops) stays as
 independent from Blender as practical. Blender-specific code belongs in the **runtime adapter**
-(`api/`, `plugin/`, bpy glue). See [docs/Future_Ideas.md](docs/Future_Ideas.md) §11.
+(`api/`, `plugin/`, bpy glue). See [docs/Future_Ideas.md](docs/Future_Ideas.md) §11 and
+[DD-014](docs/design_decisions/DD-014-standalone-runtime-path.md) (**Accepted** — Phase A + B + B2).
 
-**Rule for new work:** *Is this LayoutLab property or Blender property?*
+**Rule for new work:**
 
-No custom render engine; a future own viewport would use an existing 3D framework.
-**No viewer or second runtime is planned for implementation now.**
+1. Prefer Viewer + Core HTTP unless the task is explicitly Blender/generator-authoring.
+2. Ask: *Is this LayoutLab property or Blender/Three.js property?*
+3. Mutations go through Core commands / revision (DD-018) — never invent a second authority in the Viewer.
+
+No custom render engine; the Viewer uses Three.js.
 
 ------------------------------------------------------------------------
 
@@ -202,34 +210,40 @@ LayoutLab separates **planning** from **execution**:
 | Role | Responsibility |
 |---|---|
 | **AI / planning client** | User intent, variants, *what* to place or change |
-| **LayoutLab plugin** | Deterministic *how* — generators, parts, metadata, clearances, analysis |
+| **LayoutLab Core** | Deterministic *how* — generators, parts, metadata, clearances, analysis, room/furniture ops |
 
-The AI must **not** re-implement Blender parenting, `object_id`, or generator rules in ad-hoc Python each session. It uses the **LayoutLab protocol** (JSON today; future local bridge).
+The Viewer (and optionally Blender) are **clients** of Core. The AI must **not** re-implement
+Core rules in ad-hoc scripts each session. It uses the **LayoutLab protocol** (JSON / HTTP).
 
-Direct Blender control by AI is a possible **future Expert Mode** only — not the standard path. See [DD-009](docs/design_decisions/DD-009-ai-execution-boundary.md) (**Accepted**).
+Direct Blender control by AI is a possible **future Expert Mode** only — not the standard path.
+See [DD-009](docs/design_decisions/DD-009-ai-execution-boundary.md) (**Accepted**).
 
-Rules live in versioned software (plugin, generators, DDs), not only in prompts.
+Rules live in versioned software (Core, generators, DDs), not only in prompts.
 
 ------------------------------------------------------------------------
 
 # Evolution Path
 
-**Layer 1 — Execution / Geometry (now):** generators, parts, regenerate, clearances, analyze
+**Layer 1 — Execution / Core (shipped foundation):** generators, parts, regenerate, clearances,
+analyze, semantic transactions, furniture/room ops, Spatial Project MVP
 
-**Layer 2 — Planning (future):** variants, evaluate, discard, improve
+**Layer 2 — Planning (shipped slice):** candidates, evaluate, shortlist, chat Apply
+
+**Layer 2b — Standalone UX (current focus):** Viewer as product — multi-room display,
+direct manipulation (preview/commit), clearer planning feedback
 
 **Layer 3 — Problem solving (long-term):** understand requirements, choose solution types
 
-Today
+```text
+Today (product loop)
 
-Generator → Mesh
+Viewer UX → Core commands → Spatial Project export → Viewer scene
 
-Future
+Long-term
 
 Intent → Requirements → Spatial Project → Planning → Variants →
 Execution → Analysis → Solution
-
-Knowledge → Rules → Generator → Components → Constraints → Geometry → Mesh
+```
 
 Knowledge becomes the highest abstraction.
 
@@ -238,11 +252,12 @@ Knowledge becomes the highest abstraction.
 # Design Priorities
 
 1.  Correct architecture
-2.  Clear APIs
-3.  Parametric behaviour
-4.  Reusability
-5.  Readability
-6.  Performance
+2.  Clear APIs (Core contracts)
+3.  Viewer UX that respects Core authority
+4.  Parametric behaviour
+5.  Reusability
+6.  Readability
+7.  Performance
 
 Performance matters, but only after architecture is solid.
 
@@ -257,6 +272,8 @@ Avoid:
 -   UI logic inside generators
 -   Generator-specific hacks in the core
 -   Duplicate implementations of the same concept
+-   **Viewer-only truth** (local transforms that never commit to Core)
+-   Treating Blender as the default place for new product features
 
 If two generators solve the same problem differently, consider
 extracting a reusable component.
@@ -267,6 +284,7 @@ extracting a reusable component.
 
 Before implementing:
 
+-   Does this belong in the **Viewer**, **Core**, or a **Blender adapter**?
 -   Is this knowledge or geometry?
 -   Can this become reusable?
 -   Is this object-specific or generic?

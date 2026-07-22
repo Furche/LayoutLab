@@ -5,12 +5,14 @@ alwaysApply: true
 
 # LayoutLab agent conventions
 
-**Mental model:** Read `AI_CONTEXT.md` before architecture or product-direction questions. Current phase = Execution Layer (generators, JSON protocol, clearances, `analyze_layout`). Long-term vision lives in `docs/Future_Ideas.md`; coherent cross-cutting capabilities live in `docs/concepts/`. Do not skip Idea → Feature Concept → DD(s) → work packages → implementation.
+**Mental model:** Read `AI_CONTEXT.md` before architecture or product-direction questions.
 
-**Key docs:** `CHANGELOG.md` (recent changes), `docs/HANDOFF.md` (ordered work), `docs/ARCHITECTURE.md`, `docs/concepts/`, `docs/json_protocol.md`, `docs/design_decisions/`.
+**Current product focus:** Standalone **web viewer** (`viewer/`) + **Core** (`layoutlab/`, `server/`) — not new Blender plugin UX by default. Blender is a runtime adapter. Long-term vision: `docs/Future_Ideas.md`; cross-cutting behaviour: `docs/concepts/`. Do not skip Idea → Feature Concept → DD(s) → work packages → implementation.
 
-**Diagnostics:** When reporting LayoutLab diagnostics, reference the report file or paste only failing checks — not the full 18-check dump inline.
+**Key docs:** `CHANGELOG.md`, `docs/HANDOFF.md` (ordered work), `docs/ARCHITECTURE.md`, `docs/concepts/`, `docs/json_protocol.md`, `docs/design_decisions/`, `viewer/README.md`.
 
-**Code:** Minimize scope; match existing conventions; no over-engineering; comments only for non-obvious logic.
+**Diagnostics:** When reporting LayoutLab diagnostics, reference the report file or paste only failing checks — not the full check dump inline.
 
-**Blender addon:** Python under `layoutlab/`, tests in `tests/`. Plugin version in `layoutlab/__init__.py`.
+**Code:** Minimize scope; match existing conventions; no over-engineering; comments only for non-obvious logic. Viewer mutations must go through Core commands/revision (DD-018).
+
+**Versions:** Plugin/Core version in `layoutlab/__init__.py` + `session.LAYOUTLAB_VERSION`. Tests in `tests/`.

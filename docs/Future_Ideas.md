@@ -811,7 +811,7 @@ Do **not** implement from this vision until separate DDs / Feature Concepts and 
 - Sync service / cloud backend
 - Custom render engine
 
-**Current focus:** [FC-001/WP-02](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) ([DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) Accepted) — see MDD §17 · `docs/HANDOFF.md`. Blender remains the primary Execution Runtime.
+**Current focus:** Standalone **Viewer UX** on Core (multi-room, direct manipulation → preview/commit) — see MDD §17 · `docs/HANDOFF.md` · [AI_CONTEXT.md](../AI_CONTEXT.md). Blender is a runtime adapter, not the default product surface.
 
 ------------------------------------------------------------------------
 

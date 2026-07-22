@@ -4,6 +4,16 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — Product focus: Standalone Viewer first
+
+**Why:** Day-to-day work is the web Viewer + Core HTTP, not new Blender plugin UX.
+Keeping AI_CONTEXT on “Blender first / no viewer planned” was misleading agents.
+
+**How:** AI_CONTEXT v1.1, HANDOFF next-steps, `.cursor/rules/layoutlab-agent.mdc`,
+viewer README. FC-001 Core remains the backend; Viewer UX is the active product track.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — FC-001/WP-06: Spatial Project / independent rooms (0.10.40)
 
 **Why:** DD-020 makes the Spatial Project the only durable root (`rooms[]`, n=1 normal)

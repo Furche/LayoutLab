@@ -1,11 +1,13 @@
 ---
-description: Git commit workflow when the user asks to commit
+description: Auto commit and push after meaningful LayoutLab work
 alwaysApply: true
 ---
 
 # Git commits
 
-Only commit when the user explicitly asks. If unclear, ask first.
+**Default for this repo:** After completing a meaningful unit of work (feature slice, fix, docs sync), **commit and push to origin** without waiting for an extra ask. Alexander requested automatic commit + push.
+
+Still ask first only when: the change set is ambiguous (secrets, mixed unrelated work), the user said not to commit, or a destructive git action would be needed.
 
 **Safety:** Never update git config. No destructive commands (force push, hard reset) unless explicitly requested. No `--no-verify` / hook skips unless requested. No force push to main/master. Avoid `git commit --amend` unless: user requested amend, HEAD was created in this session and not pushed, or hook auto-modified files after a successful commit. If commit failed or was rejected by hook, fix and create a NEW commit — never amend.
 
@@ -13,7 +15,7 @@ Only commit when the user explicitly asks. If unclear, ask first.
 1. Run in parallel: `git status`, `git diff`, `git log -1 --oneline`
 2. Draft a 1–2 sentence message focused on *why*; match repo style
 3. Stage relevant files only (never secrets); commit via HEREDOC; verify with `git status`
-4. Do not push unless asked. No `git` commands with `-i`. No extra exploration beyond git commands during commit-only tasks.
+4. **Push** with `git push -u origin HEAD` (or `git push` if tracking exists). No `git` commands with `-i`. No extra exploration beyond git commands during commit-only tasks.
 
 **Commit message format:**
 ```bash

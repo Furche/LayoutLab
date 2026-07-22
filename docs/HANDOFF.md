@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-22 (FC-001/WP-06 shipped — FC-001 Core slice complete)
-**Plugin version:** 0.10.40 · **Branch:** `main`
+**Last updated:** 2026-07-22 (product focus → Standalone Viewer; FC-001 Core WP-01…06 done)
+**Plugin / Core version:** 0.10.40 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -23,17 +23,18 @@
 **Copy-paste prompt for new chat:**
 
 ```
-LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
+LayoutLab — semantic interior planning (Standalone Viewer + Core).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.40.
+Branch: main. Core/plugin v0.10.40.
 
-Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
+Lies zuerst AI_CONTEXT.md (Mental Model — Viewer first). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-22):
+- **Produktfokus: Standalone Web Viewer** (`viewer/`) + Core HTTP (`server/`) — nicht Blender-Plugin-UX
 - Planning slice DD-011/015/016/017 ✅
-- **FC-001/WP-01…WP-06** ✅ (`0.10.36`–`0.10.40`) — transactions, furniture ops, regenerate, wall resize, Spatial Project / independent rooms
-- Nächste Arbeit: Refinement / deferred (FC-001/WP-07 stacking later); see HANDOFF
-- DD-018/019/020 **Accepted**
-- Core: python3 -m server (:8765); Viewer Vite (:5173)
+- **FC-001/WP-01…WP-06** ✅ Core (`0.10.36`–`0.10.40`) — transactions, furniture/room ops, Spatial Project
+- Nächste Arbeit: **Viewer UX** — multi-room display, direct manipulation (preview/commit), planning feedback
+- Blender = Runtime-Adapter (Generator-QA), kein Default für neue Features
+- Core: python3 -m server (:8765); Viewer: cd viewer && npm run dev (:5173)
 
 Bitte auf Deutsch antworten. Keine vollen Diagnostic-Reports inline — nur fehlgeschlagene Checks oder Dateireferenz.
 Lies docs/HANDOFF.md für Details.
@@ -45,23 +46,24 @@ Lies docs/HANDOFF.md für Details.
 
 # What is LayoutLab?
 
-Parametric **semantic interior planning** for Blender — long-term: translate human room requirements into spatial solutions (not primarily a furniture placer).
+Parametric **semantic interior planning** — long-term: translate human room requirements into spatial solutions (not primarily a furniture placer).
 
 ```
-User Intent → Generator (rules) → Parts API → Blender scene
+User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scene export
 ```
 
 (Long-term: Intent → Planning → Execution — see [Future_Ideas.md](Future_Ideas.md) §9.)
 
-- Blender 4.0+ is the **editor**, not the product.
-- **AI** communicates via JSON (DD-003); execution boundary [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (**Accepted** — AI plans WHAT, plugin executes HOW).
-- Today: **JSON** clipboard/text block ([DD-003](design_decisions/DD-003-json-only-communication.md)).
+- **Primary product surface:** standalone web Viewer (`viewer/`) + Core HTTP ([DD-014](design_decisions/DD-014-standalone-runtime-path.md)).
+- Blender is a **runtime adapter** (first host / generator QA), **not** where new UX lands by default.
+- **AI** communicates via JSON (DD-003); execution boundary [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (**Accepted** — AI plans WHAT, Core executes HOW).
 
-**Install:** `dist/layoutlab-<version>.zip` → Blender Preferences → Add-ons.
-**Generators sync** on register: bundled → `layoutlab_generators/` when bundled version is newer.
+**Viewer:** `cd viewer && npm run dev` (default `:5173`) with Core `python3 -m server` (`:8765`).
+**Blender install (optional):** `dist/layoutlab-<version>.zip` → Preferences → Add-ons.
+**Generators sync** on Blender register: bundled → `layoutlab_generators/` when bundled version is newer.
 
-**Units:** Blender scene units natively (Metric default: 1 unit = 1 m). See `docs/units_and_coordinates.md`.
-**Reference room position (examples):** `[68.3, 197.7, 0]`. Quick Test default: `(0, 0, 0)`.
+**Units:** scene units natively (Metric default: 1 unit = 1 m). See `docs/units_and_coordinates.md`.
+**Reference room position (examples):** `[68.3, 197.7, 0]`. Quick Test / Core fixtures often `(0, 0, 0)`.
 
 ------------------------------------------------------------------------
 
@@ -166,12 +168,15 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 # Next steps (agreed order)
 
-**Active focus:** Refinement / deferred items after FC-001 Core slice (WP-01…WP-06).
-FC-001/WP-07 (stacking / advanced supports) remains explicitly later.
+**Active focus:** **Standalone Viewer UX** — multi-room display, semantic direct manipulation
+(select / move / rotate → Core preview/commit), planning feedback polish. Core FC-001 WP-01…06
+is the backend for that work; do not default new features into the Blender addon.
 
-**On demand / Refinement (not blocking):** see MDD §17 — staged Viewer explanation;
-aesthetics privacy stage 1 (minimum disclosure when flag on); further recipes only when a real
-scenario outgrows `bedroom_basic` (`kids_room` = candidate, not scheduled).
+**Queued / later:** FC-001/WP-07 (stacking / advanced supports); shared-wall apartment topology;
+persisted variants.
+
+**On demand / Refinement:** see MDD §17 — staged Viewer explanation; aesthetics privacy stage 1
+when the experimental flag is on; further recipes only when a real scenario outgrows `bedroom_basic`.
 
 Planning shortlist through `0.10.35` is shipped (DD-011/015/016/017). Historical checklist of that slice lives in Document history below.
 
@@ -275,6 +280,7 @@ Binding order for agents: **Next steps** (this file) · behaviour in [FC-001](co
 
 | Date | Change |
 |---|---|
+| 2026-07-22 | Product focus reoriented: Standalone Viewer first; AI_CONTEXT v1.1 |
 | 2026-07-22 | FC-001/WP-06 shipped (`0.10.40`); FC-001 Core slice complete |
 | 2026-07-22 | FC-001/WP-05 shipped (`0.10.39`); next WP-06 |
 | 2026-07-22 | FC-001/WP-04 shipped (`0.10.38`); next WP-05 |

@@ -413,9 +413,9 @@ Vermeiden:
 
 | ID | Scope | Status |
 |---|---|---|
-| — | Refinement / on-demand (see below) | After FC-001 Core slice |
+| Viewer UX | Standalone Viewer as product: multi-room, direct manipulation → Core preview/commit, planning feedback | **Current** |
 
-WP-01…WP-06 complete through `0.10.40`. [DD-020](docs/design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** and implemented.
+WP-01…WP-06 Core complete through `0.10.40`. [DD-020](docs/design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** and implemented. Product focus: [AI_CONTEXT.md](AI_CONTEXT.md) (Viewer first).
 
 ### Queued
 
