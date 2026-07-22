@@ -12,6 +12,10 @@ RECT_WALL_ORDER = ("south", "east", "north", "west")  # y_min, x_max, y_max, x_m
 DEFAULT_WALL_THICKNESS = 0.02
 DEFAULT_WALL_HEIGHT = 2.6
 
+ATTACHMENT_ACTIVE = "ACTIVE"
+ATTACHMENT_INACTIVE_OUTSIDE_WALL = "INACTIVE_OUTSIDE_WALL"
+CORNER_NAMES = ("sw", "se", "nw", "ne")
+
 
 def _new_id():
     return str(uuid.uuid4())
@@ -140,6 +144,12 @@ def update_room_model(model, params):
     if "collection" in params:
         model["collection"] = str(params["collection"])
 
+    footprint = model["footprint"]
+    if footprint.get("kind") != "rectangle":
+        raise ValueError("MVP update_room supports rectangle only")
+
+    prev = _footprint_snapshot(model)
+
     if "location" in params or "origin" in params:
         loc = params.get("location") or params.get("origin")
         model["origin"] = [
@@ -147,10 +157,6 @@ def update_room_model(model, params):
             _f(loc[1]),
             _f(loc[2]) if len(loc) > 2 else model["origin"][2],
         ]
-
-    footprint = model["footprint"]
-    if footprint.get("kind") != "rectangle":
-        raise ValueError("MVP update_room supports rectangle only")
 
     width = footprint["width"]
     depth = footprint["depth"]
@@ -176,15 +182,228 @@ def update_room_model(model, params):
     if "wall_thickness" in params:
         model["wall_thickness"] = _f(params["wall_thickness"], DEFAULT_WALL_THICKNESS)
 
+    _apply_rectangle_footprint(model, existing=model.get("walls"))
+    _reconcile_wall_attachments(model, prev)
+    return model
+
+
+def _footprint_snapshot(model):
+    origin = list(model["origin"])
+    fp = model["footprint"]
+    return {
+        "origin": origin,
+        "width": _f(fp["width"]),
+        "depth": _f(fp["depth"]),
+    }
+
+
+def _apply_rectangle_footprint(model, *, existing=None):
+    fp = model["footprint"]
     model["walls"] = derive_rectangle_walls(
         model["origin"],
-        footprint["width"],
-        footprint["depth"],
+        fp["width"],
+        fp["depth"],
         model["height"],
         model["wall_thickness"],
-        existing=model.get("walls"),
+        existing=existing if existing is not None else model.get("walls"),
     )
     _revalidate_attachments(model)
+
+
+def _attachment_world_u(model, wall, offset):
+    """World coordinate along the wall's primary axis at ``offset``."""
+    ox, oy = _f(model["origin"][0]), _f(model["origin"][1])
+    side = wall.get("side")
+    if side in ("south", "north"):
+        return ox + _f(offset)
+    if side in ("west", "east"):
+        return oy + _f(offset)
+    raise ValueError(f"unknown wall side {side!r}")
+
+
+def _offset_from_world_u(model, wall, world_u):
+    ox, oy = _f(model["origin"][0]), _f(model["origin"][1])
+    side = wall.get("side")
+    if side in ("south", "north"):
+        return _f(world_u) - ox
+    if side in ("west", "east"):
+        return _f(world_u) - oy
+    raise ValueError(f"unknown wall side {side!r}")
+
+
+def _attachment_fits(wall, offset, span):
+    return offset >= -1e-6 and offset + span <= wall["length"] + 1e-6
+
+
+def _snapshot_attachments(model):
+    """Capture world-U anchors before a footprint change (DD-019 preserve world)."""
+    snaps = []
+    for opening in model.get("openings", []):
+        wall = find_wall(model, opening["wall_id"])
+        snaps.append(
+            {
+                "kind": "opening",
+                "id": opening.get("opening_id"),
+                "wall_id": opening["wall_id"],
+                "world_u": _attachment_world_u(model, wall, opening.get("offset", 0.0)),
+                "span": _f(opening.get("width")),
+            }
+        )
+    for fixed in model.get("fixed_elements", []):
+        wall = find_wall(model, fixed["wall_id"])
+        snaps.append(
+            {
+                "kind": "fixed",
+                "id": fixed.get("fixed_element_id"),
+                "wall_id": fixed["wall_id"],
+                "world_u": _attachment_world_u(model, wall, fixed.get("offset", 0.0)),
+                "span": _f(fixed.get("width")),
+            }
+        )
+    return snaps
+
+
+def _reconcile_wall_attachments(model, prev_footprint=None):
+    """Recompute offsets from preserved world anchors; inactive when swallowed."""
+    # If prev given, use snapshots from that geometry conceptually — callers snapshot
+    # before mutating. When prev is a footprint dict we rebuild anchors using current
+    # attachments' offsets against *prev* geometry via a temporary view.
+    if prev_footprint is not None:
+        temp = {
+            "origin": list(prev_footprint["origin"]),
+            "footprint": {
+                "kind": "rectangle",
+                "width": prev_footprint["width"],
+                "depth": prev_footprint["depth"],
+            },
+            "walls": derive_rectangle_walls(
+                prev_footprint["origin"],
+                prev_footprint["width"],
+                prev_footprint["depth"],
+                model["height"],
+                model.get("wall_thickness", DEFAULT_WALL_THICKNESS),
+                existing=model.get("walls"),
+            ),
+            "openings": model.get("openings", []),
+            "fixed_elements": model.get("fixed_elements", []),
+        }
+        snaps = _snapshot_attachments(temp)
+    else:
+        snaps = _snapshot_attachments(model)
+
+    by_opening = {s["id"]: s for s in snaps if s["kind"] == "opening"}
+    by_fixed = {s["id"]: s for s in snaps if s["kind"] == "fixed"}
+
+    for opening in model.get("openings", []):
+        snap = by_opening.get(opening.get("opening_id"))
+        wall = find_wall(model, opening["wall_id"])
+        if snap:
+            opening["offset"] = _offset_from_world_u(model, wall, snap["world_u"])
+        span = _f(opening.get("width"))
+        if _attachment_fits(wall, _f(opening.get("offset")), span):
+            opening["state"] = ATTACHMENT_ACTIVE
+        else:
+            opening["state"] = ATTACHMENT_INACTIVE_OUTSIDE_WALL
+        opening.setdefault("state", ATTACHMENT_ACTIVE)
+
+    for fixed in model.get("fixed_elements", []):
+        snap = by_fixed.get(fixed.get("fixed_element_id"))
+        wall = find_wall(model, fixed["wall_id"])
+        if snap:
+            fixed["offset"] = _offset_from_world_u(model, wall, snap["world_u"])
+        span = _f(fixed.get("width"))
+        if _attachment_fits(wall, _f(fixed.get("offset")), span):
+            fixed["state"] = ATTACHMENT_ACTIVE
+        else:
+            fixed["state"] = ATTACHMENT_INACTIVE_OUTSIDE_WALL
+        fixed.setdefault("state", ATTACHMENT_ACTIVE)
+
+
+def move_wall(model, wall_ref, delta, *, outward_positive=True):
+    """Move one rectangle wall parallel to itself (FC-001/WP-05).
+
+    ``delta > 0`` expands the room (wall moves outward) when ``outward_positive``.
+    Opposite wall stays fixed; adjacent walls lengthen/shorten.
+    """
+    if model["footprint"].get("kind") != "rectangle":
+        raise ValueError("move_wall supports rectangle footprint only")
+    wall = find_wall(model, wall_ref)
+    side = wall.get("side")
+    d = _f(delta)
+    if not outward_positive:
+        d = -d
+
+    prev = _footprint_snapshot(model)
+    ox, oy, oz = (_f(v) for v in model["origin"])
+    width = _f(model["footprint"]["width"])
+    depth = _f(model["footprint"]["depth"])
+
+    if side == "north":
+        depth = depth + d
+    elif side == "south":
+        oy = oy - d
+        depth = depth + d
+    elif side == "east":
+        width = width + d
+    elif side == "west":
+        ox = ox - d
+        width = width + d
+    else:
+        raise ValueError(f"unknown wall side {side!r}")
+
+    if width <= 1e-6 or depth <= 1e-6:
+        raise ValueError("move_wall would make width/depth <= 0")
+
+    model["origin"] = [ox, oy, oz]
+    model["footprint"]["width"] = width
+    model["footprint"]["depth"] = depth
+    _apply_rectangle_footprint(model, existing=model.get("walls"))
+    _reconcile_wall_attachments(model, prev)
+    return model
+
+
+def move_corner(model, corner, dx=0.0, dy=0.0):
+    """Move a rectangle corner (sw/se/nw/ne) by dx/dy in world XY (FC-001/WP-05)."""
+    corner = str(corner or "").strip().lower()
+    if corner not in CORNER_NAMES:
+        raise ValueError(f"corner must be one of {CORNER_NAMES}")
+    dx = _f(dx)
+    dy = _f(dy)
+    # Map corner motion to wall outward deltas.
+    # sw: west outward = -dx if dx<0... 
+    # Moving SW corner by (dx, dy): west wall moves by -dx (outward if dx negative),
+    # south wall moves by -dy (outward if dy negative).
+    # Better: apply footprint bounds directly.
+    if model["footprint"].get("kind") != "rectangle":
+        raise ValueError("move_corner supports rectangle footprint only")
+
+    prev = _footprint_snapshot(model)
+    ox, oy, oz = (_f(v) for v in model["origin"])
+    width = _f(model["footprint"]["width"])
+    depth = _f(model["footprint"]["depth"])
+
+    # Corner world positions before:
+    # sw=(ox,oy), se=(ox+w,oy), nw=(ox,oy+d), ne=(ox+w,oy+d)
+    if corner == "sw":
+        ox, oy = ox + dx, oy + dy
+        width, depth = width - dx, depth - dy
+    elif corner == "se":
+        oy = oy + dy
+        width, depth = width + dx, depth - dy
+    elif corner == "nw":
+        ox = ox + dx
+        width, depth = width - dx, depth + dy
+    elif corner == "ne":
+        width, depth = width + dx, depth + dy
+
+    if width <= 1e-6 or depth <= 1e-6:
+        raise ValueError("move_corner would make width/depth <= 0")
+
+    model["origin"] = [ox, oy, oz]
+    model["footprint"]["width"] = width
+    model["footprint"]["depth"] = depth
+    _apply_rectangle_footprint(model, existing=model.get("walls"))
+    _reconcile_wall_attachments(model, prev)
     return model
 
 
@@ -213,6 +432,10 @@ def _fit_on_wall(wall, offset, span, label):
         )
 
 
+def is_attachment_active(item):
+    return str(item.get("state") or ATTACHMENT_ACTIVE) == ATTACHMENT_ACTIVE
+
+
 def add_opening(model, params):
     params = params or {}
     kind = str(params.get("kind") or params.get("opening_kind") or "door").strip().lower()
@@ -221,7 +444,12 @@ def add_opening(model, params):
     wall = find_wall(model, params.get("wall_id") or params.get("wall") or params.get("wall_side"))
     width = _f(params.get("width"), 0.9 if kind == "door" else 1.0)
     height = _f(params.get("height"), 2.0 if kind == "door" else 1.4)
-    offset = _f(params.get("offset"), 0.0)
+    if "offset" in params:
+        offset = _f(params.get("offset"), 0.0)
+    elif "offset_along_wall" in params:
+        offset = _f(params.get("offset_along_wall"), 0.0)
+    else:
+        offset = 0.0
     sill = _f(params.get("sill_height") or params.get("sill"), 0.0 if kind == "door" else 0.8)
     if height <= 0:
         raise ValueError("opening height must be > 0")
@@ -237,6 +465,7 @@ def add_opening(model, params):
         "width": width,
         "height": height,
         "sill_height": sill,
+        "state": ATTACHMENT_ACTIVE,
     }
     model.setdefault("openings", []).append(opening)
     return opening
@@ -270,6 +499,7 @@ def update_opening(model, params):
         opening["wall_side"] = wall.get("side")
     for src, dest in (
         ("offset", "offset"),
+        ("offset_along_wall", "offset"),
         ("width", "width"),
         ("height", "height"),
         ("sill_height", "sill_height"),
@@ -279,7 +509,11 @@ def update_opening(model, params):
             opening[dest] = _f(params[src])
 
     wall = find_wall(model, opening["wall_id"])
-    _fit_on_wall(wall, opening["offset"], opening["width"], "opening")
+    if _attachment_fits(wall, _f(opening["offset"]), _f(opening["width"])):
+        opening["state"] = ATTACHMENT_ACTIVE
+    else:
+        # Explicit user edit that doesn't fit → keep data, mark inactive (no silent delete).
+        opening["state"] = ATTACHMENT_INACTIVE_OUTSIDE_WALL
     return opening
 
 
@@ -313,6 +547,7 @@ def add_fixed_element(model, params):
         "width": width,
         "depth": depth,
         "height": height,
+        "state": ATTACHMENT_ACTIVE,
     }
     model.setdefault("fixed_elements", []).append(fixed)
     return fixed
@@ -344,12 +579,16 @@ def update_fixed_element(model, params):
         wall = find_wall(model, params.get("wall_id") or params.get("wall") or params.get("wall_side"))
         fixed["wall_id"] = wall["wall_id"]
         fixed["wall_side"] = wall.get("side")
-    for key in ("offset", "width", "depth", "height"):
+    for key in ("offset", "offset_along_wall", "width", "depth", "height"):
         if key in params:
-            fixed[key] = _f(params[key])
+            dest = "offset" if key == "offset_along_wall" else key
+            fixed[dest] = _f(params[key])
 
     wall = find_wall(model, fixed["wall_id"])
-    _fit_on_wall(wall, fixed["offset"], fixed["width"], "fixed element")
+    if _attachment_fits(wall, _f(fixed["offset"]), _f(fixed["width"])):
+        fixed["state"] = ATTACHMENT_ACTIVE
+    else:
+        fixed["state"] = ATTACHMENT_INACTIVE_OUTSIDE_WALL
     return fixed
 
 
@@ -451,7 +690,11 @@ def wall_plane_corners(model, wall):
 
 def openings_for_wall(model, wall):
     wall_id = wall.get("wall_id")
-    return [o for o in model.get("openings", []) if o.get("wall_id") == wall_id]
+    return [
+        o
+        for o in model.get("openings", [])
+        if o.get("wall_id") == wall_id and is_attachment_active(o)
+    ]
 
 
 def wall_local_opening_rect(opening, wall_height):

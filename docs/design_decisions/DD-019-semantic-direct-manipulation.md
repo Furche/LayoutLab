@@ -210,3 +210,4 @@ Rooms and furniture support hide/show, analysis include/exclude, edit lock, and
 | 1.0 | 2026-07-22 | **Accepted** — duplicate+invalid; fixed inactive; single-select WP-03 |
 | 1.1 | 2026-07-22 | WP-03 implemented in Core `0.10.37` (select/move/rotate_z/dup/delete/hide/lock + validity) |
 | 1.2 | 2026-07-22 | WP-04 implemented in Core `0.10.38` (`regenerate` / `set_parameter` / `resize`) |
+| 1.3 | 2026-07-22 | WP-05 implemented in Core `0.10.39` (`move_wall` / `move_corner` + inactive attachments) |

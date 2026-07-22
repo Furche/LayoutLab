@@ -393,7 +393,8 @@ Vermeiden:
 | Semantic transactions / revision / Undo (DD-018) | `0.10.36` (FC-001/WP-02) |
 | Semantic furniture manipulation (DD-019 WP-03) | `0.10.37` |
 | Parametric resize / regenerate (DD-019 WP-04) | `0.10.38` |
-| Feature Concept FC-001 (behaviour captured) | `docs/concepts/` — WP-02…04 shipped; WP-05+ queued |
+| Wall/corner resize + inactive openings (DD-019 WP-05) | `0.10.39` |
+| Feature Concept FC-001 (behaviour captured) | `docs/concepts/` — WP-02…05 shipped; WP-06 queued |
 
 **Begriffsklärung (bereits vs. später):**
 
@@ -411,21 +412,19 @@ Vermeiden:
 
 | ID | Scope | Status |
 |---|---|---|
-| [FC-001/WP-05](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Wand-/Ecken-Resize, Opening-Host-Verhalten, inactive openings, invalid furniture visualization | **Current** · DD-019 |
+| [FC-001/WP-06](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Spatial Project (`rooms[]` only format), lokale Transforms, Whole-Room-Ops | **Current** · DD-020 |
 
-WP-01…WP-04 complete through `0.10.38`. [DD-019](docs/design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](docs/design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted**.
+WP-01…WP-05 complete through `0.10.39`. [DD-020](docs/design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted**.
 
 ### Queued
 
-Reihenfolge: WP-05 → WP-06.
-
 | ID | Scope | Entry |
 |---|---|---|
-| [FC-001/WP-06](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Spatial Project (`rooms[]` only format), lokale Transforms, Whole-Room-Ops | Nach WP-02 · DD-020 |
+| [FC-001/WP-07](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Erweiterte Support Surfaces und Stapeln | Explizit später |
 
 ### Refinement / On demand
 
-Nicht blockierend für **FC-001/WP-05+**. Keine festen Sprint-Zusagen außer dem
+Nicht blockierend für **FC-001/WP-06+**. Keine festen Sprint-Zusagen außer dem
 Minimal-Hinweis für experimentelle AI-Ästhetik (Stufe 1 unten).
 
 **Viewer Score- / Trade-off-Erklärung (Refinement)**

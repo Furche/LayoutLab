@@ -149,6 +149,10 @@ def apply_single_command(context, cmd):
         return room_sync.update_fixed_element(cmd.get("params") or cmd)
     if action == "remove_fixed_element":
         return room_sync.remove_fixed_element(cmd.get("params") or cmd)
+    if action == "move_wall":
+        return room_sync.move_wall(cmd.get("params") or cmd)
+    if action == "move_corner":
+        return room_sync.move_corner(cmd.get("params") or cmd)
 
     obj = bpy.data.objects.get(name) if name else None
     if action == "move":

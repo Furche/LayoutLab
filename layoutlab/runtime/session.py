@@ -40,7 +40,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.38"
+LAYOUTLAB_VERSION = "0.10.39"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -53,6 +53,8 @@ SESSION_ACTIONS = frozenset(
         "add_fixed_element",
         "update_fixed_element",
         "remove_fixed_element",
+        "move_wall",
+        "move_corner",
         "delete_collection_objects",
         "delete_prefix",
         "run_generator",
@@ -212,6 +214,8 @@ def _room_objects(model):
             )
 
     for opening in model.get("openings", []):
+        if not room_core.is_attachment_active(opening):
+            continue
         loc, dims = room_core.opening_world_box(model, opening)
         objects.append(
             _object_dict(
@@ -224,11 +228,16 @@ def _room_objects(model):
                 world_bbox_corners=_box_corners(loc, dims),
                 viewer=viewer_block_for_role("room_opening", display_type="WIRE"),
                 entity_id=opening.get("opening_id"),
-                extra_props={"layoutlab_room_id": room_id},
+                extra_props={
+                    "layoutlab_room_id": room_id,
+                    "layoutlab_attachment_state": opening.get("state") or "ACTIVE",
+                },
             )
         )
 
     for fixed in model.get("fixed_elements", []):
+        if not room_core.is_attachment_active(fixed):
+            continue
         loc, dims = room_core.fixed_element_world_box(model, fixed)
         objects.append(
             _object_dict(
@@ -241,7 +250,10 @@ def _room_objects(model):
                 world_bbox_corners=_box_corners(loc, dims),
                 viewer=viewer_block_for_role("room_fixed"),
                 entity_id=fixed.get("fixed_element_id"),
-                extra_props={"layoutlab_room_id": room_id},
+                extra_props={
+                    "layoutlab_room_id": room_id,
+                    "layoutlab_attachment_state": fixed.get("state") or "ACTIVE",
+                },
             )
         )
 
@@ -597,6 +609,41 @@ class RoomSession:
             params = cmd.get("params") or cmd
             model = self._resolve(params)
             room_core.update_room_model(model, params)
+            furniture_ops.refresh_all_validity(self.mesh_store, self._rooms)
+            return self._room_result(model)
+
+        if action == "move_wall":
+            params = cmd.get("params") or cmd
+            model = self._resolve(params)
+            wall_ref = (
+                params.get("wall_id")
+                or params.get("wall")
+                or params.get("wall_side")
+                or cmd.get("wall_id")
+                or cmd.get("wall")
+                or cmd.get("wall_side")
+            )
+            if "delta" in params:
+                delta = params.get("delta")
+            elif "delta" in cmd:
+                delta = cmd.get("delta")
+            else:
+                raise ValueError("move_wall requires delta")
+            room_core.move_wall(model, wall_ref, delta)
+            furniture_ops.refresh_all_validity(self.mesh_store, self._rooms)
+            return self._room_result(model)
+
+        if action == "move_corner":
+            params = cmd.get("params") or cmd
+            model = self._resolve(params)
+            corner = params.get("corner") or cmd.get("corner")
+            dx = params.get("dx", cmd.get("dx", 0.0))
+            dy = params.get("dy", cmd.get("dy", 0.0))
+            if "delta" in params and isinstance(params.get("delta"), (list, tuple)):
+                dx = params["delta"][0]
+                dy = params["delta"][1] if len(params["delta"]) > 1 else 0.0
+            room_core.move_corner(model, corner, dx=dx, dy=dy)
+            furniture_ops.refresh_all_validity(self.mesh_store, self._rooms)
             return self._room_result(model)
 
         if action == "delete_room":

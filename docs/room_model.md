@@ -31,7 +31,9 @@ Blender meshes (adapter)
 | Action | Purpose |
 |---|---|
 | `create_room` | Rectangle room + four walls |
-| `update_room` | Size / height / origin (wall ids preserved) |
+| `update_room` | Size / height / origin (wall ids preserved; attachments reconciled) |
+| `move_wall` | Parallel wall move (`delta`, outward-positive) — FC-001/WP-05 |
+| `move_corner` | Corner `sw\|se\|nw\|ne` with `dx`/`dy` — FC-001/WP-05 |
 | `delete_room` | Remove all meshes for `room_id` |
 | `add_opening` / `update_opening` / `remove_opening` | Door or window (cuts wall panels) |
 | `add_fixed_element` / `update_fixed_element` / `remove_fixed_element` | e.g. radiator |

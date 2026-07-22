@@ -134,6 +134,8 @@ def sync_room_to_scene(model):
             )
 
     for opening in model.get("openings", []):
+        if not room_core.is_attachment_active(opening):
+            continue
         loc, dims = room_core.opening_world_box(model, opening)
         obj = create_box(
             f"{prefix}opening_{opening['name']}",
@@ -153,6 +155,8 @@ def sync_room_to_scene(model):
         )
 
     for fixed in model.get("fixed_elements", []):
+        if not room_core.is_attachment_active(fixed):
+            continue
         loc, dims = room_core.fixed_element_world_box(model, fixed)
         obj = create_box(
             f"{prefix}fixed_{fixed['name']}",
@@ -261,3 +265,24 @@ def remove_fixed_element(params):
     result = sync_room_to_scene(model)
     result["removed_fixed_element"] = fixed
     return result
+
+
+def move_wall(params):
+    model, _ = _resolve_and_load(params)
+    wall_ref = params.get("wall_id") or params.get("wall") or params.get("wall_side")
+    if "delta" not in params:
+        raise ValueError("move_wall requires delta")
+    room_core.move_wall(model, wall_ref, params.get("delta"))
+    return sync_room_to_scene(model)
+
+
+def move_corner(params):
+    model, _ = _resolve_and_load(params)
+    corner = params.get("corner")
+    dx = params.get("dx", 0.0)
+    dy = params.get("dy", 0.0)
+    if isinstance(params.get("delta"), (list, tuple)):
+        dx = params["delta"][0]
+        dy = params["delta"][1] if len(params["delta"]) > 1 else 0.0
+    room_core.move_corner(model, corner, dx=dx, dy=dy)
+    return sync_room_to_scene(model)

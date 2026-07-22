@@ -4,6 +4,17 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — FC-001/WP-05: wall/corner resize + inactive openings (0.10.39)
+
+**Why:** DD-019 requires wall edits that preserve furniture world pose, keep
+swallowed openings/fixed elements as inactive (not deleted), and mark invalid
+furniture without silent repair.
+
+**How:** `move_wall` / `move_corner` + attachment reconcile; viewer skips inactive
+meshes; `refresh_all_validity` after footprint changes. Next: WP-06 Spatial Project.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — FC-001/WP-04: parametric resize via regenerate (0.10.38)
 
 **Why:** DD-019 forbids mesh-scale resize; furniture size changes must edit generator
