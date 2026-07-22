@@ -71,9 +71,9 @@ Without a key, demo intents still work (empty/furnished kids room, schrank, lös
 
 Supported: room model, openings, fixed, `run_generator`, `analyze_layout`, deletes,
 semantic transactions (preview / commit / undo / redo), semantic furniture ops
-(`move` / `rotate_z` / duplicate / delete / hide / lock by `object_id`). Export embeds
-live `analysis`, `revision`, and furniture `validity` / `support_ref`. Not yet:
-headless `regenerate` (WP-04), viewport gizmos, wall resize (WP-05).
+(`move` / `rotate_z` / duplicate / delete / hide / lock), parametric
+`regenerate` / `set_parameter` / `resize`. Export embeds live `analysis`, `revision`,
+and furniture `validity` / `support_ref`. Not yet: viewport gizmos, wall resize (WP-05).
 
 ## Viewer
 

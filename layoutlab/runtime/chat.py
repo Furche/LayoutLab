@@ -30,7 +30,8 @@ Allowed command actions only:
 create_room, update_room, delete_room, add_opening, update_opening, remove_opening,
 add_fixed_element, update_fixed_element, remove_fixed_element,
 delete_collection_objects, delete_prefix, run_generator, analyze_layout,
-select_object, move, rotate_z, duplicate, delete, hide, show, set_flags, set_locked.
+select_object, move, rotate_z, duplicate, delete, hide, show, set_flags, set_locked,
+regenerate, set_parameter, resize.
 
 Rules:
 - Prefer Metric meters (1 unit = 1 m).

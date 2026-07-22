@@ -205,6 +205,7 @@ See [DD-007-clearance-zones.md](design_decisions/DD-007-clearance-zones.md). Con
 | v0.5.1 | `layoutlab_object_id`, params, `regenerate`, export block |
 | v0.6.0 `[IMPLEMENTED]` | Parts model — join per Part, Main/Dynamic, parenting |
 | v0.10.37 `[IMPLEMENTED]` | Core semantic furniture ops by `object_id` (move/rotate_z/dup/delete/hide/lock, `support_ref`, validity) |
+| v0.10.38 `[IMPLEMENTED]` | Core parametric resize: `regenerate` / `set_parameter` / `resize` (same `object_id`, pose preserved) |
 
 Legacy scenes without Parts: still deletable via prefix; `regenerate` rebuilds with Parts.
 

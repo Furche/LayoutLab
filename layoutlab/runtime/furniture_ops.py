@@ -515,24 +515,207 @@ def duplicate_object(
     }
 
 
+def resolve_object_id(store, *, object_id=None, object_name=None) -> str:
+    """Resolve logical furniture id from object_id or any part mesh name."""
+    if object_id:
+        oid = str(object_id)
+        if main_part(store, oid) is None:
+            raise ValueError(f"object not found: {oid}")
+        return oid
+    name = object_name
+    if not name:
+        raise ValueError("object_id or object (mesh name) required")
+    for obj in store.objects:
+        if obj.name == name:
+            oid = obj.get("layoutlab_object_id")
+            if not oid:
+                raise ValueError(
+                    f"Object '{name}' has no layoutlab_object_id "
+                    "(legacy — use delete_prefix + run_generator)"
+                )
+            return str(oid)
+    raise ValueError(f"Object not found: {name}")
+
+
+def _capture_semantic_state(store, object_id: str) -> dict[str, Any]:
+    main = main_part(store, object_id)
+    if main is None:
+        raise ValueError(f"object not found: {object_id}")
+    loc = main.world_origin()
+    return {
+        "location": [float(loc[0]), float(loc[1]), float(loc[2])],
+        "rotation_z_deg": float(main.rotation_z_deg or 0.0),
+        "support_ref": support_ref(main),
+        "room_id": main.get("layoutlab_room_id"),
+        "locked": is_locked(main),
+        "visible": is_visible(main),
+        "included_in_analysis": bool(main.props.get("included_in_analysis", True)),
+        "protected_from_ai": bool(
+            main.props.get("protected_from_ai") or main.props.get("layoutlab_protected_from_ai")
+        ),
+        "generator": main.get("layoutlab_generator"),
+        "params": _parse_params(main),
+        "collection": main.collection or "layoutlab_room",
+    }
+
+
+def _restore_semantic_state(store, object_id: str, state: dict) -> None:
+    main = main_part(store, object_id)
+    if main is None:
+        return
+    main.rotation_z_deg = float(state.get("rotation_z_deg") or 0.0)
+    for part in objects_for_id(store, object_id):
+        part["layoutlab_support_ref"] = state.get("support_ref") or SUPPORT_ROOM_FLOOR
+        if state.get("room_id"):
+            part["layoutlab_room_id"] = state["room_id"]
+        part["locked"] = bool(state.get("locked"))
+        part["visible"] = bool(state.get("visible", True))
+        part["included_in_analysis"] = bool(state.get("included_in_analysis", True))
+        part["protected_from_ai"] = bool(state.get("protected_from_ai"))
+    params = _parse_params(main)
+    params["location"] = list(state.get("location") or params.get("location") or [0, 0, 0])
+    params["rotation_z_deg"] = main.rotation_z_deg
+    _write_params(main, params)
+    for part in objects_for_id(store, object_id):
+        if part is not main and part.get("layoutlab_params"):
+            _write_params(part, params)
+
+
+def regenerate_object(
+    session,
+    *,
+    object_id: str | None = None,
+    object_name: str | None = None,
+    params_override: dict | None = None,
+    honour_lock: bool = True,
+) -> dict:
+    """Rebuild furniture from generator params (DD-002 / FC-001/WP-04). Same object_id."""
+    from ..util import merge_generator_params
+    from .headless_api import execute_generator_headless
+
+    store = session.mesh_store
+    oid = resolve_object_id(store, object_id=object_id, object_name=object_name)
+    main = main_part(store, oid)
+    if main is None:
+        raise ValueError(f"object not found: {oid}")
+    if honour_lock:
+        _require_unlocked(main, action="regenerate")
+
+    state = _capture_semantic_state(store, oid)
+    generator = state.get("generator")
+    if not generator:
+        raise ValueError("Object has no layoutlab_generator metadata")
+
+    merged = merge_generator_params(state["params"], params_override or {})
+    # Keep current world pose unless the override explicitly sets location.
+    if not (params_override and "location" in params_override):
+        merged["location"] = list(state["location"])
+    if not (params_override and "rotation_z_deg" in params_override):
+        merged["rotation_z_deg"] = state["rotation_z_deg"]
+    if not merged.get("collection"):
+        merged["collection"] = state["collection"]
+
+    was_selected = getattr(session, "selected_object_id", None) == oid
+    store.delete_by_object_id(oid)
+    result = execute_generator_headless(generator, merged, object_id=oid, store=store)
+    ensure_semantic_defaults(store, session._rooms, oid)
+    _restore_semantic_state(store, oid, {**state, "params": merged})
+
+    new_main = main_part(store, oid)
+    if new_main is not None:
+        if params_override and "location" in params_override:
+            loc = params_override["location"]
+            new_main.location.x = float(loc[0])
+            new_main.location.y = float(loc[1])
+            new_main.location.z = float(loc[2]) if len(loc) > 2 else float(new_main.location.z)
+        else:
+            loc = state["location"]
+            new_main.location.x = float(loc[0])
+            new_main.location.y = float(loc[1])
+            new_main.location.z = float(loc[2])
+        if params_override and "rotation_z_deg" in params_override:
+            new_main.rotation_z_deg = float(params_override["rotation_z_deg"])
+        else:
+            new_main.rotation_z_deg = float(state["rotation_z_deg"])
+        # Re-sync params JSON after pose fix.
+        params = _parse_params(new_main)
+        params["location"] = [
+            new_main.location.x,
+            new_main.location.y,
+            new_main.location.z,
+        ]
+        params["rotation_z_deg"] = new_main.rotation_z_deg
+        _write_params(new_main, params)
+
+    validity = refresh_validity(store, session._rooms, oid)
+    if was_selected:
+        session.selected_object_id = oid
+
+    summary = semantic_summary(store, oid)
+    summary["validity"] = validity
+    out = {
+        "regenerated": merged.get("name") or summary.get("name") or "",
+        "object_id": oid,
+        "generator": generator,
+        "params": merged,
+        "object": summary,
+    }
+    if isinstance(result, dict):
+        for key in ("parts", "main_part", "part_object_count"):
+            if key in result:
+                out[key] = result[key]
+    return out
+
+
+def set_parameter(
+    session,
+    *,
+    object_id: str | None = None,
+    object_name: str | None = None,
+    params: dict | None = None,
+    parameter: str | None = None,
+    value: Any = None,
+    honour_lock: bool = True,
+) -> dict:
+    """Change generator parameter(s) and regenerate (semantic resize — no mesh scale)."""
+    overrides = dict(params or {})
+    if parameter is not None:
+        overrides[str(parameter)] = value
+    if not overrides:
+        raise ValueError("set_parameter requires params{} and/or parameter+value")
+    result = regenerate_object(
+        session,
+        object_id=object_id,
+        object_name=object_name,
+        params_override=overrides,
+        honour_lock=honour_lock,
+    )
+    result["set_parameter"] = True
+    result["overrides"] = overrides
+    return result
+
+
 def apply_furniture_command(session, cmd: dict) -> Any:
     """Dispatch one furniture manipulation command."""
     action = cmd.get("action")
     params = cmd.get("params") if isinstance(cmd.get("params"), dict) else {}
-    object_id = cmd.get("object_id") or params.get("object_id") or cmd.get("object") or params.get("object")
+    object_id = cmd.get("object_id") or params.get("object_id")
+    object_name = cmd.get("object") or cmd.get("name") or params.get("object") or params.get("name")
 
     if action == "select_object":
-        return select_object(session, object_id)
+        return select_object(session, object_id or object_name)
 
     if action in ("move", "move_object"):
-        if not object_id:
-            raise ValueError("move requires object_id")
+        oid = resolve_object_id(
+            session.mesh_store, object_id=object_id, object_name=object_name
+        )
         location = cmd.get("location") or params.get("location")
-        return move_object(session, str(object_id), location)
+        return move_object(session, oid, location)
 
     if action in ("rotate_z", "rotate_object_z"):
-        if not object_id:
-            raise ValueError("rotate_z requires object_id")
+        oid = resolve_object_id(
+            session.mesh_store, object_id=object_id, object_name=object_name
+        )
         if "degrees" in cmd:
             degrees = cmd.get("degrees")
         elif "degrees" in params:
@@ -548,32 +731,37 @@ def apply_furniture_command(session, cmd: dict) -> Any:
             absolute = bool(params.get("absolute"))
         elif cmd.get("delta") or params.get("delta"):
             absolute = False
-        return rotate_object_z(session, str(object_id), float(degrees), absolute=absolute)
+        return rotate_object_z(session, oid, float(degrees), absolute=absolute)
 
     if action == "duplicate":
-        if not object_id:
-            raise ValueError("duplicate requires object_id")
+        oid = resolve_object_id(
+            session.mesh_store, object_id=object_id, object_name=object_name
+        )
         offset = cmd.get("offset") or params.get("offset") or (0.2, 0.2, 0.0)
-        return duplicate_object(session, str(object_id), offset=offset)
+        return duplicate_object(session, oid, offset=offset)
 
     if action == "delete":
-        if not object_id:
-            raise ValueError("delete requires object_id")
-        return delete_object(session, str(object_id))
+        oid = resolve_object_id(
+            session.mesh_store, object_id=object_id, object_name=object_name
+        )
+        return delete_object(session, oid)
 
     if action == "hide":
-        if not object_id:
-            raise ValueError("hide requires object_id")
-        return hide_object(session, str(object_id), hidden=True)
+        oid = resolve_object_id(
+            session.mesh_store, object_id=object_id, object_name=object_name
+        )
+        return hide_object(session, oid, hidden=True)
 
     if action == "show":
-        if not object_id:
-            raise ValueError("show requires object_id")
-        return hide_object(session, str(object_id), hidden=False)
+        oid = resolve_object_id(
+            session.mesh_store, object_id=object_id, object_name=object_name
+        )
+        return hide_object(session, oid, hidden=False)
 
     if action in ("set_flags", "set_object_flags"):
-        if not object_id:
-            raise ValueError("set_flags requires object_id")
+        oid = resolve_object_id(
+            session.mesh_store, object_id=object_id, object_name=object_name
+        )
         flags = dict(params)
         for key in (
             "locked",
@@ -586,14 +774,57 @@ def apply_furniture_command(session, cmd: dict) -> Any:
                 flags[key] = cmd[key]
         flags.pop("object_id", None)
         flags.pop("object", None)
-        return set_object_flags(session, str(object_id), flags)
+        flags.pop("name", None)
+        return set_object_flags(session, oid, flags)
 
     if action == "set_locked":
-        if not object_id:
-            raise ValueError("set_locked requires object_id")
+        oid = resolve_object_id(
+            session.mesh_store, object_id=object_id, object_name=object_name
+        )
         locked = cmd.get("locked") if "locked" in cmd else params.get("locked")
         if locked is None:
             raise ValueError("set_locked requires locked: bool")
-        return set_object_flags(session, str(object_id), {"locked": bool(locked)})
+        return set_object_flags(session, oid, {"locked": bool(locked)})
+
+    if action == "regenerate":
+        overrides = dict(params) if params else {}
+        for key, value in cmd.items():
+            if key in ("action", "object_id", "object", "name", "params", "generator"):
+                continue
+            if key not in overrides:
+                overrides[key] = value
+        return regenerate_object(
+            session,
+            object_id=object_id,
+            object_name=object_name,
+            params_override=overrides or None,
+        )
+
+    if action in ("set_parameter", "resize"):
+        overrides = dict(params) if params else {}
+        parameter = cmd.get("parameter") or cmd.get("param")
+        if parameter is not None and "value" in cmd:
+            overrides[str(parameter)] = cmd.get("value")
+        for key, val in cmd.items():
+            if key in (
+                "action",
+                "object_id",
+                "object",
+                "name",
+                "params",
+                "parameter",
+                "param",
+                "value",
+                "generator",
+            ):
+                continue
+            if key not in overrides:
+                overrides[key] = val
+        return set_parameter(
+            session,
+            object_id=object_id,
+            object_name=object_name,
+            params=overrides or None,
+        )
 
     raise ValueError(f"unhandled furniture action {action!r}")

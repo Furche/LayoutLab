@@ -404,7 +404,7 @@ Rebuild a logical object from stored generator metadata, optionally overriding p
 {
   "action": "regenerate",
   "object_id": "a1b2c3d4-…",
-  "params": { "length": 14 }
+  "params": { "width": 1.8 }
 }
 ```
 
@@ -414,7 +414,7 @@ Rebuild a logical object from stored generator metadata, optionally overriding p
 {
   "action": "regenerate",
   "object": "BED_120x200_mattress",
-  "params": { "width": 22 }
+  "params": { "width": 1.8 }
 }
 ```
 
@@ -428,13 +428,36 @@ Rebuild a logical object from stored generator metadata, optionally overriding p
 
 1. Resolve `object_id` from field or from `object` mesh custom property.
 2. Read `layoutlab_generator` and `layoutlab_params` from existing components.
-3. Merge `params` overrides into stored params.
+3. Merge `params` overrides into stored params (current pose kept unless `location` overridden).
 4. Delete all meshes with that `layoutlab_object_id`.
 5. Re-run generator with merged params; **same `object_id` preserved**.
+6. Restore semantic flags (`locked`, `visible`, `support_ref`, …) and refresh validity.
+
+**Core:** `[IMPLEMENTED]` `0.10.38` (FC-001/WP-04). **Blender:** already `[IMPLEMENTED]`.
 
 **Legacy objects** without `layoutlab_object_id` cannot be regenerated — use `delete_prefix` + `run_generator`.
 
-**Return value (console):** `{ "regenerated", "object_id", "generator", "params", … }`
+**Return:** `{ "regenerated", "object_id", "generator", "params", "object", … }`
+
+------------------------------------------------------------------------
+
+## 5.12b `set_parameter` / `resize` `[IMPLEMENTED]` Core `0.10.38`
+
+Parametric resize — **no mesh scale**. Alias `resize` → same path.
+
+```json
+{ "action": "set_parameter", "object_id": "…", "params": { "width": 1.8 } }
+```
+
+```json
+{ "action": "set_parameter", "object_id": "…", "parameter": "width", "value": 1.8 }
+```
+
+```json
+{ "action": "resize", "object_id": "…", "width": 1.8 }
+```
+
+Merges overrides then runs `regenerate`. Honours `locked`. One Undo unit via `commit_commands`.
 
 ------------------------------------------------------------------------
 

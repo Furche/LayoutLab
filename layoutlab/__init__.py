@@ -1,7 +1,7 @@
 bl_info = {
     "name": "LayoutLab",
     "author": "ChatGPT / Alexander",
-    "version": (0, 10, 37),
+    "version": (0, 10, 38),
     "blender": (4, 0, 0),
     "location": "View3D > Sidebar > LayoutLab",
     "description": "Room layout JSON exchange with an asset-browser-like generator browser.",

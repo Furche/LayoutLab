@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-22 (FC-001/WP-03 shipped — next WP-04)
-**Plugin version:** 0.10.37 · **Branch:** `main`
+**Last updated:** 2026-07-22 (FC-001/WP-04 shipped — next WP-05)
+**Plugin version:** 0.10.38 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -25,18 +25,15 @@
 ```
 LayoutLab — Blender-Addon für semantische Raumplanung (Execution + Planning v0).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Plugin v0.10.37.
+Branch: main. Plugin v0.10.38.
 
 Lies zuerst AI_CONTEXT.md (Mental Model). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-22):
-- DD-016 **Accepted**: plan_layout + bedroom_basic (agent_tools 0.5)
-- DD-015 **Accepted**: soft metrics + tradeoffs (Ästhetik ≠ Core-Metrik)
-- DD-011 **Accepted** + **candidates v1 shipped**: `plan_layout` mode=candidates
-- DD-017 **Accepted** + evaluation schema + shortlist + revision + force path
-- **Shortlist selection** ✅ (`0.10.29`) · **blueprint SVG cards** ✅ (`0.10.33`) · **optionale AI-Ästhetik** ✅ (`0.10.34` / `0.10.35`)
+- Planning slice DD-011/015/016/017 ✅
 - **FC-001/WP-02** ✅ (`0.10.36`) — transactions / revision / Undo
-- **FC-001/WP-03** ✅ (`0.10.37`) — furniture select/move/rotate_z/duplicate/delete/hide/lock + validity
-- Nächste Arbeit: **FC-001/WP-04** ([DD-019](design_decisions/DD-019-semantic-direct-manipulation.md)) — parametrische Resize + regenerate
+- **FC-001/WP-03** ✅ (`0.10.37`) — furniture select/move/rotate/dup/delete/hide/lock
+- **FC-001/WP-04** ✅ (`0.10.38`) — regenerate / set_parameter / resize (parametrisch)
+- Nächste Arbeit: **FC-001/WP-05** ([DD-019](design_decisions/DD-019-semantic-direct-manipulation.md)) — Wand-/Ecken-Resize, openings inactive
 - DD-018/019/020 **Accepted** (FC-001/WP-01)
 - Core: python3 -m server (:8765); Viewer Vite (:5173)
 
@@ -92,12 +89,12 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 | Component | Version |
 |---|---|
-| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.10.37** |
+| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.10.38** |
 | `bed_basic` | **0.7.0** — raised frame construction (`BedConstruction`) + optional `bed_entry` clearances; sizes in meters |
 | `wardrobe_basic` | **0.7.0** — `front_side` (`y_min` \| `y_max`), `create_clearance`, part `clearance_front_access`; sizes in meters |
 | `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance (`required`); sizes in meters |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.10.37.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.38.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -165,15 +162,15 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | 2026-07-10 | Parenting fixes v0.6.5–0.6.8 |
 | 2026-07-10 | DD-007 Accepted |
 
-**Latest commit (at last handoff update):** WP-03 furniture ops (`0.10.37`)
+**Latest commit (at last handoff update):** WP-04 parametric resize (`0.10.38`)
 
 ------------------------------------------------------------------------
 
 # Next steps (agreed order)
 
-**Active focus:** **FC-001/WP-04** — parametric furniture resize via generator parameters + regenerate (DD-019). WP-05 walls may proceed in parallel after WP-02.
+**Active focus:** **FC-001/WP-05** — wall/corner resize, opening host behaviour, inactive openings, invalid furniture visualization (DD-019).
 
-**After WP-04 (queued):** WP-05 → WP-06. Full ordered roadmap: [LayoutLab_Master_Design_Document.md](../LayoutLab_Master_Design_Document.md) §17.
+**After WP-05 (queued):** WP-06. Full ordered roadmap: [LayoutLab_Master_Design_Document.md](../LayoutLab_Master_Design_Document.md) §17.
 
 **On demand / Refinement (not blocking WP-01):** see MDD §17 — staged Viewer explanation;
 aesthetics privacy stage 1 (minimum disclosure when flag on); further recipes only when a real
@@ -266,10 +263,11 @@ Living product track — **full ordered roadmap** lives in [LayoutLab_Master_Des
 1. ✅ **FC-001/WP-01** — DD-018 / DD-019 / DD-020 **Accepted**
 2. ✅ **FC-001/WP-02** — transactions / revisions / Undo (`0.10.36`, DD-018)
 3. ✅ **FC-001/WP-03** — furniture select/move/rotate/dup/delete/hide/lock (`0.10.37`, DD-019)
-4. 📋 **FC-001/WP-04** — parametric resize + regenerate
-5. 📋 Queued: WP-05 → WP-06
-6. 📋 Refinement (nicht FC-001-Blocker): gestufte Viewer-Erklärung; Ästhetik-Privacy Stufe 1; Recipes nur bei konkretem Szenario
-7. ⏸ Deferred: Capture, shared-wall topology, multi-floor, persisted variants, cloud/auth; Ästhetik-Privacy Stufe 2 / Default-on
+4. ✅ **FC-001/WP-04** — parametric resize + regenerate (`0.10.38`, DD-019)
+5. 📋 **FC-001/WP-05** — wall/opening resize + inactive/invalid visualization
+6. 📋 Queued: WP-06
+7. 📋 Refinement (nicht FC-001-Blocker): gestufte Viewer-Erklärung; Ästhetik-Privacy Stufe 1; Recipes nur bei konkretem Szenario
+8. ⏸ Deferred: Capture, shared-wall topology, multi-floor, persisted variants, cloud/auth; Ästhetik-Privacy Stufe 2 / Default-on
 
 Binding order for agents: **Next steps** (this file) · behaviour in [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · binding architecture only after resulting DDs are accepted.
 
@@ -279,6 +277,7 @@ Binding order for agents: **Next steps** (this file) · behaviour in [FC-001](co
 
 | Date | Change |
 |---|---|
+| 2026-07-22 | FC-001/WP-04 shipped (`0.10.38`); next WP-05 |
 | 2026-07-22 | FC-001/WP-03 shipped (`0.10.37`); next WP-04 |
 | 2026-07-22 | FC-001/WP-02 shipped (`0.10.36`); next WP-03 |
 | 2026-07-22 | DD-018/019/020 **Accepted**; next FC-001/WP-02 |

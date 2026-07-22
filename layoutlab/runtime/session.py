@@ -40,7 +40,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.37"
+LAYOUTLAB_VERSION = "0.10.38"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -70,6 +70,10 @@ SESSION_ACTIONS = frozenset(
         "set_flags",
         "set_object_flags",
         "set_locked",
+        # FC-001/WP-04 parametric resize
+        "regenerate",
+        "set_parameter",
+        "resize",
     }
 )
 
@@ -571,6 +575,9 @@ class RoomSession:
             "set_flags",
             "set_object_flags",
             "set_locked",
+            "regenerate",
+            "set_parameter",
+            "resize",
         ):
             return furniture_ops.apply_furniture_command(self, cmd)
 

@@ -4,6 +4,16 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — FC-001/WP-04: parametric resize via regenerate (0.10.38)
+
+**Why:** DD-019 forbids mesh-scale resize; furniture size changes must edit generator
+parameters and rebuild (DD-002). Headless Core lacked `regenerate` — only Blender had it.
+
+**How:** `regenerate` / `set_parameter` / `resize` merge params, delete+rebuild same
+`object_id`, restore pose/flags. Next: WP-05 wall/opening edits.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — FC-001/WP-03: semantic furniture ops in Core (0.10.37)
 
 **Why:** DD-019 requires viewport edits to mutate semantic furniture state (pose,
