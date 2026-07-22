@@ -156,10 +156,6 @@
           <button type="button" data-cam="front" title="Front (3)">Front</button>
           <button type="button" data-cam="side" title="Side (4)">Side</button>
           <span class="view-controls-sep" aria-hidden="true"></span>
-          <button type="button" data-edit="orbit" class="active" title="Orbit (O)">Orbit</button>
-          <button type="button" data-edit="move" title="Move furniture (G)">Move</button>
-          <button type="button" data-edit="rotate" title="Rotate Z (R)">Rotate</button>
-          <span class="view-controls-sep" aria-hidden="true"></span>
           <button type="button" id="btn-undo" title="Undo (⌘Z)">Undo</button>
           <button type="button" id="btn-redo" title="Redo (⇧⌘Z)">Redo</button>
         </div>
@@ -212,13 +208,11 @@
             <h2>Shortcuts</h2>
             <ul class="shortcuts">
               <li><kbd>⌘V</kbd> paste export</li>
-              <li><kbd>F</kbd> fit (perspective)</li>
-              <li><kbd>1</kbd>–<kbd>4</kbd> iso/top/front/side (ortho)</li>
-              <li><kbd>G</kbd> move (handles / walls / furniture) · <kbd>R</kbd> rotate · <kbd>O</kbd> orbit</li>
-              <li>Blue = wall handles · amber = corners · drag → Core preview</li>
-              <li><kbd>Esc</kbd> cancel preview / clear selection</li>
+              <li><kbd>F</kbd> fit · <kbd>1</kbd>–<kbd>4</kbd> camera</li>
+              <li>Click object/room → transform gizmos</li>
+              <li>Arrows move · purple ring rotate · blue böppel scale</li>
+              <li>Drag empty space to orbit · <kbd>Esc</kbd> clear / cancel</li>
               <li><kbd>⌘Z</kbd> / <kbd>⇧⌘Z</kbd> Undo / Redo (Core)</li>
-              <li>Orbit → perspective · pan/dolly keep ortho</li>
             </ul>
           </section>
         </div>

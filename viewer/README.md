@@ -53,6 +53,7 @@ Viewer UX on top of FC-001 Core (transactions, furniture/room ops, multi-room pr
 3. ~~Direct manipulation Move/Rotate → preview/commit~~ ✅ (`0.10.43`)
 4. ~~Wall drag + furniture-first pick~~ ✅ (`0.10.44`)
 5. ~~Wall/corner gizmos~~ ✅ (`0.10.45`)
-6. Planning / shortlist feedback polish; furniture resize gizmos later
+6. ~~Selection transform gizmos (arrows / ring / böppel)~~ ✅ (`0.10.46`)
+7. Planning / shortlist feedback polish; room Z-rotate when Core supports it
 
 See [docs/HANDOFF.md](../docs/HANDOFF.md).

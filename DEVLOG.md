@@ -4,6 +4,17 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — Selection-based transform gizmos (`0.10.46`)
+
+**Why:** Mode switching (Orbit/Move/Rotate) forced users to hunt for the right
+tool; CAD-style gizmos on the selection match the expected “click then
+manipulate” flow.
+
+**How:** Selecting furniture or a room shows move arrows, a Z rotate ring
+(furniture), and scale böppel; gestures still commit through Core preview.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — Viewer wall/corner gizmos (`0.10.45`)
 
 **Why:** Wall drag worked but was invisible — users had to discover that walls

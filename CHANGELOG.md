@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection transform gizmos (`0.10.46`):** Click furniture or room → show move arrows, rotate ring (furniture), and scale böppel (furniture axes / room walls+corners). Removed Orbit/Move/Rotate mode buttons; orbit remains default camera drag.
 - **Viewer wall/corner gizmos (`0.10.45`):** Move mode shows blue wall handles and amber corner handles; drag → `move_wall` / `move_corner` preview/commit. Handles scoped to focused room when one is selected.
 - **Viewer wall drag + pick fix (`0.10.44`):** Move mode resizes walls via `move_wall` preview/commit; pick prefers furniture over walls; wall_side on mesh userData.
 - **Viewer direct manipulation (`0.10.43`):** Move/Rotate modes drag furniture via Core `/v1/preview/*` (commit on release, Esc cancels); Undo/Redo buttons + ⌘Z; selection shows pose/validity. Requires a live Core scene.
