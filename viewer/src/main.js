@@ -9,6 +9,7 @@ import {
   getPresetPose,
 } from "./scene.js";
 import { renderFloorplanSvg } from "./floorplan.js";
+import { buildRoomGizmos, isGizmoMesh } from "./gizmos.js";
 import {
   createPreviewClient,
   findMeshForObjectId,
@@ -24,6 +25,7 @@ import {
   ROTATE_DEG_PER_PX,
   wallDeltaFromDrag,
   wallMoveCommand,
+  cornerMoveCommand,
 } from "./manipulate.js";
 import kidsRoomFixture from "../../tests/fixtures/reference_kids_room_export.json";
 import kidsRoomFindings from "../../tests/fixtures/reference_kids_room_export_findings.json";
@@ -437,6 +439,7 @@ let liveCoreSession = false;
 let editMode = "orbit"; // orbit | move | rotate
 let gesture = null; // active drag gesture
 let lastPreviewPush = 0;
+let gizmoGroup = null;
 let pendingChatCommands = null;
 let pendingChatQuality = null;
 let pendingChatProposalPayload = null;
@@ -1046,6 +1049,7 @@ function renderSelectedRoomFloorplan(data, roomId) {
 function selectRoom(roomId, { fit = true, announce = fit } = {}) {
   selectedRoomId = roomId || null;
   applyRoomFocus();
+  rebuildGizmos();
   if (el.roomList) {
     for (const btn of el.roomList.querySelectorAll("button[data-room-id]")) {
       const id = btn.dataset.roomId || "";
@@ -1209,15 +1213,19 @@ function selectMesh(mesh, opts = {}) {
   const pose = ud.object_id ? poseFromExport(lastExportData, ud.object_id) : null;
   const bits = [
     mesh.name || "object",
+    ud.gizmo ? `gizmo ${ud.kind}` : null,
     ud.role ? `role ${ud.role}` : null,
-    ud.wall_side ? `wall ${ud.wall_side}` : null,
+    ud.wall_side || ud.wallSide ? `wall ${ud.wall_side || ud.wallSide}` : null,
+    ud.corner ? `corner ${ud.corner}` : null,
     ud.object_id && isFurnitureMesh(mesh) ? `id ${ud.object_id.slice(0, 8)}…` : null,
-    ud.room_id ? `room ${String(ud.room_id).slice(0, 8)}…` : null,
+    ud.room_id || ud.roomId
+      ? `room ${String(ud.room_id || ud.roomId).slice(0, 8)}…`
+      : null,
     pose ? `xy ${pose.location[0].toFixed(2)}, ${pose.location[1].toFixed(2)}` : null,
     pose ? `rz ${pose.rotation_z_deg.toFixed(1)}°` : null,
     pose?.validity ? `validity ${pose.validity}` : null,
     ud.clearance_name ? `clearance ${ud.clearance_name}` : null,
-    isManipulableMesh(mesh, editMode)
+    isGizmoMesh(mesh) || isManipulableMesh(mesh, editMode)
       ? `edit: ${editMode}`
       : editMode === "rotate" && isWallMesh(mesh)
         ? "walls: use Move mode"
@@ -1228,8 +1236,11 @@ function selectMesh(mesh, opts = {}) {
     .join("<br>");
   el.selection.className = "selection-info";
   setStatus(`Selected ${mesh.name}`, "ok");
-  if (opts.syncRoom !== false && ud.room_id && ud.room_id !== selectedRoomId) {
-    selectRoom(ud.room_id, { fit: false, announce: false });
+  if (opts.syncRoom !== false) {
+    const rid = ud.room_id || ud.roomId;
+    if (rid && rid !== selectedRoomId) {
+      selectRoom(rid, { fit: false, announce: false });
+    }
   }
 }
 
@@ -1406,6 +1417,7 @@ function loadExportData(data, sourceLabel, opts = {}) {
   if (preserveRoomId) {
     selectRoom(preserveRoomId, { fit: false, announce: false });
   }
+  rebuildGizmos();
   if (preserveObjectId) {
     const mesh = findMeshForObjectId(collectMeshes(), preserveObjectId);
     if (mesh) selectMesh(mesh, { syncRoom: false });
@@ -1414,6 +1426,13 @@ function loadExportData(data, sourceLabel, opts = {}) {
       collectMeshes(),
       opts.preserveWall.roomId,
       opts.preserveWall.wallSide,
+    );
+    if (mesh) selectMesh(mesh, { syncRoom: false });
+  } else if (opts.preserveCorner) {
+    const mesh = findGizmoHandle(
+      opts.preserveCorner.roomId,
+      "corner",
+      opts.preserveCorner.corner,
     );
     if (mesh) selectMesh(mesh, { syncRoom: false });
   }
@@ -1507,7 +1526,50 @@ function applyCamera(preset) {
   });
 }
 
+function rebuildGizmos() {
+  if (gizmoGroup?.parent) {
+    gizmoGroup.parent.remove(gizmoGroup);
+    gizmoGroup.traverse((obj) => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
+        else obj.material.dispose();
+      }
+    });
+  }
+  gizmoGroup = null;
+  if (!sceneRoot || !lastExportData || editMode !== "move") return;
+  gizmoGroup = buildRoomGizmos(lastExportData, {
+    roomId: selectedRoomId || null,
+  });
+  sceneRoot.add(gizmoGroup);
+}
+
+function findGizmoHandle(roomId, kind, key) {
+  if (!gizmoGroup) return null;
+  let found = null;
+  gizmoGroup.traverse((obj) => {
+    if (found || !obj.userData?.gizmo) return;
+    if (obj.userData.roomId !== roomId || obj.userData.kind !== kind) return;
+    if (kind === "wall" && obj.userData.wallSide === key) found = obj;
+    if (kind === "corner" && obj.userData.corner === key) found = obj;
+  });
+  return found;
+}
+
+function pickGizmo(clientX, clientY) {
+  if (!gizmoGroup || editMode !== "move") return null;
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObject(gizmoGroup, true);
+  return hits[0]?.object || null;
+}
+
 function pickObject(clientX, clientY, { preferFurniture = false } = {}) {
+  const gizmo = pickGizmo(clientX, clientY);
+  if (gizmo) return gizmo;
   const rect = renderer.domElement.getBoundingClientRect();
   pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
   pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
@@ -1743,13 +1805,14 @@ function setEditMode(mode) {
     btn.classList.toggle("active", btn.dataset.edit === editMode);
   }
   controls.enabled = editMode === "orbit";
+  rebuildGizmos();
   if (selected) selectMesh(selected, { syncRoom: false });
   setStatus(
     editMode === "orbit"
       ? "Orbit mode"
       : editMode === "move"
-        ? "Move mode — drag furniture (Core preview/commit)"
-        : "Rotate mode — drag horizontally (Core preview/commit)",
+        ? "Move mode — drag handles, walls, or furniture"
+        : "Rotate mode — drag furniture horizontally",
     "ok",
   );
 }
@@ -1765,12 +1828,18 @@ function applyExportFromCore(payload, label, opts = {}) {
     (gesture?.kind === "wall"
       ? { roomId: gesture.roomId, wallSide: gesture.wallSide }
       : null);
+  const preserveCorner =
+    opts.preserveCorner ||
+    (gesture?.kind === "corner"
+      ? { roomId: gesture.roomId, corner: gesture.corner }
+      : null);
   loadExportData(payload.export, label, {
     preserveSelection: Boolean(opts.preserveSelection ?? true),
     preserveCamera: true,
     quiet: opts.quiet,
     preserveObjectId: opts.preserveObjectId,
     preserveWall,
+    preserveCorner,
   });
 }
 
@@ -1829,9 +1898,11 @@ async function endGestureCommit() {
     const done =
       g.kind === "wall"
         ? `Moved ${g.wallSide} wall`
-        : g.mode === "move"
-          ? "Moved"
-          : "Rotated";
+        : g.kind === "corner"
+          ? `Moved ${g.corner} corner`
+          : g.mode === "move"
+            ? "Moved"
+            : "Rotated";
     setStatus(`${done} · revision ${committed.revision}`, "ok");
   } catch (err) {
     gesture = null;
@@ -1874,20 +1945,6 @@ async function startGesture(ev, mesh) {
     setStatus("Move/Rotate needs a Core scene (Empty / Furnished / Multi-room)", "warn");
     return false;
   }
-  if (editMode === "rotate" && isWallMesh(mesh)) {
-    setStatus("Walls: switch to Move to resize; Rotate is for furniture", "warn");
-    selectMesh(mesh);
-    return false;
-  }
-  if (!isManipulableMesh(mesh, editMode)) {
-    setStatus(
-      editMode === "rotate"
-        ? "Select furniture to rotate"
-        : "Select furniture or a wall to move",
-      "warn",
-    );
-    return false;
-  }
 
   const floor = hitBlenderFloorXY(
     raycaster,
@@ -1897,6 +1954,66 @@ async function startGesture(ev, mesh) {
     ev.clientY,
     renderer.domElement,
   );
+
+  if (isGizmoMesh(mesh)) {
+    const roomId = mesh.userData.roomId;
+    if (mesh.userData.kind === "wall") {
+      const wallSide = String(mesh.userData.wallSide || "").toLowerCase();
+      gesture = {
+        kind: "wall",
+        mode: "move",
+        roomId,
+        wallSide,
+        startFloor: floor,
+        startClientX: ev.clientX,
+        _delta: 0,
+        started: false,
+        _beginning: false,
+        commands() {
+          return [wallMoveCommand(this.roomId, this.wallSide, this._delta || 0)];
+        },
+      };
+      selectMesh(mesh);
+      controls.enabled = false;
+      return true;
+    }
+    if (mesh.userData.kind === "corner") {
+      const corner = String(mesh.userData.corner || "").toLowerCase();
+      gesture = {
+        kind: "corner",
+        mode: "move",
+        roomId,
+        corner,
+        startFloor: floor,
+        startClientX: ev.clientX,
+        _dx: 0,
+        _dy: 0,
+        started: false,
+        _beginning: false,
+        commands() {
+          return [cornerMoveCommand(this.roomId, this.corner, this._dx || 0, this._dy || 0)];
+        },
+      };
+      selectMesh(mesh);
+      controls.enabled = false;
+      return true;
+    }
+  }
+
+  if (editMode === "rotate" && isWallMesh(mesh)) {
+    setStatus("Walls: switch to Move to resize; Rotate is for furniture", "warn");
+    selectMesh(mesh);
+    return false;
+  }
+  if (!isManipulableMesh(mesh, editMode)) {
+    setStatus(
+      editMode === "rotate"
+        ? "Select furniture to rotate"
+        : "Select a handle, wall, or furniture to move",
+      "warn",
+    );
+    return false;
+  }
 
   if (isWallMesh(mesh)) {
     const roomId = mesh.userData.room_id;
@@ -1965,9 +2082,11 @@ async function ensureGesturePreview() {
     const label =
       gesture.kind === "wall"
         ? `Moving ${gesture.wallSide} wall`
-        : gesture.mode === "move"
-          ? "Moving"
-          : "Rotating";
+        : gesture.kind === "corner"
+          ? `Moving ${gesture.corner} corner`
+          : gesture.mode === "move"
+            ? "Moving"
+            : "Rotating";
     setStatus(`${label}… release to commit, Esc to cancel`);
   } catch (err) {
     gesture = null;
@@ -1989,7 +2108,7 @@ async function updateGesture(ev) {
   await ensureGesturePreview();
   if (!gesture?.started) return;
 
-  if (gesture.kind === "wall" || gesture.mode === "move") {
+  if (gesture.kind === "wall" || gesture.kind === "corner" || gesture.mode === "move") {
     const floor = hitBlenderFloorXY(
       raycaster,
       camera,
@@ -2003,6 +2122,9 @@ async function updateGesture(ev) {
     const dy = floor.y - gesture.startFloor.y;
     if (gesture.kind === "wall") {
       gesture._delta = wallDeltaFromDrag(gesture.wallSide, dx, dy);
+    } else if (gesture.kind === "corner") {
+      gesture._dx = dx;
+      gesture._dy = dy;
     } else {
       const optimisticDx = dx - gesture.lastLocal.x;
       const optimisticDy = dy - gesture.lastLocal.y;
@@ -2081,9 +2203,9 @@ renderer.domElement.addEventListener("pointerdown", (ev) => {
   controls.enabled = false;
   const hit = pickObject(ev.clientX, ev.clientY, { preferFurniture: true });
   const target =
-    hit && isManipulableMesh(hit, editMode)
+    hit && (isGizmoMesh(hit) || isManipulableMesh(hit, editMode))
       ? hit
-      : selected && isManipulableMesh(selected, editMode)
+      : selected && (isGizmoMesh(selected) || isManipulableMesh(selected, editMode))
         ? selected
         : null;
   if (!target) {

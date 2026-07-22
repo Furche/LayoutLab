@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-22 (Viewer direct manipulation `0.10.43`)
-**Plugin / Core version:** 0.10.43 · **Branch:** `main`
+**Last updated:** 2026-07-22 (Viewer wall/corner gizmos `0.10.45`)
+**Plugin / Core version:** 0.10.45 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -25,16 +25,15 @@
 ```
 LayoutLab — semantic interior planning (Standalone Viewer + Core).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Core/plugin v0.10.43.
+Branch: main. Core/plugin v0.10.45.
 
 Lies zuerst AI_CONTEXT.md (Mental Model — Viewer first). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-22):
 - **Produktfokus: Standalone Web Viewer** (`viewer/`) + Core HTTP (`server/`) — nicht Blender-Plugin-UX
 - Planning slice DD-011/015/016/017 ✅
-- **FC-001/WP-01…WP-06** ✅ Core (`0.10.36`–`0.10.40`) — transactions, furniture/room ops, Spatial Project
-- **`0.10.41`–`0.10.42`:** hide_room furniture omit; Viewer multi-room meta + room selection
-- **`0.10.43`:** Viewer Move/Rotate via Core preview/commit; Undo/Redo
-- Nächste Arbeit: **Viewer UX** — wall/resize gizmos; planning feedback polish
+- **FC-001/WP-01…WP-06** ✅ Core (`0.10.36`–`0.10.40`)
+- **`0.10.41`–`0.10.45`:** Viewer multi-room, Move/Rotate, wall drag, wall/corner gizmos
+- Nächste Arbeit: **Viewer UX** — planning feedback polish; furniture resize gizmos
 - Blender = Runtime-Adapter (Generator-QA), kein Default für neue Features
 - Core: python3 -m server (:8765); Viewer: cd viewer && npm run dev (:5173)
 
@@ -91,12 +90,12 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 | Component | Version |
 |---|---|
-| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.10.43** |
+| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.10.45** |
 | `bed_basic` | **0.7.0** — raised frame construction (`BedConstruction`) + optional `bed_entry` clearances; sizes in meters |
 | `wardrobe_basic` | **0.7.0** — `front_side` (`y_min` \| `y_max`), `create_clearance`, part `clearance_front_access`; sizes in meters |
 | `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance (`required`); sizes in meters |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.10.43.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.45.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -164,14 +163,14 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | 2026-07-10 | Parenting fixes v0.6.5–0.6.8 |
 | 2026-07-10 | DD-007 Accepted |
 
-**Latest commit (at last handoff update):** Viewer direct manipulation Move/Rotate (`0.10.43`)
+**Latest commit (at last handoff update):** Viewer wall/corner gizmos (`0.10.45`)
 
 ------------------------------------------------------------------------
 
 # Next steps (agreed order)
 
-**Active focus:** **Standalone Viewer UX** — wall/corner resize gizmos; planning
-feedback polish. `0.10.43` furniture Move/Rotate via Core preview/commit.
+**Active focus:** **Standalone Viewer UX** — planning feedback polish; furniture
+resize gizmos. `0.10.45` wall/corner handles in Move mode.
 
 **Queued / later:** FC-001/WP-07 (stacking / advanced supports); shared-wall apartment topology;
 persisted variants.
@@ -272,10 +271,12 @@ Living product track — **full ordered roadmap** lives in [LayoutLab_Master_Des
 7. ✅ **hide_room furniture omit + Viewer multi-room meta** (`0.10.41`)
 8. ✅ **Viewer room selection / focus / floorplan** (`0.10.42`)
 9. ✅ **Viewer Move/Rotate → Core preview/commit** (`0.10.43`)
-10. 📋 **Viewer** — wall/resize gizmos; planning feedback polish
-11. 📋 **FC-001/WP-07** — advanced supports / stacking (explicitly later)
-12. 📋 Refinement: gestufte Viewer-Erklärung; Ästhetik-Privacy Stufe 1; Recipes on demand
-13. ⏸ Deferred: Capture, shared-wall topology, multi-floor, persisted variants, cloud/auth; Ästhetik-Privacy Stufe 2 / Default-on
+10. ✅ **Viewer wall drag + pick fix** (`0.10.44`)
+11. ✅ **Viewer wall/corner gizmos** (`0.10.45`)
+12. 📋 **Viewer** — planning feedback polish; furniture resize gizmos
+13. 📋 **FC-001/WP-07** — advanced supports / stacking (explicitly later)
+14. 📋 Refinement: gestufte Viewer-Erklärung; Ästhetik-Privacy Stufe 1; Recipes on demand
+15. ⏸ Deferred: Capture, shared-wall topology, multi-floor, persisted variants, cloud/auth; Ästhetik-Privacy Stufe 2 / Default-on
 
 Binding order for agents: **Next steps** (this file) · behaviour in [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · binding architecture only after resulting DDs are accepted.
 
@@ -285,6 +286,7 @@ Binding order for agents: **Next steps** (this file) · behaviour in [FC-001](co
 
 | Date | Change |
 |---|---|
+| 2026-07-22 | `0.10.45` Viewer wall/corner gizmos (Move mode handles → move_wall / move_corner) |
 | 2026-07-22 | `0.10.43` Viewer Move/Rotate via Core preview/commit; Undo/Redo |
 | 2026-07-22 | `0.10.42` Viewer room selection / focus / floorplan; Multi-room Core demo |
 | 2026-07-22 | `0.10.41` hide_room omits furniture; Viewer multi-room meta / visible floorplan pick |

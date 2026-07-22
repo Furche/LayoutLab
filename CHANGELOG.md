@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Viewer wall/corner gizmos (`0.10.45`):** Move mode shows blue wall handles and amber corner handles; drag → `move_wall` / `move_corner` preview/commit. Handles scoped to focused room when one is selected.
 - **Viewer wall drag + pick fix (`0.10.44`):** Move mode resizes walls via `move_wall` preview/commit; pick prefers furniture over walls; wall_side on mesh userData.
 - **Viewer direct manipulation (`0.10.43`):** Move/Rotate modes drag furniture via Core `/v1/preview/*` (commit on release, Esc cancels); Undo/Redo buttons + ⌘Z; selection shows pose/validity. Requires a live Core scene.
 - **Viewer room selection (`0.10.42`):** Inspector room list (focus / dim others / floorplan for selected room); viewport pick syncs active room; Examples → Multi-room (Core) demo; fabric objects export `layoutlab.room_id`.

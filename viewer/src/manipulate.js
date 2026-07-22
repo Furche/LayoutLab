@@ -174,6 +174,16 @@ export function wallMoveCommand(roomId, wallSide, delta) {
   };
 }
 
+export function cornerMoveCommand(roomId, corner, dx, dy) {
+  return {
+    action: "move_corner",
+    room_id: roomId,
+    corner,
+    dx,
+    dy,
+  };
+}
+
 /**
  * @param {object} api
  * @param {(path: string, body?: object) => Promise<object>} api.post

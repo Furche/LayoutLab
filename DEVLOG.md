@@ -4,6 +4,16 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — Viewer wall/corner gizmos (`0.10.45`)
+
+**Why:** Wall drag worked but was invisible — users had to discover that walls
+themselves were the grab target. FC-001 calls for explicit wall/corner tools.
+
+**How:** Move mode draws wall (blue) and corner (amber) handles from room
+footprints; gestures go through Core preview/commit (`move_wall` / `move_corner`).
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — Viewer wall drag + furniture pick (`0.10.44`)
 
 **Why:** Move mode ignored walls (only furniture), but walls were the easiest
