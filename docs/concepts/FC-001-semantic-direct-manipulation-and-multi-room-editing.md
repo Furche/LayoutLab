@@ -1,6 +1,6 @@
 # FC-001 — Semantic Direct Manipulation and Multi-Room Editing
 
-**Status:** Active (WP-02 complete — transactions shipped `0.10.36`; next WP-03)
+**Status:** Active (WP-03 complete — furniture ops `0.10.37`; next WP-04)
 **Date:** 2026-07-22
 **Owner:** Product / Architecture
 **Related:** [DD-009](../design_decisions/DD-009-ai-execution-boundary.md) · [DD-010](../design_decisions/DD-010-room-model.md) · [DD-014](../design_decisions/DD-014-standalone-runtime-path.md) · [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) (**Accepted**) · [DD-019](../design_decisions/DD-019-semantic-direct-manipulation.md) (**Accepted**) · [DD-020](../design_decisions/DD-020-spatial-project-independent-rooms.md) (**Accepted**) · [Room Model](../room_model.md) · [Spatial Project vision](../Future_Ideas.md#13-spatial-project-model)
@@ -434,9 +434,9 @@ decisions for:
 DD-010 remains the accepted single-space foundation. This concept extends it; it
 does not rewrite it.
 
-**WP-01 status:** complete. **WP-02 status:** complete (`0.10.36` — Core transactions,
-integer revision, session Undo/Redo ≥ 50, preview/commit, stale `base_revision`).
-Next implementation package is **FC-001/WP-03** (direct furniture manipulation / DD-019).
+**WP-01 status:** complete. **WP-02 status:** complete (`0.10.36`). **WP-03 status:**
+complete (`0.10.37` — select/move/rotate_z/duplicate/delete/hide/lock, floor
+`support_ref`, validity). Next: **FC-001/WP-04** (parametric resize / regenerate).
 Locked Accept defaults include: session Undo ≥ 50 with integer revision; duplicate includes
 invalid membership; fixed elements become inactive not deleted; Spatial Project is the only
 durable format (`rooms[]`, n = 1 normal; no legacy single-room export).
@@ -452,8 +452,8 @@ themselves.
 |---|---|---|
 | **FC-001/WP-01** | Architecture package: define the three decisions above and resolve schema ownership | **Done** — DD-018/019/020 Accepted |
 | **FC-001/WP-02** | Transaction/revision foundation with preview, commit, Undo/Redo and stale proposal protection | **Done** — `0.10.36` (DD-018) |
-| **FC-001/WP-03** | Single-room furniture selection, XY move/Z rotation, floor support, duplicate/delete/hide/lock | **Next** — WP-02 foundation · DD-019 |
-| **FC-001/WP-04** | Parametric furniture resize through generator parameters and regeneration | WP-03 + generator contract review |
+| **FC-001/WP-03** | Single-room furniture selection, XY move/Z rotation, floor support, duplicate/delete/hide/lock | **Done** — `0.10.37` (DD-019) |
+| **FC-001/WP-04** | Parametric furniture resize through generator parameters and regeneration | **Next** — WP-03 + generator contract |
 | **FC-001/WP-05** | Wall/corner resize, opening host behaviour, inactive opening restoration and invalid furniture visualization | WP-02 + direct manipulation DD |
 | **FC-001/WP-06** | Independent multi-room Spatial Project, local transforms and whole-room operations | Spatial Project DD accepted |
 | **FC-001/WP-07** | Advanced support surfaces and stacking | Explicitly later |

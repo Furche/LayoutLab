@@ -16,6 +16,7 @@ from ..protocol.viewer_export import (
 from .analyze import analyze_session
 from .headless_api import execute_generator_headless
 from .mesh_store import MeshStore, triangulate_faces
+from . import furniture_ops
 from . import transactions as tx
 
 # Keep in sync with layoutlab/__init__.py bl_info version when bumping the plugin.
@@ -39,7 +40,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.36"
+LAYOUTLAB_VERSION = "0.10.37"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -56,8 +57,24 @@ SESSION_ACTIONS = frozenset(
         "delete_prefix",
         "run_generator",
         "analyze_layout",
+        # FC-001/WP-03 semantic furniture ops (by object_id)
+        "select_object",
+        "move",
+        "move_object",
+        "rotate_z",
+        "rotate_object_z",
+        "duplicate",
+        "delete",
+        "hide",
+        "show",
+        "set_flags",
+        "set_object_flags",
+        "set_locked",
     }
 )
+
+# Selection is session UI state — apply without Undo / revision bump when alone.
+EPHEMERAL_ACTIONS = frozenset({"select_object"})
 
 
 def _r3(values):
@@ -260,7 +277,12 @@ def _furniture_export_object(obj):
     if object_id:
         extra["layoutlab_object_id"] = object_id
 
-    return _object_dict(
+    rz = float(getattr(obj, "rotation_z_deg", 0.0) or 0.0)
+    # Parent-only rotation is on the main part; children export their effective world Z.
+    if obj.parent is not None:
+        rz = float(getattr(obj.parent, "rotation_z_deg", 0.0) or 0.0) + rz
+
+    data = _object_dict(
         name=obj.name,
         collection=obj.collection,
         location=world_origin,
@@ -275,8 +297,19 @@ def _furniture_export_object(obj):
             "part": obj.get("layoutlab_part"),
             "generator": obj.get("layoutlab_generator"),
             "part_type": obj.get("layoutlab_part_type"),
+            "support_ref": obj.get("layoutlab_support_ref") or furniture_ops.SUPPORT_ROOM_FLOOR,
+            "room_id": obj.get("layoutlab_room_id"),
+            "validity": obj.get("layoutlab_validity") or furniture_ops.VALIDITY_VALID,
+            "locked": bool(obj.props.get("locked") or obj.props.get("layoutlab_locked")),
+            "included_in_analysis": bool(obj.props.get("included_in_analysis", True)),
+            "protected_from_ai": bool(
+                obj.props.get("protected_from_ai") or obj.props.get("layoutlab_protected_from_ai")
+            ),
         },
     )
+    data["rotation_euler_deg"] = [0.0, 0.0, round(rz, 4)]
+    data["visible"] = furniture_ops.is_visible(obj)
+    return data
 
 
 def export_viewer_scene(session: "RoomSession") -> dict:
@@ -305,6 +338,7 @@ def export_viewer_scene(session: "RoomSession") -> dict:
         ),
         "rooms": rooms,
         "objects": objects,
+        "selected_object_id": getattr(session, "selected_object_id", None),
         "analysis": analyze_session(session, {"scope": "scene", "include": ["clearances"]}),
     }
 
@@ -321,6 +355,7 @@ class RoomSession:
         self._redo: list[tx.UndoEntry] = []
         self._preview: dict | None = None
         self.last_transaction: dict | None = None
+        self.selected_object_id: str | None = None
 
     def clear(self):
         self._rooms.clear()
@@ -331,6 +366,7 @@ class RoomSession:
         self._redo.clear()
         self._preview = None
         self.last_transaction = None
+        self.selected_object_id = None
 
     def clone(self) -> "RoomSession":
         """Independent copy for dry-run (mutations do not touch the live session).
@@ -342,6 +378,7 @@ class RoomSession:
         other.mesh_store = self.mesh_store.clone()
         other.agent_state = copy.deepcopy(self.agent_state)
         other.revision = int(self.revision)
+        other.selected_object_id = self.selected_object_id
         return other
 
     @property
@@ -369,12 +406,15 @@ class RoomSession:
         return self._preview is not None
 
     def _snapshot_domain(self) -> dict:
-        return tx.domain_snapshot(self._rooms, self.mesh_store, self.revision)
+        snap = tx.domain_snapshot(self._rooms, self.mesh_store, self.revision)
+        snap["selected_object_id"] = self.selected_object_id
+        return snap
 
     def _restore_domain(self, snap: dict) -> None:
         self._rooms = copy.deepcopy(snap["rooms"])
         self.mesh_store = snap["mesh_store"].clone()
         self.revision = int(snap["revision"])
+        self.selected_object_id = snap.get("selected_object_id")
 
     def _transaction_payload(self, applied: dict, record: tx.TransactionRecord) -> dict:
         out = dict(applied)
@@ -512,7 +552,27 @@ class RoomSession:
             ):
                 if key in cmd and key not in params:
                     params[key] = cmd[key]
-            return execute_generator_headless(generator, params, store=self.mesh_store)
+            result = execute_generator_headless(generator, params, store=self.mesh_store)
+            oid = (result or {}).get("object_id")
+            if oid:
+                furniture_ops.ensure_semantic_defaults(self.mesh_store, self._rooms, oid)
+            return result
+
+        if action in (
+            "select_object",
+            "move",
+            "move_object",
+            "rotate_z",
+            "rotate_object_z",
+            "duplicate",
+            "delete",
+            "hide",
+            "show",
+            "set_flags",
+            "set_object_flags",
+            "set_locked",
+        ):
+            return furniture_ops.apply_furniture_command(self, cmd)
 
         if action == "analyze_layout":
             return analyze_session(self, cmd)
@@ -654,6 +714,17 @@ class RoomSession:
                     error="AI Apply blocked by protected_from_ai.",
                     extra={"violations": violations},
                 )
+
+        # Selection-only batches are ephemeral UI state (no Undo / no revision bump).
+        if ops and all(
+            isinstance(c, dict) and c.get("action") in EPHEMERAL_ACTIONS for c in ops
+        ):
+            applied = self.apply_commands(ops)
+            applied["ephemeral"] = True
+            applied["revision"] = self.revision
+            applied["can_undo"] = self.can_undo
+            applied["can_redo"] = self.can_redo
+            return applied
 
         before = self._snapshot_domain()
         applied = self.apply_commands(ops)

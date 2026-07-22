@@ -208,3 +208,4 @@ Rooms and furniture support hide/show, analysis include/exclude, edit lock, and
 |---|---|---|
 | 0.1 | 2026-07-22 | Proposed — FC-001/WP-01 decomposition |
 | 1.0 | 2026-07-22 | **Accepted** — duplicate+invalid; fixed inactive; single-select WP-03 |
+| 1.1 | 2026-07-22 | WP-03 implemented in Core `0.10.37` (select/move/rotate_z/dup/delete/hide/lock + validity) |

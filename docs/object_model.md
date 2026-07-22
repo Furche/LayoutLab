@@ -204,7 +204,7 @@ See [DD-007-clearance-zones.md](design_decisions/DD-007-clearance-zones.md). Con
 | v0.5.0 | Name prefix + `layoutlab_role`; many meshes per furniture |
 | v0.5.1 | `layoutlab_object_id`, params, `regenerate`, export block |
 | v0.6.0 `[IMPLEMENTED]` | Parts model — join per Part, Main/Dynamic, parenting |
-| v0.7 `[PLANNED]` | JSON `move` by `object_id` (move Main Part + children) |
+| v0.10.37 `[IMPLEMENTED]` | Core semantic furniture ops by `object_id` (move/rotate_z/dup/delete/hide/lock, `support_ref`, validity) |
 
 Legacy scenes without Parts: still deletable via prefix; `regenerate` rebuilds with Parts.
 
@@ -225,6 +225,7 @@ Details: `layoutlab/generators/bed_basic.md`, `wardrobe_basic.md`
 
 | Version | Date | Changes |
 |---|---|---|
+| 0.6.2 | 2026-07-22 | Core WP-03: semantic move/rotate/flags/validity by `object_id` |
 | 0.6.1 | 2026-07-10 | Fix child Part parenting transforms (no double translation) |
 | 0.6.0 | 2026-07-10 | Parts hierarchy; join-on-finalize; main/dynamic; parenting |
 | 0.5.1 | 2026-07-10 | Semantic metadata; regenerate; export `layoutlab` block |

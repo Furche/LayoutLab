@@ -391,7 +391,8 @@ Vermeiden:
 | Shortlist selection + blueprint cards | `0.10.29`–`0.10.33` |
 | Experimental AI aesthetics + visual evidence | `0.10.34` / `0.10.35` (opt-in flag) |
 | Semantic transactions / revision / Undo (DD-018) | `0.10.36` (FC-001/WP-02) |
-| Feature Concept FC-001 (behaviour captured) | `docs/concepts/` — not yet implemented |
+| Semantic furniture manipulation (DD-019 WP-03) | `0.10.37` |
+| Feature Concept FC-001 (behaviour captured) | `docs/concepts/` — WP-02/03 shipped; WP-04+ queued |
 
 **Begriffsklärung (bereits vs. später):**
 
@@ -409,23 +410,22 @@ Vermeiden:
 
 | ID | Scope | Status |
 |---|---|---|
-| [FC-001/WP-03](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Direkte Möbelbearbeitung (Select, XY-Move, Z-Rotation, Floor-Support, duplicate/delete/hide/lock) | **Current** · DD-019 |
+| [FC-001/WP-04](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Parametrische Möbel-Größenänderung (Generator-Parameter + Regeneration, kein Mesh-Scaling) | **Current** · DD-019 |
 
-WP-01 + WP-02 complete: [DD-018](docs/design_decisions/DD-018-semantic-transactions-and-authority.md) implemented (`0.10.36`); [DD-019](docs/design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](docs/design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted**.
+WP-01…WP-03 complete: transactions (`0.10.36`) + furniture ops (`0.10.37`). [DD-019](docs/design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](docs/design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted**.
 
 ### Queued
 
-Reihenfolge: WP-03 / WP-04 / WP-05 → WP-06.
+Reihenfolge: WP-04 / WP-05 → WP-06.
 
 | ID | Scope | Entry |
 |---|---|---|
-| [FC-001/WP-04](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Parametrische Möbel-Größenänderung (Generator-Parameter + Regeneration, kein Mesh-Scaling) | Nach WP-03 |
 | [FC-001/WP-05](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Wand-/Ecken-Resize, Opening-Host-Verhalten, inactive openings, invalid furniture visualization | Nach WP-02 · DD-019 |
 | [FC-001/WP-06](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Spatial Project (`rooms[]` only format), lokale Transforms, Whole-Room-Ops | Nach WP-02 · DD-020 |
 
 ### Refinement / On demand
 
-Nicht blockierend für **FC-001/WP-03+**. Keine festen Sprint-Zusagen außer dem
+Nicht blockierend für **FC-001/WP-04+**. Keine festen Sprint-Zusagen außer dem
 Minimal-Hinweis für experimentelle AI-Ästhetik (Stufe 1 unten).
 
 **Viewer Score- / Trade-off-Erklärung (Refinement)**

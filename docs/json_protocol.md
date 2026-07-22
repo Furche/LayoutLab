@@ -330,12 +330,15 @@ Removes **all scene objects** whose names start with `prefix`. Use before re-run
 
 | Field | Required |
 |---|---|
-| `object` or `name` | yes |
+| `object` or `name` | yes (Blender) |
+| `object_id` | yes (Core headless) |
 | `location` | yes |
 
-**Note:** moves **one** Blender object. For generated furniture, move the **Main Part** (`body`) — child Parts follow. `[IMPLEMENTED]` v0.6 parenting; `[PLANNED]` JSON `move` by `object_id`.
+**Blender:** moves **one** mesh. For generated furniture, move the **Main Part** (`body`) — child Parts follow.
 
-**Error if object not found.**
+**Core (`0.10.37`, FC-001/WP-03):** `{ "action": "move", "object_id": "…", "location": [x, y, z] }` moves the logical furniture group. XY translation; Z follows `support_ref = room_floor`. May become `INVALID_*` without dropping room membership.
+
+**Error if object not found or locked.**
 
 ------------------------------------------------------------------------
 
@@ -347,10 +350,28 @@ Removes **all scene objects** whose names start with `prefix`. Use before re-run
 
 | Field | Required |
 |---|---|
-| `object` or `name` | yes |
+| `object` or `name` | yes (Blender) |
+| `object_id` | yes (Core headless) |
 | `degrees` | yes |
 
-Same single-object limitation as `move`. **Error if object not found.**
+**Core:** absolute Z on Main Part (`"delta": true` for relative). Children follow via parent transform.
+
+**Error if object not found or locked.**
+
+------------------------------------------------------------------------
+
+## 5.9b Furniture lifecycle flags `[IMPLEMENTED]` Core `0.10.37`
+
+| Action | Minimal body | Notes |
+|---|---|---|
+| `select_object` | `{ "object_id" }` | Ephemeral; no revision / Undo |
+| `duplicate` | `{ "object_id", "offset"? }` | New UUID |
+| `delete` | `{ "object_id" }` | Session-Undo reversible |
+| `hide` / `show` | `{ "object_id" }` | `visible` |
+| `set_locked` | `{ "object_id", "locked" }` | Blocks edit ops |
+| `set_flags` | flags + `object_id` | `locked`, `visible`, `protected_from_ai`, `included_in_analysis`, `support_ref` |
+
+Export `layoutlab` may include `support_ref`, `room_id`, `validity`, `locked`. Validity: `VALID`, `INVALID_OUTSIDE_ROOM`, `INVALID_INTERSECTS_WALL`.
 
 ------------------------------------------------------------------------
 
@@ -360,7 +381,7 @@ Same single-object limitation as `move`. **Error if object not found.**
 { "action": "delete", "object": "TEST_BOX" }
 ```
 
-Silent if object does not exist.
+Silent if object does not exist (Blender by name). Core prefers `object_id` (errors if missing).
 
 ------------------------------------------------------------------------
 

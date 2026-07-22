@@ -79,6 +79,13 @@ def _mesh_entry(obj: MeshObject):
         "collection": obj.collection or "",
         "world_bounds": _bounds_dict(bounds),
         "dimensions": _r(dims),
+        "location": _r(obj.world_origin()),
+        "rotation_z_deg": round(float(getattr(obj, "rotation_z_deg", 0.0) or 0.0), 4),
+        "support_ref": obj.get("layoutlab_support_ref") or "room_floor",
+        "room_id": obj.get("layoutlab_room_id") or "",
+        "validity": obj.get("layoutlab_validity") or "VALID",
+        "locked": bool(obj.props.get("locked") or obj.props.get("layoutlab_locked")),
+        "visible": bool(obj.props.get("visible", True)),
     }
     if obj.get("layoutlab_clearance_name"):
         entry["clearance_name"] = obj.get("layoutlab_clearance_name")

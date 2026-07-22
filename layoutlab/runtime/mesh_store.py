@@ -62,6 +62,7 @@ class MeshObject:
         "name",
         "type",
         "location",
+        "rotation_z_deg",
         "vertices",
         "faces",
         "props",
@@ -78,6 +79,7 @@ class MeshObject:
         name,
         *,
         location=(0, 0, 0),
+        rotation_z_deg=0.0,
         vertices=None,
         faces=None,
         obj_type="MESH",
@@ -89,6 +91,7 @@ class MeshObject:
         self.name = name
         self.type = obj_type
         self.location = Vec3(*location)
+        self.rotation_z_deg = float(rotation_z_deg or 0.0)
         self.vertices = list(vertices or [])
         self.faces = list(faces or [])
         self.props: dict[str, Any] = {}
@@ -111,15 +114,30 @@ class MeshObject:
     def keys(self):
         return self.props.keys()
 
-    def world_origin(self):
+    def _rotate_z(self, x, y, degrees):
+        import math
+
+        if not degrees:
+            return x, y
+        rad = math.radians(float(degrees))
+        c, s = math.cos(rad), math.sin(rad)
+        return x * c - y * s, x * s + y * c
+
+    def local_point_to_world(self, x, y, z):
+        """Map a point in this object's local space to world (Z-rotation + parent chain)."""
+        rx, ry = self._rotate_z(float(x), float(y), self.rotation_z_deg)
+        wx = rx + self.location.x
+        wy = ry + self.location.y
+        wz = float(z) + self.location.z
         if self.parent is not None:
-            px, py, pz = self.parent.world_origin()
-            return (px + self.location.x, py + self.location.y, pz + self.location.z)
-        return (self.location.x, self.location.y, self.location.z)
+            return self.parent.local_point_to_world(wx, wy, wz)
+        return (wx, wy, wz)
+
+    def world_origin(self):
+        return self.local_point_to_world(0.0, 0.0, 0.0)
 
     def world_vertices(self):
-        ox, oy, oz = self.world_origin()
-        return [[float(v[0]) + ox, float(v[1]) + oy, float(v[2]) + oz] for v in self.vertices]
+        return [list(self.local_point_to_world(v[0], v[1], v[2])) for v in self.vertices]
 
     def world_bbox_corners(self):
         verts = self.world_vertices()

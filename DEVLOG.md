@@ -4,6 +4,19 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — FC-001/WP-03: semantic furniture ops in Core (0.10.37)
+
+**Why:** DD-019 requires viewport edits to mutate semantic furniture state (pose,
+`support_ref`, flags, validity), not raw meshes. WP-03 delivers the Core command
+surface so Viewer gestures (later) and AI/user Apply share one path with DD-018
+transactions.
+
+**How:** `furniture_ops` + MeshObject Z-rotation; `move`/`rotate_z`/duplicate/delete/
+hide/lock by `object_id`; floor support MVP; invalid positions stay assigned.
+Selection is ephemeral (no revision). Parametric resize = WP-04; walls = WP-05.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — FC-001/WP-02: semantic transactions in Core (0.10.36)
 
 **Why:** DD-018 requires one authoritative mutation path so manual edits and AI Apply share
