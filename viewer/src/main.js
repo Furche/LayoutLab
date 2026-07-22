@@ -1856,7 +1856,10 @@ function gestureLabel(g) {
   if (!g) return "Edit";
   if (g.kind === "wall") return `Moving ${g.wallSide} wall`;
   if (g.kind === "corner") return `Moving ${g.corner} corner`;
-  if (g.kind === "move_axis") return `Moving ${g.target} ${g.axis}`;
+  if (g.kind === "move_axis") {
+    if (g.axis === "xy") return `Moving ${g.target} XY`;
+    return `Moving ${g.target} ${g.axis}`;
+  }
   if (g.kind === "rotate_z") return "Rotating";
   if (g.kind === "scale_axis") return `Scaling ${g.axis}`;
   return "Editing";
@@ -2117,7 +2120,8 @@ async function updateGesture(ev) {
     let dx = floor.x - gesture.startFloor.x;
     let dy = floor.y - gesture.startFloor.y;
     if (gesture.axis === "x") dy = 0;
-    if (gesture.axis === "y") dx = 0;
+    else if (gesture.axis === "y") dx = 0;
+    // axis === "xy" → free plane move (both axes)
     if (gesture.target === "furniture") {
       const optimisticDx = dx - gesture.lastLocal.x;
       const optimisticDy = dy - gesture.lastLocal.y;

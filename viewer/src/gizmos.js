@@ -11,6 +11,7 @@ import * as THREE from "three";
 
 const MOVE_X = 0xe06c75;
 const MOVE_Y = 0x98c379;
+const MOVE_XY = 0xe5c07b;
 const ROTATE = 0xc678dd;
 const SCALE = 0x5b9fd4;
 const CORNER = 0xe5c07b;
@@ -145,6 +146,19 @@ function makeArrow(axis, color, meta) {
   return group;
 }
 
+/** 3ds-Max-style XY plane square between the two move arrows. */
+function makePlaneHandle(color, size, meta) {
+  const geo = new THREE.PlaneGeometry(size, size);
+  const mesh = new THREE.Mesh(
+    geo,
+    mat(color, { opacity: 0.55, emissiveIntensity: 0.45 }),
+  );
+  // PlaneGeometry is XY-facing (+Z normal) — correct for Blender floor plane.
+  mesh.position.set(size * 0.55, size * 0.55, 0.01);
+  tag(mesh, meta);
+  return mesh;
+}
+
 function makeRotateRing(radius, color, meta) {
   const torus = new THREE.Mesh(
     new THREE.TorusGeometry(radius, 0.035, 10, 48),
@@ -195,6 +209,14 @@ export function buildFurnitureGizmo(bounds, objectId) {
       kind: "move_axis",
       axis: "y",
       label: "move-y",
+    }),
+  );
+  group.add(
+    makePlaneHandle(MOVE_XY, 0.22, {
+      ...base,
+      kind: "move_axis",
+      axis: "xy",
+      label: "move-xy",
     }),
   );
 
@@ -257,6 +279,14 @@ export function buildRoomGizmo(room) {
   );
   moveRoot.add(
     makeArrow("y", MOVE_Y, { ...base, kind: "move_axis", axis: "y", label: "room-move-y" }),
+  );
+  moveRoot.add(
+    makePlaneHandle(MOVE_XY, 0.24, {
+      ...base,
+      kind: "move_axis",
+      axis: "xy",
+      label: "room-move-xy",
+    }),
   );
   group.add(moveRoot);
 
