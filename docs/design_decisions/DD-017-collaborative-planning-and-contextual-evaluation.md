@@ -432,9 +432,17 @@ materials, or camera choice may dominate the score.
 AI aesthetics is an opinionated, probabilistic signal. It must be labeled accordingly, carry
 confidence, and never be presented as an objective building-code or usability verdict.
 
-Visual evaluation may send room images to a configured model provider. The product must disclose
-that transfer, avoid logging images or style prompts by default, respect provider-independent and
-local-model paths, and make the feature opt-in where privacy or cost requires it.
+Visual evaluation may send room images to a configured model provider. Disclosure is
+**two-stage** (product decision 2026-07-22; see MDD §17 Refinement):
+
+1. **Minimum (required whenever experimental aesthetics is enabled):** disclose that
+   data/images are transferred; which provider/model; that API costs may apply; that the
+   feature is experimental and optional.
+2. **Full privacy UX (before default-on or production offering):** consent dialogs,
+   detailed settings, and default-on behaviour.
+
+Avoid logging images or style prompts by default; keep provider-independent and local-model
+paths open. Opt-in remains the default until stage 2 is deliberately productized.
 
 An aesthetic result is cacheable when the standardized evidence hash, candidate geometry revision,
 model/provider version, rubric version, and style context are identical. Cache reuse must preserve
@@ -549,14 +557,31 @@ Narrow DD-011/DD-015 amendments are in place. Remaining work is staged implement
 
 ## Implementation order (staged after Accept)
 
-1. ~~Continue DD-011 candidate expansion and existing soft ranking without introducing DD-017 schemas.~~ ← **current**
-2. ~~Review and accept/amend DD-017; then add narrow DD-011/DD-015 amendments.~~ ✅
-3. Define a minimal semantic capability/preference-profile, role, and intention allowlist schema.
-4. Add signed deterministic score components, veto rules, and context weights.
-5. Implement bounded internal revision and Core functional shortlisting before user-facing proposals.
-6. Expose candidate comparison and score breakdown in the Viewer.
-7. Prototype standardized renders plus comparative AI aesthetics behind an optional experimental flag.
+**Shipped (Planning slice through `0.10.35`):**
+
+1. ~~Continue DD-011 candidate expansion and existing soft ranking without introducing DD-017 schemas.~~ ✅ (`0.10.24`)
+2. ~~Review and accept/amend DD-017; then add narrow DD-011/DD-015 amendments.~~ ✅ (2026-07-21)
+3. ~~Define a minimal semantic capability/preference-profile, role, and intention allowlist schema.~~ ✅ (`0.10.25`)
+4. ~~Add signed deterministic score components, veto rules, and context weights.~~ ✅ (`0.10.25`)
+5. ~~Implement bounded internal revision and Core functional shortlisting before user-facing proposals.~~ ✅ (`0.10.25` / `0.10.26`)
+6. ~~Expose candidate comparison in the Viewer (shortlist cards, quality flags, Apply-Gate).~~ ✅ partial (`0.10.29`–`0.10.33`) — soft-warning counts and risks; **not** a full signed-score breakdown UI
+7. ~~Prototype standardized visual evidence plus comparative AI aesthetics behind an optional experimental flag.~~ ✅ (`0.10.34` / `0.10.35`)
+
+**Remaining refinement (not blocking FC-001/WP-01):**
+
 8. Calibrate rubrics/weights using real rooms and user feedback; avoid hard-coding taste prematurely.
+9. **Viewer explanation (staged Refinement):** MVP today = soft warnings + selection reason +
+   aesthetic tip. Later: short plain-language pros/cons/trade-offs first; optional expandable
+   detail (functional scores, penalties, vetos, aesthetic rubric). No metrics dashboard.
+10. **Aesthetics privacy/provider transparency (two-stage):**
+    - Stage 1 (minimum, whenever experimental aesthetics runs): transfer notice, provider/model,
+      possible API cost, experimental/optional labeling.
+    - Stage 2 (before default-on / production): consent dialogs and detailed settings.
+11. **Additional recipes — strictly on demand only.** No second recipe is scheduled. Decide the
+    next recipe only when a real planning scenario outgrows `bedroom_basic`. `kids_room` is a
+    plausible candidate, not a commitment.
+
+Product roadmap placement: [LayoutLab_Master_Design_Document.md](../../LayoutLab_Master_Design_Document.md) §17 (Refinement / On demand). Active implementation focus is **FC-001/WP-01**, not further DD-017 schema expansion.
 
 ------------------------------------------------------------------------
 
@@ -568,3 +593,5 @@ Narrow DD-011/DD-015 amendments are in place. Remaining work is staged implement
 | 0.2 | 2026-07-21 | Review revision — Core functional shortlist → AI recommendation → User selection; semantic allowlist, validity table, anti-compensation, capabilities/roles, and experimental aesthetics clarified |
 | 0.3 | 2026-07-21 | Acceptance-prep revision — functional equivalence principle, proposal leak guard, DD-008 mapping, high-impact role clarification, override labeling, instance persistence, and aesthetic caching |
 | 1.0 | 2026-07-21 | **Accepted** — target contract locked; DD-011/DD-015 amended narrowly; implementation remains staged |
+| 1.1 | 2026-07-22 | Status sync — shipped steps marked; remaining work = calibration / UX refinement / recipes on demand |
+| 1.2 | 2026-07-22 | Product decisions — staged Viewer explanation; recipes strictly on-demand; two-stage aesthetics privacy |

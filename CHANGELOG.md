@@ -8,6 +8,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Roadmap consolidation:** MDD §17 rewritten into Implemented / Active / Queued / Refinement / Later / Deferred; HANDOFF narrowed to FC-001/WP-01; Future_Ideas and DD-017 status synced with shipped Planning slice (`0.10.24`–`0.10.35`); historical Phase-2–4 open checkboxes and stale “not built” claims removed or clarified.
+- **Refinement product decisions:** Viewer explanation stays staged Refinement (short pros/cons first, optional expandable scores later — no dashboard); further recipes strictly on-demand (`kids_room` candidate only); AI-aesthetics privacy is two-stage (minimum disclosure whenever the experimental flag runs; full consent UX only before default-on / production).
+
 ### Added
 
 - **Feature Concept layer + FC-001:** `docs/concepts/` now holds stable cross-cutting product concepts between Future Ideas and binding DDs. FC-001 specifies semantic room/furniture manipulation, invalid-state preservation, opening lifecycle, transactions/Undo/authority and independent multi-room editing, with roadmap work-package references.

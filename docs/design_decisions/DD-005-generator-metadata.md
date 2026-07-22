@@ -75,8 +75,8 @@ Optional future fields `[PLANNED]`: author, license, tags, thumbnail path, examp
 | Regex inference (`infer_generator_meta_from_code`) | `[IMPLEMENTED]` |
 | Browser display | `[IMPLEMENTED]` |
 | Export in scene JSON and generator list | `[IMPLEMENTED]` |
-| Validation on `save_generator` | `[PLANNED]` |
-| Thumbnail / tags / author fields | `[PLANNED]` |
+| Validation on `save_generator` | `[PLANNED]` — deferred polish (not active FC-001 work) |
+| Thumbnail / tags / author fields | `[PLANNED]` — deferred with Asset-Browser polish (DD-004) |
 
 ## References
 

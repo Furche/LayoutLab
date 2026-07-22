@@ -1,8 +1,8 @@
 # DD-011 — Layout Variants and Comparison (Planning v1)
 
-**Status:** Accepted  
-**Date:** 2026-07-20  
-**Accepted:** 2026-07-20  
+**Status:** Accepted
+**Date:** 2026-07-20
+**Accepted:** 2026-07-20
 **Related:** [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-015](DD-015-soft-metrics-and-tradeoffs.md) · [DD-016](DD-016-deterministic-layout-recipes.md) · [DD-017](DD-017-collaborative-planning-and-contextual-evaluation.md) · [Future_Ideas.md](../Future_Ideas.md) §5 / §16 · [agent_tool_contract.md](../agent_tool_contract.md)
 
 ------------------------------------------------------------------------
@@ -109,9 +109,9 @@ v0 name `bedroom_basic` remains valid as the first **room-use** recipe. DD-011 m
 | Explain selection / optional override language | AI (may bias only via allowlisted preference keys + documented assumes) |
 | Apply / consent | User |
 
-> Recipe = **strategy** (solution space + goal).  
-> Planner enumerates **candidates**.  
-> Metrics **judge**.  
+> Recipe = **strategy** (solution space + goal).
+> Planner enumerates **candidates**.
+> Metrics **judge**.
 > Selection is the **planning act**.
 
 AI does **not** invent candidate coordinates. AI chooses (or proposes) **which recipe** and **requirements/priorities**; Core owns expansion and default ranking.
@@ -126,8 +126,8 @@ AI does **not** invent candidate coordinates. AI chooses (or proposes) **which r
    - bed wall: south \| north (and optionally west if the room is deep enough)
    - wardrobe / desk relative order on the opposite or adjacent wall
    - window count / sides still driven by requirements (unchanged)
-2. Core capability: extend **`plan_layout`** with `mode: "candidates"` (default for agent bedroom planning once wired; `mode: "single"` keeps v0 one-shot).  
-   Returns `{ recipe, recipe_kind, recipe_goals, candidates: [...], selected_id, selection_reason, score_breakdown }`.  
+2. Core capability: extend **`plan_layout`** with `mode: "candidates"` (default for agent bedroom planning once wired; `mode: "single"` keeps v0 one-shot).
+   Returns `{ recipe, recipe_kind, recipe_goals, candidates: [...], selected_id, selection_reason, score_breakdown }`.
    Default proposal `commands` = selected candidate.
 3. Each candidate is dry-run / analyze evaluated on a **session clone** (same as today). Discard or demote candidates with hard errors / `solid_wall_penetration`.
 4. Rank using **existing** soft metrics only (no aesthetic ML, no “73% nice”):
@@ -180,14 +180,14 @@ AI does **not** invent candidate coordinates. AI chooses (or proposes) **which r
 
 ### 5. Relationship to DD-016
 
-DD-016 remains valid for v0: a recipe **must** be able to emit at least one valid layout.  
-DD-016’s `bedroom_basic` is the first recipe instance; DD-011 **generalizes** the recipe concept and makes expand → evaluate → select the primary planning path.  
+DD-016 remains valid for v0: a recipe **must** be able to emit at least one valid layout.
+DD-016’s `bedroom_basic` is the first recipe instance; DD-011 **generalizes** the recipe concept and makes expand → evaluate → select the primary planning path.
 Single-shot emission may remain as `mode: "single"` / internal helper used by the candidate generator.
 
 ### 6. What “best” means (v1)
 
-“Best” = **best measured under DD-015 proxies + hard validity**, optionally weighted by the recipe’s stated objective — not taste.  
-If two candidates tie on metrics, pick the stable default strategy (document in `assumes`).  
+“Best” = **best measured under DD-015 proxies + hard validity**, optionally weighted by the recipe’s stated objective — not taste.
+If two candidates tie on metrics, pick the stable default strategy (document in `assumes`).
 User/AI priority overrides (e.g. `prefer_bed_wall: "north"`) force that family of candidates to the front **before** soft ranking among the remaining set.
 
 ------------------------------------------------------------------------
@@ -219,13 +219,19 @@ User/AI priority overrides (e.g. `prefer_bed_wall: "north"`) force that family o
 
 ## Implementation order (after Accept)
 
-1. Document recipe registry metadata (id, kind, goal tags, applicability) — even if only `bedroom_basic` exists (`kind: "room_use"`, e.g. `goals: ["sleep","storage"]`). Do **not** rename `bedroom_basic`.
-2. Factor `bedroom_basic` into shared placement primitives + option matrix → N candidates (commands only, no analyze yet).
-3. Evaluate each on session clone; attach quality / soft_summary.
-4. Deterministic rank + `selection_reason` strings (German templates OK).
-5. Expose via `plan_layout` (`mode: "candidates"`); wire agent + baseline.
-6. Tests + session-log: different strategies appear when metrics differ; identical inputs → identical winner.
-7. Later: more recipes (room-use and/or goal) on the same contract; persist variants / compare UI (Future_Ideas §16) — separate product slice.
+1. ~~Document recipe registry metadata (id, kind, goal tags, applicability).~~ ✅
+2. ~~Factor `bedroom_basic` into shared placement primitives + option matrix → N candidates.~~ ✅ (`0.10.24`)
+3. ~~Evaluate each on session clone; attach quality / soft_summary.~~ ✅
+4. ~~Deterministic rank + `selection_reason` strings.~~ ✅
+5. ~~Expose via `plan_layout` (`mode: "candidates"`); wire agent + baseline.~~ ✅
+6. ~~Tests + session-log.~~ ✅
+7. **Strictly on demand:** more recipes (room-use and/or goal) on the same contract — no second
+   recipe is scheduled; `kids_room` remains only a plausible candidate.
+8. Later (separate product slice): persist variants / compare UI (Future_Ideas §16) — **not** the same as ephemeral candidates.
+
+DD-017 evaluation schema, shortlist, revision and aesthetics are tracked in
+[DD-017](DD-017-collaborative-planning-and-contextual-evaluation.md) (shipped through `0.10.35`).
+Active product focus after that slice: FC-001/WP-01 (see MDD §17).
 
 ------------------------------------------------------------------------
 

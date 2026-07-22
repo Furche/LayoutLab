@@ -35,8 +35,10 @@ When implementing anything that touches APIs, JSON protocol, generator behaviour
 or UI patterns — check this index first.
 
 **Reserved (not created):** Future_Ideas §19 may later use DD-012 … DD-013 for
-Integrated AI and Capture Pipeline. **DD-011** + **DD-017** are **Accepted** (candidate expansion next; then evaluation schema / shortlist). **DD-014** is the Standalone Runtime
-path (Phase A + B room write + B2 generators Accepted; multi-space Spatial Project is
-tracked by FC-001 and remains a later DD).
+Integrated AI and Capture Pipeline. **DD-011** + **DD-017** are **Accepted** (ephemeral
+candidates + collaborative evaluation shipped through `0.10.35`; persisted project variants
+remain later). **DD-014** is the Standalone Runtime path (Phase A + B room write + B2
+generators Accepted; multi-space Spatial Project via FC-001 → future DD).
+Ordered product roadmap: [LayoutLab_Master_Design_Document.md](../../LayoutLab_Master_Design_Document.md) §17.
 Agent tools: see [../agent_tool_contract.md](../agent_tool_contract.md).
 Do not invent files for remaining reserved IDs until an actual proposal is written.

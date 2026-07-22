@@ -37,7 +37,7 @@ LayoutLab workflows.
 | **Python snippets for AI** | No schema, no validation, breaks on Blender updates |
 | **Natural language → direct bpy** | Requires NLP inside plugin; wrong layer |
 | **Custom binary protocol** | Not human-readable; bad for AI and debugging |
-| **MCP / REST API to Blender** | Possible future frontend `[PLANNED]`; JSON remains the semantic layer |
+| **MCP / REST API to Blender** | Core already exposes HTTP JSON (`server/`, DD-014); a Blender-side MCP/bridge remains deferred. JSON remains the semantic layer |
 
 ## Consequences
 
@@ -51,8 +51,11 @@ LayoutLab workflows.
 **Negative / trade-offs**
 
 - JSON is verbose for complex geometry (generators preferred over raw boxes).
-- No structured error response yet — failures go to Blender console only `[PLANNED]`.
-- `protocol_version` field not yet enforced `[PLANNED]`.
+- Blender clipboard/operator path: failures often surface in the console; a full
+  structured command-error envelope for that path remains `[PLANNED]` (deferred —
+  not on the active FC-001 roadmap). Core HTTP already returns simple
+  `{ok, error}` JSON envelopes.
+- `protocol_version` field not yet enforced `[PLANNED]` (deferred polish).
 
 ## Rules for Agents
 
@@ -68,8 +71,8 @@ LayoutLab workflows.
 | JSON command input (clipboard / text block) | `[IMPLEMENTED]` v0.5 |
 | Scene JSON export | `[IMPLEMENTED]` v0.5 |
 | Full protocol spec | `[IMPLEMENTED]` `docs/json_protocol.md` |
-| Structured error response | `[PLANNED]` |
-| `protocol_version` field | `[PLANNED]` |
+| Structured error response (full protocol) | `[PLANNED]` — deferred; Core HTTP has simple `{ok, error}` |
+| `protocol_version` field | `[PLANNED]` — deferred polish |
 
 ## References
 

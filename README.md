@@ -57,12 +57,12 @@ See [docs/json_protocol.md](docs/json_protocol.md) for the full command referenc
 
 No manual copying into folders — Blender extracts the addon for you.
 
-The zip is rebuilt **automatically** after git commits that change `layoutlab/` (via `scripts/install_git_hooks.sh`).  
+The zip is rebuilt **automatically** after git commits that change `layoutlab/` (via `scripts/install_git_hooks.sh`).
 Cursor also runs `python3 scripts/build_addon_zip.py` after addon changes during development.
 
 ### Diagnostics
 
-After installing, open **LayoutLab → Run Console Checks**.  
+After installing, open **LayoutLab → Run Console Checks**.
 The structured report is **printed to the system console** (*Window → Toggle System Console*) **and** copied to the clipboard — send it to Cursor for review.
 
 ### Option B — Copy folder
@@ -245,15 +245,16 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 
 ## Roadmap (summary)
 
-| Phase | Focus | Status |
+| Track | Focus | Status |
 |---|---|---|
-| **A** | Documentation foundation | Complete |
-| **B** | Generators in repo, tests, sync | Complete |
-| **C** | Monolith → module split | Complete |
-| **D** | Semantic object model, `regenerate` | Complete |
-| **E** | Clearance zones (DD-007) → Constraints / analysis (DD-008) → bed clearances | Complete (v0.8.0) |
+| Historical A–E | Docs → generators → module split → object model → clearances/analysis | Complete |
+| Planning slice | Recipes, candidates, shortlist, Apply-Gate, optional AI aesthetics | Shipped (`0.10.24`–`0.10.35`) |
+| **Active** | [FC-001/WP-01](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) architecture package | Current — DDs first, no feature code yet |
+| Queued | FC-001/WP-02 … WP-06 | After WP-01 Accept |
+| Refinement | Staged Viewer explanation; aesthetics privacy stage 1; recipes on demand only | Not blocking FC-001 |
+| Later / deferred | WP-07, persisted variants, walkways, capture, shared walls, cloud; aesthetics privacy stage 2 | See MDD §17 |
 
-Full roadmap: [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) §17 · Phase status: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9
+Full roadmap: [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) §17 · Session focus: [docs/HANDOFF.md](docs/HANDOFF.md) · Module phases: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9
 
 ------------------------------------------------------------------------
 

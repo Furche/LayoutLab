@@ -62,10 +62,10 @@ test — not yet a full Asset Browser clone.
 | Category filter | `[IMPLEMENTED]` |
 | Metadata panel (name, version, description) | `[IMPLEMENTED]` |
 | Quick test (location, length, width) | `[IMPLEMENTED]` |
-| Thumbnails | `[PLANNED]` |
-| Favourites / recently used | `[PLANNED]` |
-| Drag-drop into viewport | `[PLANNED]` |
-| Live preview | `[PLANNED]` |
+| Thumbnails | `[PLANNED]` — **explicitly deferred** (Asset-Browser polish; not active roadmap) |
+| Favourites / recently used | `[PLANNED]` — **explicitly deferred** |
+| Drag-drop into viewport | `[PLANNED]` — **explicitly deferred** |
+| Live preview | `[PLANNED]` — **explicitly deferred** (FC-001 may later define semantic preview; not this UI polish) |
 
 ## References
 

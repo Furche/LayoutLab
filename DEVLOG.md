@@ -4,6 +4,31 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — Refinement product decisions (docs only)
+
+**Decisions:** (1) Viewer score explanation remains Refinement — MVP soft warnings /
+selection reason / aesthetic tip; target = short pros/cons then optional expandable detail,
+not a metrics dashboard. (2) Further recipes are strictly on-demand; no second recipe
+scheduled; `kids_room` is only a candidate. (3) AI-aesthetics privacy is two-stage —
+minimum transfer/provider/cost/experimental disclosure whenever the flag runs; full consent
+UX only before default-on or production. None of these block FC-001/WP-01.
+
+------------------------------------------------------------------------
+
+## 2026-07-22 — Roadmap consolidation (docs only)
+
+**Problem:** MDD §17 still showed Clearance, Constraints, Variants, Undo, Optimierer and
+Wohnungsplanung as open checkboxes long after those foundations (or partial slices) shipped.
+HANDOFF duplicated a long historical checklist; Future_Ideas still called Viewer/chat/variants
+“not built”; DD-017 Implementation Order left shipped steps unmarked.
+
+**Decision:** Make MDD §17 the ordered product roadmap (Implemented → Active WP-01 → Queued
+WP-02…06 → Refinement → Later concepts → Explicitly Deferred). HANDOFF keeps only the active
+focus. Distinguish ephemeral candidates from persisted variants; replace “Undo für Generatoren”
+with FC-001/WP-02; leave DD-004/003 polish markers as deferred, not active work.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — Feature Concepts between Future Ideas and Design Decisions
 
 **Problem:** Direct viewport manipulation, parametric furniture editing, multi-room state,

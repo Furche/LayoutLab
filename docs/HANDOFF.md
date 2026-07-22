@@ -1,9 +1,9 @@
 # LayoutLab — Session Handoff
 
-> Living onboarding doc for new chat sessions / agents.  
+> Living onboarding doc for new chat sessions / agents.
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-22 (FC-001 direct manipulation + multi-room concept)
+**Last updated:** 2026-07-22 (roadmap consolidation — FC-001/WP-01 focus)
 **Plugin version:** 0.10.35 · **Branch:** `main`
 
 ------------------------------------------------------------------------
@@ -17,7 +17,7 @@
 5. Read this file for **current** status and next steps.
 6. Respond to Alexander in **German**.
 
-**Repo path:** `/Users/allex/Documents/00_codin/BlenderAddons/LayoutLab`  
+**Repo path:** `/Users/allex/Documents/00_codin/BlenderAddons/LayoutLab`
 **Remote:** `https://github.com/Furche/LayoutLab.git`
 
 **Copy-paste prompt for new chat:**
@@ -60,10 +60,10 @@ User Intent → Generator (rules) → Parts API → Blender scene
 - **AI** communicates via JSON (DD-003); execution boundary [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (**Accepted** — AI plans WHAT, plugin executes HOW).
 - Today: **JSON** clipboard/text block ([DD-003](design_decisions/DD-003-json-only-communication.md)).
 
-**Install:** `dist/layoutlab-<version>.zip` → Blender Preferences → Add-ons.  
+**Install:** `dist/layoutlab-<version>.zip` → Blender Preferences → Add-ons.
 **Generators sync** on register: bundled → `layoutlab_generators/` when bundled version is newer.
 
-**Units:** Blender scene units natively (Metric default: 1 unit = 1 m). See `docs/units_and_coordinates.md`.  
+**Units:** Blender scene units natively (Metric default: 1 unit = 1 m). See `docs/units_and_coordinates.md`.
 **Reference room position (examples):** `[68.3, 197.7, 0]`. Quick Test default: `(0, 0, 0)`.
 
 ------------------------------------------------------------------------
@@ -163,32 +163,21 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | 2026-07-10 | Parenting fixes v0.6.5–0.6.8 |
 | 2026-07-10 | DD-007 Accepted |
 
-**Latest commit (at last handoff update):** `f636809` — runtime independence docs
+**Latest commit (at last handoff update):** `29f860c` — FC-001 concept merge; docs roadmap consolidation in progress locally
 
 ------------------------------------------------------------------------
 
 # Next steps (agreed order)
 
-1. ~~Entschlacken von `agent.py` (Bedroom-Heuristiken → planning/)~~ ✅ (v0.10.21)  
-2. ~~**Accept DD-016 / DD-015**~~ ✅ (2026-07-20)  
-3. ~~**Accept DD-011**~~ ✅ (2026-07-20)  
-4. ~~**Accept DD-017 + amend DD-011/DD-015**~~ ✅ (2026-07-21)
-5. ~~DD-011 candidate expansion + soft ranking~~ ✅ (`0.10.24` — `mode: "candidates"`)
-6. ~~Define the minimal DD-017 schema contract: profiles/capabilities, roles/intentions, signed categories and veto thresholds~~ ✅ (`0.10.25`)
-7. ~~Core functional shortlisting + bounded internal revision~~ ✅ (`0.10.25` shortlist; `0.10.26` revision ≤2 rounds)
-8. ~~Core recipe force path (generic registry)~~ ✅ (`0.10.27` — bedroom first mapping)
-9. ~~Planning selection surfacing (reply + session log)~~ ✅ (`0.10.28`)
-10. ~~Shortlist selection (chat + Viewer)~~ ✅ (`0.10.29`)
-11. ~~Shortlist sketch cards (labels + ASCII)~~ ✅ (`0.10.30`)
-12. ~~Shortlist 3D thumbnails~~ ✅ (`0.10.31`) → replaced by blueprint SVG
-13. ~~Shortlist blueprint SVG~~ ✅ (`0.10.33`)
-14. ~~Optional AI aesthetics + standardized evidence~~ ✅ (`0.10.34` / `0.10.35`)
-15. ~~Capture coherent direct manipulation + multi-room product behaviour~~ ✅ ([FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md))
-16. **FC-001/WP-01:** derive and review separate DDs for transactions/authority, semantic direct manipulation and Spatial Project
-17. After acceptance: implement FC-001/WP-02 first; then WP-03–05; WP-06 remains a separate multi-room milestone
-18. More recipes when needed (room-use or goal) — not Capture/Cloud/Auth
+**Active focus:** [FC-001/WP-01](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) — architecture package only (Transactions/Authority, Semantic Direct Manipulation, Spatial Project). No direct feature implementation yet.
 
-DD-011/015/016/017 **Accepted** · planning shortlist shipped · next architectural track: **FC-001/WP-01**
+**After DD acceptance (queued, do not start early):** WP-02 → WP-03 / WP-04 / WP-05 → WP-06. Full ordered roadmap: [LayoutLab_Master_Design_Document.md](../LayoutLab_Master_Design_Document.md) §17.
+
+**On demand / Refinement (not blocking WP-01):** see MDD §17 — staged Viewer explanation;
+aesthetics privacy stage 1 (minimum disclosure when flag on); further recipes only when a real
+scenario outgrows `bedroom_basic` (`kids_room` = candidate, not scheduled).
+
+Planning shortlist through `0.10.35` is shipped (DD-011/015/016/017). Historical checklist of that slice lives in Document history below.
 
 ------------------------------------------------------------------------
 
@@ -270,26 +259,14 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 
 # User roadmap priority (Alexander)
 
-Living product track — keep in sync with *Next steps* above.
+Living product track — **full ordered roadmap** lives in [LayoutLab_Master_Design_Document.md](../LayoutLab_Master_Design_Document.md) §17. This section only mirrors the active focus.
 
-1. ✅ Generator docs, API, modular plugin, browser, regenerate  
-2. ✅ Clearance (DD-007) · Constraints / analyze (DD-008) · Room Model (DD-010)  
-3. ✅ Standalone Core + Viewer (DD-014) · Soft metrics (DD-015) · Recipes (DD-016)  
-4. ✅ Planning foundation: recipes as strategies (DD-011) · collaborative evaluation (DD-017)  
-5. ✅ DD-011 candidate expansion + soft ranking (`0.10.24`)  
-6. ✅ Minimal DD-017 evaluation schema (profiles/roles/vetos) (`0.10.25`)  
-7. ✅ Core functional shortlist + bounded revision (`0.10.26`)  
-8. ✅ Core recipe force path / `recipe_routing` (`0.10.27`)  
-9. ✅ Planning selection surfacing (`0.10.28`)  
-10. ✅ Shortlist selection chat + Viewer (`0.10.29`)  
-11. ✅ Shortlist sketch cards (`0.10.30`)  
-12. ✅ Shortlist 3D thumbnails (`0.10.31`)  
-13. ✅ Optional experimental AI aesthetics + visual evidence (`0.10.34` / `0.10.35`)
-14. ✅ Direct manipulation + multi-room behaviour captured as [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md)
-15. 📋 FC-001/WP-01 architecture package; then transactions → direct editing → room editing → independent multi-room
-16. 📋 Bridge / capture / connected spaces / persisted variants — Future Ideas, separate DDs
+1. 📋 **FC-001/WP-01** — architecture DDs for transactions/authority, semantic direct manipulation, Spatial Project
+2. 📋 Queued after Accept: WP-02 → WP-03 → WP-04 → WP-05 → WP-06 (behaviour in [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md))
+3. 📋 Refinement (nicht FC-001-Blocker): gestufte Viewer-Erklärung; Ästhetik-Privacy Stufe 1; Recipes nur bei konkretem Szenario
+4. ⏸ Deferred: Capture, shared-wall topology, multi-floor, persisted variants, cloud/auth; Ästhetik-Privacy Stufe 2 / Default-on
 
-Binding order for agents: **Next steps** (this file) · feature behaviour in [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · binding architecture only after resulting DDs are accepted.
+Binding order for agents: **Next steps** (this file) · behaviour in [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · binding architecture only after resulting DDs are accepted.
 
 ------------------------------------------------------------------------
 
@@ -297,6 +274,7 @@ Binding order for agents: **Next steps** (this file) · feature behaviour in [FC
 
 | Date | Change |
 |---|---|
+| 2026-07-22 | Roadmap consolidation + refinement decisions (Viewer explanation staged; recipes on-demand; aesthetics privacy two-stage); Next steps = FC-001/WP-01 |
 | 2026-07-21 | Shortlist 3D thumbnails (`0.10.31`): slim viewer_preview + WebGL cards |
 | 2026-07-21 | Shortlist sketch cards (`0.10.30`): label_de + ASCII cards in Viewer |
 | 2026-07-21 | Shortlist selection (`0.10.29`): chat + Viewer pick before Apply |
