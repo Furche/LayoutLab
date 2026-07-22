@@ -805,7 +805,7 @@ def _finish_agent_result(
     placement.last_placement_fp = fp
     _update_agent_state(session, result, conversation, last_plan=last_plan, placement_fp=fp)
     result["agent_state"] = dict(getattr(session, "agent_state", {}) or {})
-    return result
+    return _stamp_base_revision(session, result)
 
 
 def _update_agent_state(
@@ -1135,6 +1135,11 @@ def _normalize_proposal(parsed: dict) -> dict:
         "commands": commands,
         "expected_risks": list(proposal.get("expected_risks") or []),
     }
+    if "base_revision" in proposal and proposal.get("base_revision") is not None:
+        try:
+            out_proposal["base_revision"] = int(proposal.get("base_revision"))
+        except (TypeError, ValueError):
+            pass
     if requirements is not None:
         from .planning import normalize_requirements
 
@@ -1145,6 +1150,20 @@ def _normalize_proposal(parsed: dict) -> dict:
         "proposal": out_proposal,
         "suggested_next_tools": list(parsed.get("suggested_next_tools") or []),
     }
+
+
+def _stamp_base_revision(session, result: dict) -> dict:
+    """Attach session revision to proposal for stale-Apply protection (DD-018)."""
+    if not isinstance(result, dict):
+        return result
+    rev = int(getattr(session, "revision", 0) or 0)
+    result["base_revision"] = rev
+    proposal = result.get("proposal")
+    if isinstance(proposal, dict):
+        stamped = dict(proposal)
+        stamped["base_revision"] = rev
+        result["proposal"] = stamped
+    return result
 
 
 def _demo_as_agent_result(message: str) -> dict | None:
@@ -1209,10 +1228,12 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
     """
     message = (message or "").strip()
     if not message:
-        return {"ok": False, "error": "message required", "commands": [], "reply": ""}
+        return _stamp_base_revision(
+            session, {"ok": False, "error": "message required", "commands": [], "reply": ""}
+        )
 
     if _is_observation_query(message):
-        return _observation_reply(session)
+        return _stamp_base_revision(session, _observation_reply(session))
 
     # DD-017: choose among Core functional shortlist before a new plan
     from .planning.selection_surface import (
@@ -1235,34 +1256,37 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 session, selected, message, last_plan=None, placement_fp=fp
             )
             selected["agent_state"] = dict(getattr(session, "agent_state", {}) or {})
-        return selected
+        return _stamp_base_revision(session, selected)
 
     if not llm_configured(llm_config):
         if _session_wants_recipe_planning(session, message):
-            return _recipe_plan_fallback(session, message)
+            return _stamp_base_revision(session, _recipe_plan_fallback(session, message))
         demo = _demo_as_agent_result(message)
         if demo:
-            return _attach_quality_preview(session, demo)
-        return {
-            "ok": True,
-            "mode": "demo",
-            "reply": (
-                "Kein LLM-Key. Unter LLM-Einstellungen einen Key setzen, "
-                "oder Demo-Intents nutzen (empty/furnished kids room, schrank, lösche den raum, analyze)."
-            ),
-            "questions": [],
-            "proposal": {
-                "proposal_id": str(uuid.uuid4()),
-                "title": "",
-                "rationale": "",
-                "assumes": [],
+            return _stamp_base_revision(session, _attach_quality_preview(session, demo))
+        return _stamp_base_revision(
+            session,
+            {
+                "ok": True,
+                "mode": "demo",
+                "reply": (
+                    "Kein LLM-Key. Unter LLM-Einstellungen einen Key setzen, "
+                    "oder Demo-Intents nutzen (empty/furnished kids room, schrank, lösche den raum, analyze)."
+                ),
+                "questions": [],
+                "proposal": {
+                    "proposal_id": str(uuid.uuid4()),
+                    "title": "",
+                    "rationale": "",
+                    "assumes": [],
+                    "commands": [],
+                    "expected_risks": [],
+                },
+                "suggested_next_tools": ["get_scene_summary"],
                 "commands": [],
-                "expected_risks": [],
+                "tool_trace": [],
             },
-            "suggested_next_tools": ["get_scene_summary"],
-            "commands": [],
-            "tool_trace": [],
-        }
+        )
 
     settings = resolve_llm_settings(llm_config)
     tools = openai_tool_definitions()
@@ -1406,26 +1430,32 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
         )
     except Exception as exc:
         if _session_wants_recipe_planning(session, conversation):
-            return _recipe_plan_fallback(session, conversation, error=str(exc), llm_config=llm_config)
+            return _stamp_base_revision(
+                session,
+                _recipe_plan_fallback(session, conversation, error=str(exc), llm_config=llm_config),
+            )
         demo = _demo_as_agent_result(message)
         if demo:
             demo["reply"] = f"(Agent/LLM fehlgeschlagen: {exc}) {demo['reply']}"
             demo["llm_error"] = str(exc)
-            return _attach_quality_preview(session, demo)
-        return {
-            "ok": False,
-            "mode": "agent",
-            "error": str(exc),
-            "reply": f"Agent fehlgeschlagen: {exc}",
-            "questions": [],
-            "proposal": {
-                "proposal_id": str(uuid.uuid4()),
-                "title": "",
-                "rationale": "",
-                "assumes": [],
+            return _stamp_base_revision(session, _attach_quality_preview(session, demo))
+        return _stamp_base_revision(
+            session,
+            {
+                "ok": False,
+                "mode": "agent",
+                "error": str(exc),
+                "reply": f"Agent fehlgeschlagen: {exc}",
+                "questions": [],
+                "proposal": {
+                    "proposal_id": str(uuid.uuid4()),
+                    "title": "",
+                    "rationale": "",
+                    "assumes": [],
+                    "commands": [],
+                    "expected_risks": [],
+                },
                 "commands": [],
-                "expected_risks": [],
+                "tool_trace": tool_trace,
             },
-            "commands": [],
-            "tool_trace": tool_trace,
-        }
+        )

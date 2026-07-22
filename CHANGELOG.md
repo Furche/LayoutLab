@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **FC-001/WP-02 semantic transactions (`0.10.36`):** Core `RoomSession` owns integer `revision`, session Undo/Redo (default depth ≥ 50), preview/commit/cancel (no Undo until commit), and authoritative `commit_commands` (internal `apply_commands` unchanged for dry-run/clones). Stale AI Apply rejected on `base_revision` mismatch; proposals carry `base_revision`. HTTP: `/v1/commands` commits; `/v1/undo`, `/v1/redo`, `/v1/preview/*`. Export/`get_scene_summary` expose `revision`.
+
 ### Changed
 
 - **Roadmap consolidation:** MDD §17 rewritten into Implemented / Active / Queued / Refinement / Later / Deferred; HANDOFF narrowed to FC-001/WP-01; Future_Ideas and DD-017 status synced with shipped Planning slice (`0.10.24`–`0.10.35`); historical Phase-2–4 open checkboxes and stale “not built” claims removed or clarified.

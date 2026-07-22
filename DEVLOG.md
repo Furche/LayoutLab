@@ -4,6 +4,20 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — FC-001/WP-02: semantic transactions in Core (0.10.36)
+
+**Why:** DD-018 requires one authoritative mutation path so manual edits and AI Apply share
+a revision timeline, preview does not flood Undo, and stale proposals cannot overwrite
+newer user work. Blender Undo stays out of Core authority.
+
+**How:** `commit_commands` is the live path (`POST /v1/commands`); `apply_commands` remains
+internal for clones/dry-run. Integer `revision`, session Undo ≥ 50, Redo reapplies stored
+operations, proposals stamp `base_revision`.
+
+**Next:** FC-001/WP-03 (direct furniture manipulation) against DD-019.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — DD-018 / DD-019 / DD-020 Accepted (FC-001/WP-01)
 
 **Accepted defaults:** session Undo ≥ 50 + integer project revision; duplicate includes

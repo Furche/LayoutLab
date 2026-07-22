@@ -16,6 +16,7 @@ from ..protocol.viewer_export import (
 from .analyze import analyze_session
 from .headless_api import execute_generator_headless
 from .mesh_store import MeshStore, triangulate_faces
+from . import transactions as tx
 
 # Keep in sync with layoutlab/__init__.py bl_info version when bumping the plugin.
 
@@ -38,7 +39,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.35"
+LAYOUTLAB_VERSION = "0.10.36"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -294,6 +295,7 @@ def export_viewer_scene(session: "RoomSession") -> dict:
         "unit": "METRIC",
         "unit_scale": 1.0,
         "scene": "RoomSession",
+        "revision": int(getattr(session, "revision", 0) or 0),
         "generators": [],
         "note": (
             "Coordinates/dimensions are LayoutLab scene units (native). "
@@ -308,25 +310,104 @@ def export_viewer_scene(session: "RoomSession") -> dict:
 
 
 class RoomSession:
-    """In-memory rooms + furniture mesh store."""
+    """In-memory rooms + furniture mesh store with semantic transactions (DD-018)."""
 
-    def __init__(self):
+    def __init__(self, *, undo_depth: int = tx.DEFAULT_UNDO_DEPTH):
         self._rooms: dict[str, dict] = {}
         self.mesh_store = MeshStore()
         self.agent_state = empty_agent_state()
+        self.revision = 0
+        self._undo = tx.TransactionHistory(max_depth=undo_depth)
+        self._redo: list[tx.UndoEntry] = []
+        self._preview: dict | None = None
+        self.last_transaction: dict | None = None
 
     def clear(self):
         self._rooms.clear()
         self.mesh_store.clear()
         self.agent_state = empty_agent_state()
+        self.revision = 0
+        self._undo.clear()
+        self._redo.clear()
+        self._preview = None
+        self.last_transaction = None
 
     def clone(self) -> "RoomSession":
-        """Independent copy for dry-run (mutations do not touch the live session)."""
-        other = RoomSession()
+        """Independent copy for dry-run (mutations do not touch the live session).
+
+        Clones carry the current revision but an empty Undo/Redo history and no preview.
+        """
+        other = RoomSession(undo_depth=self._undo.max_depth)
         other._rooms = copy.deepcopy(self._rooms)
         other.mesh_store = self.mesh_store.clone()
         other.agent_state = copy.deepcopy(self.agent_state)
+        other.revision = int(self.revision)
         return other
+
+    @property
+    def can_undo(self) -> bool:
+        return self._undo.can_undo and self._preview is None
+
+    @property
+    def can_redo(self) -> bool:
+        return bool(self._redo) and self._preview is None
+
+    @property
+    def undo_depth(self) -> int:
+        return self._undo.max_depth
+
+    @property
+    def undo_len(self) -> int:
+        return len(self._undo)
+
+    @property
+    def redo_len(self) -> int:
+        return len(self._redo)
+
+    @property
+    def preview_active(self) -> bool:
+        return self._preview is not None
+
+    def _snapshot_domain(self) -> dict:
+        return tx.domain_snapshot(self._rooms, self.mesh_store, self.revision)
+
+    def _restore_domain(self, snap: dict) -> None:
+        self._rooms = copy.deepcopy(snap["rooms"])
+        self.mesh_store = snap["mesh_store"].clone()
+        self.revision = int(snap["revision"])
+
+    def _transaction_payload(self, applied: dict, record: tx.TransactionRecord) -> dict:
+        out = dict(applied)
+        out["revision"] = self.revision
+        out["base_revision"] = record.base_revision
+        out["result_revision"] = record.result_revision
+        out["transaction"] = record.to_dict()
+        out["can_undo"] = self.can_undo
+        out["can_redo"] = self.can_redo
+        return out
+
+    def _error_payload(
+        self,
+        *,
+        error_code: str,
+        error: str,
+        extra: dict | None = None,
+        status_ok: bool = False,
+    ) -> dict:
+        payload = {
+            "ok": status_ok,
+            "error_code": error_code,
+            "error": error,
+            "revision": self.revision,
+            "can_undo": self.can_undo,
+            "can_redo": self.can_redo,
+            "results": [],
+            "errors": [{"ok": False, "error": error, "error_code": error_code}],
+            "export": export_viewer_scene(self),
+        }
+        if extra:
+            payload.update(extra)
+        return payload
 
     def list_rooms(self):
         return [copy.deepcopy(m) for m in self._rooms.values()]
@@ -496,6 +577,10 @@ class RoomSession:
         raise ValueError(f"unhandled action {action!r}")
 
     def apply_commands(self, commands: list) -> dict:
+        """Internal batch apply — does **not** create Undo or advance revision.
+
+        Authoritative mutations must use :meth:`commit_commands` (DD-018).
+        """
         results = []
         errors = []
         for index, cmd in enumerate(commands or []):
@@ -514,4 +599,284 @@ class RoomSession:
             "results": results,
             "errors": errors,
             "export": export_viewer_scene(self),
+            "revision": self.revision,
+        }
+
+    def commit_commands(
+        self,
+        commands: list,
+        *,
+        actor: str = "user",
+        action: str = "commands",
+        description: str = "",
+        base_revision: int | None = None,
+    ) -> dict:
+        """Authoritative commit: one semantic transaction + Undo unit (DD-018)."""
+        if self._preview is not None:
+            return self._error_payload(
+                error_code=tx.ERROR_PREVIEW_ACTIVE,
+                error="Cannot commit while a preview is active; commit_preview or cancel_preview first.",
+            )
+
+        try:
+            actor_norm = tx.normalize_actor(actor)
+        except ValueError as exc:
+            return self._error_payload(error_code=tx.ERROR_INVALID_ACTOR, error=str(exc))
+
+        if actor_norm == "ai" and base_revision is None:
+            return self._error_payload(
+                error_code=tx.ERROR_MISSING_BASE_REVISION,
+                error="AI Apply requires base_revision (stale-proposal protection).",
+                extra={"current_revision": self.revision},
+            )
+
+        effective_base = self.revision if base_revision is None else int(base_revision)
+        if effective_base != self.revision:
+            return self._error_payload(
+                error_code=tx.ERROR_STALE_BASE_REVISION,
+                error=(
+                    f"stale base_revision: proposal base={effective_base} "
+                    f"current={self.revision}; revalidate or regenerate."
+                ),
+                extra={
+                    "base_revision": effective_base,
+                    "current_revision": self.revision,
+                    "note": "Blind apply of stale AI proposals is forbidden (DD-018).",
+                },
+            )
+
+        ops = list(commands or [])
+        if actor_norm == "ai":
+            violations = tx.ai_protection_violations(self._rooms, self.mesh_store, ops)
+            if violations:
+                return self._error_payload(
+                    error_code=tx.ERROR_PROTECTED_FROM_AI,
+                    error="AI Apply blocked by protected_from_ai.",
+                    extra={"violations": violations},
+                )
+
+        before = self._snapshot_domain()
+        applied = self.apply_commands(ops)
+        if not applied.get("ok"):
+            self._restore_domain(before)
+            out = dict(applied)
+            out["ok"] = False
+            out["error_code"] = tx.ERROR_COMMIT_FAILED
+            out["error"] = "commit aborted; session restored to base revision"
+            out["revision"] = self.revision
+            out["base_revision"] = effective_base
+            out["can_undo"] = self.can_undo
+            out["can_redo"] = self.can_redo
+            return out
+
+        self.revision = int(self.revision) + 1
+        record = tx.TransactionRecord(
+            actor=actor_norm,
+            action=str(action or "commands"),
+            base_revision=effective_base,
+            result_revision=self.revision,
+            operations=copy.deepcopy(ops),
+            description=str(description or ""),
+        )
+        self._undo.push(tx.UndoEntry(record=record, before=before))
+        self._redo.clear()
+        self.last_transaction = record.to_dict()
+        # Refresh export so revision field matches post-commit state.
+        applied["export"] = export_viewer_scene(self)
+        return self._transaction_payload(applied, record)
+
+    def begin_preview(
+        self,
+        commands: list | None = None,
+        *,
+        actor: str = "user",
+        description: str = "",
+    ) -> dict:
+        """Start a non-authoritative preview (no Undo / no revision bump)."""
+        if self._preview is not None:
+            return self._error_payload(
+                error_code=tx.ERROR_PREVIEW_ACTIVE,
+                error="preview already active",
+            )
+        try:
+            actor_norm = tx.normalize_actor(actor)
+        except ValueError as exc:
+            return self._error_payload(error_code=tx.ERROR_INVALID_ACTOR, error=str(exc))
+
+        base_snapshot = self._snapshot_domain()
+        ops = list(commands or [])
+        self._preview = {
+            "base_snapshot": base_snapshot,
+            "base_revision": self.revision,
+            "actor": actor_norm,
+            "description": str(description or ""),
+            "commands": ops,
+        }
+        if ops:
+            applied = self.apply_commands(ops)
+            if not applied.get("ok"):
+                self._restore_domain(base_snapshot)
+                self._preview = None
+                out = dict(applied)
+                out["preview"] = False
+                out["error_code"] = tx.ERROR_COMMIT_FAILED
+                out["error"] = "preview begin failed; session unchanged"
+                return out
+        return {
+            "ok": True,
+            "preview": True,
+            "revision": self.revision,
+            "base_revision": base_snapshot["revision"],
+            "can_undo": self.can_undo,
+            "can_redo": self.can_redo,
+            "export": export_viewer_scene(self),
+        }
+
+    def update_preview(self, commands: list) -> dict:
+        """Replace preview ops from the preview base snapshot (still non-authoritative)."""
+        if self._preview is None:
+            return self._error_payload(
+                error_code=tx.ERROR_NO_PREVIEW,
+                error="no active preview",
+            )
+        self._restore_domain(self._preview["base_snapshot"])
+        ops = list(commands or [])
+        self._preview["commands"] = ops
+        applied = self.apply_commands(ops)
+        if not applied.get("ok"):
+            self._restore_domain(self._preview["base_snapshot"])
+            self._preview["commands"] = []
+            out = dict(applied)
+            out["preview"] = True
+            out["error_code"] = tx.ERROR_COMMIT_FAILED
+            out["error"] = "preview update failed; restored preview base"
+            out["revision"] = self.revision
+            return out
+        return {
+            "ok": True,
+            "preview": True,
+            "revision": self.revision,
+            "base_revision": self._preview["base_revision"],
+            "can_undo": self.can_undo,
+            "can_redo": self.can_redo,
+            "export": export_viewer_scene(self),
+        }
+
+    def cancel_preview(self) -> dict:
+        """Discard preview and restore the pre-preview domain state."""
+        if self._preview is None:
+            return {
+                "ok": True,
+                "cancelled": False,
+                "preview": False,
+                "revision": self.revision,
+                "export": export_viewer_scene(self),
+            }
+        self._restore_domain(self._preview["base_snapshot"])
+        self._preview = None
+        return {
+            "ok": True,
+            "cancelled": True,
+            "preview": False,
+            "revision": self.revision,
+            "can_undo": self.can_undo,
+            "can_redo": self.can_redo,
+            "export": export_viewer_scene(self),
+        }
+
+    def commit_preview(
+        self,
+        *,
+        action: str | None = None,
+        description: str | None = None,
+    ) -> dict:
+        """Commit the active preview as one transaction (revision advances once)."""
+        if self._preview is None:
+            return self._error_payload(
+                error_code=tx.ERROR_NO_PREVIEW,
+                error="no active preview",
+            )
+        ops = list(self._preview.get("commands") or [])
+        actor = self._preview.get("actor") or "user"
+        base_revision = self._preview.get("base_revision")
+        desc = (
+            description
+            if description is not None
+            else self._preview.get("description") or ""
+        )
+        act = action or "gesture"
+        self._restore_domain(self._preview["base_snapshot"])
+        self._preview = None
+        return self.commit_commands(
+            ops,
+            actor=actor,
+            action=act,
+            description=desc,
+            base_revision=base_revision,
+        )
+
+    def undo(self) -> dict:
+        """Restore the project to the pre-transaction revision for the last commit."""
+        if self._preview is not None:
+            return self._error_payload(
+                error_code=tx.ERROR_PREVIEW_ACTIVE,
+                error="Cannot undo while a preview is active; cancel_preview first.",
+            )
+        entry = self._undo.pop()
+        if entry is None:
+            return self._error_payload(
+                error_code=tx.ERROR_NOTHING_TO_UNDO,
+                error="nothing to undo",
+            )
+        self._restore_domain(entry.before)
+        self._redo.append(entry)
+        self.last_transaction = None
+        return {
+            "ok": True,
+            "undone": True,
+            "revision": self.revision,
+            "transaction": entry.record.to_dict(),
+            "can_undo": self.can_undo,
+            "can_redo": self.can_redo,
+            "export": export_viewer_scene(self),
+        }
+
+    def redo(self) -> dict:
+        """Reapply the same committed semantic operations (no AI / recipe re-invoke)."""
+        if self._preview is not None:
+            return self._error_payload(
+                error_code=tx.ERROR_PREVIEW_ACTIVE,
+                error="Cannot redo while a preview is active; cancel_preview first.",
+            )
+        if not self._redo:
+            return self._error_payload(
+                error_code=tx.ERROR_NOTHING_TO_REDO,
+                error="nothing to redo",
+            )
+        entry = self._redo.pop()
+        before = self._snapshot_domain()
+        applied = self.apply_commands(copy.deepcopy(entry.record.operations))
+        if not applied.get("ok"):
+            self._restore_domain(before)
+            out = dict(applied)
+            out["ok"] = False
+            out["error_code"] = tx.ERROR_COMMIT_FAILED
+            out["error"] = "redo failed; session restored"
+            out["revision"] = self.revision
+            out["can_undo"] = self.can_undo
+            out["can_redo"] = self.can_redo
+            return out
+        self.revision = int(entry.record.result_revision)
+        self._undo.push(tx.UndoEntry(record=entry.record, before=before))
+        self.last_transaction = entry.record.to_dict()
+        applied["export"] = export_viewer_scene(self)
+        return {
+            "ok": True,
+            "redone": True,
+            "revision": self.revision,
+            "transaction": entry.record.to_dict(),
+            "can_undo": self.can_undo,
+            "can_redo": self.can_redo,
+            "export": applied["export"],
+            "results": applied.get("results") or [],
         }

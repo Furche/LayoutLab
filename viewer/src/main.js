@@ -561,9 +561,19 @@ function applyPendingChatCommands() {
     }
   }
   const commands = pendingChatCommands;
+  const proposal = pendingChatProposalPayload?.proposal || {};
+  const baseRevision =
+    proposal.base_revision ?? pendingChatProposalPayload?.base_revision ?? null;
   if (el.commandsViewDialog?.open) el.commandsViewDialog.close();
   clearChatProposal();
-  postCommandsToCore({ commands }, "Core · chat Apply")
+  const applyBody = {
+    commands,
+    actor: "ai",
+    action: "ai_apply",
+    description: proposal.title || "AI Apply",
+  };
+  if (baseRevision != null) applyBody.base_revision = baseRevision;
+  postCommandsToCore(applyBody, "Core · chat Apply")
     .then(() => appendChatBubble("assistant", "Applied to Core."))
     .catch((err) => {
       appendChatBubble("assistant", err.message);

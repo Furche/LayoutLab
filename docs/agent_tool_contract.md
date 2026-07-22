@@ -202,14 +202,19 @@ After tool rounds, the model emits:
     "rationale": "…",
     "assumes": [],
     "commands": [],
-    "expected_risks": []
+    "expected_risks": [],
+    "base_revision": 0
   },
+  "base_revision": 0,
   "suggested_next_tools": []
 }
 ```
 
-UI shows `reply` primarily; Apply sends `proposal.commands` to `POST /v1/commands`.
-Core re-sanitizes against the allowlist before apply.
+`base_revision` is stamped by Core from the live session revision when the proposal is
+produced (DD-018). UI shows `reply` primarily; Apply sends `proposal.commands` plus
+`base_revision` to `POST /v1/commands` (`actor: "ai"`). Core re-sanitizes against the
+allowlist and **rejects** Apply when `base_revision ≠ current revision`
+(`error_code: "stale_base_revision"`).
 
 ------------------------------------------------------------------------
 
@@ -218,8 +223,10 @@ Core re-sanitizes against the allowlist before apply.
 | Endpoint | Role |
 |---|---|
 | `POST /v1/tools/{name}` | Deterministic tool execution (testable without LLM) |
-| `POST /v1/agent/turn` | LLM orchestration: seed + tool calls → structured proposal + quality |
-| `POST /v1/commands` | Commit / Apply (unchanged; no hard block on findings in v1) |
+| `POST /v1/agent/turn` | LLM orchestration: seed + tool calls → structured proposal + quality + `base_revision` |
+| `POST /v1/commands` | Authoritative commit (`commit_commands`) — optional `actor`, `base_revision`, `action`, `description` |
+| `POST /v1/undo` / `POST /v1/redo` | Session Undo/Redo (DD-018) |
+| `POST /v1/preview/{begin,update,commit,cancel}` | Non-authoritative preview until commit |
 | `POST /v1/chat` | Legacy thin chat (demo + one-shot LLM); keep until agent turn replaces UI |
 
 MCP may later adapt the same tool functions; it is not the primary bus.

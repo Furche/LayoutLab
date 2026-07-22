@@ -156,6 +156,9 @@ def get_scene_summary(session, params=None):
         "ok": True,
         "unit": "METRIC",
         "unit_scale": 1.0,
+        "revision": int(getattr(session, "revision", 0) or 0),
+        "can_undo": bool(getattr(session, "can_undo", False)),
+        "can_redo": bool(getattr(session, "can_redo", False)),
         "rooms": rooms_out,
         "object_counts": {
             "furniture": furniture,
@@ -362,7 +365,7 @@ def list_supported_actions(session, params=None):
     return {
         "ok": True,
         "actions": sorted(SESSION_ACTIONS),
-        "note": "Mutating actions must go through proposal.commands → Apply (/v1/commands).",
+        "note": "Mutating actions must go through proposal.commands → Apply (POST /v1/commands via commit_commands).",
     }
 
 

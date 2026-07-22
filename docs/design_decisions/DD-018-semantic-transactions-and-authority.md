@@ -204,3 +204,4 @@ application honour them.
 |---|---|---|
 | 0.1 | 2026-07-22 | Proposed — FC-001/WP-01 decomposition |
 | 1.0 | 2026-07-22 | **Accepted** — session Undo ≥ 50; integer revision; import = one transaction |
+| 1.1 | 2026-07-22 | Implemented in Core `0.10.36` (FC-001/WP-02): `commit_commands`, preview, Undo/Redo, stale `base_revision` |

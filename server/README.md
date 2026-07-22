@@ -1,4 +1,4 @@
-# LayoutLab Core server (DD-014 + agent tools)
+# LayoutLab Core server (DD-014 + agent tools + DD-018 transactions)
 
 Local Python HTTP service that applies **Room Model** / generator commands and returns
 `viewer_schema` export JSON. No Blender / `bpy` required.
@@ -17,13 +17,27 @@ Listens on `http://127.0.0.1:8765` by default.
 
 | Method | Path | Body | Response |
 |---|---|---|---|
-| `GET` | `/health` | — | `{ "ok", "core_version", "tools", "chat", "session_log", … }` |
+| `GET` | `/health` | — | `{ "ok", "core_version", "revision", "can_undo", "can_redo", "tools", … }` |
 | `GET` | `/v1/session/log` | — | last session events (tail) + paths + `core_version` |
 | `POST` | `/v1/session/reset` | `{ "reason"?, "clear_scene"? }` | archive log, start fresh session (viewer calls this on tab refresh) |
-| `POST` | `/v1/commands` | `{ "commands": [ … ] }` | `{ "ok", "results", "export" }` |
-| `POST` | `/v1/agent/turn` | `{ "message", "llm"?, "history"? }` | proposal (no apply) |
+| `POST` | `/v1/commands` | `{ "commands", "actor"?, "base_revision"?, "action"?, "description"? }` | commit via `RoomSession.commit_commands` → `{ "ok", "results", "export", "revision", "transaction", … }` |
+| `POST` | `/v1/undo` | `{}` | restore previous committed revision |
+| `POST` | `/v1/redo` | `{}` | reapply last undone transaction ops |
+| `POST` | `/v1/preview/begin` | `{ "commands"?, "actor"?, "description"? }` | non-authoritative preview (no Undo) |
+| `POST` | `/v1/preview/update` | `{ "commands" }` | replace preview ops from preview base |
+| `POST` | `/v1/preview/commit` | `{ "action"?, "description"? }` | commit preview as one transaction |
+| `POST` | `/v1/preview/cancel` | `{}` | discard preview |
+| `POST` | `/v1/agent/turn` | `{ "message", "llm"?, "history"? }` | proposal (no apply); includes `base_revision` |
 | `POST` | `/v1/tools/{name}` | tool params JSON | tool result |
 | `POST` | `/v1/chat` | legacy thin chat | proposal |
+
+### Authoritative Apply (DD-018)
+
+- Live mutations go through **`commit_commands`** (not internal `apply_commands`).
+- Integer **`revision`** advances on each successful commit.
+- AI Apply should send `actor: "ai"` and `base_revision` from the proposal. Mismatch → `error_code: "stale_base_revision"` (no blind apply).
+- If `base_revision` is present and `actor` omitted, the server defaults `actor` to `ai`.
+- User / system / import batches may omit `base_revision` (uses current revision).
 
 ## Session log
 
@@ -49,14 +63,15 @@ curl -s -X POST http://127.0.0.1:8765/v1/tools/get_scene_summary \
 ```
 
 With an API key (viewer LLM settings or env), `/v1/agent/turn` runs tool calling and
-returns a structured `proposal`. Apply still uses `/v1/commands`.
+returns a structured `proposal` with `base_revision`. Apply still uses `/v1/commands`.
 
 Without a key, demo intents still work (empty/furnished kids room, schrank, lösche den raum, analyze).
 
 ## Room + generator write
 
-Supported: room model, openings, fixed, `run_generator`, `analyze_layout`, deletes.
-Export embeds live `analysis`. Not yet: undo, `regenerate`, `dry_run_commands`.
+Supported: room model, openings, fixed, `run_generator`, `analyze_layout`, deletes,
+semantic transactions (preview / commit / undo / redo). Export embeds live `analysis`
+and `revision`. Not yet: `regenerate`, viewport gesture ops (FC-001/WP-03+).
 
 ## Viewer
 
@@ -64,4 +79,4 @@ Export embeds live `analysis`. Not yet: undo, `regenerate`, `dry_run_commands`.
 cd viewer && npm run dev
 ```
 
-Sidebar **AI Chat** → agent turn; **Apply to Core** commits commands.
+Sidebar **AI Chat** → agent turn; **Apply to Core** commits commands with `base_revision`.
