@@ -4,6 +4,16 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — Viewer wall drag + furniture pick (`0.10.44`)
+
+**Why:** Move mode ignored walls (only furniture), but walls were the easiest
+meshes to select — drag felt broken.
+
+**How:** Wall parallel drag → `move_wall` preview/commit; raycast prefers
+furniture when present; expose `wall_side` on viewer meshes.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — Viewer direct manipulation Move/Rotate (`0.10.43`)
 
 **Why:** FC-001 / DD-019 Core ops exist; the Viewer still could not drive

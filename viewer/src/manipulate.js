@@ -1,11 +1,11 @@
 /**
  * Viewer direct manipulation against Core preview/commit (DD-018 / DD-019).
- * Move = room XY drag; Rotate = horizontal drag → absolute Z degrees.
+ * Move = furniture XY or wall parallel drag; Rotate = furniture Z degrees.
  */
 
 import * as THREE from "three";
 
-const NON_FURNITURE_ROLES = new Set([
+const ROOM_FABRIC_ROLES = new Set([
   "room_floor",
   "room_wall",
   "room_opening",
@@ -18,13 +18,30 @@ const ROTATE_DEG_PER_PX = 0.45;
 
 /**
  * @param {THREE.Object3D | null | undefined} mesh
- * @returns {boolean}
  */
-export function isManipulableMesh(mesh) {
+export function isFurnitureMesh(mesh) {
   const ud = mesh?.userData || {};
   if (!ud.object_id) return false;
-  if (NON_FURNITURE_ROLES.has(ud.role)) return false;
+  if (ROOM_FABRIC_ROLES.has(ud.role)) return false;
+  if (ud.role === "clearance") return true; // same object_id as furniture
   return true;
+}
+
+/**
+ * @param {THREE.Object3D | null | undefined} mesh
+ */
+export function isWallMesh(mesh) {
+  return mesh?.userData?.role === "room_wall" && Boolean(mesh.userData.wall_side);
+}
+
+/**
+ * @param {THREE.Object3D | null | undefined} mesh
+ * @param {"orbit"|"move"|"rotate"} editMode
+ */
+export function isManipulableMesh(mesh, editMode = "move") {
+  if (isFurnitureMesh(mesh)) return true;
+  if (editMode === "move" && isWallMesh(mesh)) return true;
+  return false;
 }
 
 /**
@@ -37,6 +54,24 @@ export function findMeshForObjectId(meshes, objectId) {
   const list = meshes.filter((m) => m?.userData?.object_id === objectId);
   return (
     list.find((m) => m.userData.role !== "clearance") || list[0] || null
+  );
+}
+
+/**
+ * @param {THREE.Object3D[]} meshes
+ * @param {string} roomId
+ * @param {string} wallSide
+ */
+export function findWallMesh(meshes, roomId, wallSide) {
+  if (!roomId || !wallSide) return null;
+  const side = String(wallSide).toLowerCase();
+  return (
+    meshes.find(
+      (m) =>
+        m?.userData?.role === "room_wall" &&
+        m.userData.room_id === roomId &&
+        String(m.userData.wall_side || "").toLowerCase() === side,
+    ) || null
   );
 }
 
@@ -71,6 +106,21 @@ export function poseFromExport(exportData, objectId) {
 }
 
 /**
+ * Outward-positive delta for move_wall from a floor-plane drag (dx, dy in Blender XY).
+ * @param {string} wallSide
+ * @param {number} dx
+ * @param {number} dy
+ */
+export function wallDeltaFromDrag(wallSide, dx, dy) {
+  const side = String(wallSide || "").toLowerCase();
+  if (side === "north") return dy;
+  if (side === "south") return -dy;
+  if (side === "east") return dx;
+  if (side === "west") return -dx;
+  return 0;
+}
+
+/**
  * Intersect a horizontal Blender floor plane (z = planeZ) under the Z-up root.
  * @returns {{ x: number, y: number, z: number } | null}
  */
@@ -84,7 +134,6 @@ export function hitBlenderFloorXY(raycaster, camera, sceneRoot, clientX, clientY
   );
   raycaster.setFromCamera(ndc, camera);
 
-  // Plane in Blender local space: z = planeZ (normal +Z).
   const localPoint = new THREE.Vector3(0, 0, planeZ);
   const localNormal = new THREE.Vector3(0, 0, 1);
   sceneRoot.localToWorld(localPoint);
@@ -113,6 +162,15 @@ export function rotateCommand(objectId, degrees) {
     object_id: objectId,
     degrees,
     absolute: true,
+  };
+}
+
+export function wallMoveCommand(roomId, wallSide, delta) {
+  return {
+    action: "move_wall",
+    room_id: roomId,
+    wall_side: wallSide,
+    delta,
   };
 }
 

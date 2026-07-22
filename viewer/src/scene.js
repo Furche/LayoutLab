@@ -238,16 +238,18 @@ export function buildSceneFromExport(data) {
     }
 
     mesh.name = obj.name || role;
+    const props = obj.custom_properties || {};
     mesh.userData = {
       role,
-      object_id: obj.layoutlab?.object_id || obj.custom_properties?.layoutlab_object_id || "",
+      object_id: obj.layoutlab?.object_id || props.layoutlab_object_id || "",
       room_id:
         obj.layoutlab?.room_id ||
-        obj.custom_properties?.layoutlab_room_id ||
+        props.layoutlab_room_id ||
         "",
+      wall_side: props.layoutlab_wall_side || obj.layoutlab?.wall_side || "",
       clearance_name:
         obj.layoutlab?.clearance?.clearance_name ||
-        obj.custom_properties?.layoutlab_clearance_name ||
+        props.layoutlab_clearance_name ||
         "",
       exportName: obj.name || "",
       baseColor: color,
