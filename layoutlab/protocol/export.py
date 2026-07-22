@@ -65,7 +65,10 @@ def viewer_block_from_object(obj):
         corners = mesh_world_quad_corners(obj)
 
     mesh = None
-    if not is_wire and role != "room_wall":
+    if role == "clearance":
+        # Oriented wire mesh — AABB boxes look like scale/shear when furniture rotates.
+        mesh = mesh_world_geometry(obj)
+    elif not is_wire and role != "room_wall":
         mesh = mesh_world_geometry(obj)
 
     return viewer_block_for_role(role, corners=corners, display_type=display_type, mesh=mesh)

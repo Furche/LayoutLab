@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -38,6 +39,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -66,6 +68,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -78,6 +81,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -116,6 +120,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -134,6 +139,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -151,6 +157,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -158,6 +165,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -251,6 +259,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -275,6 +284,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -294,6 +304,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -310,6 +321,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -427,6 +439,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -445,6 +458,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -468,6 +482,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
@@ -499,6 +514,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.

@@ -42,7 +42,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.51"
+LAYOUTLAB_VERSION = "0.10.52"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -288,7 +288,9 @@ def _furniture_export_object(obj):
     display_type = obj.display_type
     is_wire = role == "clearance" or str(display_type).upper() == "WIRE"
     mesh = None
-    if not is_wire and obj.vertices and len(obj.vertices) <= MAX_VIEWER_MESH_VERTS:
+    # Clearances always export oriented verts (AABB would look like scale/shear when rotated).
+    export_mesh = (not is_wire or role == "clearance") and obj.vertices
+    if export_mesh and len(obj.vertices) <= MAX_VIEWER_MESH_VERTS:
         mesh = {
             "vertices": [_r3(v) for v in obj.world_vertices()],
             "faces": triangulate_faces(obj.faces),

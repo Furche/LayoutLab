@@ -195,6 +195,24 @@ function meshFromViewer(viewer, color, opts = {}) {
   );
 }
 
+/** Oriented wireframe from exported mesh verts (used for rotated clearances). */
+function wireMeshFromViewer(viewer, color, opts = {}) {
+  const solid = meshFromViewer(viewer, color, { opacity: 1 });
+  if (!solid) return null;
+  const edges = new THREE.EdgesGeometry(solid.geometry, 20);
+  solid.geometry.dispose();
+  solid.material.dispose();
+  return new THREE.LineSegments(
+    edges,
+    new THREE.LineBasicMaterial({
+      color,
+      transparent: true,
+      opacity: opts.opacity ?? 0.85,
+      depthWrite: false,
+    }),
+  );
+}
+
 /**
  * @returns {{ root: THREE.Group, layers: { clearances: THREE.Group, openings: THREE.Group } }}
  */
@@ -222,10 +240,14 @@ export function buildSceneFromExport(data) {
     let mesh = null;
     if (viewer.primitive === "quad" && viewer.corners) {
       mesh = quadMesh(viewer.corners, color);
-    } else if (!displayWire && viewer.primitive === "mesh") {
-      mesh = meshFromViewer(viewer, color, {
-        opacity: role === "room_floor" ? 0.95 : 1,
-      });
+    } else if (viewer.primitive === "mesh" && Array.isArray(viewer.vertices)) {
+      mesh = displayWire
+        ? wireMeshFromViewer(viewer, color, {
+            opacity: role === "clearance" ? 0.85 : 0.7,
+          })
+        : meshFromViewer(viewer, color, {
+            opacity: role === "room_floor" ? 0.95 : 1,
+          });
     }
 
     if (!mesh) {

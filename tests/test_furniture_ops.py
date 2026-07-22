@@ -145,6 +145,70 @@ class TestFurnitureManipulation(unittest.TestCase):
         self.assertAlmostEqual(center1[0], center0[0], places=4)
         self.assertAlmostEqual(center1[1], center0[1], places=4)
 
+    def test_clearance_export_keeps_oriented_mesh_after_rotate(self):
+        """Clearance viewer hint must keep mesh verts (not AABB) so rotation is visible."""
+        from layoutlab.runtime.session import export_viewer_scene
+
+        placed = self.session.commit_commands(
+            [
+                {
+                    "action": "run_generator",
+                    "generator": "desk_basic",
+                    "params": {
+                        "name": "DESK_CL",
+                        "location": [2.0, 1.0, 0.0],
+                        "width": 1.2,
+                        "depth": 0.6,
+                        "height": 0.75,
+                        "show_clearance": True,
+                        "collection": "layoutlab_room",
+                    },
+                }
+            ],
+            actor="user",
+        )
+        self.assertTrue(placed["ok"], placed)
+        oid = placed["results"][0]["result"]["object_id"]
+
+        def _clearances(export):
+            out = []
+            for o in export["objects"]:
+                props = o.get("custom_properties") or {}
+                role = (o.get("layoutlab") or {}).get("role") or props.get("layoutlab_role")
+                if role == "clearance" or props.get("layoutlab_clearance_name"):
+                    if (o.get("layoutlab") or {}).get("object_id") == oid:
+                        out.append(o)
+            return out
+
+        before = export_viewer_scene(self.session)
+        clearances = _clearances(before)
+        self.assertTrue(clearances, "desk should export a clearance")
+        cl0 = clearances[0]
+        viewer0 = cl0.get("viewer") or {}
+        self.assertEqual(viewer0.get("primitive"), "mesh")
+        self.assertEqual(viewer0.get("display"), "wire")
+        verts0 = viewer0.get("vertices") or []
+        self.assertGreaterEqual(len(verts0), 8)
+
+        self.session.commit_commands(
+            [{"action": "rotate_z", "object_id": oid, "degrees": 45}],
+            actor="user",
+        )
+        after = export_viewer_scene(self.session)
+        cl1 = _clearances(after)[0]
+        viewer1 = cl1.get("viewer") or {}
+        self.assertEqual(viewer1.get("primitive"), "mesh")
+        verts1 = viewer1.get("vertices") or []
+        self.assertEqual(len(verts1), len(verts0))
+        moved = any(
+            abs(a[0] - b[0]) > 1e-3 or abs(a[1] - b[1]) > 1e-3 for a, b in zip(verts0, verts1)
+        )
+        self.assertTrue(moved, "clearance verts should change after rotate_z")
+        span_x = max(v[0] for v in verts1) - min(v[0] for v in verts1)
+        span_y = max(v[1] for v in verts1) - min(v[1] for v in verts1)
+        self.assertGreater(span_x, 0.7)
+        self.assertGreater(span_y, 0.7)
+
     def test_invalid_outside_room_still_assigned(self):
         from layoutlab.runtime import furniture_ops as fo
 
