@@ -1,6 +1,6 @@
 /**
  * Selection-based transform gizmos (FC-001):
- * Flat 2D overlay look (arrows / ring / discs) in the Blender XY plane.
+ * Opaque flat 2D overlays in the Blender XY plane, with prioritized hit targets.
  *
  * Coordinates are Blender Z-up (parented under the scene world root).
  */
@@ -13,9 +13,22 @@ const MOVE_XY = 0xe5c07b;
 const ROTATE = 0xc678dd;
 const SCALE = 0x5b9fd4;
 const CORNER = 0xe5c07b;
-const HANDLE_Z = 0.08;
-const OUTSET = 0.14;
+const HOVER_TINT = 0xffffff;
+const HANDLE_Z = 0.1;
+const OUTSET = 0.16;
 const GIZMO_RENDER_ORDER = 1000;
+
+/** Higher wins when several coplanar handles overlap under the cursor. */
+const PICK = {
+  move_axis: 50,
+  move_xy: 45,
+  scale_axis: 40,
+  wall: 40,
+  corner: 40,
+  rotate_z: 25,
+};
+
+let hoveredRoot = null;
 
 /**
  * @param {object} room
@@ -88,22 +101,18 @@ export function furnitureBounds(exportData, objectId) {
   };
 }
 
-function fillMat(color, opts = {}) {
+function fillMat(color) {
   return new THREE.MeshBasicMaterial({
     color,
-    transparent: true,
-    opacity: opts.opacity ?? 0.92,
     depthTest: false,
     depthWrite: false,
     side: THREE.DoubleSide,
   });
 }
 
-function lineMat(color, opts = {}) {
+function lineMat(color) {
   return new THREE.LineBasicMaterial({
     color,
-    transparent: true,
-    opacity: opts.opacity ?? 1,
     depthTest: false,
     depthWrite: false,
   });
@@ -115,52 +124,81 @@ function styleOverlay(obj) {
   return obj;
 }
 
-function tag(mesh, meta) {
-  mesh.userData = { gizmo: true, ...meta };
-  mesh.name = meta.label || meta.kind || "gizmo";
-  return styleOverlay(mesh);
-}
-
-function invisibleHit(geo) {
-  const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ visible: false }));
+function markVisual(mesh, baseColor) {
+  mesh.userData.gizmoVisual = true;
+  mesh.userData.baseColor = baseColor;
   styleOverlay(mesh);
   return mesh;
 }
 
-/** Flat disc in XY (scale / wall / corner handles). */
-function makeDisc(color, radius, meta, opts = {}) {
-  const group = new THREE.Group();
-  const fill = new THREE.Mesh(
-    new THREE.CircleGeometry(radius, 28),
-    fillMat(color, { opacity: opts.fillOpacity ?? 0.88 }),
-  );
-  const rim = new THREE.LineLoop(
-    new THREE.BufferGeometry().setFromPoints(
-      new THREE.EllipseCurve(0, 0, radius, radius, 0, Math.PI * 2, false, 0).getPoints(40),
-    ),
-    lineMat(0xffffff, { opacity: 0.55 }),
-  );
-  rim.position.z = 0.002;
-  const hit = invisibleHit(new THREE.CircleGeometry(radius * 1.55, 16));
-  group.add(fill, rim, hit);
-  tag(group, meta);
+function pickPriorityFor(meta) {
+  if (meta.kind === "move_axis" && meta.axis === "xy") return PICK.move_xy;
+  if (meta.kind === "move_axis") return PICK.move_axis;
+  if (meta.kind === "rotate_z") return PICK.rotate_z;
+  if (meta.kind === "scale_axis") return PICK.scale_axis;
+  if (meta.kind === "wall") return PICK.wall;
+  if (meta.kind === "corner") return PICK.corner;
+  return 10;
+}
+
+function finishHandle(group, meta) {
+  group.userData = { gizmo: true, hoverRoot: group, ...meta };
+  group.name = meta.label || meta.kind || "gizmo";
+  styleOverlay(group);
+  const priority = pickPriorityFor(meta);
   group.traverse((o) => {
-    if (o.isMesh || o.isLine) o.userData = { ...group.userData };
+    if (!o.isMesh && !o.isLine) return;
+    o.userData = {
+      ...group.userData,
+      gizmoHit: Boolean(o.userData?.gizmoHit),
+      gizmoVisual: Boolean(o.userData?.gizmoVisual),
+      baseColor: o.userData?.baseColor,
+      pickPriority: priority,
+      hoverRoot: group,
+    };
   });
   return group;
 }
 
-/** Flat 2D arrow along Blender +X or +Y. */
+function makeHit(geo, meta) {
+  const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ visible: false }));
+  mesh.userData.gizmoHit = true;
+  styleOverlay(mesh);
+  return mesh;
+}
+
+/** Opaque flat disc (scale / wall / corner). */
+function makeDisc(color, radius, meta) {
+  const group = new THREE.Group();
+  const fill = markVisual(new THREE.Mesh(new THREE.CircleGeometry(radius, 28), fillMat(color)), color);
+  const rim = new THREE.LineLoop(
+    new THREE.BufferGeometry().setFromPoints(
+      new THREE.EllipseCurve(0, 0, radius, radius, 0, Math.PI * 2, false, 0).getPoints(48),
+    ),
+    lineMat(0x1a1d23),
+  );
+  rim.position.z = 0.002;
+  styleOverlay(rim);
+  // Hit only slightly larger than visual — avoid stealing rotate/move picks.
+  const hit = makeHit(new THREE.CircleGeometry(radius * 1.15, 20), meta);
+  group.add(fill, rim, hit);
+  return finishHandle(group, meta);
+}
+
+/** Opaque flat arrow along +X or +Y. */
 function makeArrow(axis, color, meta) {
   const group = new THREE.Group();
-  const shaftLen = 0.48;
-  const shaftW = 0.045;
-  const headLen = 0.16;
-  const headW = 0.13;
+  const shaftLen = 0.42;
+  const shaftW = 0.08;
+  const headLen = 0.18;
+  const headW = 0.18;
 
-  const shaft = new THREE.Mesh(
-    new THREE.PlaneGeometry(axis === "x" ? shaftLen : shaftW, axis === "x" ? shaftW : shaftLen),
-    fillMat(color),
+  const shaft = markVisual(
+    new THREE.Mesh(
+      new THREE.PlaneGeometry(axis === "x" ? shaftLen : shaftW, axis === "x" ? shaftW : shaftLen),
+      fillMat(color),
+    ),
+    color,
   );
   if (axis === "x") shaft.position.set(shaftLen / 2, 0, 0);
   else shaft.position.set(0, shaftLen / 2, 0);
@@ -177,32 +215,29 @@ function makeArrow(axis, color, meta) {
     headShape.lineTo(headW / 2, 0);
     headShape.closePath();
   }
-  const head = new THREE.Mesh(new THREE.ShapeGeometry(headShape), fillMat(color));
+  const head = markVisual(new THREE.Mesh(new THREE.ShapeGeometry(headShape), fillMat(color)), color);
   if (axis === "x") head.position.set(shaftLen, 0, 0.001);
   else head.position.set(0, shaftLen, 0.001);
 
-  const hit = invisibleHit(
+  const hit = makeHit(
     axis === "x"
-      ? new THREE.PlaneGeometry(shaftLen + headLen + 0.08, 0.28)
-      : new THREE.PlaneGeometry(0.28, shaftLen + headLen + 0.08),
+      ? new THREE.PlaneGeometry(shaftLen + headLen, Math.max(shaftW, headW) * 1.15)
+      : new THREE.PlaneGeometry(Math.max(shaftW, headW) * 1.15, shaftLen + headLen),
+    meta,
   );
   if (axis === "x") hit.position.set((shaftLen + headLen) / 2, 0, 0);
   else hit.position.set(0, (shaftLen + headLen) / 2, 0);
 
   group.add(shaft, head, hit);
-  tag(group, meta);
-  group.traverse((o) => {
-    if (o.isMesh) o.userData = { ...group.userData };
-  });
-  return group;
+  return finishHandle(group, meta);
 }
 
-/** Flat XY plane square between the move arrows. */
+/** Opaque XY plane square. */
 function makePlaneHandle(color, size, meta) {
   const group = new THREE.Group();
-  const fill = new THREE.Mesh(
-    new THREE.PlaneGeometry(size, size),
-    fillMat(color, { opacity: 0.45 }),
+  const fill = markVisual(
+    new THREE.Mesh(new THREE.PlaneGeometry(size, size), fillMat(color)),
+    color,
   );
   const half = size / 2;
   const rim = new THREE.LineLoop(
@@ -212,83 +247,67 @@ function makePlaneHandle(color, size, meta) {
       new THREE.Vector3(half, half, 0.002),
       new THREE.Vector3(-half, half, 0.002),
     ]),
-    lineMat(color, { opacity: 0.95 }),
+    lineMat(0x1a1d23),
   );
-  const hit = invisibleHit(new THREE.PlaneGeometry(size * 1.25, size * 1.25));
+  styleOverlay(rim);
+  const hit = makeHit(new THREE.PlaneGeometry(size * 1.1, size * 1.1), meta);
   group.add(fill, rim, hit);
-  group.position.set(size * 0.55, size * 0.55, 0.01);
-  tag(group, meta);
-  group.traverse((o) => {
-    if (o.isMesh || o.isLine) o.userData = { ...group.userData };
-  });
-  return group;
+  group.position.set(size * 0.62, size * 0.62, 0.01);
+  return finishHandle(group, meta);
 }
 
-/** Flat annular ring for Z rotation. */
+/** Opaque annular ring — thin band so it rarely overlaps arrows/scale. */
 function makeRotateRing(radius, color, meta) {
   const group = new THREE.Group();
-  const inner = Math.max(radius - 0.04, radius * 0.88);
-  const ring = new THREE.Mesh(
-    new THREE.RingGeometry(inner, radius, 64),
-    fillMat(color, { opacity: 0.75 }),
+  const band = 0.055;
+  const inner = Math.max(radius - band, 0.08);
+  const ring = markVisual(
+    new THREE.Mesh(new THREE.RingGeometry(inner, radius, 72), fillMat(color)),
+    color,
   );
   const outerRim = new THREE.LineLoop(
     new THREE.BufferGeometry().setFromPoints(
-      new THREE.EllipseCurve(0, 0, radius, radius, 0, Math.PI * 2, false, 0).getPoints(64),
+      new THREE.EllipseCurve(0, 0, radius, radius, 0, Math.PI * 2, false, 0).getPoints(72),
     ),
-    lineMat(0xffffff, { opacity: 0.4 }),
+    lineMat(0x1a1d23),
   );
   outerRim.position.z = 0.002;
-  const hit = invisibleHit(new THREE.RingGeometry(Math.max(inner - 0.08, 0.05), radius + 0.1, 48));
+  styleOverlay(outerRim);
+  // Hit matches the visible band (+small pad), not the whole disc interior.
+  const hit = makeHit(new THREE.RingGeometry(inner - 0.01, radius + 0.02, 56), meta);
   group.add(ring, outerRim, hit);
-  tag(group, meta);
-  group.traverse((o) => {
-    if (o.isMesh || o.isLine) o.userData = { ...group.userData };
-  });
-  return group;
+  return finishHandle(group, meta);
 }
 
 /**
- * Furniture: move arrows + rotate ring + scale discs at ±X / ±Y.
- * @param {object} bounds from furnitureBounds
- * @param {string} objectId
+ * Furniture: arrows inside ring, scale discs outside ring (no overlap).
  */
 export function buildFurnitureGizmo(bounds, objectId) {
   const group = new THREE.Group();
   group.name = "edit_gizmos";
   const [cx, cy, cz] = bounds.center;
   const [sx, sy] = bounds.size;
-  const z = cz + HANDLE_Z;
-  group.position.set(cx, cy, z);
+  group.position.set(cx, cy, cz + HANDLE_Z);
 
   const base = { target: "furniture", objectId, generator: bounds.generator || "" };
+  const half = Math.max(sx, sy) * 0.5;
+  const ringR = Math.max(half + 0.1, 0.48);
+  const scaleDist = ringR + 0.2;
 
   group.add(
-    makeArrow("x", MOVE_X, {
-      ...base,
-      kind: "move_axis",
-      axis: "x",
-      label: "move-x",
-    }),
+    makeArrow("x", MOVE_X, { ...base, kind: "move_axis", axis: "x", label: "move-x" }),
   );
   group.add(
-    makeArrow("y", MOVE_Y, {
-      ...base,
-      kind: "move_axis",
-      axis: "y",
-      label: "move-y",
-    }),
+    makeArrow("y", MOVE_Y, { ...base, kind: "move_axis", axis: "y", label: "move-y" }),
   );
   group.add(
-    makePlaneHandle(MOVE_XY, 0.22, {
+    makePlaneHandle(MOVE_XY, 0.2, {
       ...base,
       kind: "move_axis",
       axis: "xy",
       label: "move-xy",
     }),
   );
-
-  const ringR = Math.max(Math.max(sx, sy) * 0.45, 0.45);
   group.add(
     makeRotateRing(ringR, ROTATE, {
       ...base,
@@ -297,15 +316,13 @@ export function buildFurnitureGizmo(bounds, objectId) {
     }),
   );
 
-  const hx = Math.max(sx * 0.5 + 0.05, 0.35);
-  const hy = Math.max(sy * 0.5 + 0.05, 0.35);
   for (const [axis, sign, x, y] of [
-    ["x", 1, hx, 0],
-    ["x", -1, -hx, 0],
-    ["y", 1, 0, hy],
-    ["y", -1, 0, -hy],
+    ["x", 1, scaleDist, 0],
+    ["x", -1, -scaleDist, 0],
+    ["y", 1, 0, scaleDist],
+    ["y", -1, 0, -scaleDist],
   ]) {
-    const b = makeDisc(SCALE, 0.09, {
+    const disc = makeDisc(SCALE, 0.1, {
       ...base,
       kind: "scale_axis",
       axis,
@@ -314,16 +331,15 @@ export function buildFurnitureGizmo(bounds, objectId) {
       startSizeX: sx,
       startSizeY: sy,
     });
-    b.position.set(x, y, 0);
-    group.add(b);
+    disc.position.set(x, y, 0);
+    group.add(disc);
   }
 
   return group;
 }
 
 /**
- * Room: move arrows at center + wall/corner discs.
- * @param {object} room
+ * Room: move at center; wall/corner discs outside footprint.
  */
 export function buildRoomGizmo(room) {
   const group = new THREE.Group();
@@ -337,11 +353,10 @@ export function buildRoomGizmo(room) {
   const z = oz + HANDLE_Z;
   const cx = ox + w * 0.5;
   const cy = oy + d * 0.5;
+  const base = { target: "room", roomId };
 
   const moveRoot = new THREE.Group();
   moveRoot.position.set(cx, cy, z);
-  const base = { target: "room", roomId };
-
   moveRoot.add(
     makeArrow("x", MOVE_X, { ...base, kind: "move_axis", axis: "x", label: "room-move-x" }),
   );
@@ -349,7 +364,7 @@ export function buildRoomGizmo(room) {
     makeArrow("y", MOVE_Y, { ...base, kind: "move_axis", axis: "y", label: "room-move-y" }),
   );
   moveRoot.add(
-    makePlaneHandle(MOVE_XY, 0.24, {
+    makePlaneHandle(MOVE_XY, 0.22, {
       ...base,
       kind: "move_axis",
       axis: "xy",
@@ -365,7 +380,7 @@ export function buildRoomGizmo(room) {
     { side: "east", x: ox + w + OUTSET, y: oy + d * 0.5 },
   ];
   for (const wall of walls) {
-    const mesh = makeDisc(SCALE, 0.1, {
+    const mesh = makeDisc(SCALE, 0.11, {
       ...base,
       kind: "wall",
       wallSide: wall.side,
@@ -376,13 +391,13 @@ export function buildRoomGizmo(room) {
   }
 
   const corners = [
-    { corner: "sw", x: ox - OUTSET * 0.6, y: oy - OUTSET * 0.6 },
-    { corner: "se", x: ox + w + OUTSET * 0.6, y: oy - OUTSET * 0.6 },
-    { corner: "nw", x: ox - OUTSET * 0.6, y: oy + d + OUTSET * 0.6 },
-    { corner: "ne", x: ox + w + OUTSET * 0.6, y: oy + d + OUTSET * 0.6 },
+    { corner: "sw", x: ox - OUTSET * 0.7, y: oy - OUTSET * 0.7 },
+    { corner: "se", x: ox + w + OUTSET * 0.7, y: oy - OUTSET * 0.7 },
+    { corner: "nw", x: ox - OUTSET * 0.7, y: oy + d + OUTSET * 0.7 },
+    { corner: "ne", x: ox + w + OUTSET * 0.7, y: oy + d + OUTSET * 0.7 },
   ];
   for (const c of corners) {
-    const mesh = makeDisc(CORNER, 0.11, {
+    const mesh = makeDisc(CORNER, 0.12, {
       ...base,
       kind: "corner",
       corner: c.corner,
@@ -395,10 +410,6 @@ export function buildRoomGizmo(room) {
   return group;
 }
 
-/**
- * @param {object} exportData
- * @param {{ type: 'furniture'|'room', objectId?: string, roomId?: string } | null} selection
- */
 export function buildSelectionGizmos(exportData, selection) {
   if (!selection) {
     const empty = new THREE.Group();
@@ -432,14 +443,58 @@ export function isGizmoMesh(mesh) {
   return Boolean(mesh?.userData?.gizmo);
 }
 
-/** Map furniture scale axis drag to resize params. */
+/**
+ * Prefer dedicated hit meshes, then higher pickPriority (avoids rotate↔scale mixups).
+ * @param {THREE.Intersection[]} hits
+ * @returns {THREE.Object3D | null}
+ */
+export function resolveGizmoPick(hits) {
+  if (!hits?.length) return null;
+  const scored = hits
+    .map((h) => h.object)
+    .filter((o) => o?.userData?.gizmo)
+    .map((o) => ({
+      obj: o,
+      hit: o.userData.gizmoHit ? 1 : 0,
+      pri: Number(o.userData.pickPriority) || 0,
+    }));
+  if (!scored.length) return hits[0]?.object || null;
+  scored.sort((a, b) => b.hit - a.hit || b.pri - a.pri);
+  return scored[0].obj;
+}
+
+export function clearGizmoHover() {
+  if (!hoveredRoot) return;
+  hoveredRoot.traverse((o) => {
+    if (!o.userData?.gizmoVisual || !o.material?.color) return;
+    const base = o.userData.baseColor;
+    if (base != null) o.material.color.setHex(base);
+  });
+  hoveredRoot = null;
+}
+
+/**
+ * Highlight the handle under the cursor (brighten its visual meshes).
+ * @param {THREE.Object3D | null} mesh
+ */
+export function setGizmoHover(mesh) {
+  const root = mesh?.userData?.hoverRoot || (mesh?.userData?.gizmo ? mesh : null);
+  if (root === hoveredRoot) return;
+  clearGizmoHover();
+  if (!root) return;
+  hoveredRoot = root;
+  root.traverse((o) => {
+    if (!o.userData?.gizmoVisual || !o.material?.color) return;
+    o.material.color.setHex(HOVER_TINT);
+  });
+}
+
 export function resizeParamsForAxis(generator, axis, startSize, delta) {
   const g = String(generator || "").toLowerCase();
   const size = Math.max(0.25, (axis === "x" ? startSize[0] : startSize[1]) + delta);
   if (axis === "x") {
     return { width: Number(size.toFixed(4)) };
   }
-  // Y axis
   if (g.includes("bed")) {
     return { length: Number(size.toFixed(4)) };
   }

@@ -11,11 +11,14 @@ import {
 import { renderFloorplanSvg } from "./floorplan.js";
 import {
   buildSelectionGizmos,
+  clearGizmoHover,
   furnitureBounds,
   isGizmoMesh,
   resizeParamsForAxis,
+  resolveGizmoPick,
   roomMoveCommand,
   resizeCommand,
+  setGizmoHover,
 } from "./gizmos.js";
 import {
   createPreviewClient,
@@ -1672,6 +1675,7 @@ function applyCamera(preset) {
 }
 
 function rebuildGizmos() {
+  clearGizmoHover();
   if (gizmoGroup?.parent) {
     gizmoGroup.parent.remove(gizmoGroup);
     gizmoGroup.traverse((obj) => {
@@ -1688,18 +1692,6 @@ function rebuildGizmos() {
   sceneRoot.add(gizmoGroup);
 }
 
-function findGizmoHandle(roomId, kind, key) {
-  if (!gizmoGroup) return null;
-  let found = null;
-  gizmoGroup.traverse((obj) => {
-    if (found || !obj.userData?.gizmo) return;
-    if (obj.userData.roomId !== roomId || obj.userData.kind !== kind) return;
-    if (kind === "wall" && obj.userData.wallSide === key) found = obj;
-    if (kind === "corner" && obj.userData.corner === key) found = obj;
-  });
-  return found;
-}
-
 function pickGizmo(clientX, clientY) {
   if (!gizmoGroup) return null;
   const rect = renderer.domElement.getBoundingClientRect();
@@ -1707,7 +1699,18 @@ function pickGizmo(clientX, clientY) {
   pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
   const hits = raycaster.intersectObject(gizmoGroup, true);
-  return hits[0]?.object || null;
+  return resolveGizmoPick(hits);
+}
+
+function updateGizmoHover(clientX, clientY) {
+  if (gesture || pendingBodyDrag || !gizmoGroup) {
+    clearGizmoHover();
+    if (el.viewport) el.viewport.style.cursor = "";
+    return;
+  }
+  const hit = pickGizmo(clientX, clientY);
+  setGizmoHover(hit);
+  if (el.viewport) el.viewport.style.cursor = hit ? "pointer" : "";
 }
 
 function pickObject(clientX, clientY, { preferFurniture = false } = {}) {
@@ -2421,6 +2424,7 @@ renderer.domElement.addEventListener(
       ev.stopImmediatePropagation();
       controls.enabled = false;
       orthoOrbitArmed = false;
+      clearGizmoHover();
       renderer.domElement.setPointerCapture?.(ev.pointerId);
       startGesture(ev, gizmoHit).catch((err) => setStatus(err.message, "error"));
       return;
@@ -2450,10 +2454,12 @@ renderer.domElement.addEventListener(
 
 renderer.domElement.addEventListener("pointermove", (ev) => {
   if (gesture) {
+    clearGizmoHover();
     updateGesture(ev).catch((err) => setStatus(err.message, "warn"));
     return;
   }
   if (pendingBodyDrag && pointerDown) {
+    clearGizmoHover();
     const dx = ev.clientX - pointerDown.x;
     const dy = ev.clientY - pointerDown.y;
     if (dx * dx + dy * dy >= 16) {
@@ -2462,6 +2468,9 @@ renderer.domElement.addEventListener("pointermove", (ev) => {
       startBodyMoveGesture(ev, body).catch((err) => setStatus(err.message, "error"));
     }
     return;
+  }
+  if (!pointerDown) {
+    updateGizmoHover(ev.clientX, ev.clientY);
   }
   if (!orthoOrbitArmed || projectionMode !== "orthographic" || !pointerDown) return;
   if (!controls.enabled) {
@@ -2542,6 +2551,11 @@ controls.addEventListener("start", () => {
 
 controls.addEventListener("end", () => {
   orthoOrbitArmed = false;
+});
+
+el.viewport.addEventListener("pointerleave", () => {
+  clearGizmoHover();
+  if (el.viewport) el.viewport.style.cursor = "";
 });
 
 // Drag & drop export JSON (counter avoids flicker on child enter/leave)

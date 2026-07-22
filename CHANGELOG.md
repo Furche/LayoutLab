@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -40,6 +41,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -70,6 +72,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -84,6 +87,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -124,6 +128,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -144,6 +149,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -163,6 +169,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -172,6 +179,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -267,6 +275,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -293,6 +302,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -314,6 +324,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -332,6 +343,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -451,6 +463,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -471,6 +484,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -496,6 +510,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
@@ -529,6 +544,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
 - **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
