@@ -42,7 +42,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.41"
+LAYOUTLAB_VERSION = "0.10.42"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -183,6 +183,7 @@ def _room_objects(model):
             world_bbox_corners=_box_corners(floor_loc, floor_dims),
             viewer=viewer_block_for_role("room_floor"),
             extra_props={"layoutlab_room_id": room_id},
+            layoutlab_extra={"room_id": room_id},
         )
     )
 
@@ -221,6 +222,7 @@ def _room_objects(model):
                         "layoutlab_wall_facing": "inward",
                         "layoutlab_wall_panel_index": index,
                     },
+                    layoutlab_extra={"room_id": room_id},
                 )
             )
 
@@ -243,6 +245,7 @@ def _room_objects(model):
                     "layoutlab_room_id": room_id,
                     "layoutlab_attachment_state": opening.get("state") or "ACTIVE",
                 },
+                layoutlab_extra={"room_id": room_id},
             )
         )
 
@@ -265,6 +268,7 @@ def _room_objects(model):
                     "layoutlab_room_id": room_id,
                     "layoutlab_attachment_state": fixed.get("state") or "ACTIVE",
                 },
+                layoutlab_extra={"room_id": room_id},
             )
         )
 

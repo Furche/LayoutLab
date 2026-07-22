@@ -49,7 +49,7 @@ Also: drag-drop a `.json` onto the viewport, or **Examples** for fixtures.
 Viewer UX on top of FC-001 Core (transactions, furniture/room ops, multi-room project):
 
 1. ~~Multi-room meta / visible-room floorplan pick~~ ✅ (`0.10.41`)
-2. Room selection UI + project overview (next)
+2. ~~Room selection UI + focus / floorplan~~ ✅ (`0.10.42`)
 3. Direct manipulation → preview/commit
 4. Planning / shortlist feedback polish
 

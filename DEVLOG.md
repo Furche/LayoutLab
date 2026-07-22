@@ -4,6 +4,17 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — Viewer room selection (`0.10.42`)
+
+**Why:** After multi-room Core export, the Viewer still treated the scene as one
+undifferentiated mesh pile. Agents and users need to focus a room before direct
+manipulation and planning feedback make sense.
+
+**How:** Inspector room list + floorplan for the active room; dim other rooms in
+3D; pick sync; Core multi-room example command set.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — Viewer meta multi-room + hide_room furniture omit (`0.10.41`)
 
 **Why:** Review of WP-06 found hidden rooms still exported member furniture, and the

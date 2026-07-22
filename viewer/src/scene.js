@@ -241,6 +241,10 @@ export function buildSceneFromExport(data) {
     mesh.userData = {
       role,
       object_id: obj.layoutlab?.object_id || obj.custom_properties?.layoutlab_object_id || "",
+      room_id:
+        obj.layoutlab?.room_id ||
+        obj.custom_properties?.layoutlab_room_id ||
+        "",
       clearance_name:
         obj.layoutlab?.clearance?.clearance_name ||
         obj.custom_properties?.layoutlab_clearance_name ||

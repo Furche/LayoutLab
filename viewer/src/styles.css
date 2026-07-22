@@ -556,6 +556,87 @@ button:hover {
   word-break: break-word;
 }
 
+.room-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.room-list li {
+  margin: 0;
+}
+
+.room-list button {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #232a34;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.room-list button:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.room-list button.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, #232a34);
+}
+
+.room-list .room-name {
+  font-weight: 600;
+  flex: 1 1 auto;
+}
+
+.room-list .room-badges {
+  display: inline-flex;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.room-list .room-size {
+  width: 100%;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.room-floorplan {
+  margin-top: 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #0e1218;
+  overflow: hidden;
+  min-height: 8rem;
+}
+
+.room-floorplan svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 12rem;
+}
+
+.room-list-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .selection-info {
   margin: 0;
   font-size: 0.85rem;

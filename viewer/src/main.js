@@ -26,6 +26,7 @@ const el = {
   btnFindings: document.getElementById("btn-findings"),
   btnCoreEmpty: document.getElementById("btn-core-empty"),
   btnCoreFurnished: document.getElementById("btn-core-furnished"),
+  btnCoreMultiroom: document.getElementById("btn-core-multiroom"),
   btnCoreCommands: document.getElementById("btn-core-commands"),
   coreUrl: document.getElementById("core-url"),
   coreVersion: document.getElementById("core-version"),
@@ -60,6 +61,8 @@ const el = {
   settingsPopover: document.getElementById("settings-popover"),
   inspector: document.getElementById("inspector"),
   btnInspectorToggle: document.getElementById("btn-inspector-toggle"),
+  roomList: document.getElementById("room-list"),
+  roomFloorplan: document.getElementById("room-floorplan"),
 };
 
 /** Same shell as layoutlab/plugin/test_rooms.py empty_test_room_commands(). */
@@ -149,6 +152,75 @@ const FURNISHED_TEST_ROOM_COMMANDS = {
       params: {
         name: "DESK_120x60",
         location: [2.7, 1.58, 0],
+        width: 1.2,
+        depth: 0.6,
+        height: 0.75,
+        show_clearance: true,
+        collection: "layoutlab_room",
+      },
+    },
+  ],
+};
+
+/** Two independent rooms for Spatial Project / room-selection UX. */
+const MULTI_ROOM_DEMO_COMMANDS = {
+  commands: [
+    { action: "delete_collection_objects", collection: "layoutlab_room" },
+    {
+      action: "create_room",
+      params: {
+        name: "KIDS_ROOM",
+        location: [0, 0, 0],
+        width: 4.2,
+        depth: 2.18,
+        height: 2.6,
+        wall_thickness: 0.02,
+        collection: "layoutlab_room",
+      },
+    },
+    {
+      action: "add_opening",
+      params: {
+        room: "KIDS_ROOM",
+        opening_name: "door_east",
+        kind: "door",
+        wall_side: "east",
+        offset: 0.25,
+        width: 0.7,
+        height: 1.84,
+      },
+    },
+    {
+      action: "create_room",
+      params: {
+        name: "STUDY",
+        location: [6, 0, 0],
+        width: 3.2,
+        depth: 2.8,
+        height: 2.6,
+        wall_thickness: 0.02,
+        collection: "layoutlab_room",
+      },
+    },
+    {
+      action: "add_opening",
+      params: {
+        room: "STUDY",
+        opening_name: "window_north",
+        kind: "window",
+        wall_side: "north",
+        offset: 0.6,
+        width: 1.4,
+        height: 1.2,
+        sill_height: 0.9,
+      },
+    },
+    {
+      action: "run_generator",
+      generator: "desk_basic",
+      params: {
+        name: "DESK_STUDY",
+        location: [6.3, 1.8, 0],
         width: 1.2,
         depth: 0.6,
         height: 0.75,
@@ -654,6 +726,7 @@ let layers = { clearances: null, openings: null, solids: null };
 let sceneRoot = null;
 let lastFit = null;
 let selected = null;
+let selectedRoomId = null;
 let findingMeshes = [];
 let pointerDown = null;
 let lastPointerButton = 0;
@@ -832,6 +905,188 @@ function renderMeta(data, sourceLabel) {
     .join("");
 }
 
+function roomIdOfMesh(mesh) {
+  return mesh?.userData?.room_id || "";
+}
+
+function setMeshOpacity(mesh, opacity) {
+  if (!mesh?.material) return;
+  const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  for (const m of mats) {
+    if (!("opacity" in m)) continue;
+    if (mesh.userData._baseOpacity == null) {
+      mesh.userData._baseOpacity = m.opacity ?? 1;
+    }
+    m.transparent = true;
+    m.opacity = opacity;
+    m.depthWrite = opacity >= 0.95;
+    m.needsUpdate = true;
+  }
+}
+
+function restoreMeshOpacity(mesh) {
+  if (!mesh?.material) return;
+  const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  const base = mesh.userData._baseOpacity;
+  if (base == null) return;
+  for (const m of mats) {
+    if (!("opacity" in m)) continue;
+    m.opacity = base;
+    m.transparent = base < 0.99;
+    m.depthWrite = base >= 0.95;
+    m.needsUpdate = true;
+  }
+}
+
+function applyRoomFocus() {
+  for (const mesh of collectMeshes()) {
+    restoreMeshOpacity(mesh);
+    if (!selectedRoomId) continue;
+    const rid = roomIdOfMesh(mesh);
+    if (rid && rid !== selectedRoomId) {
+      setMeshOpacity(mesh, 0.18);
+    }
+  }
+}
+
+function fitCameraToRoom(roomId) {
+  if (!sceneRoot || !roomId) return false;
+  const box = new THREE.Box3();
+  let any = false;
+  for (const mesh of collectMeshes()) {
+    if (roomIdOfMesh(mesh) === roomId) {
+      box.expandByObject(mesh);
+      any = true;
+    }
+  }
+  if (!any || box.isEmpty()) return false;
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z, 1);
+  const dist = maxDim * 1.35;
+  const fit = { center, size, maxDim, dist };
+  lastFit = fit;
+  projectionMode = "perspective";
+  camera = perspCamera;
+  controls.object = perspCamera;
+  perspCamera.near = Math.max(0.01, dist / 100);
+  perspCamera.far = dist * 20;
+  animateCameraTo(getFitViewPose(fit), {
+    projection: "perspective",
+    statusMsg: null,
+  });
+  return true;
+}
+
+function renderSelectedRoomFloorplan(data, roomId) {
+  if (!el.roomFloorplan) return;
+  el.roomFloorplan.innerHTML = "";
+  if (!roomId || !data) {
+    el.roomFloorplan.hidden = true;
+    return;
+  }
+  const svg = renderFloorplanSvg(data, { roomId });
+  if (!svg) {
+    el.roomFloorplan.hidden = true;
+    return;
+  }
+  el.roomFloorplan.appendChild(svg);
+  el.roomFloorplan.hidden = false;
+}
+
+function selectRoom(roomId, { fit = true, announce = fit } = {}) {
+  selectedRoomId = roomId || null;
+  applyRoomFocus();
+  if (el.roomList) {
+    for (const btn of el.roomList.querySelectorAll("button[data-room-id]")) {
+      const id = btn.dataset.roomId || "";
+      btn.classList.toggle("active", id === (selectedRoomId || ""));
+    }
+  }
+  renderSelectedRoomFloorplan(lastExportData, selectedRoomId);
+  if (selectedRoomId && fit) {
+    const ok = fitCameraToRoom(selectedRoomId);
+    const room = (lastExportData?.rooms || []).find((r) => r?.room_id === selectedRoomId);
+    const name = room?.name || selectedRoomId;
+    if (announce) {
+      if (ok) setStatus(`Focused room ${name}`, "ok");
+      else if (room?.visible === false) setStatus(`Room ${name} is hidden (no mesh)`, "warn");
+      else setStatus(`Room ${name} selected`, "ok");
+    }
+  } else if (!selectedRoomId) {
+    if (fit && sceneRoot) {
+      const fitBox = computeFit(sceneRoot);
+      if (fitBox) {
+        lastFit = fitBox;
+        animateCameraTo(getFitViewPose(fitBox), {
+          projection: "perspective",
+          statusMsg: null,
+        });
+      }
+    }
+    if (announce) setStatus("Showing all rooms", "ok");
+  }
+}
+
+function renderRooms(data) {
+  if (!el.roomList) return;
+  const rooms = Array.isArray(data?.rooms) ? data.rooms : [];
+  el.roomList.innerHTML = "";
+  if (!rooms.length) {
+    el.roomList.innerHTML = `<li><p class="room-list-empty">No rooms in export.</p></li>`;
+    renderSelectedRoomFloorplan(null, null);
+    return;
+  }
+
+  const allLi = document.createElement("li");
+  const allBtn = document.createElement("button");
+  allBtn.type = "button";
+  allBtn.dataset.roomId = "";
+  allBtn.innerHTML = `<span class="room-name">All rooms</span>`;
+  allBtn.classList.toggle("active", !selectedRoomId);
+  allBtn.addEventListener("click", () => selectRoom(null, { fit: true }));
+  allLi.appendChild(allBtn);
+  el.roomList.appendChild(allLi);
+
+  for (const room of rooms) {
+    if (!room?.room_id) continue;
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.roomId = room.room_id;
+    const badges = [];
+    if (room.visible === false) badges.push("hidden");
+    if (room.locked) badges.push("locked");
+    const w = room.footprint?.width;
+    const d = room.footprint?.depth;
+    const size =
+      Number.isFinite(Number(w)) && Number.isFinite(Number(d))
+        ? `${Number(w).toFixed(2)} × ${Number(d).toFixed(2)} m`
+        : "";
+    btn.innerHTML =
+      `<span class="room-name">${escapeHtml(room.name || room.room_id)}</span>` +
+      (badges.length
+        ? `<span class="room-badges">${badges.map((b) => escapeHtml(b)).join(" · ")}</span>`
+        : "") +
+      (size ? `<span class="room-size">${escapeHtml(size)}</span>` : "");
+    btn.classList.toggle("active", selectedRoomId === room.room_id);
+    btn.addEventListener("click", () => selectRoom(room.room_id, { fit: true }));
+    li.appendChild(btn);
+    el.roomList.appendChild(li);
+  }
+
+  if (selectedRoomId && !rooms.some((r) => r?.room_id === selectedRoomId)) {
+    selectedRoomId = null;
+  }
+  applyRoomFocus();
+  renderSelectedRoomFloorplan(data, selectedRoomId);
+  if (el.roomList.querySelector("button[data-room-id]")) {
+    for (const btn of el.roomList.querySelectorAll("button[data-room-id]")) {
+      btn.classList.toggle("active", (btn.dataset.roomId || null) === (selectedRoomId || ""));
+    }
+  }
+}
+
 function collectMeshes() {
   const list = [];
   if (!sceneRoot) return list;
@@ -905,11 +1160,15 @@ function selectMesh(mesh) {
   const bits = [
     mesh.name || "object",
     ud.role ? `role ${ud.role}` : null,
+    ud.room_id ? `room ${ud.room_id}` : null,
     ud.clearance_name ? `clearance ${ud.clearance_name}` : null,
   ].filter(Boolean);
   el.selection.innerHTML = bits.map((b, i) => (i === 0 ? `<strong>${escapeHtml(b)}</strong>` : escapeHtml(b))).join("<br>");
   el.selection.className = "selection-info";
   setStatus(`Selected ${mesh.name}`, "ok");
+  if (ud.room_id && ud.room_id !== selectedRoomId) {
+    selectRoom(ud.room_id, { fit: false, announce: false });
+  }
 }
 
 function meshesForFinding(finding) {
@@ -1046,6 +1305,7 @@ function parseExportText(text) {
 function loadExportData(data, sourceLabel) {
   if (!data || typeof data !== "object") throw new Error("Invalid export JSON");
   lastExportData = data;
+  selectedRoomId = null;
   clearSelection();
   clearFindingHighlights();
   clearGroup(content);
@@ -1062,6 +1322,7 @@ function loadExportData(data, sourceLabel) {
   perspCamera.updateProjectionMatrix();
   controls.update();
   renderMeta(data, sourceLabel);
+  renderRooms(data);
   renderAnalysis(data);
   const n = (data.objects || []).length;
   const findings = data.analysis?.findings?.length ?? 0;
@@ -1238,6 +1499,12 @@ el.btnCommandsViewApply?.addEventListener("click", () => {
 
 el.btnCoreFurnished?.addEventListener("click", () => {
   postCommandsToCore(FURNISHED_TEST_ROOM_COMMANDS, "Core · furnished kids room").catch((err) =>
+    setStatus(err.message, "error"),
+  );
+});
+
+el.btnCoreMultiroom?.addEventListener("click", () => {
+  postCommandsToCore(MULTI_ROOM_DEMO_COMMANDS, "Core · multi-room demo").catch((err) =>
     setStatus(err.message, "error"),
   );
 });
