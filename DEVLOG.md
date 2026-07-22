@@ -4,6 +4,14 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — Viewer meta multi-room + hide_room furniture omit (`0.10.41`)
+
+**Why:** Review of WP-06 found hidden rooms still exported member furniture, and the
+Viewer meta/floorplan assumed `rooms[0]`. Fix export parity for hide; show project +
+all room names in meta; floorplan selects first visible room.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — Product focus: Standalone Viewer first
 
 **Why:** Day-to-day work is the web Viewer + Core HTTP, not new Blender plugin UX.

@@ -116,12 +116,25 @@ function doorSwingPath(span, _roomW, _roomD, toSvg) {
 }
 
 /**
- * Build an SVG element (blueprint top-down) from slim viewer_preview.
+ * Build an SVG element (blueprint top-down) from slim viewer_preview / export.
+ * Shortlist cards are usually one room; for multi-room exports pick an explicit
+ * roomId, else the first visible room with a footprint (not blindly rooms[0] if hidden).
  * @param {object} exportData
+ * @param {{ roomId?: string }} [opts]
  * @returns {SVGSVGElement | null}
  */
-export function renderFloorplanSvg(exportData) {
-  const room = Array.isArray(exportData?.rooms) ? exportData.rooms[0] : null;
+export function renderFloorplanSvg(exportData, opts = {}) {
+  const rooms = Array.isArray(exportData?.rooms) ? exportData.rooms : [];
+  let room = null;
+  if (opts.roomId) {
+    room = rooms.find((r) => r && r.room_id === opts.roomId) || null;
+  }
+  if (!room) {
+    room =
+      rooms.find((r) => r?.footprint && r.visible !== false) ||
+      rooms.find((r) => r?.footprint) ||
+      null;
+  }
   if (!room?.footprint) return null;
   const roomW = Number(room.footprint.width) || 0;
   const roomD = Number(room.footprint.depth) || 0;

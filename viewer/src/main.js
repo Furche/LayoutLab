@@ -807,15 +807,25 @@ function escapeHtml(s) {
 }
 
 function renderMeta(data, sourceLabel) {
-  const rooms = data.rooms || [];
-  const roomName = rooms[0]?.name || "—";
+  const rooms = Array.isArray(data.rooms) ? data.rooms : [];
+  const visibleRooms = rooms.filter((r) => r && r.visible !== false);
+  const roomLabel =
+    rooms.length === 0
+      ? "—"
+      : rooms.length === 1
+        ? rooms[0]?.name || "—"
+        : `${rooms.length} rooms (${visibleRooms.map((r) => r.name || "?").join(", ") || "—"})`;
+  const projectName = data.project_name || data.project?.name || data.scene || "—";
+  const revision =
+    data.revision ?? data.project?.revision ?? "—";
   const rows = [
     ["Source", sourceLabel],
-    ["Scene", data.scene || "—"],
+    ["Project", projectName],
+    ["Revision", String(revision)],
     ["Version", data.layoutlab_version || "—"],
     ["Viewer schema", data.viewer_schema || "—"],
     ["Unit", `${data.unit || "?"} · scale ${data.unit_scale ?? "?"}`],
-    ["Room", roomName],
+    ["Rooms", roomLabel],
   ];
   el.meta.innerHTML = rows
     .map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd>`)

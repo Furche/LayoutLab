@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Viewer multi-room meta + hide_room export fix (`0.10.41`):** hidden rooms omit member furniture from viewer export (not only fabric); Viewer meta shows project/revision and all room names; floorplan picks first visible room (optional `roomId`) instead of blind `rooms[0]`. Duplicate inactive-opening test now forces `INACTIVE_OUTSIDE_WALL`.
 - **FC-001/WP-06 Spatial Project / independent rooms (`0.10.40`):** Core project identity (`project_id`/`project_name`), multi-room `rooms[]` export (`viewer_schema` `0.1.2`), `move_room` with VALID-follows / INVALID-stays-world participation, `duplicate_room` (incl. invalid + inactive), room flags (`hide_room`/`show_room`/`set_room_flags`/`set_room_locked`), `delete_room` removes members; furniture `local_location` derived from room origin. Builds on WP-02…05.
 
 ### Changed

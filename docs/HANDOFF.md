@@ -3,8 +3,8 @@
 > Living onboarding doc for new chat sessions / agents.
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-22 (product focus → Standalone Viewer; FC-001 Core WP-01…06 done)
-**Plugin / Core version:** 0.10.40 · **Branch:** `main`
+**Last updated:** 2026-07-22 (Viewer multi-room meta + hide_room fix `0.10.41`)
+**Plugin / Core version:** 0.10.41 · **Branch:** `main`
 
 ------------------------------------------------------------------------
 
@@ -25,14 +25,15 @@
 ```
 LayoutLab — semantic interior planning (Standalone Viewer + Core).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Core/plugin v0.10.40.
+Branch: main. Core/plugin v0.10.41.
 
 Lies zuerst AI_CONTEXT.md (Mental Model — Viewer first). Für Architektur: docs/ARCHITECTURE.md.
 Aktueller Stand (2026-07-22):
 - **Produktfokus: Standalone Web Viewer** (`viewer/`) + Core HTTP (`server/`) — nicht Blender-Plugin-UX
 - Planning slice DD-011/015/016/017 ✅
 - **FC-001/WP-01…WP-06** ✅ Core (`0.10.36`–`0.10.40`) — transactions, furniture/room ops, Spatial Project
-- Nächste Arbeit: **Viewer UX** — multi-room display, direct manipulation (preview/commit), planning feedback
+- **`0.10.41`:** hide_room omits furniture; Viewer meta multi-room; floorplan visible-room pick
+- Nächste Arbeit: **Viewer UX** — room selection / overview floorplan, direct manipulation (preview/commit)
 - Blender = Runtime-Adapter (Generator-QA), kein Default für neue Features
 - Core: python3 -m server (:8765); Viewer: cd viewer && npm run dev (:5173)
 
@@ -89,12 +90,12 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 | Component | Version |
 |---|---|
-| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.10.40** |
+| Plugin (`layoutlab/__init__.py` `bl_info`) | **0.10.41** |
 | `bed_basic` | **0.7.0** — raised frame construction (`BedConstruction`) + optional `bed_entry` clearances; sizes in meters |
 | `wardrobe_basic` | **0.7.0** — `front_side` (`y_min` \| `y_max`), `create_clearance`, part `clearance_front_access`; sizes in meters |
 | `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance (`required`); sizes in meters |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.10.40.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.41.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -166,11 +167,15 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 
 ------------------------------------------------------------------------
 
+**Latest commit (at last handoff update):** Viewer multi-room meta + hide_room fix (`0.10.41`)
+
+------------------------------------------------------------------------
+
 # Next steps (agreed order)
 
-**Active focus:** **Standalone Viewer UX** — multi-room display, semantic direct manipulation
-(select / move / rotate → Core preview/commit), planning feedback polish. Core FC-001 WP-01…06
-is the backend for that work; do not default new features into the Blender addon.
+**Active focus:** **Standalone Viewer UX** — room selection / overview; then direct manipulation
+(select / move / rotate → Core preview/commit), planning feedback polish. `0.10.41` fixed
+hide_room furniture export + multi-room meta.
 
 **Queued / later:** FC-001/WP-07 (stacking / advanced supports); shared-wall apartment topology;
 persisted variants.
@@ -268,9 +273,11 @@ Living product track — **full ordered roadmap** lives in [LayoutLab_Master_Des
 4. ✅ **FC-001/WP-04** — parametric resize (`0.10.38`)
 5. ✅ **FC-001/WP-05** — wall/corner resize + inactive openings (`0.10.39`)
 6. ✅ **FC-001/WP-06** — Spatial Project / Multi-Room (`0.10.40`, DD-020)
-7. 📋 **FC-001/WP-07** — advanced supports / stacking (explicitly later)
-7. 📋 Refinement (nicht FC-001-Blocker): gestufte Viewer-Erklärung; Ästhetik-Privacy Stufe 1; Recipes nur bei konkretem Szenario
-8. ⏸ Deferred: Capture, shared-wall topology, multi-floor, persisted variants, cloud/auth; Ästhetik-Privacy Stufe 2 / Default-on
+7. ✅ **hide_room furniture omit + Viewer multi-room meta** (`0.10.41`)
+8. 📋 **Viewer** — room selection / overview; direct manipulation → Core preview/commit
+9. 📋 **FC-001/WP-07** — advanced supports / stacking (explicitly later)
+10. 📋 Refinement: gestufte Viewer-Erklärung; Ästhetik-Privacy Stufe 1; Recipes on demand
+11. ⏸ Deferred: Capture, shared-wall topology, multi-floor, persisted variants, cloud/auth; Ästhetik-Privacy Stufe 2 / Default-on
 
 Binding order for agents: **Next steps** (this file) · behaviour in [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · binding architecture only after resulting DDs are accepted.
 
@@ -280,6 +287,7 @@ Binding order for agents: **Next steps** (this file) · behaviour in [FC-001](co
 
 | Date | Change |
 |---|---|
+| 2026-07-22 | `0.10.41` hide_room omits furniture; Viewer multi-room meta / visible floorplan pick |
 | 2026-07-22 | Product focus reoriented: Standalone Viewer first; AI_CONTEXT v1.1 |
 | 2026-07-22 | FC-001/WP-06 shipped (`0.10.40`); FC-001 Core slice complete |
 | 2026-07-22 | FC-001/WP-05 shipped (`0.10.39`); next WP-06 |

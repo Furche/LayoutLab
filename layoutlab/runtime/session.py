@@ -42,7 +42,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.40"
+LAYOUTLAB_VERSION = "0.10.41"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -345,6 +345,9 @@ def _furniture_export_object_with_room(obj, rooms_by_id: dict):
         return None
     room_id = obj.get("layoutlab_room_id")
     model = rooms_by_id.get(room_id) if room_id else None
+    # Hidden rooms omit fabric and member furniture (same visibility rule).
+    if model is not None and not bool(model.get("visible", True)):
+        return None
     if model is not None:
         local = room_ops.local_location(exported["location"], model)
         exported["local_location"] = _r3(local)

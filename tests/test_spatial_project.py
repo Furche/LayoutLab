@@ -133,6 +133,8 @@ class SpatialProjectTests(unittest.TestCase):
         self.assertAlmostEqual(local[1], vy0, places=3)
 
     def test_duplicate_room_includes_invalid_and_inactive(self):
+        from layoutlab.core import room as room_core
+
         room = self._create_room(width=4.0, depth=3.0)
         rid = room["room_id"]
         self.session.apply_command(
@@ -140,19 +142,33 @@ class SpatialProjectTests(unittest.TestCase):
                 "action": "add_opening",
                 "params": {
                     "room_id": rid,
-                    "wall_side": "south",
-                    "kind": "door",
-                    "name": "door1",
-                    "offset": 0.5,
-                    "width": 0.9,
-                    "height": 2.0,
+                    "wall_side": "east",
+                    "kind": "window",
+                    "name": "win_near_north",
+                    "offset": 2.4,
+                    "width": 0.5,
+                    "height": 1.2,
+                    "sill_height": 1.0,
                 },
             }
         )
-        # Shrink south via move_wall so opening may become inactive if offset out of range —
-        # instead place opening near end then shrink width.
+        # Shorten east wall by moving north wall south → opening becomes inactive.
+        self.session.apply_command(
+            {
+                "action": "move_wall",
+                "params": {"room_id": rid, "wall_side": "north", "delta": -1.0},
+            }
+        )
+        src = self.session.get_by_id(rid)
+        self.assertEqual(src["openings"][0]["state"], room_core.ATTACHMENT_INACTIVE_OUTSIDE_WALL)
+
+        # Safe interior placement after shrink (depth ≈ 2.0).
         invalid_id = self._spawn_furniture(rid, name="out", location=(50.0, 50.0, 0.0))
-        valid_id = self._spawn_furniture(rid, name="in", location=(1.0, 1.0, 0.0))
+        valid_id = self._spawn_furniture(rid, name="in", location=(0.8, 0.4, 0.0))
+        self.assertEqual(
+            furniture_ops.validity_of(furniture_ops.main_part(self.session.mesh_store, valid_id)),
+            furniture_ops.VALIDITY_VALID,
+        )
 
         dup = self.session.apply_command(
             {
@@ -169,17 +185,17 @@ class SpatialProjectTests(unittest.TestCase):
         self.assertEqual(len(dup["duplicated_object_ids"]), 2)
         self.assertEqual(dup["opening_count"], 1)
 
-        # Source room unchanged.
         src = self.session.get_by_id(rid)
         self.assertEqual(src["origin"][0], 0.0)
         self.assertEqual(len(src["openings"]), 1)
+        self.assertEqual(src["openings"][0]["state"], room_core.ATTACHMENT_INACTIVE_OUTSIDE_WALL)
 
         clone = self.session.get_by_id(new_id)
         self.assertAlmostEqual(clone["origin"][0], 5.0, places=4)
         self.assertEqual(len(clone["openings"]), 1)
+        self.assertEqual(clone["openings"][0]["state"], room_core.ATTACHMENT_INACTIVE_OUTSIDE_WALL)
         self.assertNotEqual(clone["openings"][0]["opening_id"], src["openings"][0]["opening_id"])
 
-        # Invalid membership copied to new room.
         new_invalid = [
             oid
             for oid in dup["duplicated_object_ids"]
@@ -193,7 +209,6 @@ class SpatialProjectTests(unittest.TestCase):
             ),
             new_id,
         )
-        # Source invalid still on source room.
         self.assertEqual(
             furniture_ops.main_part(self.session.mesh_store, invalid_id).get("layoutlab_room_id"),
             rid,
@@ -218,12 +233,18 @@ class SpatialProjectTests(unittest.TestCase):
         self.session.apply_command(
             {"action": "set_room_flags", "room_id": rid, "locked": False}
         )
+        bed_id = self._spawn_furniture(rid, name="hidden_bed", location=(1.0, 1.0, 0.0))
         self.session.apply_command({"action": "hide_room", "room_id": rid})
         export = export_viewer_scene(self.session)
         self.assertFalse(export["rooms"][0]["visible"])
-        # Hidden rooms omit fabric meshes but remain in rooms[].
+        # Hidden rooms omit fabric and member furniture but remain in rooms[].
         roles = {o.get("layoutlab", {}).get("role") for o in export["objects"]}
         self.assertNotIn("room_floor", roles)
+        exported_ids = {
+            o.get("layoutlab", {}).get("object_id") or o.get("custom_properties", {}).get("layoutlab_object_id")
+            for o in export["objects"]
+        }
+        self.assertNotIn(bed_id, exported_ids)
 
     def test_delete_room_removes_member_furniture(self):
         room = self._create_room()
