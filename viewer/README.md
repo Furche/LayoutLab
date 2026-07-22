@@ -22,7 +22,7 @@ npm run dev
 
 Open the printed local URL (default `http://localhost:5173`).
 
-On start the viewer can load `tests/fixtures/reference_kids_room_export.json`, or use **Core** buttons (empty / furnished room) when the server is up.
+On start the viewer loads a **furnished bedroom** via Core (`BEDROOM` 4.5×3.6 with bed, wardrobe, desk). If Core is offline, it falls back to the kids-room static fixture. Toolbar: empty/furnished bedroom; **Examples** for kids-room fixtures and multi-room.
 
 **From Blender (optional):** LayoutLab → **Copy Scene Layout** → in the viewer click **Paste export** (or ⌘V / Ctrl+V). If the browser blocks clipboard access, a paste dialog opens.
 

@@ -49,6 +49,7 @@ const el = {
   btnFindings: document.getElementById("btn-findings"),
   btnCoreEmpty: document.getElementById("btn-core-empty"),
   btnCoreFurnished: document.getElementById("btn-core-furnished"),
+  btnCoreKids: document.getElementById("btn-core-kids"),
   btnCoreMultiroom: document.getElementById("btn-core-multiroom"),
   btnCoreCommands: document.getElementById("btn-core-commands"),
   coreUrl: document.getElementById("core-url"),
@@ -90,7 +91,126 @@ const el = {
   btnRedo: document.getElementById("btn-redo"),
 };
 
-/** Same shell as layoutlab/plugin/test_rooms.py empty_test_room_commands(). */
+/** Default viewer bedroom shell (4.5 × 3.6 m). */
+const EMPTY_BEDROOM_COMMANDS = {
+  commands: [
+    { action: "delete_collection_objects", collection: "layoutlab_room" },
+    {
+      action: "create_room",
+      params: {
+        name: "BEDROOM",
+        location: [0, 0, 0],
+        width: 4.5,
+        depth: 3.6,
+        height: 2.6,
+        wall_thickness: 0.02,
+        collection: "layoutlab_room",
+      },
+    },
+    {
+      action: "add_opening",
+      params: {
+        room: "BEDROOM",
+        opening_name: "window_west",
+        kind: "window",
+        wall_side: "west",
+        offset: 0.55,
+        width: 1.5,
+        height: 1.4,
+        sill_height: 0.9,
+      },
+    },
+    {
+      action: "add_opening",
+      params: {
+        room: "BEDROOM",
+        opening_name: "door_east",
+        kind: "door",
+        wall_side: "east",
+        offset: 0.35,
+        width: 0.9,
+        height: 2.05,
+      },
+    },
+    {
+      action: "add_fixed_element",
+      params: {
+        room: "BEDROOM",
+        fixed_name: "radiator",
+        kind: "radiator",
+        wall_side: "west",
+        offset: 0.7,
+        width: 1.2,
+        depth: 0.12,
+        height: 0.7,
+      },
+    },
+  ],
+};
+
+/**
+ * Default furnished bedroom: 140×200 bed on west wall, wardrobe on north,
+ * desk NE with chair clearance into the room. No analyze findings.
+ */
+const FURNISHED_BEDROOM_COMMANDS = {
+  commands: [
+    ...EMPTY_BEDROOM_COMMANDS.commands,
+    {
+      action: "run_generator",
+      generator: "bed_basic",
+      params: {
+        name: "BED_140x200",
+        location: [0.08, 0.45, 0],
+        length: 2.0,
+        width: 1.4,
+        head_side: "x_min",
+        leg_height: 0.22,
+        frame_height: 0.12,
+        headboard_height: 0.45,
+        clearances: [
+          {
+            clearance_name: "bed_entry",
+            side: "foot",
+            depth: 0.6,
+            requirement: "preferred",
+          },
+        ],
+        collection: "layoutlab_room",
+      },
+    },
+    {
+      action: "run_generator",
+      generator: "wardrobe_basic",
+      params: {
+        name: "WARDROBE_180",
+        location: [0.25, 2.97, 0],
+        width: 1.8,
+        depth: 0.58,
+        height: 2.2,
+        front_side: "y_min",
+        show_clearance: true,
+        clearance_depth: 0.6,
+        collection: "layoutlab_room",
+      },
+    },
+    {
+      action: "run_generator",
+      generator: "desk_basic",
+      params: {
+        name: "DESK_140x60",
+        location: [2.65, 2.95, 0],
+        width: 1.4,
+        depth: 0.6,
+        height: 0.75,
+        show_clearance: true,
+        clearance_depth: 0.65,
+        collection: "layoutlab_room",
+      },
+    },
+  ],
+};
+
+/** Reference kids-room shell — mirrors layoutlab/plugin/test_rooms.py. */
 const EMPTY_TEST_ROOM_COMMANDS = {
   commands: [
     { action: "delete_collection_objects", collection: "layoutlab_room" },
@@ -147,7 +267,7 @@ const EMPTY_TEST_ROOM_COMMANDS = {
   ],
 };
 
-/** Same as layoutlab/plugin/test_rooms.py furnished_test_room_commands(). */
+/** Reference kids room + bed + desk — mirrors test_rooms.furnished_test_room_commands(). */
 const FURNISHED_TEST_ROOM_COMMANDS = {
   commands: [
     ...EMPTY_TEST_ROOM_COMMANDS.commands,
@@ -1633,7 +1753,7 @@ el.btnPaste.addEventListener("click", () => {
 });
 
 el.btnCoreEmpty?.addEventListener("click", () => {
-  postCommandsToCore(EMPTY_TEST_ROOM_COMMANDS, "Core · empty kids room").catch((err) =>
+  postCommandsToCore(EMPTY_BEDROOM_COMMANDS, "Core · empty bedroom").catch((err) =>
     setStatus(err.message, "error"),
   );
 });
@@ -1695,6 +1815,12 @@ el.btnCommandsViewApply?.addEventListener("click", () => {
 });
 
 el.btnCoreFurnished?.addEventListener("click", () => {
+  postCommandsToCore(FURNISHED_BEDROOM_COMMANDS, "Core · furnished bedroom").catch((err) =>
+    setStatus(err.message, "error"),
+  );
+});
+
+el.btnCoreKids?.addEventListener("click", () => {
   postCommandsToCore(FURNISHED_TEST_ROOM_COMMANDS, "Core · furnished kids room").catch((err) =>
     setStatus(err.message, "error"),
   );
@@ -1707,7 +1833,7 @@ el.btnCoreMultiroom?.addEventListener("click", () => {
 });
 
 el.btnCoreCommands?.addEventListener("click", () => {
-  el.commandsText.value = JSON.stringify(FURNISHED_TEST_ROOM_COMMANDS, null, 2);
+  el.commandsText.value = JSON.stringify(FURNISHED_BEDROOM_COMMANDS, null, 2);
   el.commandsDialog.showModal();
   el.commandsText.focus();
 });
@@ -1928,7 +2054,7 @@ async function endGestureCancel() {
 
 async function startGesture(ev, mesh) {
   if (!liveCoreSession) {
-    setStatus("Gizmos need a Core scene (Empty / Furnished / Multi-room)", "warn");
+    setStatus("Gizmos need a Core scene (bedroom / kids / multi-room)", "warn");
     return false;
   }
   if (!isGizmoMesh(mesh)) return false;
@@ -2384,6 +2510,15 @@ window.addEventListener("resize", resize);
 resize();
 frame();
 
+async function loadDefaultScene() {
+  try {
+    await postCommandsToCore(FURNISHED_BEDROOM_COMMANDS, "Core · default bedroom");
+  } catch (err) {
+    setStatus(`Core offline — static fixture (${err.message})`, "warn");
+    await loadFixture();
+  }
+}
+
 resetCoreSessionOnLoad().finally(() => {
-  loadFixture().catch((err) => setStatus(`Error: ${err.message}`, "error"));
+  loadDefaultScene().catch((err) => setStatus(`Error: ${err.message}`, "error"));
 });

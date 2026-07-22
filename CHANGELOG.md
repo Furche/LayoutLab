@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **Ortho top-view gizmo fix (`0.10.48`):** gizmo/select clicks no longer force perspective; leave ortho only after a real orbit drag.
 - **XY plane move handle (`0.10.47`):** amber square between move arrows (rooms + furniture) for free XY drag like 3ds Max.
 - **Selection transform gizmos (`0.10.46`):** Click furniture or room → show move arrows, rotate ring (furniture), and scale böppel (furniture axes / room walls+corners). Removed Orbit/Move/Rotate mode buttons; orbit remains default camera drag.
@@ -35,6 +36,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **DD-018 / DD-019 / DD-020 Accepted (FC-001/WP-01):** semantic transactions & authority; semantic direct manipulation; Spatial Project / independent rooms. Locked: session Undo ≥ 50 + integer revision; duplicate includes invalid; fixed elements → inactive; project `rooms[]` only (no legacy single-room export). Next: FC-001/WP-02.
 - **Feature Concept layer + FC-001:** `docs/concepts/` now holds stable cross-cutting product concepts between Future Ideas and binding DDs. FC-001 specifies semantic room/furniture manipulation, invalid-state preservation, opening lifecycle, transactions/Undo/authority and independent multi-room editing, with roadmap work-package references.
 - **Aesthetic visual evidence (`0.10.35`):** when AI aesthetics is enabled, Core renders standardized top-down blueprint PNGs per shortlist candidate (walls/door/window/furniture) and sends them as multimodal vision input; ASCII remains automatic fallback if the model rejects images. Rubric v0.2 records `evidence_kind`.
@@ -60,6 +62,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **DD-017:** collaborative planning and contextual candidate evaluation — semantic allowlists, capability/role context, validity and anti-compensation, plus optional experimental aesthetics ([DD-017](docs/design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md))
 - **DD-011 Proposed:** Layout variants / Planning v1 — a **recipe** is a goal-oriented planning strategy (not only a room type); Core expands candidates, evaluates with analyze + soft metrics, selects winner ([DD-011](docs/design_decisions/DD-011-layout-variants-and-comparison.md))
 
@@ -69,6 +72,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **Mini-Requirements → `plan_layout`:** LLM fills structured `requirements` (room size, door/window counts, furniture, bed size); Core maps to recipe geometry; proposal carries `requirements`
 - **DD-016 Planning recipes (`agent_tools` 0.5):** tool `plan_layout` + recipe `bedroom_basic` — Core places standard bedroom furniture deterministically; agent prefers recipes over free xy; dry-run target = 0 hard errors on 4×3.5 / 4×4
 - **Layout sketch (`agent_tools` 0.4):** `get_layout_sketch` top-down ASCII + `bounds_xy`; included in dry-run, scene seed, quality preview, and session log — spatial eyes for the agent without the 3D viewport
@@ -104,6 +108,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **DD-014 Phase B (room write):** Accepted locks — local Python Core HTTP service, Room Model commands only, headless viewer export (no `bpy`); Blender remains generator QA reference ([DD-014](docs/design_decisions/DD-014-standalone-runtime-path.md))
 - **Headless room session:** `layoutlab/runtime/session.py` — in-memory Room Model + `export_viewer_scene`
 - **Core server:** `server/` — `GET /health`, `POST /v1/commands`, CORS for Vite; `python -m server`
@@ -119,6 +124,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **Plugin 0.10.4:** scene export emits `viewer_schema` + per-object `viewer` hints (wall quads / clearance wires); walls stamp `layoutlab_viewer_corners`
 - **Findings demo fixture:** `tests/fixtures/reference_kids_room_export_findings.json` (1 error + 1 warning) — loadable in viewer
 - **Viewer paste:** Paste Blender scene-export JSON from clipboard (button + ⌘V/Ctrl+V, dialog fallback)
@@ -133,10 +139,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **Test room buttons (v0.10.7):** Sidebar → Empty / Furnished kids-room (clears `layoutlab_room`, builds reference shell ± bed/desk)
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **Export embeds analysis (v0.10.8):** `Copy Scene` / `Copy Selected` include live `analyze_layout` under `analysis` for the Phase A viewer
 
 ### Changed
@@ -227,6 +235,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **v0.8.0 — `analyze_layout` (DD-008):** `layoutlab/protocol/layout_analysis.py`, `zone_must_be_clear` AABB overlap, JSON command wired in `commands.py`
 - **Diagnostics:** `analyze_layout_clear`, `analyze_layout_blocked` (16 checks total)
 - **Unit tests:** `aabb_intersects`, `requirement_to_severity` in `tests/test_layout_analysis.py`
@@ -248,6 +257,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - JSON command `analyze_layout` — constraint findings from clearance zones (DD-008)
 - `layoutlab/protocol/layout_analysis.py` — `zone_must_be_clear` v1
 - Diagnostic checks `analyze_layout_clear`, `analyze_layout_blocked` (16 checks total)
@@ -264,6 +274,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - Scene export: structured `layoutlab.clearance` block with `local_bounds`, `world_bounds`, `local_transform`, `clearance_id`, `clearance_name`, `requirement`
 - Diagnostic check `clearance_export` (14 checks total)
 
@@ -277,6 +288,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **`api["create_clearance"]`** (DD-007): `clearance_id`, `clearance_name`, `requirement` (`required`/`preferred`), `local_transform` in params; `local_location` relative to Main Part
 - Unit tests for clearance requirement validation and local/world resolution
 
@@ -391,6 +403,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - Transform diagnostic checks (bed layout at origin vs offset, main-part move/rotate follow, wardrobe clearance adjacency, regenerate layout policy)
 - `tests/test_transforms.py` — translation comparison helper tests
 
@@ -406,6 +419,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **Parts architecture:** `begin_part`, `end_part`, `finish` in generator API
 - `layoutlab/api/parts.py` — Part session, mesh join, parenting to Main Part
 - `layoutlab_part`, `layoutlab_part_type` metadata and export fields
@@ -426,6 +440,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - Semantic object metadata on generator meshes (`layoutlab_object_id`, `layoutlab_generator`, `layoutlab_params`, `layoutlab_component`)
 - `regenerate` JSON command — rebuild logical object with param overrides, same object_id
 - `layoutlab` block in scene export for objects with identity metadata
@@ -454,6 +469,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - Initial v0.5 prototype (`layoutlab_chatgpt_helper_v05.py`)
 - JSON command exchange and scene export
 - Generator browser and `bed_basic` generator
