@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Ortho top-view gizmo fix (`0.10.48`):** gizmo/select clicks no longer force perspective; leave ortho only after a real orbit drag.
 - **XY plane move handle (`0.10.47`):** amber square between move arrows (rooms + furniture) for free XY drag like 3ds Max.
 - **Selection transform gizmos (`0.10.46`):** Click furniture or room → show move arrows, rotate ring (furniture), and scale böppel (furniture axes / room walls+corners). Removed Orbit/Move/Rotate mode buttons; orbit remains default camera drag.
 - **Viewer wall/corner gizmos (`0.10.45`):** Move mode shows blue wall handles and amber corner handles; drag → `move_wall` / `move_corner` preview/commit. Handles scoped to focused room when one is selected.

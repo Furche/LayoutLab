@@ -2198,29 +2198,51 @@ el.btnRedo?.addEventListener("click", () => {
   coreRedo().catch((err) => setStatus(err.message, "error"));
 });
 
-renderer.domElement.addEventListener("pointerdown", (ev) => {
-  lastPointerButton = ev.button;
-  lastPointerType = ev.pointerType || "mouse";
-  if (ev.pointerType === "touch") activeTouchCount += 1;
-  if (ev.button !== 0) return;
-  pointerDown = { x: ev.clientX, y: ev.clientY };
-  const gizmoHit = pickGizmo(ev.clientX, ev.clientY);
-  if (!gizmoHit) return;
-  ev.preventDefault();
-  ev.stopPropagation();
-  controls.enabled = false;
-  renderer.domElement.setPointerCapture?.(ev.pointerId);
-  startGesture(ev, gizmoHit).catch((err) => setStatus(err.message, "error"));
-});
+// Leave ortho only after real orbit drag; gizmo presses never start OrbitControls.
+let orthoOrbitArmed = false;
+
+renderer.domElement.addEventListener(
+  "pointerdown",
+  (ev) => {
+    lastPointerButton = ev.button;
+    lastPointerType = ev.pointerType || "mouse";
+    if (ev.pointerType === "touch") activeTouchCount += 1;
+    if (ev.button !== 0) return;
+    pointerDown = { x: ev.clientX, y: ev.clientY };
+    const gizmoHit = pickGizmo(ev.clientX, ev.clientY);
+    if (!gizmoHit) return;
+    // Stop OrbitControls before it can leave orthographic top view.
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    controls.enabled = false;
+    orthoOrbitArmed = false;
+    renderer.domElement.setPointerCapture?.(ev.pointerId);
+    startGesture(ev, gizmoHit).catch((err) => setStatus(err.message, "error"));
+  },
+  true,
+);
 
 renderer.domElement.addEventListener("pointermove", (ev) => {
-  if (!gesture) return;
-  updateGesture(ev).catch((err) => setStatus(err.message, "warn"));
+  if (gesture) {
+    updateGesture(ev).catch((err) => setStatus(err.message, "warn"));
+    return;
+  }
+  if (!orthoOrbitArmed || projectionMode !== "orthographic" || !pointerDown) return;
+  if (!controls.enabled) {
+    orthoOrbitArmed = false;
+    return;
+  }
+  const dx = ev.clientX - pointerDown.x;
+  const dy = ev.clientY - pointerDown.y;
+  if (dx * dx + dy * dy < 36) return;
+  orthoOrbitArmed = false;
+  usePerspective({ statusMsg: "Orbit · perspective" });
 });
 
 renderer.domElement.addEventListener("pointerup", (ev) => {
   if (ev.pointerType === "touch") activeTouchCount = Math.max(0, activeTouchCount - 1);
   if (ev.button !== 0) return;
+  orthoOrbitArmed = false;
   if (gesture) {
     endGestureCommit().catch((err) => setStatus(err.message, "error"));
     pointerDown = null;
@@ -2242,15 +2264,17 @@ renderer.domElement.addEventListener("pointerup", (ev) => {
 
 renderer.domElement.addEventListener("pointercancel", () => {
   activeTouchCount = 0;
+  orthoOrbitArmed = false;
   if (gesture) {
     endGestureCancel().catch(() => {});
   }
 });
 
-// Orbit (rotate) leaves orthographic; dolly/pan keep it.
 controls.addEventListener("start", () => {
   if (camTween) cancelCameraTween();
+  orthoOrbitArmed = false;
   if (projectionMode !== "orthographic") return;
+  if (gesture || !controls.enabled) return;
   let isRotate = false;
   if (lastPointerType === "touch") {
     isRotate = activeTouchCount <= 1;
@@ -2266,10 +2290,13 @@ controls.addEventListener("start", () => {
             : null;
     isRotate = action === THREE.MOUSE.ROTATE;
   }
-  if (isRotate) {
-    usePerspective({ statusMsg: "Orbit · perspective" });
-  }
+  if (isRotate) orthoOrbitArmed = true;
 });
+
+controls.addEventListener("end", () => {
+  orthoOrbitArmed = false;
+});
+
 // Drag & drop export JSON (counter avoids flicker on child enter/leave)
 let dragDepth = 0;
 
