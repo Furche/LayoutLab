@@ -1964,9 +1964,31 @@ function offsetObjectMeshes(objectId, dx, dy) {
       mesh.position.y += dy;
     }
   }
+  // Keep gizmos glued to the object during optimistic drag (avoid preview lag).
+  if (
+    gizmoGroup &&
+    selectionTarget?.type === "furniture" &&
+    selectionTarget.objectId === objectId
+  ) {
+    gizmoGroup.position.x += dx;
+    gizmoGroup.position.y += dy;
+  }
 }
 
-async function pushGesturePreview(commands, { begin = false } = {}) {
+function offsetRoomMeshes(roomId, dx, dy) {
+  for (const mesh of collectMeshes()) {
+    if (mesh.userData?.room_id === roomId || mesh.userData?.roomId === roomId) {
+      mesh.position.x += dx;
+      mesh.position.y += dy;
+    }
+  }
+  if (gizmoGroup && selectionTarget?.type === "room" && selectionTarget.roomId === roomId) {
+    gizmoGroup.position.x += dx;
+    gizmoGroup.position.y += dy;
+  }
+}
+
+async function pushGesturePreview(commands, { begin = false, applyExport = true } = {}) {
   const result = begin
     ? await previewClient.begin(commands, "viewer gizmo")
     : await previewClient.update(commands);
@@ -1974,7 +1996,7 @@ async function pushGesturePreview(commands, { begin = false } = {}) {
     const detail = result?.error || result?.errors?.[0]?.error || "preview failed";
     throw new Error(detail);
   }
-  applyExportFromCore(result, "Core · preview", { quiet: true });
+  if (applyExport) applyExportFromCore(result, "Core · preview", { quiet: true });
   return result;
 }
 
@@ -2232,14 +2254,16 @@ async function startBodyMoveGesture(ev, target) {
     setStatus("Drag-move needs a Core scene", "warn");
     return false;
   }
-  const floor = hitBlenderFloorXY(
-    raycaster,
-    camera,
-    sceneRoot,
-    ev.clientX,
-    ev.clientY,
-    renderer.domElement,
-  );
+  const floor =
+    target.startFloor ||
+    hitBlenderFloorXY(
+      raycaster,
+      camera,
+      sceneRoot,
+      ev.clientX,
+      ev.clientY,
+      renderer.domElement,
+    );
   const ok =
     target.type === "furniture"
       ? beginMoveAxisGesture("furniture", "xy", { objectId: target.objectId }, floor, ev.clientX)
@@ -2287,6 +2311,8 @@ async function updateGesture(ev) {
     renderer.domElement,
   );
 
+  let skipExportReload = false;
+
   if (gesture.kind === "wall" && floor && gesture.startFloor) {
     const dx = floor.x - gesture.startFloor.x;
     const dy = floor.y - gesture.startFloor.y;
@@ -2312,9 +2338,16 @@ async function updateGesture(ev) {
         gesture.startPose.location[1] + dy,
         gesture.startPose.location[2],
       ];
+      skipExportReload = true;
     } else {
+      const prevDx = gesture._dx || 0;
+      const prevDy = gesture._dy || 0;
+      const odx = dx - prevDx;
+      const ody = dy - prevDy;
+      if (odx || ody) offsetRoomMeshes(gesture.roomId, odx, ody);
       gesture._dx = dx;
       gesture._dy = dy;
+      skipExportReload = true;
     }
   } else if (gesture.kind === "scale_axis" && floor && gesture.startFloor) {
     const dx = floor.x - gesture.startFloor.x;
@@ -2327,16 +2360,7 @@ async function updateGesture(ev) {
   if (now - lastPreviewPush < MOVE_THROTTLE_MS) return;
   lastPreviewPush = now;
   try {
-    await pushGesturePreview(gesture.commands());
-    if (gesture.kind === "move_axis" && gesture.target === "furniture") {
-      const cur = poseFromExport(lastExportData, gesture.objectId);
-      if (cur) {
-        gesture.lastLocal = {
-          x: cur.location[0] - gesture.startPose.location[0],
-          y: cur.location[1] - gesture.startPose.location[1],
-        };
-      }
-    }
+    await pushGesturePreview(gesture.commands(), { applyExport: !skipExportReload });
   } catch (err) {
     setStatus(`Preview update: ${err.message}`, "warn");
   }
@@ -2378,6 +2402,8 @@ el.btnRedo?.addEventListener("click", () => {
 
 // Leave ortho only after real orbit drag; gizmo presses never start OrbitControls.
 let orthoOrbitArmed = false;
+/** Pointerdown on furniture/floor — select immediately; drag past threshold starts move. */
+let pendingBodyDrag = null;
 
 renderer.domElement.addEventListener(
   "pointerdown",
@@ -2387,6 +2413,7 @@ renderer.domElement.addEventListener(
     if (ev.pointerType === "touch") activeTouchCount += 1;
     if (ev.button !== 0) return;
     pointerDown = { x: ev.clientX, y: ev.clientY };
+    pendingBodyDrag = null;
     const gizmoHit = pickGizmo(ev.clientX, ev.clientY);
     if (gizmoHit) {
       // Stop OrbitControls before it can leave orthographic top view.
@@ -2406,7 +2433,17 @@ renderer.domElement.addEventListener(
     controls.enabled = false;
     orthoOrbitArmed = false;
     renderer.domElement.setPointerCapture?.(ev.pointerId);
-    startBodyMoveGesture(ev, body).catch((err) => setStatus(err.message, "error"));
+    // Select first so gizmos appear before any move (needed for rotate-ring UX).
+    selectMesh(body.mesh, { quiet: true });
+    const floor = hitBlenderFloorXY(
+      raycaster,
+      camera,
+      sceneRoot,
+      ev.clientX,
+      ev.clientY,
+      renderer.domElement,
+    );
+    pendingBodyDrag = { ...body, startFloor: floor, pointerId: ev.pointerId };
   },
   true,
 );
@@ -2414,6 +2451,16 @@ renderer.domElement.addEventListener(
 renderer.domElement.addEventListener("pointermove", (ev) => {
   if (gesture) {
     updateGesture(ev).catch((err) => setStatus(err.message, "warn"));
+    return;
+  }
+  if (pendingBodyDrag && pointerDown) {
+    const dx = ev.clientX - pointerDown.x;
+    const dy = ev.clientY - pointerDown.y;
+    if (dx * dx + dy * dy >= 16) {
+      const body = pendingBodyDrag;
+      pendingBodyDrag = null;
+      startBodyMoveGesture(ev, body).catch((err) => setStatus(err.message, "error"));
+    }
     return;
   }
   if (!orthoOrbitArmed || projectionMode !== "orthographic" || !pointerDown) return;
@@ -2435,6 +2482,14 @@ renderer.domElement.addEventListener("pointerup", (ev) => {
   if (gesture) {
     endGestureCommit().catch((err) => setStatus(err.message, "error"));
     pointerDown = null;
+    pendingBodyDrag = null;
+    return;
+  }
+  if (pendingBodyDrag) {
+    // Click-select only — gizmos already visible.
+    pendingBodyDrag = null;
+    controls.enabled = true;
+    pointerDown = null;
     return;
   }
   if (!pointerDown) return;
@@ -2454,8 +2509,11 @@ renderer.domElement.addEventListener("pointerup", (ev) => {
 renderer.domElement.addEventListener("pointercancel", () => {
   activeTouchCount = 0;
   orthoOrbitArmed = false;
+  pendingBodyDrag = null;
   if (gesture) {
     endGestureCancel().catch(() => {});
+  } else {
+    controls.enabled = true;
   }
 });
 

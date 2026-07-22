@@ -308,6 +308,42 @@ def select_object(session, object_id: str | None) -> dict:
     return {"selected_object_id": oid, "object": semantic_summary(session.mesh_store, oid)}
 
 
+def _rotate_offset_z(x: float, y: float, degrees: float) -> tuple[float, float]:
+    import math
+
+    if not degrees:
+        return float(x), float(y)
+    rad = math.radians(float(degrees))
+    c, s = math.cos(rad), math.sin(rad)
+    return x * c - y * s, x * s + y * c
+
+
+def footprint_half_xy(params: dict | None, generator: str | None = None) -> tuple[float, float]:
+    """Half footprint extents in local XY (min-corner → center), before Z rotation."""
+    p = params or {}
+    gen = str(generator or "")
+    if gen == "bed_basic":
+        sx = float(p.get("length") or 2.0)
+        sy = float(p.get("width") or 1.2)
+    else:
+        # desk_basic / wardrobe_basic / unknown: width×depth
+        sx = float(p.get("width") or 1.0)
+        sy = float(p.get("depth") or 0.6)
+    return max(sx, 0.01) * 0.5, max(sy, 0.01) * 0.5
+
+
+def corner_to_center(location, half_x: float, half_y: float, rotation_z_deg: float) -> list[float]:
+    lx, ly, lz = float(location[0]), float(location[1]), float(location[2] if len(location) > 2 else 0.0)
+    ox, oy = _rotate_offset_z(half_x, half_y, rotation_z_deg)
+    return [lx + ox, ly + oy, lz]
+
+
+def center_to_corner(center, half_x: float, half_y: float, rotation_z_deg: float) -> list[float]:
+    cx, cy, cz = float(center[0]), float(center[1]), float(center[2] if len(center) > 2 else 0.0)
+    ox, oy = _rotate_offset_z(half_x, half_y, rotation_z_deg)
+    return [cx - ox, cy - oy, cz]
+
+
 def move_object(session, object_id: str, location, *, honour_lock: bool = True) -> dict:
     """Set Main Part world XY location; Z follows floor support (MVP)."""
     store = session.mesh_store
@@ -362,25 +398,41 @@ def rotate_object_z(
     *,
     absolute: bool = True,
     honour_lock: bool = True,
+    pivot: str = "center",
 ) -> dict:
+    """Rotate Main Part about Z. Default pivot is footprint center (keeps center fixed)."""
     store = session.mesh_store
     main = main_part(store, object_id)
     if main is None:
         raise ValueError(f"object not found: {object_id}")
     if honour_lock:
         _require_unlocked(main, action="rotate_z")
+
+    params = _parse_params(main)
+    gen = main.get("layoutlab_generator")
+    hx, hy = footprint_half_xy(params, gen)
+    old_rz = float(main.rotation_z_deg or 0.0)
+    loc = [float(main.location.x), float(main.location.y), float(main.location.z)]
+    center = corner_to_center(loc, hx, hy, old_rz) if pivot == "center" else None
+
     deg = float(degrees)
     if absolute:
         main.rotation_z_deg = deg
     else:
-        main.rotation_z_deg = float(main.rotation_z_deg) + deg
+        main.rotation_z_deg = old_rz + deg
     # Normalize to (-180, 180]
     while main.rotation_z_deg <= -180.0:
         main.rotation_z_deg += 360.0
     while main.rotation_z_deg > 180.0:
         main.rotation_z_deg -= 360.0
 
-    params = _parse_params(main)
+    if pivot == "center" and center is not None:
+        new_loc = center_to_corner(center, hx, hy, main.rotation_z_deg)
+        main.location.x = new_loc[0]
+        main.location.y = new_loc[1]
+        main.location.z = new_loc[2]
+        params["location"] = new_loc
+
     params["rotation_z_deg"] = main.rotation_z_deg
     _write_params(main, params)
     for part in objects_for_id(store, object_id):
@@ -390,6 +442,7 @@ def rotate_object_z(
     validity = refresh_validity(store, session._rooms, object_id)
     out = semantic_summary(store, object_id)
     out["validity"] = validity
+    out["pivot"] = pivot
     return out
 
 
@@ -607,9 +660,12 @@ def regenerate_object(
         raise ValueError("Object has no layoutlab_generator metadata")
 
     merged = merge_generator_params(state["params"], params_override or {})
-    # Keep current world pose unless the override explicitly sets location.
+    # Keep footprint center fixed when size changes (min-corner location adjusts).
     if not (params_override and "location" in params_override):
-        merged["location"] = list(state["location"])
+        old_hx, old_hy = footprint_half_xy(state["params"], generator)
+        center = corner_to_center(state["location"], old_hx, old_hy, state["rotation_z_deg"])
+        new_hx, new_hy = footprint_half_xy(merged, generator)
+        merged["location"] = center_to_corner(center, new_hx, new_hy, state["rotation_z_deg"])
     if not (params_override and "rotation_z_deg" in params_override):
         merged["rotation_z_deg"] = state["rotation_z_deg"]
     if not merged.get("collection"):
@@ -619,7 +675,12 @@ def regenerate_object(
     store.delete_by_object_id(oid)
     result = execute_generator_headless(generator, merged, object_id=oid, store=store)
     ensure_semantic_defaults(store, session._rooms, oid)
-    _restore_semantic_state(store, oid, {**state, "params": merged})
+    pose_state = {
+        **state,
+        "params": merged,
+        "location": list(merged.get("location") or state["location"]),
+    }
+    _restore_semantic_state(store, oid, pose_state)
 
     new_main = main_part(store, oid)
     if new_main is not None:
@@ -629,7 +690,7 @@ def regenerate_object(
             new_main.location.y = float(loc[1])
             new_main.location.z = float(loc[2]) if len(loc) > 2 else float(new_main.location.z)
         else:
-            loc = state["location"]
+            loc = pose_state["location"]
             new_main.location.x = float(loc[0])
             new_main.location.y = float(loc[1])
             new_main.location.z = float(loc[2])

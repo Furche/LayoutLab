@@ -126,6 +126,25 @@ class TestFurnitureManipulation(unittest.TestCase):
         )
         self.assertAlmostEqual(main["rotation_euler_deg"][2], 90.0, places=3)
 
+    def test_rotate_z_preserves_footprint_center(self):
+        from layoutlab.runtime import furniture_ops as fo
+
+        main = fo.main_part(self.session.mesh_store, self.object_id)
+        params = fo._parse_params(main)
+        hx, hy = fo.footprint_half_xy(params, main.get("layoutlab_generator"))
+        loc0 = [main.location.x, main.location.y, main.location.z]
+        center0 = fo.corner_to_center(loc0, hx, hy, main.rotation_z_deg)
+
+        self.session.commit_commands(
+            [{"action": "rotate_z", "object_id": self.object_id, "degrees": 90}],
+            actor="user",
+        )
+        main = fo.main_part(self.session.mesh_store, self.object_id)
+        loc1 = [main.location.x, main.location.y, main.location.z]
+        center1 = fo.corner_to_center(loc1, hx, hy, main.rotation_z_deg)
+        self.assertAlmostEqual(center1[0], center0[0], places=4)
+        self.assertAlmostEqual(center1[1], center0[1], places=4)
+
     def test_invalid_outside_room_still_assigned(self):
         from layoutlab.runtime import furniture_ops as fo
 

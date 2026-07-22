@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **Ortho top-view gizmo fix (`0.10.48`):** gizmo/select clicks no longer force perspective; leave ortho only after a real orbit drag.
@@ -37,6 +38,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **DD-018 / DD-019 / DD-020 Accepted (FC-001/WP-01):** semantic transactions & authority; semantic direct manipulation; Spatial Project / independent rooms. Locked: session Undo ≥ 50 + integer revision; duplicate includes invalid; fixed elements → inactive; project `rooms[]` only (no legacy single-room export). Next: FC-001/WP-02.
@@ -64,6 +66,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **DD-017:** collaborative planning and contextual candidate evaluation — semantic allowlists, capability/role context, validity and anti-compensation, plus optional experimental aesthetics ([DD-017](docs/design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md))
@@ -75,6 +78,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **Mini-Requirements → `plan_layout`:** LLM fills structured `requirements` (room size, door/window counts, furniture, bed size); Core maps to recipe geometry; proposal carries `requirements`
@@ -112,6 +116,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **DD-014 Phase B (room write):** Accepted locks — local Python Core HTTP service, Room Model commands only, headless viewer export (no `bpy`); Blender remains generator QA reference ([DD-014](docs/design_decisions/DD-014-standalone-runtime-path.md))
@@ -129,6 +134,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **Plugin 0.10.4:** scene export emits `viewer_schema` + per-object `viewer` hints (wall quads / clearance wires); walls stamp `layoutlab_viewer_corners`
@@ -145,12 +151,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **Test room buttons (v0.10.7):** Sidebar → Empty / Furnished kids-room (clears `layoutlab_room`, builds reference shell ± bed/desk)
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **Export embeds analysis (v0.10.8):** `Copy Scene` / `Copy Selected` include live `analyze_layout` under `analysis` for the Phase A viewer
@@ -243,6 +251,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **v0.8.0 — `analyze_layout` (DD-008):** `layoutlab/protocol/layout_analysis.py`, `zone_must_be_clear` AABB overlap, JSON command wired in `commands.py`
@@ -266,6 +275,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - JSON command `analyze_layout` — constraint findings from clearance zones (DD-008)
@@ -284,6 +294,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - Scene export: structured `layoutlab.clearance` block with `local_bounds`, `world_bounds`, `local_transform`, `clearance_id`, `clearance_name`, `requirement`
@@ -299,6 +310,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **`api["create_clearance"]`** (DD-007): `clearance_id`, `clearance_name`, `requirement` (`required`/`preferred`), `local_transform` in params; `local_location` relative to Main Part
@@ -415,6 +427,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - Transform diagnostic checks (bed layout at origin vs offset, main-part move/rotate follow, wardrobe clearance adjacency, regenerate layout policy)
@@ -432,6 +445,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - **Parts architecture:** `begin_part`, `end_part`, `finish` in generator API
@@ -454,6 +468,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - Semantic object metadata on generator meshes (`layoutlab_object_id`, `layoutlab_generator`, `layoutlab_params`, `layoutlab_component`)
@@ -484,6 +499,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Selection gizmo UX (`0.10.51`):** gizmos appear on click (before drag); furniture rotates about footprint center; resize keeps center; move gizmos track objects without preview lag.
 - **Body drag + room fabric follow (`0.10.50`):** Select and drag furniture/floor to move XY without arrow gizmos; `move_room` keeps windows/doors/radiators attached (skip world-U reconcile on pure translation).
 - **Default furnished bedroom (`0.10.49`):** Viewer boots a 4.5×3.6 m `BEDROOM` via Core (140×200 bed, wardrobe, desk) instead of the tiny kids-room fixture; kids layouts remain under Examples.
 - Initial v0.5 prototype (`layoutlab_chatgpt_helper_v05.py`)

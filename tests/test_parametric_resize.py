@@ -70,6 +70,15 @@ class TestParametricResize(unittest.TestCase):
             actor="user",
         )
         before_parts = len(fo.objects_for_id(self.session.mesh_store, self.object_id))
+        main = fo.main_part(self.session.mesh_store, self.object_id)
+        params0 = fo._parse_params(main)
+        hx0, hy0 = fo.footprint_half_xy(params0, main.get("layoutlab_generator"))
+        center0 = fo.corner_to_center(
+            [main.location.x, main.location.y, main.location.z],
+            hx0,
+            hy0,
+            main.rotation_z_deg,
+        )
 
         resized = self.session.commit_commands(
             [
@@ -90,8 +99,13 @@ class TestParametricResize(unittest.TestCase):
         self.assertAlmostEqual(float(result["params"]["width"]), 1.8, places=3)
 
         summary = fo.semantic_summary(self.session.mesh_store, self.object_id)
-        self.assertAlmostEqual(summary["location"][0], 2.5, places=3)
-        self.assertAlmostEqual(summary["location"][1], 1.8, places=3)
+        main = fo.main_part(self.session.mesh_store, self.object_id)
+        params1 = fo._parse_params(main)
+        hx1, hy1 = fo.footprint_half_xy(params1, main.get("layoutlab_generator"))
+        center1 = fo.corner_to_center(summary["location"], hx1, hy1, summary["rotation_z_deg"])
+        # Footprint center stays put when size changes; min-corner location may shift.
+        self.assertAlmostEqual(center1[0], center0[0], places=3)
+        self.assertAlmostEqual(center1[1], center0[1], places=3)
         self.assertAlmostEqual(summary["rotation_z_deg"], 45.0, places=3)
         self.assertGreaterEqual(
             len(fo.objects_for_id(self.session.mesh_store, self.object_id)), 1
