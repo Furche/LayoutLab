@@ -9,6 +9,17 @@ import {
   getPresetPose,
 } from "./scene.js";
 import { renderFloorplanSvg } from "./floorplan.js";
+import {
+  createPreviewClient,
+  findMeshForObjectId,
+  hitBlenderFloorXY,
+  isManipulableMesh,
+  moveCommand,
+  MOVE_THROTTLE_MS,
+  poseFromExport,
+  rotateCommand,
+  ROTATE_DEG_PER_PX,
+} from "./manipulate.js";
 import kidsRoomFixture from "../../tests/fixtures/reference_kids_room_export.json";
 import kidsRoomFindings from "../../tests/fixtures/reference_kids_room_export_findings.json";
 
@@ -63,6 +74,8 @@ const el = {
   btnInspectorToggle: document.getElementById("btn-inspector-toggle"),
   roomList: document.getElementById("room-list"),
   roomFloorplan: document.getElementById("room-floorplan"),
+  btnUndo: document.getElementById("btn-undo"),
+  btnRedo: document.getElementById("btn-redo"),
 };
 
 /** Same shell as layoutlab/plugin/test_rooms.py empty_test_room_commands(). */
@@ -384,10 +397,41 @@ async function postCommandsToCore(commandsPayload, sourceLabel) {
     const detail = payload.errors?.[0]?.error || "command failed";
     setStatus(`Core reported errors: ${detail}`, "warn");
   }
+  liveCoreSession = true;
   loadExportData(payload.export, sourceLabel);
 }
 
+async function postCoreJson(path, body = {}) {
+  const base = getCoreUrl();
+  persistCoreUrl();
+  let response;
+  try {
+    response = await fetch(`${base}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {}),
+    });
+  } catch (err) {
+    throw new Error(
+      `Core unreachable at ${base} (${err.message}). Start with: python -m server`,
+    );
+  }
+  let payload;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(`Core returned non-JSON (HTTP ${response.status})`);
+  }
+  return payload;
+}
+
+const previewClient = createPreviewClient({ post: postCoreJson });
+
 let lastExportData = null;
+let liveCoreSession = false;
+let editMode = "orbit"; // orbit | move | rotate
+let gesture = null; // active drag gesture
+let lastPreviewPush = 0;
 let pendingChatCommands = null;
 let pendingChatQuality = null;
 let pendingChatProposalPayload = null;
@@ -1147,7 +1191,7 @@ function clearFindingHighlights() {
   }
 }
 
-function selectMesh(mesh) {
+function selectMesh(mesh, opts = {}) {
   clearFindingHighlights();
   if (selected && selected !== mesh) clearMeshHighlight(selected);
   selected = mesh;
@@ -1157,16 +1201,24 @@ function selectMesh(mesh) {
   }
   setMeshHighlight(mesh, HIGHLIGHT);
   const ud = mesh.userData || {};
+  const pose = ud.object_id ? poseFromExport(lastExportData, ud.object_id) : null;
   const bits = [
     mesh.name || "object",
     ud.role ? `role ${ud.role}` : null,
-    ud.room_id ? `room ${ud.room_id}` : null,
+    ud.object_id ? `id ${ud.object_id.slice(0, 8)}…` : null,
+    ud.room_id ? `room ${ud.room_id.slice(0, 8)}…` : null,
+    pose ? `xy ${pose.location[0].toFixed(2)}, ${pose.location[1].toFixed(2)}` : null,
+    pose ? `rz ${pose.rotation_z_deg.toFixed(1)}°` : null,
+    pose?.validity ? `validity ${pose.validity}` : null,
     ud.clearance_name ? `clearance ${ud.clearance_name}` : null,
+    isManipulableMesh(mesh) ? `edit: ${editMode}` : null,
   ].filter(Boolean);
-  el.selection.innerHTML = bits.map((b, i) => (i === 0 ? `<strong>${escapeHtml(b)}</strong>` : escapeHtml(b))).join("<br>");
+  el.selection.innerHTML = bits
+    .map((b, i) => (i === 0 ? `<strong>${escapeHtml(b)}</strong>` : escapeHtml(b)))
+    .join("<br>");
   el.selection.className = "selection-info";
   setStatus(`Selected ${mesh.name}`, "ok");
-  if (ud.room_id && ud.room_id !== selectedRoomId) {
+  if (opts.syncRoom !== false && ud.room_id && ud.room_id !== selectedRoomId) {
     selectRoom(ud.room_id, { fit: false, announce: false });
   }
 }
@@ -1302,8 +1354,14 @@ function parseExportText(text) {
   return data;
 }
 
-function loadExportData(data, sourceLabel) {
+function loadExportData(data, sourceLabel, opts = {}) {
   if (!data || typeof data !== "object") throw new Error("Invalid export JSON");
+  const preserve = Boolean(opts.preserveSelection);
+  const preserveObjectId = preserve
+    ? opts.preserveObjectId ?? selected?.userData?.object_id ?? null
+    : null;
+  const preserveRoomId = preserve ? opts.preserveRoomId ?? selectedRoomId : null;
+  const preserveCamera = Boolean(opts.preserveCamera ?? preserve);
   lastExportData = data;
   selectedRoomId = null;
   clearSelection();
@@ -1314,35 +1372,54 @@ function loadExportData(data, sourceLabel) {
   sceneRoot = built.root;
   layers = built.layers;
   applyLayerVisibility();
-  projectionMode = "perspective";
-  camera = perspCamera;
-  controls.object = perspCamera;
-  lastFit = fitCameraToRoot(perspCamera, controls, built.root);
-  perspCamera.aspect = Math.max(el.viewport.clientWidth, 1) / Math.max(el.viewport.clientHeight, 1);
-  perspCamera.updateProjectionMatrix();
-  controls.update();
+  if (!preserveCamera) {
+    projectionMode = "perspective";
+    camera = perspCamera;
+    controls.object = perspCamera;
+    lastFit = fitCameraToRoot(perspCamera, controls, built.root);
+    perspCamera.aspect = Math.max(el.viewport.clientWidth, 1) / Math.max(el.viewport.clientHeight, 1);
+    perspCamera.updateProjectionMatrix();
+    controls.update();
+  }
   renderMeta(data, sourceLabel);
   renderRooms(data);
   renderAnalysis(data);
+  if (preserveRoomId) {
+    selectRoom(preserveRoomId, { fit: false, announce: false });
+  }
+  if (preserveObjectId) {
+    const mesh = findMeshForObjectId(collectMeshes(), preserveObjectId);
+    if (mesh) selectMesh(mesh, { syncRoom: false });
+  }
   const n = (data.objects || []).length;
   const findings = data.analysis?.findings?.length ?? 0;
   el.objectCount.textContent = `${n} object${n === 1 ? "" : "s"}`;
-  const findingNote = data.analysis?.analyzed ? ` · ${findings} finding${findings === 1 ? "" : "s"}` : "";
-  setStatus(`Loaded ${sourceLabel} · ${n} objects${findingNote}`, "ok");
+  if (!opts.quiet) {
+    const findingNote = data.analysis?.analyzed
+      ? ` · ${findings} finding${findings === 1 ? "" : "s"}`
+      : "";
+    setStatus(`Loaded ${sourceLabel} · ${n} objects${findingNote}`, "ok");
+  }
 }
 
 function loadFromPasteText(text, sourceLabel = "clipboard paste") {
   const data = parseExportText(text);
+  liveCoreSession = false;
+  previewClient.resetLocal();
   loadExportData(data, sourceLabel);
 }
 
 async function loadFixture() {
   setStatus("Loading kids-room fixture…");
+  liveCoreSession = false;
+  previewClient.resetLocal();
   loadExportData(kidsRoomFixture, "reference_kids_room_export.json");
 }
 
 async function loadFindingsFixture() {
   setStatus("Loading findings demo…");
+  liveCoreSession = false;
+  previewClient.resetLocal();
   loadExportData(kidsRoomFindings, "reference_kids_room_export_findings.json");
 }
 
@@ -1615,9 +1692,288 @@ el.toggleClearances.addEventListener("change", applyLayerVisibility);
 el.toggleOpenings.addEventListener("change", applyLayerVisibility);
 
 el.viewControls?.addEventListener("click", (ev) => {
+  const editBtn = ev.target.closest("button[data-edit]");
+  if (editBtn) {
+    setEditMode(editBtn.dataset.edit);
+    return;
+  }
   const btn = ev.target.closest("button[data-cam]");
   if (!btn) return;
   applyCamera(btn.dataset.cam);
+});
+
+function setEditMode(mode) {
+  if (!["orbit", "move", "rotate"].includes(mode)) return;
+  if (gesture) return;
+  editMode = mode;
+  for (const btn of el.viewControls?.querySelectorAll("button[data-edit]") || []) {
+    btn.classList.toggle("active", btn.dataset.edit === editMode);
+  }
+  controls.enabled = editMode === "orbit";
+  if (selected) selectMesh(selected, { syncRoom: false });
+  setStatus(
+    editMode === "orbit"
+      ? "Orbit mode"
+      : editMode === "move"
+        ? "Move mode — drag furniture (Core preview/commit)"
+        : "Rotate mode — drag horizontally (Core preview/commit)",
+    "ok",
+  );
+}
+
+function applyExportFromCore(payload, label, opts = {}) {
+  if (!payload?.export) {
+    const detail = payload?.error || payload?.errors?.[0]?.error || "no export";
+    throw new Error(detail);
+  }
+  liveCoreSession = true;
+  loadExportData(payload.export, label, {
+    preserveSelection: true,
+    preserveCamera: true,
+    quiet: opts.quiet,
+    ...opts,
+  });
+}
+
+function offsetObjectMeshes(objectId, dx, dy) {
+  for (const mesh of collectMeshes()) {
+    if (mesh.userData?.object_id === objectId) {
+      mesh.position.x += dx;
+      mesh.position.y += dy;
+    }
+  }
+}
+
+async function pushGesturePreview(commands, { begin = false } = {}) {
+  const result = begin
+    ? await previewClient.begin(commands, `viewer ${editMode}`)
+    : await previewClient.update(commands);
+  if (!result?.ok) {
+    const detail = result?.error || result?.errors?.[0]?.error || "preview failed";
+    throw new Error(detail);
+  }
+  applyExportFromCore(result, `Core · preview ${editMode}`, { quiet: true });
+  return result;
+}
+
+async function endGestureCommit() {
+  if (!gesture) return;
+  const g = gesture;
+  const startX = pointerDown?.x ?? g.startClientX;
+  const startY = pointerDown?.y ?? 0;
+  const endX = g._clientX ?? startX;
+  const endY = g._clientY ?? startY;
+  const dragged = Math.hypot(endX - startX, endY - startY) >= 4;
+  if (!g.started && !dragged) {
+    gesture = null;
+    controls.enabled = editMode === "orbit";
+    return;
+  }
+  // Keep `gesture` until begin finishes so ensureGesturePreview can run.
+  controls.enabled = editMode === "orbit";
+  try {
+    if (!g.started) {
+      await ensureGesturePreview();
+    }
+    if (!gesture?.started && !previewClient.active) {
+      gesture = null;
+      return;
+    }
+    const cmds = g.commands();
+    gesture = null;
+    await pushGesturePreview(cmds);
+    const committed = await previewClient.commit(`viewer ${g.mode}`);
+    if (!committed?.ok) {
+      throw new Error(committed?.error || "commit failed");
+    }
+    applyExportFromCore(committed, `Core · ${g.mode} commit`, { quiet: true });
+    setStatus(`${g.mode === "move" ? "Moved" : "Rotated"} · revision ${committed.revision}`, "ok");
+  } catch (err) {
+    gesture = null;
+    try {
+      const cancelled = await previewClient.cancel();
+      if (cancelled?.export) {
+        applyExportFromCore(cancelled, "Core · preview cancel", { quiet: true });
+      }
+    } catch {
+      /* ignore */
+    }
+    setStatus(`Gesture failed: ${err.message}`, "error");
+  }
+}
+
+async function endGestureCancel() {
+  if (!gesture && !previewClient.active) return;
+  gesture = null;
+  controls.enabled = editMode === "orbit";
+  try {
+    const cancelled = await previewClient.cancel();
+    if (cancelled?.export) {
+      applyExportFromCore(cancelled, "Core · preview cancel", { quiet: true });
+    } else if (lastExportData) {
+      loadExportData(lastExportData, "restore", {
+        preserveSelection: true,
+        preserveCamera: true,
+        quiet: true,
+      });
+    }
+    setStatus("Preview cancelled", "warn");
+  } catch (err) {
+    previewClient.resetLocal();
+    setStatus(`Cancel failed: ${err.message}`, "error");
+  }
+}
+
+async function startGesture(ev, mesh) {
+  if (!liveCoreSession) {
+    setStatus("Move/Rotate needs a Core scene (Empty / Furnished / Multi-room)", "warn");
+    return false;
+  }
+  if (!isManipulableMesh(mesh)) {
+    setStatus("Select furniture to move/rotate", "warn");
+    return false;
+  }
+  const objectId = mesh.userData.object_id;
+  const pose = poseFromExport(lastExportData, objectId);
+  if (!pose) {
+    setStatus("Object not found in export", "error");
+    return false;
+  }
+  const floor = hitBlenderFloorXY(
+    raycaster,
+    camera,
+    sceneRoot,
+    ev.clientX,
+    ev.clientY,
+    renderer.domElement,
+  );
+  gesture = {
+    mode: editMode,
+    objectId,
+    startPose: pose,
+    startFloor: floor,
+    startClientX: ev.clientX,
+    lastLocal: { x: 0, y: 0 },
+    started: false,
+    _beginning: false,
+    commands() {
+      if (this.mode === "rotate") {
+        const dx = (this._clientX ?? this.startClientX) - this.startClientX;
+        const degrees = this.startPose.rotation_z_deg + dx * ROTATE_DEG_PER_PX;
+        return [rotateCommand(this.objectId, degrees)];
+      }
+      const loc = this._location || this.startPose.location;
+      return [moveCommand(this.objectId, loc)];
+    },
+  };
+  selectMesh(mesh);
+  controls.enabled = false;
+  return true;
+}
+
+async function ensureGesturePreview() {
+  if (!gesture || gesture.started || gesture._beginning) return;
+  gesture._beginning = true;
+  try {
+    await pushGesturePreview(gesture.commands(), { begin: true });
+    if (!gesture) return;
+    gesture.started = true;
+    setStatus(`${gesture.mode === "move" ? "Moving" : "Rotating"}… release to commit, Esc to cancel`);
+  } catch (err) {
+    gesture = null;
+    controls.enabled = editMode === "orbit";
+    setStatus(`Preview begin failed: ${err.message}`, "error");
+  } finally {
+    if (gesture) gesture._beginning = false;
+  }
+}
+
+async function updateGesture(ev) {
+  if (!gesture) return;
+  gesture._clientX = ev.clientX;
+  gesture._clientY = ev.clientY;
+  const startX = pointerDown?.x ?? gesture.startClientX;
+  const startY = pointerDown?.y ?? ev.clientY;
+  const dragPx = Math.hypot(ev.clientX - startX, ev.clientY - startY);
+  if (!gesture.started && dragPx < 4) return;
+  await ensureGesturePreview();
+  if (!gesture?.started) return;
+
+  if (gesture.mode === "move") {
+    const floor = hitBlenderFloorXY(
+      raycaster,
+      camera,
+      sceneRoot,
+      ev.clientX,
+      ev.clientY,
+      renderer.domElement,
+    );
+    if (!floor || !gesture.startFloor) return;
+    const dx = floor.x - gesture.startFloor.x;
+    const dy = floor.y - gesture.startFloor.y;
+    const optimisticDx = dx - gesture.lastLocal.x;
+    const optimisticDy = dy - gesture.lastLocal.y;
+    if (optimisticDx || optimisticDy) {
+      offsetObjectMeshes(gesture.objectId, optimisticDx, optimisticDy);
+      gesture.lastLocal = { x: dx, y: dy };
+    }
+    gesture._location = [
+      gesture.startPose.location[0] + dx,
+      gesture.startPose.location[1] + dy,
+      gesture.startPose.location[2],
+    ];
+  }
+  const now = performance.now();
+  if (now - lastPreviewPush < MOVE_THROTTLE_MS) return;
+  lastPreviewPush = now;
+  try {
+    await pushGesturePreview(gesture.commands());
+    if (gesture.mode === "move") {
+      const cur = poseFromExport(lastExportData, gesture.objectId);
+      if (cur) {
+        gesture.lastLocal = {
+          x: cur.location[0] - gesture.startPose.location[0],
+          y: cur.location[1] - gesture.startPose.location[1],
+        };
+      }
+    }
+  } catch (err) {
+    setStatus(`Preview update: ${err.message}`, "warn");
+  }
+}
+
+async function coreUndo() {
+  if (gesture) {
+    await endGestureCancel();
+    return;
+  }
+  try {
+    const result = await postCoreJson("/v1/undo", {});
+    if (!result?.ok) throw new Error(result?.error || "undo failed");
+    applyExportFromCore(result, "Core · undo");
+    setStatus(`Undo · revision ${result.revision}`, "ok");
+  } catch (err) {
+    setStatus(err.message, "error");
+  }
+}
+
+async function coreRedo() {
+  if (gesture) return;
+  try {
+    const result = await postCoreJson("/v1/redo", {});
+    if (!result?.ok) throw new Error(result?.error || "redo failed");
+    applyExportFromCore(result, "Core · redo");
+    setStatus(`Redo · revision ${result.revision}`, "ok");
+  } catch (err) {
+    setStatus(err.message, "error");
+  }
+}
+
+el.btnUndo?.addEventListener("click", () => {
+  coreUndo().catch((err) => setStatus(err.message, "error"));
+});
+el.btnRedo?.addEventListener("click", () => {
+  coreRedo().catch((err) => setStatus(err.message, "error"));
 });
 
 renderer.domElement.addEventListener("pointerdown", (ev) => {
@@ -1625,12 +1981,30 @@ renderer.domElement.addEventListener("pointerdown", (ev) => {
   lastPointerType = ev.pointerType || "mouse";
   if (ev.pointerType === "touch") activeTouchCount += 1;
   if (ev.button !== 0) return;
-  pointerDown = { x: ev.clientX, y: ev.clientY };
+  pointerDown = { x: ev.clientX, y: ev.clientY, edit: editMode };
+  if (editMode === "orbit") return;
+  const hit = pickObject(ev.clientX, ev.clientY);
+  const target = hit && isManipulableMesh(hit) ? hit : selected && isManipulableMesh(selected) ? selected : null;
+  if (!target) return;
+  ev.preventDefault();
+  renderer.domElement.setPointerCapture?.(ev.pointerId);
+  startGesture(ev, target).catch((err) => setStatus(err.message, "error"));
+});
+
+renderer.domElement.addEventListener("pointermove", (ev) => {
+  if (!gesture) return;
+  updateGesture(ev).catch((err) => setStatus(err.message, "warn"));
 });
 
 renderer.domElement.addEventListener("pointerup", (ev) => {
   if (ev.pointerType === "touch") activeTouchCount = Math.max(0, activeTouchCount - 1);
-  if (ev.button !== 0 || !pointerDown) return;
+  if (ev.button !== 0) return;
+  if (gesture) {
+    endGestureCommit().catch((err) => setStatus(err.message, "error"));
+    pointerDown = null;
+    return;
+  }
+  if (!pointerDown) return;
   const dx = ev.clientX - pointerDown.x;
   const dy = ev.clientY - pointerDown.y;
   pointerDown = null;
@@ -1646,6 +2020,9 @@ renderer.domElement.addEventListener("pointerup", (ev) => {
 
 renderer.domElement.addEventListener("pointercancel", () => {
   activeTouchCount = 0;
+  if (gesture) {
+    endGestureCancel().catch(() => {});
+  }
 });
 
 // Orbit (rotate) leaves orthographic; dolly/pan keep it.
@@ -1730,6 +2107,12 @@ window.addEventListener("paste", (ev) => {
 window.addEventListener("keydown", (ev) => {
   const tag = (ev.target && ev.target.tagName) || "";
   if (tag === "TEXTAREA" || tag === "INPUT") return;
+  if ((ev.metaKey || ev.ctrlKey) && (ev.key === "z" || ev.key === "Z")) {
+    ev.preventDefault();
+    if (ev.shiftKey) coreRedo().catch((err) => setStatus(err.message, "error"));
+    else coreUndo().catch((err) => setStatus(err.message, "error"));
+    return;
+  }
   if (ev.key === "f" || ev.key === "F") {
     ev.preventDefault();
     applyCamera("fit");
@@ -1737,7 +2120,14 @@ window.addEventListener("keydown", (ev) => {
   else if (ev.key === "2") applyCamera("top");
   else if (ev.key === "3") applyCamera("front");
   else if (ev.key === "4") applyCamera("side");
+  else if (ev.key === "g" || ev.key === "G") setEditMode("move");
+  else if (ev.key === "r" || ev.key === "R") setEditMode("rotate");
+  else if (ev.key === "o" || ev.key === "O") setEditMode("orbit");
   else if (ev.key === "Escape") {
+    if (gesture || previewClient.active) {
+      endGestureCancel().catch((err) => setStatus(err.message, "error"));
+      return;
+    }
     clearSelection();
     clearFindingHighlights();
     setStatus("Selection cleared");

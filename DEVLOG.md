@@ -4,6 +4,16 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — Viewer direct manipulation Move/Rotate (`0.10.43`)
+
+**Why:** FC-001 / DD-019 Core ops exist; the Viewer still could not drive
+preview→commit gestures. Without that, Spatial Project editing stays chat-only.
+
+**How:** Orbit/Move/Rotate toolbar; floor-plane XY drag and Z rotate through
+`/v1/preview/begin|update|commit|cancel`; Undo/Redo against Core.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — Viewer room selection (`0.10.42`)
 
 **Why:** After multi-room Core export, the Viewer still treated the scene as one

@@ -50,7 +50,7 @@ Viewer UX on top of FC-001 Core (transactions, furniture/room ops, multi-room pr
 
 1. ~~Multi-room meta / visible-room floorplan pick~~ ✅ (`0.10.41`)
 2. ~~Room selection UI + focus / floorplan~~ ✅ (`0.10.42`)
-3. Direct manipulation → preview/commit
-4. Planning / shortlist feedback polish
+3. ~~Direct manipulation Move/Rotate → preview/commit~~ ✅ (`0.10.43`)
+4. Planning / shortlist feedback polish; wall/resize gizmos later
 
 See [docs/HANDOFF.md](../docs/HANDOFF.md).

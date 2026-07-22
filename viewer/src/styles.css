@@ -803,6 +803,19 @@ button:hover {
   backdrop-filter: blur(6px);
 }
 
+.view-controls button.active {
+  border-color: var(--accent);
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 22%, var(--panel));
+}
+
+.view-controls-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 0.15rem 0.15rem;
+  background: var(--border);
+}
+
 .drop-hint {
   position: absolute;
   inset: 0;
