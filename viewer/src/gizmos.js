@@ -496,13 +496,15 @@ export function setGizmoHover(mesh) {
 export function resizeParamsForAxis(generator, axis, startSize, delta) {
   const g = String(generator || "").toLowerCase();
   const size = Math.max(0.25, (axis === "x" ? startSize[0] : startSize[1]) + delta);
-  if (axis === "x") {
-    return { width: Number(size.toFixed(4)) };
-  }
+  const rounded = Number(size.toFixed(4));
+  // bed_basic: length = X extent, width = Y extent (see bed_basic.md).
   if (g.includes("bed")) {
-    return { length: Number(size.toFixed(4)) };
+    return axis === "x" ? { length: rounded } : { width: rounded };
   }
-  return { depth: Number(size.toFixed(4)) };
+  if (axis === "x") {
+    return { width: rounded };
+  }
+  return { depth: rounded };
 }
 
 export function roomMoveCommand(roomId, dx, dy) {
