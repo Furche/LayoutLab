@@ -1754,11 +1754,14 @@ function resize() {
 function frame(now = performance.now()) {
   updateCameraTween(now);
   controls.update();
+  renderer.autoClear = true;
   renderer.render(scene, camera);
-  // Overlay pass: solid colors on top of translucent clearances/openings.
+  // Overlay pass: keep color buffer, only reset depth so handles draw on top.
   if (gizmoGroup) {
+    renderer.autoClear = false;
     renderer.clearDepth();
     renderer.render(gizmoScene, camera);
+    renderer.autoClear = true;
   }
   requestAnimationFrame(frame);
 }
