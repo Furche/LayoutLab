@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import uuid
 from typing import Any
 
 from ..core import room as room_core
@@ -17,6 +18,7 @@ from .analyze import analyze_session
 from .headless_api import execute_generator_headless
 from .mesh_store import MeshStore, triangulate_faces
 from . import furniture_ops
+from . import room_ops
 from . import transactions as tx
 
 # Keep in sync with layoutlab/__init__.py bl_info version when bumping the plugin.
@@ -40,7 +42,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.39"
+LAYOUTLAB_VERSION = "0.10.40"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -55,6 +57,13 @@ SESSION_ACTIONS = frozenset(
         "remove_fixed_element",
         "move_wall",
         "move_corner",
+        # FC-001/WP-06 Spatial Project / independent rooms
+        "move_room",
+        "duplicate_room",
+        "hide_room",
+        "show_room",
+        "set_room_flags",
+        "set_room_locked",
         "delete_collection_objects",
         "delete_prefix",
         "run_generator",
@@ -155,6 +164,8 @@ def _object_dict(
 
 def _room_objects(model):
     """Synthesize viewer objects for one room (floor / wall quads / openings / fixed)."""
+    if not bool(model.get("visible", True)):
+        return []
     collection = model.get("collection") or "layoutlab_room"
     room_id = model["room_id"]
     prefix = f"{model['name']}_"
@@ -328,28 +339,56 @@ def _furniture_export_object(obj):
     return data
 
 
+def _furniture_export_object_with_room(obj, rooms_by_id: dict):
+    exported = _furniture_export_object(obj)
+    if not exported:
+        return None
+    room_id = obj.get("layoutlab_room_id")
+    model = rooms_by_id.get(room_id) if room_id else None
+    if model is not None:
+        local = room_ops.local_location(exported["location"], model)
+        exported["local_location"] = _r3(local)
+        layoutlab = exported.setdefault("layoutlab", {})
+        layoutlab["local_location"] = _r3(local)
+        layoutlab["room_id"] = room_id
+    return exported
+
+
 def export_viewer_scene(session: "RoomSession") -> dict:
-    """Build viewer_schema export dict from session rooms + furniture."""
-    rooms = [room_core.export_room_block(m) for m in session.list_rooms()]
+    """Build Spatial Project viewer export (DD-020): project + rooms[] + objects[]."""
+    live_rooms = list(session._rooms.values())
+    rooms_by_id = {m["room_id"]: m for m in live_rooms}
+    rooms = [room_core.export_room_block(m) for m in live_rooms]
     objects = []
-    for model in session.list_rooms():
+    for model in live_rooms:
         objects.extend(_room_objects(model))
     for obj in session.mesh_store.objects:
-        exported = _furniture_export_object(obj)
+        exported = _furniture_export_object_with_room(obj, rooms_by_id)
         if exported:
             objects.append(exported)
+    revision = int(getattr(session, "revision", 0) or 0)
+    project_id = getattr(session, "project_id", None) or ""
+    project_name = getattr(session, "project_name", None) or "Spatial Project"
     return {
         "layoutlab_version": LAYOUTLAB_VERSION,
         "viewer_schema": VIEWER_SCHEMA,
         "unit": "METRIC",
         "unit_scale": 1.0,
-        "scene": "RoomSession",
-        "revision": int(getattr(session, "revision", 0) or 0),
+        "scene": "SpatialProject",
+        "project_id": project_id,
+        "project_name": project_name,
+        "project": {
+            "project_id": project_id,
+            "name": project_name,
+            "revision": revision,
+        },
+        "revision": revision,
         "generators": [],
         "note": (
+            "Spatial Project export (DD-020). "
             "Coordinates/dimensions are LayoutLab scene units (native). "
             "With Metric and unit_scale=1.0, 1 unit = 1 meter. "
-            "Headless Room Model + generator export (DD-014 Phase B2). "
+            "Furniture location is world; local_location = world - room.origin. "
             "analysis is from analyze_layout at export time."
         ),
         "rooms": rooms,
@@ -360,9 +399,11 @@ def export_viewer_scene(session: "RoomSession") -> dict:
 
 
 class RoomSession:
-    """In-memory rooms + furniture mesh store with semantic transactions (DD-018)."""
+    """In-memory Spatial Project: rooms + furniture with semantic transactions (DD-018/020)."""
 
     def __init__(self, *, undo_depth: int = tx.DEFAULT_UNDO_DEPTH):
+        self.project_id = str(uuid.uuid4())
+        self.project_name = "Spatial Project"
         self._rooms: dict[str, dict] = {}
         self.mesh_store = MeshStore()
         self.agent_state = empty_agent_state()
@@ -390,6 +431,8 @@ class RoomSession:
         Clones carry the current revision but an empty Undo/Redo history and no preview.
         """
         other = RoomSession(undo_depth=self._undo.max_depth)
+        other.project_id = self.project_id
+        other.project_name = self.project_name
         other._rooms = copy.deepcopy(self._rooms)
         other.mesh_store = self.mesh_store.clone()
         other.agent_state = copy.deepcopy(self.agent_state)
@@ -424,6 +467,8 @@ class RoomSession:
     def _snapshot_domain(self) -> dict:
         snap = tx.domain_snapshot(self._rooms, self.mesh_store, self.revision)
         snap["selected_object_id"] = self.selected_object_id
+        snap["project_id"] = self.project_id
+        snap["project_name"] = self.project_name
         return snap
 
     def _restore_domain(self, snap: dict) -> None:
@@ -431,6 +476,10 @@ class RoomSession:
         self.mesh_store = snap["mesh_store"].clone()
         self.revision = int(snap["revision"])
         self.selected_object_id = snap.get("selected_object_id")
+        if "project_id" in snap:
+            self.project_id = snap["project_id"]
+        if "project_name" in snap:
+            self.project_name = snap["project_name"]
 
     def _transaction_payload(self, applied: dict, record: tx.TransactionRecord) -> dict:
         out = dict(applied)
@@ -490,6 +539,7 @@ class RoomSession:
         raise ValueError(f"room not found: {room_id or room_name}")
 
     def _store(self, model):
+        room_ops.ensure_room_defaults(model)
         self._rooms[model["room_id"]] = model
         return model
 
@@ -509,6 +559,7 @@ class RoomSession:
             "fixed_element_count": len(model.get("fixed_elements", [])),
             "collection": model.get("collection") or "layoutlab_room",
             "world_bounds": room_core.room_world_bounds(model),
+            **room_ops.room_flags(model),
         }
 
     def apply_command(self, cmd: dict) -> Any:
@@ -593,6 +644,17 @@ class RoomSession:
         ):
             return furniture_ops.apply_furniture_command(self, cmd)
 
+        if action in (
+            "move_room",
+            "duplicate_room",
+            "hide_room",
+            "show_room",
+            "set_room_flags",
+            "set_room_locked",
+            "delete_room",
+        ):
+            return room_ops.apply_room_command(self, cmd)
+
         if action == "analyze_layout":
             return analyze_session(self, cmd)
 
@@ -608,13 +670,28 @@ class RoomSession:
         if action == "update_room":
             params = cmd.get("params") or cmd
             model = self._resolve(params)
+            if model.get("locked"):
+                raise ValueError(f"room is locked: cannot update_room ({model.get('room_id')})")
+            old_origin = list(model["origin"])
             room_core.update_room_model(model, params)
-            furniture_ops.refresh_all_validity(self.mesh_store, self._rooms)
+            new_origin = list(model["origin"])
+            dx = float(new_origin[0]) - float(old_origin[0])
+            dy = float(new_origin[1]) - float(old_origin[1])
+            dz = float(new_origin[2]) - float(old_origin[2])
+            if abs(dx) > 1e-12 or abs(dy) > 1e-12 or abs(dz) > 1e-12:
+                # Whole-room transform participation (DD-020) when origin changes.
+                room_ops.apply_room_transform_participation(
+                    self, model, dx=dx, dy=dy, dz=dz
+                )
+            else:
+                furniture_ops.refresh_all_validity(self.mesh_store, self._rooms)
             return self._room_result(model)
 
         if action == "move_wall":
             params = cmd.get("params") or cmd
             model = self._resolve(params)
+            if model.get("locked"):
+                raise ValueError(f"room is locked: cannot move_wall ({model.get('room_id')})")
             wall_ref = (
                 params.get("wall_id")
                 or params.get("wall")
@@ -636,6 +713,8 @@ class RoomSession:
         if action == "move_corner":
             params = cmd.get("params") or cmd
             model = self._resolve(params)
+            if model.get("locked"):
+                raise ValueError(f"room is locked: cannot move_corner ({model.get('room_id')})")
             corner = params.get("corner") or cmd.get("corner")
             dx = params.get("dx", cmd.get("dx", 0.0))
             dy = params.get("dy", cmd.get("dy", 0.0))
@@ -646,45 +725,55 @@ class RoomSession:
             furniture_ops.refresh_all_validity(self.mesh_store, self._rooms)
             return self._room_result(model)
 
-        if action == "delete_room":
-            params = cmd.get("params") or cmd
-            model = self._resolve(params)
-            del self._rooms[model["room_id"]]
-            return {"deleted": model["name"], "room_id": model["room_id"]}
-
         if action == "add_opening":
             params = cmd.get("params") or cmd
             model = self._resolve(params)
+            if model.get("locked"):
+                raise ValueError(f"room is locked: cannot add_opening ({model.get('room_id')})")
             opening = room_core.add_opening(model, params)
             return {"opening": opening, **self._room_result(model)}
 
         if action == "update_opening":
             params = cmd.get("params") or cmd
             model = self._resolve(params)
+            if model.get("locked"):
+                raise ValueError(f"room is locked: cannot update_opening ({model.get('room_id')})")
             opening = room_core.update_opening(model, params)
             return {"opening": opening, **self._room_result(model)}
 
         if action == "remove_opening":
             params = cmd.get("params") or cmd
             model = self._resolve(params)
+            if model.get("locked"):
+                raise ValueError(f"room is locked: cannot remove_opening ({model.get('room_id')})")
             removed = room_core.remove_opening(model, params)
             return {"removed": removed, **self._room_result(model)}
 
         if action == "add_fixed_element":
             params = cmd.get("params") or cmd
             model = self._resolve(params)
+            if model.get("locked"):
+                raise ValueError(f"room is locked: cannot add_fixed_element ({model.get('room_id')})")
             fixed = room_core.add_fixed_element(model, params)
             return {"fixed_element": fixed, **self._room_result(model)}
 
         if action == "update_fixed_element":
             params = cmd.get("params") or cmd
             model = self._resolve(params)
+            if model.get("locked"):
+                raise ValueError(
+                    f"room is locked: cannot update_fixed_element ({model.get('room_id')})"
+                )
             fixed = room_core.update_fixed_element(model, params)
             return {"fixed_element": fixed, **self._room_result(model)}
 
         if action == "remove_fixed_element":
             params = cmd.get("params") or cmd
             model = self._resolve(params)
+            if model.get("locked"):
+                raise ValueError(
+                    f"room is locked: cannot remove_fixed_element ({model.get('room_id')})"
+                )
             removed = room_core.remove_fixed_element(model, params)
             return {"removed": removed, **self._room_result(model)}
 

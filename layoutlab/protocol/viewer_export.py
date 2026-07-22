@@ -1,6 +1,6 @@
 """Viewer export hints (DD-014 Phase A / json_protocol §6.4)."""
 
-VIEWER_SCHEMA = "0.1.1"
+VIEWER_SCHEMA = "0.1.2"
 
 WIRE_ROLES = frozenset({"clearance", "room_opening"})
 QUAD_ROLES = frozenset({"room_wall"})

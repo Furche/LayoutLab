@@ -4,6 +4,17 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — FC-001/WP-06: Spatial Project / independent rooms (0.10.40)
+
+**Why:** DD-020 makes the Spatial Project the only durable root (`rooms[]`, n=1 normal)
+with independent multi-room transforms and whole-room move participation rules.
+
+**How:** `project_id` on session/export; `move_room` / `duplicate_room` / room flags;
+VALID furniture follows room translate, INVALID stays world-fixed; `local_location` on
+export. Shared walls / apartment topology remain later.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — FC-001/WP-05: wall/corner resize + inactive openings (0.10.39)
 
 **Why:** DD-019 requires wall edits that preserve furniture world pose, keep

@@ -117,11 +117,16 @@ def get_scene_summary(session, params=None):
                 "room_id": model.get("room_id"),
                 "name": model.get("name"),
                 "collection": coll,
+                "origin": list(model.get("origin") or [0, 0, 0]),
                 "width": fp.get("width"),
                 "depth": fp.get("depth"),
                 "height": model.get("height"),
                 "opening_count": len(model.get("openings") or []),
                 "fixed_count": len(model.get("fixed_elements") or []),
+                "visible": bool(model.get("visible", True)),
+                "locked": bool(model.get("locked", False)),
+                "included_in_analysis": bool(model.get("included_in_analysis", True)),
+                "protected_from_ai": bool(model.get("protected_from_ai", False)),
             }
         )
 
@@ -163,6 +168,8 @@ def get_scene_summary(session, params=None):
         "ok": True,
         "unit": "METRIC",
         "unit_scale": 1.0,
+        "project_id": getattr(session, "project_id", None),
+        "project_name": getattr(session, "project_name", None),
         "revision": int(getattr(session, "revision", 0) or 0),
         "can_undo": bool(getattr(session, "can_undo", False)),
         "can_redo": bool(getattr(session, "can_redo", False)),

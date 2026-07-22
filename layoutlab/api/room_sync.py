@@ -286,3 +286,122 @@ def move_corner(params):
         dy = params["delta"][1] if len(params["delta"]) > 1 else 0.0
     room_core.move_corner(model, corner, dx=dx, dy=dy)
     return sync_room_to_scene(model)
+
+
+def _furniture_mains_for_room(room_id):
+    seen = set()
+    mains = []
+    for obj in bpy.data.objects:
+        if obj.get("layoutlab_room_id") != room_id:
+            continue
+        if obj.get("layoutlab_role") in (
+            "room_floor",
+            "room_wall",
+            "room_opening",
+            "room_fixed",
+            "label",
+        ):
+            continue
+        oid = obj.get("layoutlab_object_id")
+        if not oid or oid in seen:
+            continue
+        if obj.get("layoutlab_part_type") == "main" or obj.parent is None:
+            seen.add(oid)
+            mains.append(obj)
+    return mains
+
+
+def move_room(params):
+    """Translate room fabric; VALID furniture follows (DD-020). Blender adapter."""
+    model, _ = _resolve_and_load(params)
+    if model.get("locked"):
+        raise ValueError(f"room is locked: cannot move_room ({model.get('room_id')})")
+    origin = model["origin"]
+    if "location" in params:
+        loc = params["location"]
+        dx = float(loc[0]) - float(origin[0])
+        dy = float(loc[1]) - float(origin[1])
+        dz = (float(loc[2]) - float(origin[2])) if len(loc) > 2 else 0.0
+    else:
+        delta = params.get("delta")
+        if isinstance(delta, (list, tuple)):
+            dx = float(delta[0]) if len(delta) > 0 else 0.0
+            dy = float(delta[1]) if len(delta) > 1 else 0.0
+            dz = float(delta[2]) if len(delta) > 2 else 0.0
+        else:
+            dx = float(params.get("dx", 0.0))
+            dy = float(params.get("dy", 0.0))
+            dz = float(params.get("dz", 0.0))
+
+    room_id = model["room_id"]
+    followed = []
+    left_behind = []
+    for obj in _furniture_mains_for_room(room_id):
+        validity = str(obj.get("layoutlab_validity") or "VALID")
+        if validity == "VALID":
+            obj.location.x += dx
+            obj.location.y += dy
+            obj.location.z += dz
+            followed.append(obj.get("layoutlab_object_id"))
+        else:
+            left_behind.append(obj.get("layoutlab_object_id"))
+
+    room_core.update_room_model(
+        model,
+        {"location": [origin[0] + dx, origin[1] + dy, origin[2] + dz]},
+    )
+    result = sync_room_to_scene(model)
+    result["followed"] = followed
+    result["left_behind"] = left_behind
+    result["dx"] = dx
+    result["dy"] = dy
+    result["dz"] = dz
+    return result
+
+
+def set_room_flags(params):
+    model, _ = _resolve_and_load(params)
+    for key in ("locked", "visible", "included_in_analysis", "protected_from_ai"):
+        if key in params:
+            model[key] = bool(params[key])
+    return sync_room_to_scene(model)
+
+
+def hide_room(params, *, hidden=True):
+    params = dict(params or {})
+    params["visible"] = not hidden
+    return set_room_flags(params)
+
+
+def duplicate_room(params):
+    """Duplicate room fabric with new ids (furniture not auto-copied in Blender path)."""
+    src, _ = _resolve_and_load(params)
+    import copy
+    import uuid
+
+    clone = copy.deepcopy(src)
+    clone["room_id"] = str(uuid.uuid4())
+    clone["name"] = str(params.get("new_name") or f"{src.get('name', 'ROOM')}_copy")
+    offset = params.get("offset") or [2.0, 0.0, 0.0]
+    ox = float(offset[0]) if offset else 2.0
+    oy = float(offset[1]) if offset and len(offset) > 1 else 0.0
+    oz = float(offset[2]) if offset and len(offset) > 2 else 0.0
+    so = src["origin"]
+    clone["origin"] = [float(so[0]) + ox, float(so[1]) + oy, float(so[2]) + oz]
+    wall_map = {}
+    for wall in clone.get("walls", []):
+        old = wall.get("wall_id")
+        new = str(uuid.uuid4())
+        if old:
+            wall_map[old] = new
+        wall["wall_id"] = new
+    for opening in clone.get("openings", []):
+        opening["opening_id"] = str(uuid.uuid4())
+        if opening.get("wall_id") in wall_map:
+            opening["wall_id"] = wall_map[opening["wall_id"]]
+    for fixed in clone.get("fixed_elements", []):
+        fixed["fixed_element_id"] = str(uuid.uuid4())
+        if fixed.get("wall_id") in wall_map:
+            fixed["wall_id"] = wall_map[fixed["wall_id"]]
+    room_core._apply_rectangle_footprint(clone, existing=clone.get("walls"))
+    return sync_room_to_scene(clone)

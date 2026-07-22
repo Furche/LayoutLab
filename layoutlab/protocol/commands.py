@@ -153,6 +153,19 @@ def apply_single_command(context, cmd):
         return room_sync.move_wall(cmd.get("params") or cmd)
     if action == "move_corner":
         return room_sync.move_corner(cmd.get("params") or cmd)
+    if action == "move_room":
+        return room_sync.move_room(cmd.get("params") or cmd)
+    if action == "duplicate_room":
+        return room_sync.duplicate_room(cmd.get("params") or cmd)
+    if action in ("set_room_flags", "set_room_locked"):
+        params = dict(cmd.get("params") or cmd)
+        if action == "set_room_locked" and "locked" not in params:
+            params["locked"] = True
+        return room_sync.set_room_flags(params)
+    if action == "hide_room":
+        return room_sync.hide_room(cmd.get("params") or cmd, hidden=True)
+    if action == "show_room":
+        return room_sync.hide_room(cmd.get("params") or cmd, hidden=False)
 
     obj = bpy.data.objects.get(name) if name else None
     if action == "move":

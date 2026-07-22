@@ -170,6 +170,14 @@ def ai_protection_violations(rooms: dict, mesh_store, commands: list) -> list[di
             "add_fixed_element",
             "update_fixed_element",
             "remove_fixed_element",
+            "move_wall",
+            "move_corner",
+            "move_room",
+            "duplicate_room",
+            "hide_room",
+            "show_room",
+            "set_room_flags",
+            "set_room_locked",
         ):
             if resolved_room and resolved_room in prot_rooms:
                 hits.append(f"room:{resolved_room}")

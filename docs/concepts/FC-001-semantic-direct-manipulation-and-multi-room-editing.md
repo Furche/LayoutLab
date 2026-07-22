@@ -1,6 +1,6 @@
 # FC-001 — Semantic Direct Manipulation and Multi-Room Editing
 
-**Status:** Active (WP-05 complete — wall resize `0.10.39`; next WP-06)
+**Status:** Active (WP-06 complete — Spatial Project `0.10.40`; WP-07 later)
 **Date:** 2026-07-22
 **Owner:** Product / Architecture
 **Related:** [DD-009](../design_decisions/DD-009-ai-execution-boundary.md) · [DD-010](../design_decisions/DD-010-room-model.md) · [DD-014](../design_decisions/DD-014-standalone-runtime-path.md) · [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) (**Accepted**) · [DD-019](../design_decisions/DD-019-semantic-direct-manipulation.md) (**Accepted**) · [DD-020](../design_decisions/DD-020-spatial-project-independent-rooms.md) (**Accepted**) · [Room Model](../room_model.md) · [Spatial Project vision](../Future_Ideas.md#13-spatial-project-model)
@@ -434,8 +434,9 @@ decisions for:
 DD-010 remains the accepted single-space foundation. This concept extends it; it
 does not rewrite it.
 
-**WP-01…WP-05 status:** complete through wall/corner resize (`0.10.39`). Next: **FC-001/WP-06**
-(Spatial Project / independent rooms, DD-020). Locked Accept defaults include: session Undo ≥ 50
+**WP-01…WP-06 status:** complete through Spatial Project / independent rooms (`0.10.40`).
+Next optional: **FC-001/WP-07** (advanced supports / stacking — explicitly later).
+Locked Accept defaults include: session Undo ≥ 50
 with integer revision; duplicate includes invalid membership; fixed elements become inactive
 not deleted; Spatial Project is the only durable format (`rooms[]`, n = 1 normal; no legacy
 single-room export).
@@ -454,7 +455,7 @@ themselves.
 | **FC-001/WP-03** | Single-room furniture selection, XY move/Z rotation, floor support, duplicate/delete/hide/lock | **Done** — `0.10.37` (DD-019) |
 | **FC-001/WP-04** | Parametric furniture resize through generator parameters and regeneration | **Done** — `0.10.38` (DD-019) |
 | **FC-001/WP-05** | Wall/corner resize, opening host behaviour, inactive opening restoration and invalid furniture visualization | **Done** — `0.10.39` (DD-019) |
-| **FC-001/WP-06** | Independent multi-room Spatial Project, local transforms and whole-room operations | **Next** — DD-020 |
+| **FC-001/WP-06** | Independent multi-room Spatial Project, local transforms and whole-room operations | **Done** — `0.10.40` (DD-020) |
 | **FC-001/WP-07** | Advanced support surfaces and stacking | Explicitly later |
 
 Each work package must update binding contracts and tests in the same change. No

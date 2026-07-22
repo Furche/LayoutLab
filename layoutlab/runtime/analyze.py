@@ -105,6 +105,8 @@ def collect_session_objects(session, scope="scene", collection_name=None):
 
     objects = []
     for model in session._rooms.values():
+        if not bool(model.get("included_in_analysis", True)):
+            continue
         coll = model.get("collection") or "layoutlab_room"
         if scope == "collection" and coll != collection_name:
             continue
@@ -113,6 +115,11 @@ def collect_session_objects(session, scope="scene", collection_name=None):
     for obj in session.mesh_store.objects:
         if scope == "collection" and obj.collection != collection_name:
             continue
+        # Skip furniture whose room opted out of analysis.
+        rid = obj.get("layoutlab_room_id") if hasattr(obj, "get") else None
+        if rid and rid in session._rooms:
+            if not bool(session._rooms[rid].get("included_in_analysis", True)):
+                continue
         objects.append(obj)
 
     if scope == "collection" and not collection_name:

@@ -19,7 +19,7 @@ _mod = _load()
 
 class ViewerExportTests(unittest.TestCase):
     def test_schema_version(self):
-        self.assertEqual(_mod.VIEWER_SCHEMA, "0.1.1")
+        self.assertEqual(_mod.VIEWER_SCHEMA, "0.1.2")
 
     def test_clearance_wire(self):
         hint = _mod.viewer_block_for_role("clearance")

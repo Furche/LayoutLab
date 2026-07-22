@@ -512,7 +512,23 @@ Editable **Room Model** — not a furniture generator. See [room_model.md](room_
 }
 ```
 
-Creates rectangle footprint (`footprint.kind: "rectangle"`), four walls with stable ids, floor + **inward-facing wall planes** (see-through from outside). Default origin `[0, 0, 0]` if `location` omitted.
+Creates rectangle footprint (`footprint.kind: "rectangle"`), four walls with stable ids, floor + **inward-facing wall planes** (see-through from outside). Default origin `[0, 0, 0]` if `location` omitted. Rooms start with flags `visible` / `included_in_analysis` true; `locked` / `protected_from_ai` false.
+
+### `move_room` / `duplicate_room` / room flags `[IMPLEMENTED]` (DD-020 / FC-001/WP-06)
+
+```json
+{ "action": "move_room", "room_id": "<uuid>", "dx": 2.0, "dy": 0.0 }
+```
+
+```json
+{ "action": "duplicate_room", "room_id": "<uuid>", "offset": [5, 0, 0], "new_name": "ROOM_B" }
+```
+
+```json
+{ "action": "set_room_flags", "room_id": "<uuid>", "locked": true, "protected_from_ai": true }
+```
+
+Whole-room move: **VALID** assigned furniture follows; **INVALID** stays world-fixed (membership kept). `delete_room` also removes member furniture. Export is a Spatial Project (`project_id`, `rooms[]`; `viewer_schema` `0.1.2`).
 
 ### `add_opening` / `add_fixed_element`
 
@@ -577,7 +593,7 @@ Also: `update_room`, `delete_room`, `update_opening`, `remove_opening`, `update_
 | Field | Type | Description |
 |---|---|---|
 | `layoutlab_version` | string | Plugin version |
-| `viewer_schema` | string | Viewer-minimum contract semver (`0.1.1`) — [DD-014](design_decisions/DD-014-standalone-runtime-path.md) / §6.4 `[IMPLEMENTED]` v0.10.6 |
+| `viewer_schema` | string | Viewer-minimum contract semver (`0.1.2`) — Spatial Project fields |
 | `unit` | string | `METRIC`, `IMPERIAL`, or `NONE` |
 | `unit_scale` | number | Blender `scale_length` |
 | `scene` | string | Scene name |

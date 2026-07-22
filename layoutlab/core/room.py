@@ -107,11 +107,13 @@ def create_room_model(params):
     thickness = _f(params.get("wall_thickness", DEFAULT_WALL_THICKNESS), DEFAULT_WALL_THICKNESS)
     room_id = str(params.get("room_id") or _new_id())
 
+    rotation_z = _f(params.get("rotation_z_deg", 0.0), 0.0)
     return {
         "schema_version": "0.1.0",
         "room_id": room_id,
         "name": name,
         "origin": origin,
+        "rotation_z_deg": rotation_z,
         "height": height,
         "wall_thickness": thickness,
         "footprint": {"kind": "rectangle", "width": width, "depth": depth},
@@ -119,6 +121,10 @@ def create_room_model(params):
         "openings": [],
         "fixed_elements": [],
         "collection": str(params.get("collection") or "layoutlab_room"),
+        "visible": bool(params.get("visible", True)),
+        "locked": bool(params.get("locked", False)),
+        "included_in_analysis": bool(params.get("included_in_analysis", True)),
+        "protected_from_ai": bool(params.get("protected_from_ai", False)),
     }
 
 
@@ -844,12 +850,19 @@ def room_world_bounds(model):
 
 
 def export_room_block(model):
-    """Serializable layoutlab.room export block."""
+    """Serializable layoutlab.room export block (DD-010 nested under Spatial Project)."""
+    origin = list(model["origin"])
+    rotation_z = _f(model.get("rotation_z_deg", 0.0), 0.0)
     return {
         "room_id": model["room_id"],
         "name": model["name"],
         "schema_version": model.get("schema_version", "0.1.0"),
-        "origin": list(model["origin"]),
+        "origin": origin,
+        "rotation_z_deg": rotation_z,
+        "transform": {
+            "location": origin,
+            "rotation_z_deg": rotation_z,
+        },
         "height": model["height"],
         "wall_thickness": model.get("wall_thickness", DEFAULT_WALL_THICKNESS),
         "footprint": copy.deepcopy(model["footprint"]),
@@ -858,4 +871,8 @@ def export_room_block(model):
         "fixed_elements": copy.deepcopy(model.get("fixed_elements", [])),
         "world_bounds": room_world_bounds(model),
         "collection": model.get("collection", "layoutlab_room"),
+        "visible": bool(model.get("visible", True)),
+        "locked": bool(model.get("locked", False)),
+        "included_in_analysis": bool(model.get("included_in_analysis", True)),
+        "protected_from_ai": bool(model.get("protected_from_ai", False)),
     }

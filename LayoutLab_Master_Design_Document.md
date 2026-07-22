@@ -394,7 +394,8 @@ Vermeiden:
 | Semantic furniture manipulation (DD-019 WP-03) | `0.10.37` |
 | Parametric resize / regenerate (DD-019 WP-04) | `0.10.38` |
 | Wall/corner resize + inactive openings (DD-019 WP-05) | `0.10.39` |
-| Feature Concept FC-001 (behaviour captured) | `docs/concepts/` — WP-02…05 shipped; WP-06 queued |
+| Spatial Project / independent rooms (DD-020 WP-06) | `0.10.40` |
+| Feature Concept FC-001 (behaviour captured) | `docs/concepts/` — WP-01…WP-06 shipped; WP-07 later |
 
 **Begriffsklärung (bereits vs. später):**
 
@@ -404,7 +405,7 @@ Vermeiden:
 | **Automatische Raumplanung** | Recipe-driven Candidates + Force-Path | Vollständiger Problem-first-Planner / „Optimierer“ |
 | **KI bewertet Layouts** | Deterministische Scores + optionale AI-Ästhetik auf Shortlist | Breitere Produkt-UX, kalibrierte Rubriken |
 | **Möbelbibliothek** | Bundled generators + Browser-Liste | Katalog / Import / Asset-Polish |
-| **Komplette Wohnungsplanung** | Ein Raum (DD-010) | Multi-Room (FC-001/WP-06+) → später verbundene Topologie |
+| **Komplette Wohnungsplanung** | Independent Multi-Room (DD-020 / `0.10.40`) | Verbundene Topologie / Shared Walls |
 | **Laufwege** | — | Navigations-/Erreichbarkeitsanalyse (nur Future Idea) |
 | **Undo** | Semantische Transaktionen Core (`0.10.36`) | Viewport-Gesten / Multi-Room history polish |
 
@@ -412,9 +413,9 @@ Vermeiden:
 
 | ID | Scope | Status |
 |---|---|---|
-| [FC-001/WP-06](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Spatial Project (`rooms[]` only format), lokale Transforms, Whole-Room-Ops | **Current** · DD-020 |
+| — | Refinement / on-demand (see below) | After FC-001 Core slice |
 
-WP-01…WP-05 complete through `0.10.39`. [DD-020](docs/design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted**.
+WP-01…WP-06 complete through `0.10.40`. [DD-020](docs/design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** and implemented.
 
 ### Queued
 

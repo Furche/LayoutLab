@@ -34,6 +34,9 @@ Blender meshes (adapter)
 | `update_room` | Size / height / origin (wall ids preserved; attachments reconciled) |
 | `move_wall` | Parallel wall move (`delta`, outward-positive) — FC-001/WP-05 |
 | `move_corner` | Corner `sw\|se\|nw\|ne` with `dx`/`dy` — FC-001/WP-05 |
+| `move_room` | Whole-room translate; VALID furniture follows, INVALID stays world-fixed (DD-020) |
+| `duplicate_room` | Copy fabric + members (incl. invalid / inactive) with new IDs |
+| `hide_room` / `show_room` / `set_room_flags` / `set_room_locked` | Room visibility / lock / analysis / AI protection |
 | `delete_room` | Remove all meshes for `room_id` |
 | `add_opening` / `update_opening` / `remove_opening` | Door or window (cuts wall panels) |
 | `add_fixed_element` / `update_fixed_element` / `remove_fixed_element` | e.g. radiator |
@@ -53,13 +56,18 @@ Full layout (shell + bed + desk): `tests/fixtures/reference_kids_room_commands.j
 
 ## Export
 
-Scene export includes top-level `rooms[]` with `layoutlab.room`-equivalent fields (`room_id`, footprint, walls, openings, fixed_elements, `world_bounds`).
+Spatial Project export (DD-020): top-level `project_id` / `project_name` / `project{}`,
+`revision`, and `rooms[]`. Each room includes `origin` / `transform`, flags
+(`visible`, `locked`, `included_in_analysis`, `protected_from_ai`), footprint, walls,
+openings, fixed_elements, `world_bounds`. Furniture objects may include `local_location`
+(= world − room.origin). A single room is simply `len(rooms) == 1`.
 
 ------------------------------------------------------------------------
 
 ## Not in MVP
 
-Polygon footprints, free `add_wall`, multi-room (WP-06 / DD-020).
+Polygon footprints, free `add_wall`, shared walls / apartment topology (later than WP-06).
 Boolean modifiers are intentionally unused — openings use constructive panel splits.
 `analyze_layout` treats `room_wall` / `room_fixed` as blockers; floor/opening wires are excluded.
 Openings/fixed elements may be `ACTIVE` or `INACTIVE_OUTSIDE_WALL` (data kept; inactive hidden in viewer).
+Rooms with `included_in_analysis=false` are skipped by analyze.

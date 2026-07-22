@@ -143,9 +143,16 @@ def layout_export_json(context, selected_only=False):
         "unit": scene.unit_settings.system,
         "unit_scale": scene.unit_settings.scale_length,
         "scene": scene.name,
+        "project_id": scene.get("layoutlab_project_id") or "",
+        "project_name": scene.get("layoutlab_project_name") or scene.name,
+        "project": {
+            "project_id": scene.get("layoutlab_project_id") or "",
+            "name": scene.get("layoutlab_project_name") or scene.name,
+        },
         "generator_dir": str(addon_user_dir()),
         "generators": list_generators_meta(),
         "note": (
+            "Spatial Project export (DD-020). "
             "Coordinates/dimensions are Blender scene units (native). "
             "With Metric and unit_scale=1.0, 1 unit = 1 meter. "
             "location/rotation are world-space; prefer world_bbox_corners / viewer.mesh for display. "

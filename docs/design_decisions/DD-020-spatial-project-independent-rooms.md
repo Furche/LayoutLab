@@ -211,3 +211,4 @@ There is **one** durable authoring/export shape: a Spatial Project with `rooms[]
 |---|---|---|
 | 0.1 | 2026-07-22 | Proposed — FC-001/WP-01 decomposition |
 | 1.0 | 2026-07-22 | **Accepted** — project-only format; no legacy single-room export; independent rooms MVP |
+| 1.1 | 2026-07-22 | WP-06 implemented in Core `0.10.40` (`move_room` / `duplicate_room` / room flags + project export) |
