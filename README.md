@@ -249,8 +249,8 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 |---|---|---|
 | Historical A–E | Docs → generators → module split → object model → clearances/analysis | Complete |
 | Planning slice | Recipes, candidates, shortlist, Apply-Gate, optional AI aesthetics | Shipped (`0.10.24`–`0.10.35`) |
-| **Active** | [FC-001/WP-01](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) architecture package | Current — DDs first, no feature code yet |
-| Queued | FC-001/WP-02 … WP-06 | After WP-01 Accept |
+| **Active** | [FC-001/WP-02](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) transactions (DD-018) | Current |
+| Queued | FC-001/WP-03 … WP-06 | After WP-02 |
 | Refinement | Staged Viewer explanation; aesthetics privacy stage 1; recipes on demand only | Not blocking FC-001 |
 | Later / deferred | WP-07, persisted variants, walkways, capture, shared walls, cloud; aesthetics privacy stage 2 | See MDD §17 |
 

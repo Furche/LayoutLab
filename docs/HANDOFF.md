@@ -3,7 +3,7 @@
 > Living onboarding doc for new chat sessions / agents.
 > **Update this file** when major milestones, DD status, or next steps change significantly.
 
-**Last updated:** 2026-07-22 (roadmap consolidation — FC-001/WP-01 focus)
+**Last updated:** 2026-07-22 (DD-018/019/020 Accepted — next FC-001/WP-02)
 **Plugin version:** 0.10.35 · **Branch:** `main`
 
 ------------------------------------------------------------------------
@@ -34,7 +34,8 @@ Aktueller Stand (2026-07-22):
 - DD-011 **Accepted** + **candidates v1 shipped**: `plan_layout` mode=candidates
 - DD-017 **Accepted** + evaluation schema + shortlist + revision + force path
 - **Shortlist selection** ✅ (`0.10.29`) · **blueprint SVG cards** ✅ (`0.10.33`, Tür/Fenster/Möbel) · **optionale AI-Ästhetik + visuelle Evidenz** ✅ (`0.10.34` / `0.10.35`)
-- Nächste Arbeit: [FC-001/WP-01](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) Architekturpaket; noch keine direkte Implementierung
+- Nächste Arbeit: **FC-001/WP-02** implementieren ([DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) Accepted) — Transaktionen, Revisionen, Preview/Commit, Undo/Redo, stale proposals; noch keine Viewport-Manipulation (WP-03+)
+- DD-018/019/020 **Accepted** (FC-001/WP-01)
 - DD-010/014 Accepted: Room Model + Standalone Core HTTP + Viewer
 - Core: python3 -m server (:8765); Viewer Vite (:5173)
 
@@ -163,15 +164,15 @@ Alexander gives precise architecture feedback (e.g. don't merge clearance + cons
 | 2026-07-10 | Parenting fixes v0.6.5–0.6.8 |
 | 2026-07-10 | DD-007 Accepted |
 
-**Latest commit (at last handoff update):** `29f860c` — FC-001 concept merge; docs roadmap consolidation in progress locally
+**Latest commit (at last handoff update):** `a4d947a` — roadmap consolidation; DD-018/019/020 Accepted locally (uncommitted)
 
 ------------------------------------------------------------------------
 
 # Next steps (agreed order)
 
-**Active focus:** [FC-001/WP-01](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) — architecture package only (Transactions/Authority, Semantic Direct Manipulation, Spatial Project). No direct feature implementation yet.
+**Active focus:** **FC-001/WP-02** — implement [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) (transactions, revisions, preview/commit, Undo/Redo ≥ 50, stale `base_revision`). DD-019/020 Accepted but WP-03…06 wait for this foundation.
 
-**After DD acceptance (queued, do not start early):** WP-02 → WP-03 / WP-04 / WP-05 → WP-06. Full ordered roadmap: [LayoutLab_Master_Design_Document.md](../LayoutLab_Master_Design_Document.md) §17.
+**After WP-02 (queued):** WP-03 → WP-04 → WP-05 → WP-06. Full ordered roadmap: [LayoutLab_Master_Design_Document.md](../LayoutLab_Master_Design_Document.md) §17.
 
 **On demand / Refinement (not blocking WP-01):** see MDD §17 — staged Viewer explanation;
 aesthetics privacy stage 1 (minimum disclosure when flag on); further recipes only when a real
@@ -261,10 +262,11 @@ See [documentation_map.md](documentation_map.md). Minimum on most changes:
 
 Living product track — **full ordered roadmap** lives in [LayoutLab_Master_Design_Document.md](../LayoutLab_Master_Design_Document.md) §17. This section only mirrors the active focus.
 
-1. 📋 **FC-001/WP-01** — architecture DDs for transactions/authority, semantic direct manipulation, Spatial Project
-2. 📋 Queued after Accept: WP-02 → WP-03 → WP-04 → WP-05 → WP-06 (behaviour in [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md))
-3. 📋 Refinement (nicht FC-001-Blocker): gestufte Viewer-Erklärung; Ästhetik-Privacy Stufe 1; Recipes nur bei konkretem Szenario
-4. ⏸ Deferred: Capture, shared-wall topology, multi-floor, persisted variants, cloud/auth; Ästhetik-Privacy Stufe 2 / Default-on
+1. ✅ **FC-001/WP-01** — DD-018 / DD-019 / DD-020 **Accepted**
+2. 📋 **FC-001/WP-02** — transactions / revisions / Undo (DD-018)
+3. 📋 Queued: WP-03 → WP-04 → WP-05 → WP-06
+4. 📋 Refinement (nicht FC-001-Blocker): gestufte Viewer-Erklärung; Ästhetik-Privacy Stufe 1; Recipes nur bei konkretem Szenario
+5. ⏸ Deferred: Capture, shared-wall topology, multi-floor, persisted variants, cloud/auth; Ästhetik-Privacy Stufe 2 / Default-on
 
 Binding order for agents: **Next steps** (this file) · behaviour in [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · binding architecture only after resulting DDs are accepted.
 
@@ -274,7 +276,9 @@ Binding order for agents: **Next steps** (this file) · behaviour in [FC-001](co
 
 | Date | Change |
 |---|---|
-| 2026-07-22 | Roadmap consolidation + refinement decisions (Viewer explanation staged; recipes on-demand; aesthetics privacy two-stage); Next steps = FC-001/WP-01 |
+| 2026-07-22 | DD-018/019/020 **Accepted**; next FC-001/WP-02 |
+| 2026-07-22 | FC-001/WP-01: DD-018/019/020 Proposed then Accepted (transactions, direct manipulation, Spatial Project) |
+| 2026-07-22 | Roadmap consolidation + refinement decisions (Viewer explanation staged; recipes on-demand; aesthetics privacy two-stage) |
 | 2026-07-21 | Shortlist 3D thumbnails (`0.10.31`): slim viewer_preview + WebGL cards |
 | 2026-07-21 | Shortlist sketch cards (`0.10.30`): label_de + ASCII cards in Viewer |
 | 2026-07-21 | Shortlist selection (`0.10.29`): chat + Viewer pick before Apply |

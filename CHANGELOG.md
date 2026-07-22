@@ -15,6 +15,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **DD-018 / DD-019 / DD-020 Accepted (FC-001/WP-01):** semantic transactions & authority; semantic direct manipulation; Spatial Project / independent rooms. Locked: session Undo ≥ 50 + integer revision; duplicate includes invalid; fixed elements → inactive; project `rooms[]` only (no legacy single-room export). Next: FC-001/WP-02.
 - **Feature Concept layer + FC-001:** `docs/concepts/` now holds stable cross-cutting product concepts between Future Ideas and binding DDs. FC-001 specifies semantic room/furniture manipulation, invalid-state preservation, opening lifecycle, transactions/Undo/authority and independent multi-room editing, with roadmap work-package references.
 - **Aesthetic visual evidence (`0.10.35`):** when AI aesthetics is enabled, Core renders standardized top-down blueprint PNGs per shortlist candidate (walls/door/window/furniture) and sends them as multimodal vision input; ASCII remains automatic fallback if the model rejects images. Rubric v0.2 records `evidence_kind`.
 - **Experimental AI aesthetics (`0.10.34`):** opt-in `LAYOUTLAB_AI_AESTHETICS=1` (or `aesthetics: true`) compares only the Core functional shortlist using candidate ASCII sketches; records provider/model, rubric, confidence and German rationale, and may recommend — never validate or promote — a shortlist member before explicit Apply.

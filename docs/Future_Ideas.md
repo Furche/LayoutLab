@@ -580,7 +580,7 @@ independent rooms are refined in
 
 | Topic | Possible later DD |
 |---|---|
-| Project / multi-room model | [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) → future Spatial Project DD; **DD-010 remains single-space only** |
+| Project / multi-room model | [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) (**Accepted**) from [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md); **DD-010 remains single-space room fabric** |
 | Multi-floor / building model | Separate later DD after the independent multi-room milestone |
 | Variants as first-class objects | **DD-011** + **DD-017** — candidates now; persisted project variants later |
 | In-app AI product experience | **DD-012** — Integrated AI Product Experience |
@@ -653,7 +653,7 @@ Integrated AI behaviour: §7. Spatial hierarchy: §13. Capture paths: §14.
 
 # 13. Spatial Project Model
 
-**Status:** Future Vision — **not** a binding schema; single-space Room Model → [DD-010](design_decisions/DD-010-room-model.md) (**Accepted**); direct editing and independent multi-room MVP → [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) (**Ready for decomposition**)
+**Status:** Future Vision — **not** a binding multi-floor schema; single-space Room Model → [DD-010](design_decisions/DD-010-room-model.md) (**Accepted**); Spatial Project / independent rooms → [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) (**Accepted**); direct editing → [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) (**Accepted**)
 
 LayoutLab must not assume a project is always exactly one room. **DD-010** starts with
 **one editable space** (Room Model). The hierarchy below remains the longer-term target.
@@ -811,7 +811,7 @@ Do **not** implement from this vision until separate DDs / Feature Concepts and 
 - Sync service / cloud backend
 - Custom render engine
 
-**Current focus:** [FC-001/WP-01](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) architecture package — see MDD §17 · `docs/HANDOFF.md`. Blender remains the primary Execution Runtime.
+**Current focus:** [FC-001/WP-02](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) ([DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) Accepted) — see MDD §17 · `docs/HANDOFF.md`. Blender remains the primary Execution Runtime.
 
 ------------------------------------------------------------------------
 
@@ -822,6 +822,9 @@ Do **not** implement from this vision until separate DDs / Feature Concepts and 
 | [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Accepted** (2026-07-16) — MVP in plugin v0.9.0 |
 | [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) | Layout Variants and Comparison | **Accepted** (2026-07-20) — Planning v1; amended by DD-017 (shortlist → AI recommend → User) |
 | [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) | Collaborative Planning + Contextual Evaluation | **Accepted** (2026-07-21) — schema, shortlist, revision, aesthetics slice shipped; calibration/UX refinement on demand |
+| [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) | Semantic Transactions / Authority | **Accepted** (2026-07-22) — FC-001/WP-01; next WP-02 |
+| [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) | Semantic Direct Manipulation | **Accepted** (2026-07-22) — FC-001/WP-01 |
+| [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) | Spatial Project / Independent Rooms | **Accepted** (2026-07-22) — project `rooms[]` only; no legacy single-room export |
 | DD-012 | Integrated AI Product Experience | **Not created** — reserve when implementing §7 / §12 |
 | DD-013 | Capture and Reconstruction Pipeline | **Not created** — reserve when implementing §14–§15 |
 | DD-014 | Standalone Runtime Path (viewer → write) | **Accepted — Phase A + B + B2** — [DD-014](design_decisions/DD-014-standalone-runtime-path.md); multi-space Spatial Project still later |

@@ -4,6 +4,26 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-22 — DD-018 / DD-019 / DD-020 Accepted (FC-001/WP-01)
+
+**Accepted defaults:** session Undo ≥ 50 + integer project revision; duplicate includes
+invalid associated objects; wall-hosted fixed elements become inactive (not deleted);
+Spatial Project with `rooms[]` is the only durable format (n = 1 normal; no legacy
+single-room export support).
+
+**Next:** FC-001/WP-02 implementation against DD-018.
+
+------------------------------------------------------------------------
+
+## 2026-07-22 — FC-001/WP-01: Proposed DD-018 / DD-019 / DD-020
+
+**Why:** FC-001 behaviour is locked, but implementation must not start without binding
+architecture. WP-01 splits the concept into three DDs: semantic transactions
+and authority (018), direct manipulation invariants (019), and Spatial Project with
+independent rooms only (020). DD-010 stays the single-space foundation.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — Refinement product decisions (docs only)
 
 **Decisions:** (1) Viewer score explanation remains Refinement — MVP soft warnings /

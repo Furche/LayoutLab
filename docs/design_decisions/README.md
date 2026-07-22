@@ -30,6 +30,9 @@ DDs; it does not make architectural choices binding by itself. Current example:
 | [DD-015](DD-015-soft-metrics-and-tradeoffs.md) | Soft metrics and rule tradeoffs (AI ↔ LayoutLab) | **Accepted** | 2026-07-20 |
 | [DD-016](DD-016-deterministic-layout-recipes.md) | Deterministic layout recipes (Planning Layer v0) | **Accepted** | 2026-07-20 |
 | [DD-017](DD-017-collaborative-planning-and-contextual-evaluation.md) | Collaborative planning and contextual candidate evaluation | **Accepted** | 2026-07-21 |
+| [DD-018](DD-018-semantic-transactions-and-authority.md) | Semantic transactions, revisions and authority | **Accepted** | 2026-07-22 |
+| [DD-019](DD-019-semantic-direct-manipulation.md) | Semantic direct manipulation | **Accepted** | 2026-07-22 |
+| [DD-020](DD-020-spatial-project-independent-rooms.md) | Spatial Project / independent multi-room MVP | **Accepted** | 2026-07-22 |
 
 When implementing anything that touches APIs, JSON protocol, generator behaviour,
 or UI patterns — check this index first.
@@ -38,7 +41,8 @@ or UI patterns — check this index first.
 Integrated AI and Capture Pipeline. **DD-011** + **DD-017** are **Accepted** (ephemeral
 candidates + collaborative evaluation shipped through `0.10.35`; persisted project variants
 remain later). **DD-014** is the Standalone Runtime path (Phase A + B room write + B2
-generators Accepted; multi-space Spatial Project via FC-001 → future DD).
+generators Accepted). **DD-018…DD-020** (**Accepted**, FC-001/WP-01) — next implementation
+is **FC-001/WP-02** (transactions), then WP-03…06 per MDD §17.
 Ordered product roadmap: [LayoutLab_Master_Design_Document.md](../../LayoutLab_Master_Design_Document.md) §17.
 Agent tools: see [../agent_tool_contract.md](../agent_tool_contract.md).
 Do not invent files for remaining reserved IDs until an actual proposal is written.

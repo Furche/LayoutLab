@@ -54,7 +54,7 @@ field names and commands belong in the appropriate contract documents.
 
 | ID | Concept | Status | Related architecture |
 |---|---|---|---|
-| [FC-001](FC-001-semantic-direct-manipulation-and-multi-room-editing.md) | Semantic Direct Manipulation and Multi-Room Editing | **Ready for decomposition** | DD-009, DD-010, DD-014; new DDs required before implementation |
+| [FC-001](FC-001-semantic-direct-manipulation-and-multi-room-editing.md) | Semantic Direct Manipulation and Multi-Room Editing | **Active** (WP-01 done; next WP-02) | DD-009, DD-010, DD-014; [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](../design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](../design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** |
 
 ------------------------------------------------------------------------
 

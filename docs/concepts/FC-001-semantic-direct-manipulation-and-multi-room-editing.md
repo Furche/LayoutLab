@@ -1,9 +1,9 @@
 # FC-001 — Semantic Direct Manipulation and Multi-Room Editing
 
-**Status:** Ready for decomposition
+**Status:** Active (WP-01 complete — DD-018/019/020 Accepted; next WP-02)
 **Date:** 2026-07-22
 **Owner:** Product / Architecture
-**Related:** [DD-009](../design_decisions/DD-009-ai-execution-boundary.md) · [DD-010](../design_decisions/DD-010-room-model.md) · [DD-014](../design_decisions/DD-014-standalone-runtime-path.md) · [Room Model](../room_model.md) · [Spatial Project vision](../Future_Ideas.md#13-spatial-project-model)
+**Related:** [DD-009](../design_decisions/DD-009-ai-execution-boundary.md) · [DD-010](../design_decisions/DD-010-room-model.md) · [DD-014](../design_decisions/DD-014-standalone-runtime-path.md) · [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) (**Accepted**) · [DD-019](../design_decisions/DD-019-semantic-direct-manipulation.md) (**Accepted**) · [DD-020](../design_decisions/DD-020-spatial-project-independent-rooms.md) (**Accepted**) · [Room Model](../room_model.md) · [Spatial Project vision](../Future_Ideas.md#13-spatial-project-model)
 
 ------------------------------------------------------------------------
 
@@ -427,15 +427,18 @@ This concept deliberately spans several subsystems. It should not become one gia
 DD or one giant implementation ticket. At minimum, implementation requires explicit
 decisions for:
 
-1. **Transactions, revisions, Undo/Redo and authority** — shared mutation boundary
-   for user, AI and imports.
-2. **Semantic direct manipulation** — preview/commit, support surfaces, invalid
-   states and parametric regeneration.
-3. **Spatial Project / Multi-Room** — project identity, room-local coordinates,
-   room transforms, membership and independent-room MVP.
+1. **Transactions, revisions, Undo/Redo and authority** — [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) (**Accepted**)
+2. **Semantic direct manipulation** — [DD-019](../design_decisions/DD-019-semantic-direct-manipulation.md) (**Accepted**)
+3. **Spatial Project / Multi-Room** — [DD-020](../design_decisions/DD-020-spatial-project-independent-rooms.md) (**Accepted**)
 
 DD-010 remains the accepted single-space foundation. This concept extends it; it
 does not rewrite it.
+
+**WP-01 status:** complete. Next implementation package is **FC-001/WP-02**
+(transactions / revisions / Undo). Locked Accept defaults include: session Undo ≥ 50
+with integer revision; duplicate includes invalid membership; fixed elements become
+inactive not deleted; Spatial Project is the only durable format (`rooms[]`, n = 1
+normal; no legacy single-room export).
 
 ------------------------------------------------------------------------
 
@@ -446,8 +449,8 @@ themselves.
 
 | ID | Work package | Entry condition |
 |---|---|---|
-| **FC-001/WP-01** | Architecture package: define the three decisions above and resolve schema ownership | Concept reviewed |
-| **FC-001/WP-02** | Transaction/revision foundation with preview, commit, Undo/Redo and stale proposal protection | Relevant DD accepted |
+| **FC-001/WP-01** | Architecture package: define the three decisions above and resolve schema ownership | **Done** — DD-018/019/020 Accepted |
+| **FC-001/WP-02** | Transaction/revision foundation with preview, commit, Undo/Redo and stale proposal protection | **Next** — DD-018 Accepted |
 | **FC-001/WP-03** | Single-room furniture selection, XY move/Z rotation, floor support, duplicate/delete/hide/lock | WP-02 foundation |
 | **FC-001/WP-04** | Parametric furniture resize through generator parameters and regeneration | WP-03 + generator contract review |
 | **FC-001/WP-05** | Wall/corner resize, opening host behaviour, inactive opening restoration and invalid furniture visualization | WP-02 + direct manipulation DD |
@@ -457,11 +460,12 @@ themselves.
 Each work package must update binding contracts and tests in the same change. No
 work package may implement raw viewport-only state that bypasses Core.
 
-WP-01 must also decide:
+WP-01 locked defaults (see DD-018/019/020 Acceptance notes):
 
-- whether duplicating a room includes invalid but still associated objects;
-- how wall-hosted fixed elements such as radiators behave when their host or an
-  adjacent wall moves, including invalid/inactive restoration semantics.
+- duplicate room includes invalid associated objects and inactive openings/fixed elements;
+- wall-hosted fixed elements become inactive (not deleted) when swallowed, like openings;
+- session Undo default ≥ 50; integer project revision;
+- Spatial Project with `rooms[]` is the only durable format (no legacy single-room export).
 
 ------------------------------------------------------------------------
 

@@ -275,7 +275,7 @@ Candidates) · DD-014 (Standalone Core + Viewer) · DD-015 / DD-016 / DD-017 (So
 Recipes, collaborative Evaluation). Index: `docs/design_decisions/README.md`.
 
 **Noch nicht angelegt (Reserve):** DD-012 Integrated AI Product Experience · DD-013 Capture —
-siehe `docs/Future_Ideas.md` §19. Spatial Project / Multi-Room: aus [FC-001](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) ableiten (WP-01), nicht stillschweigend.
+siehe `docs/Future_Ideas.md` §19. Spatial Project / Multi-Room: [DD-020](docs/design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** (independent rooms MVP).
 
 ------------------------------------------------------------------------
 
@@ -408,26 +408,24 @@ Vermeiden:
 
 | ID | Scope | Status |
 |---|---|---|
-| [FC-001/WP-01](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Architecture package: Transactions/Authority, Semantic Direct Manipulation, Spatial Project — Schema-Ownership klären | **Current** |
+| [FC-001/WP-02](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Transaction/revision foundation (DD-018): preview/commit, Undo/Redo ≥ 50, stale-proposal protection | **Current** |
 
-Noch **keine** direkte Feature-Implementierung. Zuerst die notwendigen Architekturentscheidungen
-ableiten und reviewen lassen.
+WP-01 complete: [DD-018](docs/design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](docs/design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](docs/design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted**.
 
 ### Queued
 
-Reihenfolge beibehalten: WP-01 → WP-02 → WP-03 / WP-04 / WP-05 → WP-06.
+Reihenfolge: WP-02 → WP-03 / WP-04 / WP-05 → WP-06.
 
 | ID | Scope | Entry |
 |---|---|---|
-| [FC-001/WP-02](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Semantische Transaktionen, Revisionen, Preview/Commit, Undo/Redo, stale-proposal protection, gemeinsame Authority-Grenze | Nach akzeptierten DDs aus WP-01 |
-| [FC-001/WP-03](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Direkte Möbelbearbeitung (Select, XY-Move, Z-Rotation, Floor-Support, duplicate/delete/hide/lock) | Nach WP-02 |
+| [FC-001/WP-03](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Direkte Möbelbearbeitung (Select, XY-Move, Z-Rotation, Floor-Support, duplicate/delete/hide/lock) | Nach WP-02 · DD-019 |
 | [FC-001/WP-04](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Parametrische Möbel-Größenänderung (Generator-Parameter + Regeneration, kein Mesh-Scaling) | Nach WP-03 |
-| [FC-001/WP-05](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Wand-/Ecken-Resize, Opening-Host-Verhalten, inactive openings, invalid furniture visualization | Nach WP-02 + Direct-Manipulation-DD |
-| [FC-001/WP-06](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Unabhängiges Multi-Room Spatial Project, lokale Transforms, Whole-Room-Ops | Nach Spatial-Project-DD |
+| [FC-001/WP-05](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Wand-/Ecken-Resize, Opening-Host-Verhalten, inactive openings, invalid furniture visualization | Nach WP-02 · DD-019 |
+| [FC-001/WP-06](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Spatial Project (`rooms[]` only format), lokale Transforms, Whole-Room-Ops | Nach WP-02 · DD-020 |
 
 ### Refinement / On demand
 
-Nicht blockierend für **FC-001/WP-01**. Keine festen Sprint-Zusagen außer dem
+Nicht blockierend für **FC-001/WP-02+**. Keine festen Sprint-Zusagen außer dem
 Minimal-Hinweis für experimentelle AI-Ästhetik (Stufe 1 unten).
 
 **Viewer Score- / Trade-off-Erklärung (Refinement)**
