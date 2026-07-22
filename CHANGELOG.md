@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -43,6 +44,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -76,6 +78,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -93,6 +96,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -136,6 +140,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -159,6 +164,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -181,6 +187,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -193,6 +200,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -291,6 +299,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -320,6 +329,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -344,6 +354,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -365,6 +376,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -487,6 +499,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -510,6 +523,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -538,6 +552,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
@@ -574,6 +589,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
