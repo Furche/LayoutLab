@@ -104,17 +104,21 @@ export function furnitureBounds(exportData, objectId) {
 function fillMat(color) {
   return new THREE.MeshBasicMaterial({
     color,
-    depthTest: false,
-    depthWrite: false,
+    depthTest: true,
+    depthWrite: true,
     side: THREE.DoubleSide,
+    fog: false,
+    toneMapped: false,
   });
 }
 
 function lineMat(color) {
   return new THREE.LineBasicMaterial({
     color,
-    depthTest: false,
-    depthWrite: false,
+    depthTest: true,
+    depthWrite: true,
+    fog: false,
+    toneMapped: false,
   });
 }
 

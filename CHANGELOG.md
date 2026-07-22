@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -41,6 +42,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -72,6 +74,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -87,6 +90,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -128,6 +132,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -149,6 +154,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -169,6 +175,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -179,6 +186,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -275,6 +283,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -302,6 +311,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -324,6 +334,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -343,6 +354,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -463,6 +475,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -484,6 +497,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -510,6 +524,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.
@@ -544,6 +559,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.
 - **Gizmo pick/hover polish (`0.10.54`):** opaque flat handles; scale outside rotate ring; prioritized hit targets; mouseover highlight + pointer cursor.
 - **Flat 2D gizmos (`0.10.53`):** selection handles redrawn as unlit overlay arrows / ring / discs (no volumetric 3D cylinders/spheres).
 - **Clearance rotation fix (`0.10.52`):** clearances export oriented mesh wireframes so they rotate with furniture instead of AABB scale/shear.

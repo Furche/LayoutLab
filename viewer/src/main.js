@@ -4,6 +4,7 @@ import {
   buildSceneFromExport,
   clearGroup,
   computeFit,
+  createWorldRoot,
   fitCameraToRoot,
   getFitViewPose,
   getPresetPose,
@@ -900,6 +901,12 @@ const content = new THREE.Group();
 content.name = "content";
 scene.add(content);
 
+/** Gizmos in a separate scene so transparent clearances cannot tint them. */
+const gizmoScene = new THREE.Scene();
+const gizmoRoot = createWorldRoot();
+gizmoRoot.name = "gizmo_blender_z_up";
+gizmoScene.add(gizmoRoot);
+
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
@@ -1689,7 +1696,7 @@ function rebuildGizmos() {
   gizmoGroup = null;
   if (!sceneRoot || !lastExportData || !selectionTarget) return;
   gizmoGroup = buildSelectionGizmos(lastExportData, selectionTarget);
-  sceneRoot.add(gizmoGroup);
+  gizmoRoot.add(gizmoGroup);
 }
 
 function pickGizmo(clientX, clientY) {
@@ -1748,6 +1755,11 @@ function frame(now = performance.now()) {
   updateCameraTween(now);
   controls.update();
   renderer.render(scene, camera);
+  // Overlay pass: solid colors on top of translucent clearances/openings.
+  if (gizmoGroup) {
+    renderer.clearDepth();
+    renderer.render(gizmoScene, camera);
+  }
   requestAnimationFrame(frame);
 }
 
