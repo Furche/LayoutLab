@@ -21,6 +21,7 @@ import {
   roomRotateCommand,
   resizeCommand,
   setGizmoHover,
+  pickRoomRotateAnnulus,
 } from "./gizmos.js";
 import {
   createPreviewClient,
@@ -1863,8 +1864,24 @@ function pickGizmo(clientX, clientY) {
   pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
   pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
+  // Ensure world matrices are current (gizmo scene may not have rendered yet this frame).
+  gizmoRoot.updateMatrixWorld(true);
   const hits = raycaster.intersectObject(gizmoGroup, true);
-  return resolveGizmoPick(hits);
+  const fromRay = resolveGizmoPick(hits);
+  if (fromRay) return fromRay;
+  // Fallback: room rotate annulus in world XY (raycast often misses thin rings).
+  if (selectionTarget?.type === "room") {
+    const floor = hitBlenderFloorXY(
+      raycaster,
+      camera,
+      sceneRoot,
+      clientX,
+      clientY,
+      renderer.domElement,
+    );
+    return pickRoomRotateAnnulus(lastExportData, selectionTarget, floor);
+  }
+  return null;
 }
 
 function updateGizmoHover(clientX, clientY) {
@@ -2733,12 +2750,13 @@ renderer.domElement.addEventListener("pointerup", (ev) => {
   const dy = ev.clientY - pointerDown.y;
   pointerDown = null;
   if (dx * dx + dy * dy > 16) return; // drag = orbit, not click
+  // Prefer gizmo again on release (ring click must not clear selection).
+  if (pickGizmo(ev.clientX, ev.clientY)) return;
   const hit = pickObject(ev.clientX, ev.clientY, { preferFurniture: true });
   if (hit && !isGizmoMesh(hit)) selectMesh(hit);
   else if (!hit) {
-    clearSelection();
-    clearFindingHighlights();
-    setStatus("Selection cleared");
+    // Empty space: keep room/furniture selection — only clear via Esc.
+    // Accidental "through ring" clicks used to deselect here.
   }
 });
 

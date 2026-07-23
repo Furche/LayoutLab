@@ -182,7 +182,19 @@ function finishHandle(group, meta) {
 }
 
 function makeHit(geo, meta) {
-  const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ visible: false }));
+  // Must stay raycastable: material.visible=false is a common footgun, and FrontSide
+  // rings miss from many camera angles. Opacity-0 + DoubleSide still receives picks.
+  const mesh = new THREE.Mesh(
+    geo,
+    new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0,
+      depthTest: false,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      toneMapped: false,
+    }),
+  );
   mesh.userData.gizmoHit = true;
   styleOverlay(mesh);
   return mesh;
@@ -403,8 +415,8 @@ export function buildRoomGizmo(room) {
     }),
   );
   const half = Math.max(w, d) * 0.5;
-  // Keep ring inside wall discs so wall handles stay reachable; widen band for picking.
-  const ringR = Math.max(half * 0.72, 0.85);
+  // Inside wall discs; wide band so top-view picks are reliable on large rooms.
+  const ringR = Math.max(half * 0.78, 0.9);
   moveRoot.add(
     makeRotateRing(
       ringR,
@@ -414,8 +426,10 @@ export function buildRoomGizmo(room) {
         kind: "rotate_room_z",
         label: "room-rotate-z",
         startRotationZ: rz,
+        ringRadius: ringR,
+        ringBand: 0.2,
       },
-      { band: 0.14, hitPad: 0.22 },
+      { band: 0.2, hitPad: 0.28 },
     ),
   );
   group.add(moveRoot);
@@ -490,6 +504,41 @@ export function buildSelectionGizmos(exportData, selection) {
 
 export function isGizmoMesh(mesh) {
   return Boolean(mesh?.userData?.gizmo);
+}
+
+/**
+ * Screen/world fallback when raycast misses a thin room rotate ring.
+ * @returns {object | null} synthetic handle carrying gesture meta
+ */
+export function pickRoomRotateAnnulus(exportData, selection, floorHit) {
+  if (!selection || selection.type !== "room" || !selection.roomId || !floorHit) return null;
+  const room = (exportData?.rooms || []).find((r) => r?.room_id === selection.roomId);
+  if (!room || room.locked) return null;
+  const rect = roomRect(room);
+  if (!rect) return null;
+  const half = Math.max(rect.w, rect.d) * 0.5;
+  const ringR = Math.max(half * 0.78, 0.9);
+  const band = 0.2;
+  const pad = 0.28;
+  const [cx, cy] = roomLocalToWorld(rect, rect.w * 0.5, rect.d * 0.5);
+  const dx = floorHit.x - cx;
+  const dy = floorHit.y - cy;
+  const dist = Math.hypot(dx, dy);
+  const inner = Math.max(ringR - band - pad, 0.05);
+  const outer = ringR + pad;
+  if (dist < inner || dist > outer) return null;
+  return {
+    userData: {
+      gizmo: true,
+      gizmoHit: true,
+      kind: "rotate_room_z",
+      target: "room",
+      roomId: selection.roomId,
+      roomRz: rect.rz,
+      startRotationZ: rect.rz,
+      label: "room-rotate-z",
+    },
+  };
 }
 
 /**

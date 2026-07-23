@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Room rotate ring pick reliability (`0.10.62`):** DoubleSide opacity-0 hit meshes, matrixWorld refresh, world-XY annulus fallback; empty clicks no longer clear selection (Esc still does).
 - **Room rotate ring pick fix (`0.10.61`):** wider hit band + higher pick priority so clicks hit the ring instead of furniture underneath.
 - **Room Z-rotate (`0.10.60`):** Core `rotate_room` (footprint-center pivot, fabric + VALID furniture follow, INVALID stays); room `rotation_z_deg` drives world projection; Viewer room rotate ring + local wall/corner drag.
 - **Chat thinking indicator (`0.10.59`):** AI-Chat zeigt „Denkt nach…“ mit animierten Dots; Input/Send gesperrt bis die Antwort da ist.
