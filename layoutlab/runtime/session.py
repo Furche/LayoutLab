@@ -42,7 +42,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.62"
+LAYOUTLAB_VERSION = "0.10.63"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -233,6 +233,8 @@ def _room_objects(model):
         if not room_core.is_attachment_active(opening):
             continue
         loc, dims = room_core.opening_world_box(model, opening)
+        opening_corners = room_core.opening_world_corners(model, opening)
+        opening_mesh = room_core.box_mesh_from_corners(opening_corners)
         objects.append(
             _object_dict(
                 name=f"{prefix}opening_{opening['name']}",
@@ -241,8 +243,15 @@ def _room_objects(model):
                 dimensions=dims,
                 role="room_opening",
                 object_id=room_id,
-                world_bbox_corners=_box_corners(loc, dims),
-                viewer=viewer_block_for_role("room_opening", display_type="WIRE"),
+                world_bbox_corners=[round_corner(c) for c in opening_corners],
+                viewer=viewer_block_for_role(
+                    "room_opening",
+                    display_type="WIRE",
+                    mesh={
+                        "vertices": [_r3(v) for v in opening_mesh["vertices"]],
+                        "faces": triangulate_faces(opening_mesh["faces"]),
+                    },
+                ),
                 entity_id=opening.get("opening_id"),
                 extra_props={
                     "layoutlab_room_id": room_id,
@@ -256,6 +265,8 @@ def _room_objects(model):
         if not room_core.is_attachment_active(fixed):
             continue
         loc, dims = room_core.fixed_element_world_box(model, fixed)
+        fixed_corners = room_core.fixed_element_world_corners(model, fixed)
+        fixed_mesh = room_core.box_mesh_from_corners(fixed_corners)
         objects.append(
             _object_dict(
                 name=f"{prefix}fixed_{fixed['name']}",
@@ -264,8 +275,14 @@ def _room_objects(model):
                 dimensions=dims,
                 role="room_fixed",
                 object_id=room_id,
-                world_bbox_corners=_box_corners(loc, dims),
-                viewer=viewer_block_for_role("room_fixed"),
+                world_bbox_corners=[round_corner(c) for c in fixed_corners],
+                viewer=viewer_block_for_role(
+                    "room_fixed",
+                    mesh={
+                        "vertices": [_r3(v) for v in fixed_mesh["vertices"]],
+                        "faces": triangulate_faces(fixed_mesh["faces"]),
+                    },
+                ),
                 entity_id=fixed.get("fixed_element_id"),
                 extra_props={
                     "layoutlab_room_id": room_id,

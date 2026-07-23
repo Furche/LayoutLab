@@ -783,9 +783,27 @@ def _wall_slot_corners(model, wall, offset, span, z0, height, depth, inward):
     return [room_local_to_world(model, c) for c in local_corners]
 
 
+def _opening_slot_depth(model):
+    return max(_f(model.get("wall_thickness"), DEFAULT_WALL_THICKNESS) * 1.2, 0.025)
+
+
+def opening_world_corners(model, opening):
+    """Eight oriented world corners of an opening slot (follows room ``rotation_z_deg``)."""
+    wall = find_wall(model, opening["wall_id"])
+    return _wall_slot_corners(
+        model,
+        wall,
+        opening["offset"],
+        opening["width"],
+        opening.get("sill_height", 0.0),
+        opening["height"],
+        depth=_opening_slot_depth(model),
+        inward=False,
+    )
+
+
 def opening_world_box(model, opening):
     wall = find_wall(model, opening["wall_id"])
-    depth = max(_f(model.get("wall_thickness"), DEFAULT_WALL_THICKNESS) * 1.2, 0.025)
     return _wall_slot_box(
         model,
         wall,
@@ -793,8 +811,23 @@ def opening_world_box(model, opening):
         opening["width"],
         opening.get("sill_height", 0.0),
         opening["height"],
-        depth=depth,
+        depth=_opening_slot_depth(model),
         inward=False,
+    )
+
+
+def opening_access_world_corners(model, opening, depth=0.7):
+    """Eight oriented world corners of the inward door/window access box."""
+    wall = find_wall(model, opening["wall_id"])
+    return _wall_slot_corners(
+        model,
+        wall,
+        opening["offset"],
+        opening["width"],
+        opening.get("sill_height", 0.0),
+        opening["height"],
+        depth=_f(depth, 0.7),
+        inward=True,
     )
 
 
@@ -813,6 +846,21 @@ def opening_access_world_box(model, opening, depth=0.7):
     )
 
 
+def fixed_element_world_corners(model, fixed):
+    """Eight oriented world corners of a fixed element (e.g. radiator)."""
+    wall = find_wall(model, fixed["wall_id"])
+    return _wall_slot_corners(
+        model,
+        wall,
+        fixed["offset"],
+        fixed["width"],
+        0.0,
+        fixed["height"],
+        depth=fixed["depth"],
+        inward=True,
+    )
+
+
 def fixed_element_world_box(model, fixed):
     wall = find_wall(model, fixed["wall_id"])
     return _wall_slot_box(
@@ -825,6 +873,27 @@ def fixed_element_world_box(model, fixed):
         depth=fixed["depth"],
         inward=True,
     )
+
+
+# Bottom 0–3, top 4–7 — matches ``_wall_slot_corners`` winding.
+_BOX_QUAD_FACES = (
+    (0, 1, 2, 3),
+    (4, 7, 6, 5),
+    (0, 4, 5, 1),
+    (1, 5, 6, 2),
+    (2, 6, 7, 3),
+    (3, 7, 4, 0),
+)
+
+
+def box_mesh_from_corners(corners):
+    """Viewer mesh dict from eight box corners (triangulated quads)."""
+    if len(corners) < 8:
+        raise ValueError("box_mesh_from_corners requires 8 corners")
+    return {
+        "vertices": [[float(c[0]), float(c[1]), float(c[2])] for c in corners[:8]],
+        "faces": [list(face) for face in _BOX_QUAD_FACES],
+    }
 
 
 def wall_plane_corners(model, wall):

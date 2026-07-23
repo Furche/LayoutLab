@@ -153,6 +153,68 @@ class TestRotateRoom(unittest.TestCase):
         xs = [c[0] for c in corners]
         self.assertGreater(max(xs) - min(xs), 4.0)
 
+    def test_export_opening_and_fixed_oriented_after_rotate(self):
+        room = self._create_room()
+        rid = room["room_id"]
+        self.session.apply_command(
+            {
+                "action": "add_opening",
+                "params": {
+                    "room_id": rid,
+                    "wall_side": "west",
+                    "kind": "window",
+                    "opening_name": "win",
+                    "offset": 0.5,
+                    "width": 1.2,
+                    "height": 1.4,
+                    "sill_height": 0.9,
+                },
+            }
+        )
+        self.session.apply_command(
+            {
+                "action": "add_fixed_element",
+                "params": {
+                    "room_id": rid,
+                    "wall_side": "north",
+                    "kind": "radiator",
+                    "name": "rad",
+                    "offset": 1.0,
+                    "width": 1.0,
+                    "depth": 0.12,
+                    "height": 0.6,
+                },
+            }
+        )
+        self.session.apply_command({"action": "rotate_room", "room_id": rid, "degrees": 45})
+        export = export_viewer_scene(self.session)
+        model = self.session.get_by_id(rid)
+        opening = next(o for o in export["objects"] if "opening_win" in o["name"])
+        fixed = next(o for o in export["objects"] if "fixed_rad" in o["name"])
+
+        ov = opening.get("viewer") or {}
+        self.assertEqual(ov.get("primitive"), "mesh")
+        self.assertEqual(ov.get("display"), "wire")
+        overts = ov.get("vertices") or []
+        self.assertEqual(len(overts), 8)
+        local_o = [room_core.room_world_to_local(model, v) for v in overts]
+        ox = [c[0] for c in local_o]
+        oy = [c[1] for c in local_o]
+        # West opening: thin in local X, span along local Y
+        self.assertLess(max(ox) - min(ox), 0.1)
+        self.assertGreater(max(oy) - min(oy), 1.0)
+
+        fv = fixed.get("viewer") or {}
+        self.assertEqual(fv.get("primitive"), "mesh")
+        fverts = fv.get("vertices") or []
+        self.assertEqual(len(fverts), 8)
+        local_f = [room_core.room_world_to_local(model, v) for v in fverts]
+        fx = [c[0] for c in local_f]
+        fy = [c[1] for c in local_f]
+        # North radiator: span along local X, thin in local Y
+        self.assertGreater(max(fx) - min(fx), 0.8)
+        self.assertLess(max(fy) - min(fy), 0.25)
+
     def test_locked_room_rejects_rotate(self):
         room = self._create_room()
         rid = room["room_id"]

@@ -30,6 +30,18 @@ class ViewerExportTests(unittest.TestCase):
         hint = _mod.viewer_block_for_role("room_opening", display_type="WIRE")
         self.assertEqual(hint["display"], "wire")
 
+    def test_opening_wire_keeps_oriented_mesh(self):
+        mesh = {
+            "vertices": [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]],
+            "faces": [[0, 1, 2], [0, 2, 3]],
+        }
+        hint = _mod.viewer_block_for_role(
+            "room_opening", display_type="WIRE", mesh=mesh
+        )
+        self.assertEqual(hint["primitive"], "mesh")
+        self.assertEqual(hint["display"], "wire")
+        self.assertEqual(len(hint["vertices"]), 4)
+
     def test_wall_quad_corners(self):
         corners = [[0, 0, 0], [0, 0, 2], [1, 0, 2], [1, 0, 0]]
         hint = _mod.viewer_block_for_role("room_wall", corners=corners)

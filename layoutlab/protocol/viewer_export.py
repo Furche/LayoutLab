@@ -40,13 +40,11 @@ def viewer_block_for_role(role, *, corners=None, display_type=None, mesh=None):
 
     if role in WIRE_ROLES or (display_type and str(display_type).upper() == "WIRE"):
         hint["display"] = "wire"
-        # Clearances keep oriented mesh so Z-rotation is visible in the viewer.
-        # Other wire roles (e.g. openings) stay as AABB boxes.
-        if role != "clearance":
+        # Keep oriented meshes for clearances + openings (AABB looks unrotated after room Z).
+        if role not in ("clearance", "room_opening") and hint.get("primitive") == "mesh":
             hint.pop("vertices", None)
             hint.pop("faces", None)
-            if hint.get("primitive") == "mesh":
-                hint["primitive"] = "box"
+            hint["primitive"] = "box"
 
     return hint or None
 
