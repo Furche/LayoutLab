@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Drag world grid (`0.10.68`):** While moving furniture, a fine (10 cm) world-anchored grid appears at the object Z with a soft radial fade that follows the selection.
 - **Lamp join anchor at foot (`0.10.67`):** Multi-mesh join prefers lowest-Z piece so overhanging shades no longer become the object origin.
 - **Furniture magnet snap (`0.10.66`):** Drag snaps onto host surfaces (`place_on`); hold **Alt** to disable magnet and stay on floor.
 - **Viewer Add menu (`0.10.65`):** Viewport **Add** creates a room or furniture (bed/desk/wardrobe/lamp) into the focused room via Core commands.

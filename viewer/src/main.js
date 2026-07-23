@@ -43,6 +43,7 @@ import {
   wallMoveCommand,
   cornerMoveCommand,
 } from "./manipulate.js";
+import { createDragGrid } from "./dragGrid.js";
 import kidsRoomFixture from "../../tests/fixtures/reference_kids_room_export.json";
 import kidsRoomFindings from "../../tests/fixtures/reference_kids_room_export_findings.json";
 
@@ -1071,6 +1072,9 @@ const gizmoRoot = createWorldRoot();
 gizmoRoot.name = "gizmo_blender_z_up";
 gizmoScene.add(gizmoRoot);
 
+const dragGrid = createDragGrid();
+gizmoRoot.add(dragGrid.root);
+
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
@@ -1938,8 +1942,8 @@ function frame(now = performance.now()) {
   controls.update();
   renderer.autoClear = true;
   renderer.render(scene, camera);
-  // Overlay pass: keep color buffer, only reset depth so handles draw on top.
-  if (gizmoGroup) {
+  // Overlay: gizmos and drag-grid (depth cleared so they sit above scene).
+  if (gizmoGroup || dragGrid.root.visible) {
     renderer.autoClear = false;
     renderer.clearDepth();
     renderer.render(gizmoScene, camera);
@@ -2227,6 +2231,29 @@ function gestureLabel(g) {
   return "Editing";
 }
 
+function updateDragGridForFurnitureGesture() {
+  if (!gesture || gesture.kind !== "move_axis" || gesture.target !== "furniture") {
+    dragGrid.hide();
+    return;
+  }
+  const loc = gesture._location || gesture.startPose?.location;
+  if (!loc) {
+    dragGrid.hide();
+    return;
+  }
+  const [hx, hy] = gesture.halfXy || [0.1, 0.1];
+  const centre = footprintCentreFromPose(
+    { location: loc, rotation_z_deg: gesture.startPose?.rotation_z_deg || 0 },
+    hx,
+    hy,
+  );
+  dragGrid.show(centre[0], centre[1], loc[2] ?? 0);
+}
+
+function hideDragGrid() {
+  dragGrid.hide();
+}
+
 async function endGestureCommit() {
   if (!gesture) return;
   const g = gesture;
@@ -2237,6 +2264,7 @@ async function endGestureCommit() {
   const dragged = Math.hypot(endX - startX, endY - startY) >= 4;
   if (!g.started && !dragged) {
     gesture = null;
+    hideDragGrid();
     controls.enabled = true;
     return;
   }
@@ -2245,10 +2273,12 @@ async function endGestureCommit() {
     if (!g.started) await ensureGesturePreview();
     if (!gesture?.started && !previewClient.active) {
       gesture = null;
+      hideDragGrid();
       return;
     }
     const cmds = g.commands();
     gesture = null;
+    hideDragGrid();
     await pushGesturePreview(cmds);
     const committed = await previewClient.commit(`viewer ${g.kind}`);
     if (!committed?.ok) throw new Error(committed?.error || "commit failed");
@@ -2256,6 +2286,7 @@ async function endGestureCommit() {
     setStatus(`${gestureLabel(g)} · revision ${committed.revision}`, "ok");
   } catch (err) {
     gesture = null;
+    hideDragGrid();
     try {
       const cancelled = await previewClient.cancel();
       if (cancelled?.export) applyExportFromCore(cancelled, "Core · preview cancel", { quiet: true });
@@ -2269,6 +2300,7 @@ async function endGestureCommit() {
 async function endGestureCancel() {
   if (!gesture && !previewClient.active) return;
   gesture = null;
+  hideDragGrid();
   controls.enabled = true;
   try {
     const cancelled = await previewClient.cancel();
@@ -2564,9 +2596,11 @@ async function ensureGesturePreview() {
     await pushGesturePreview(gesture.commands(), { begin: true });
     if (!gesture) return;
     gesture.started = true;
+    updateDragGridForFurnitureGesture();
     setStatus(`${gestureLabel(gesture)}… release to commit, Esc to cancel`);
   } catch (err) {
     gesture = null;
+    hideDragGrid();
     controls.enabled = true;
     setStatus(`Preview begin failed: ${err.message}`, "error");
   } finally {
@@ -2646,6 +2680,7 @@ async function updateGesture(ev) {
       }
       gesture._location = [nextXY[0], nextXY[1], nextZ];
       skipExportReload = true;
+      updateDragGridForFurnitureGesture();
     } else {
       // Constrain along room-local axes when the room is rotated.
       const rz = gesture.roomRz || 0;
