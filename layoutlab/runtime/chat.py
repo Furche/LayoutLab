@@ -32,12 +32,12 @@ add_fixed_element, update_fixed_element, remove_fixed_element, move_wall, move_c
 move_room, rotate_room, duplicate_room, hide_room, show_room, set_room_flags, set_room_locked,
 delete_collection_objects, delete_prefix, run_generator, analyze_layout,
 select_object, move, rotate_z, duplicate, delete, hide, show, set_flags, set_locked,
-regenerate, set_parameter, resize.
+set_support, place_on, regenerate, set_parameter, resize.
 
 Rules:
 - Prefer Metric meters (1 unit = 1 m).
 - For a fresh kids room, clear collection "layoutlab_room" first, then create_room.
-- Generators: bed_basic, desk_basic, wardrobe_basic only.
+- Generators: bed_basic, desk_basic, wardrobe_basic, lamp_basic.
 - Do not invent bpy or free-form Python.
 - If the request is unclear, return commands: [] and ask a clarifying question in reply.
 - If scene context is provided, prefer updating that room rather than inventing a second space.

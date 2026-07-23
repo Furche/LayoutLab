@@ -8,6 +8,7 @@ user directory on addon register (if missing).
 | `bed_basic` | Parametric low bed | [bed_basic.md](bed_basic.md) |
 | `wardrobe_basic` | Parametric wardrobe with doors, shelves, clearance | [wardrobe_basic.md](wardrobe_basic.md) |
 | `desk_basic` | Parametric desk with chair-access clearance | [desk_basic.md](desk_basic.md) |
+| `lamp_basic` | Minimal table lamp (WP-07 stacking demo) | [lamp_basic.md](lamp_basic.md) |
 
 ## Authoring Checklist
 

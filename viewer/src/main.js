@@ -1552,6 +1552,7 @@ function selectMesh(mesh, opts = {}) {
     pose ? `xy ${pose.location[0].toFixed(2)}, ${pose.location[1].toFixed(2)}` : null,
     pose ? `rz ${pose.rotation_z_deg.toFixed(1)}°` : null,
     pose?.validity ? `validity ${pose.validity}` : null,
+    pose?.support_ref ? `support ${pose.support_ref}` : null,
     ud.clearance_name ? `clearance ${ud.clearance_name}` : null,
   ].filter(Boolean);
   el.selection.innerHTML = bits

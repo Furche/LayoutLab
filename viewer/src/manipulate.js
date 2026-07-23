@@ -101,6 +101,7 @@ export function poseFromExport(exportData, objectId) {
     location: [Number(loc[0]) || 0, Number(loc[1]) || 0, Number(loc[2]) || 0],
     rotation_z_deg: Number(rz) || 0,
     validity: main.layoutlab?.validity || null,
+    support_ref: main.layoutlab?.support_ref || null,
     name: main.name || objectId,
   };
 }

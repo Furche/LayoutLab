@@ -19,6 +19,7 @@ from .headless_api import execute_generator_headless
 from .mesh_store import MeshStore, triangulate_faces
 from . import furniture_ops
 from . import room_ops
+from . import support_surfaces
 from . import transactions as tx
 
 # Keep in sync with layoutlab/__init__.py bl_info version when bumping the plugin.
@@ -42,7 +43,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.63"
+LAYOUTLAB_VERSION = "0.10.64"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -83,6 +84,8 @@ SESSION_ACTIONS = frozenset(
         "set_flags",
         "set_object_flags",
         "set_locked",
+        "set_support",
+        "place_on",
         # FC-001/WP-04 parametric resize
         "regenerate",
         "set_parameter",
@@ -351,6 +354,7 @@ def _furniture_export_object(obj):
             "generator": obj.get("layoutlab_generator"),
             "part_type": obj.get("layoutlab_part_type"),
             "support_ref": obj.get("layoutlab_support_ref") or furniture_ops.SUPPORT_ROOM_FLOOR,
+            "support_local_xy": support_surfaces.support_local_xy_of(obj),
             "room_id": obj.get("layoutlab_room_id"),
             "validity": obj.get("layoutlab_validity") or furniture_ops.VALIDITY_VALID,
             "locked": bool(obj.props.get("locked") or obj.props.get("layoutlab_locked")),
@@ -667,6 +671,8 @@ class RoomSession:
             "set_flags",
             "set_object_flags",
             "set_locked",
+            "set_support",
+            "place_on",
             "regenerate",
             "set_parameter",
             "resize",

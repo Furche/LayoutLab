@@ -41,6 +41,7 @@ GENERATOR_KEY_PARAMS = {
         "clearance_depth",
         "collection",
     ],
+    "lamp_basic": ["name", "location", "base", "height", "shade", "collection"],
     "wardrobe_basic": [
         "name",
         "location",

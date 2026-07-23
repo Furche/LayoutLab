@@ -9,12 +9,15 @@ from typing import Any
 
 from ..core import room as room_core
 from .mesh_store import MeshObject
+from . import support_surfaces as supports
 
-SUPPORT_ROOM_FLOOR = "room_floor"
+SUPPORT_ROOM_FLOOR = supports.SUPPORT_ROOM_FLOOR
 
 VALIDITY_VALID = "VALID"
 VALIDITY_OUTSIDE = "INVALID_OUTSIDE_ROOM"
 VALIDITY_WALL = "INVALID_INTERSECTS_WALL"
+VALIDITY_OFF_SUPPORT = supports.VALIDITY_OFF_SUPPORT
+VALIDITY_NO_SUPPORT = supports.VALIDITY_NO_SUPPORT
 
 # Tolerance for "inside room" / wall AABB tests (meters).
 _BOUNDS_EPS = 1e-4
@@ -120,6 +123,7 @@ def ensure_semantic_defaults(store, rooms: dict, object_id: str | None = None) -
         main = main_part(store, oid) or obj
         if not main.get("layoutlab_support_ref"):
             main["layoutlab_support_ref"] = SUPPORT_ROOM_FLOOR
+        supports.stamp_host_surfaces(main)
         if "locked" not in main.props and "layoutlab_locked" not in main.props:
             main["locked"] = False
         if "visible" not in main.props and "layoutlab_visible" not in main.props:
@@ -139,6 +143,7 @@ def ensure_semantic_defaults(store, rooms: dict, object_id: str | None = None) -
             for key in (
                 "layoutlab_support_ref",
                 "layoutlab_room_id",
+                "layoutlab_support_local_xy",
                 "locked",
                 "visible",
                 "included_in_analysis",
@@ -194,6 +199,12 @@ def compute_validity(store, rooms: dict, object_id: str) -> str:
     main = main_part(store, object_id)
     if not main:
         return VALIDITY_VALID
+
+    # Support-surface checks first (DD-021) — may be off-support while still in room.
+    support_state = _compute_support_validity(store, object_id)
+    if support_state in (VALIDITY_NO_SUPPORT, VALIDITY_OFF_SUPPORT):
+        return support_state
+
     bbox = _furniture_solid_bbox(store, object_id)
     if not bbox:
         return VALIDITY_VALID
@@ -264,6 +275,230 @@ def compute_validity(store, rooms: dict, object_id: str) -> str:
     return VALIDITY_VALID
 
 
+def _compute_support_validity(store, object_id: str) -> str | None:
+    """Return support invalidity code, or None when support is floor / ok."""
+    main = main_part(store, object_id)
+    if not main:
+        return None
+    ref = support_ref(main)
+    if ref == SUPPORT_ROOM_FLOOR:
+        return None
+    parsed = supports.parse_object_support(ref)
+    if not parsed:
+        return VALIDITY_NO_SUPPORT
+    host_id, surface_id = parsed
+    host = main_part(store, host_id)
+    if host is None:
+        return VALIDITY_NO_SUPPORT
+    supports.stamp_host_surfaces(host)
+    surface = supports.find_surface(host, surface_id)
+    if surface is None:
+        return VALIDITY_NO_SUPPORT
+    params = _parse_params(main)
+    hx, hy = footprint_half_xy(params, main.get("layoutlab_generator"))
+    loc = [float(main.location.x), float(main.location.y), float(main.location.z)]
+    centre = corner_to_center(loc, hx, hy, float(main.rotation_z_deg or 0.0))
+    local_xy = supports.world_xy_to_surface_local(host, surface, centre)
+    if not supports.centre_in_surface(surface, local_xy):
+        return VALIDITY_OFF_SUPPORT
+    return None
+
+
+def _apply_pose_from_support(session, object_id: str, *, delta_rz: float = 0.0) -> None:
+    """Reproject child world pose from support_local_xy + host (DD-021 follow)."""
+    store = session.mesh_store
+    main = main_part(store, object_id)
+    if not main:
+        return
+    parsed = supports.parse_object_support(support_ref(main))
+    if not parsed:
+        return
+    host_id, surface_id = parsed
+    host = main_part(store, host_id)
+    if host is None:
+        return
+    supports.stamp_host_surfaces(host)
+    surface = supports.find_surface(host, surface_id)
+    if surface is None:
+        return
+    local_xy = supports.support_local_xy_of(main)
+    if local_xy is None:
+        # Derive once from current world location (corner).
+        local_xy = supports.world_xy_to_surface_local(
+            host, surface, [main.location.x, main.location.y]
+        )
+        supports.set_support_local_xy(main, local_xy)
+    wx, wy, wz = supports.surface_local_to_world(host, surface, local_xy)
+    # Child location is min-corner; surface maps the corner's XY.
+    main.location.x = float(wx)
+    main.location.y = float(wy)
+    main.location.z = float(wz)
+    if abs(delta_rz) > 1e-12:
+        main.rotation_z_deg = float(main.rotation_z_deg or 0.0) + float(delta_rz)
+        while main.rotation_z_deg <= -180.0:
+            main.rotation_z_deg += 360.0
+        while main.rotation_z_deg > 180.0:
+            main.rotation_z_deg -= 360.0
+    params = _parse_params(main)
+    params["location"] = [main.location.x, main.location.y, main.location.z]
+    params["rotation_z_deg"] = main.rotation_z_deg
+    _write_params(main, params)
+    for part in objects_for_id(store, object_id):
+        if part is not main:
+            part["layoutlab_support_ref"] = support_ref(main)
+            if main.get("layoutlab_support_local_xy"):
+                part["layoutlab_support_local_xy"] = main["layoutlab_support_local_xy"]
+            if part.get("layoutlab_params"):
+                _write_params(part, params)
+
+
+def iter_children_on_host(store, host_object_id: str):
+    host = str(host_object_id)
+    seen = set()
+    for obj in store.objects:
+        if not is_furniture_part(obj):
+            continue
+        oid = obj.get("layoutlab_object_id")
+        if not oid or oid in seen or oid == host:
+            continue
+        main = main_part(store, oid)
+        if main is None:
+            continue
+        seen.add(oid)
+        parsed = supports.parse_object_support(support_ref(main))
+        if parsed and parsed[0] == host:
+            yield oid, parsed[1]
+
+
+def follow_support_children(session, host_object_id: str, *, delta_rz: float = 0.0) -> list[str]:
+    """Reproject all children attached to host (move/rotate participation)."""
+    followed = []
+    for child_id, _surface_id in iter_children_on_host(session.mesh_store, host_object_id):
+        _apply_pose_from_support(session, child_id, delta_rz=delta_rz)
+        refresh_validity(session.mesh_store, session._rooms, child_id)
+        followed.append(child_id)
+    return followed
+
+
+def mark_dangling_support_children(session, host_object_id: str) -> list[str]:
+    """After host delete: keep dangling support_ref, mark INVALID_NO_SUPPORT."""
+    store = session.mesh_store
+    affected = []
+    host = str(host_object_id)
+    # Collect before delete empties the host.
+    children = list(iter_children_on_host(store, host))
+    for child_id, _sid in children:
+        for part in objects_for_id(store, child_id):
+            part["layoutlab_validity"] = VALIDITY_NO_SUPPORT
+        affected.append(child_id)
+    return affected
+
+
+def set_support(
+    session,
+    object_id: str,
+    support_ref_value: str,
+    *,
+    support_local_xy=None,
+    honour_lock: bool = True,
+) -> dict:
+    """Attach object to room_floor or object:<host>#surface (DD-021)."""
+    store = session.mesh_store
+    main = main_part(store, object_id)
+    if main is None:
+        raise ValueError(f"object not found: {object_id}")
+    if honour_lock:
+        _require_unlocked(main, action="set_support")
+    ref = str(support_ref_value or SUPPORT_ROOM_FLOOR).strip() or SUPPORT_ROOM_FLOOR
+    for part in objects_for_id(store, object_id):
+        part["layoutlab_support_ref"] = ref
+
+    if ref == SUPPORT_ROOM_FLOOR:
+        supports.set_support_local_xy(main, None)
+        for part in objects_for_id(store, object_id):
+            part.props.pop("layoutlab_support_local_xy", None)
+        return move_object(
+            session,
+            object_id,
+            [main.location.x, main.location.y, main.location.z],
+            honour_lock=False,
+        )
+
+    parsed = supports.parse_object_support(ref)
+    if not parsed:
+        raise ValueError(f"unsupported support_ref {ref!r}")
+    host_id, surface_id = parsed
+    if host_id == str(object_id):
+        raise ValueError("cannot support an object on itself")
+    host = main_part(store, host_id)
+    if host is None:
+        raise ValueError(f"support host not found: {host_id}")
+    supports.stamp_host_surfaces(host)
+    surface = supports.find_surface(host, surface_id)
+    if surface is None:
+        raise ValueError(f"surface {surface_id!r} not found on host {host_id}")
+
+    if support_local_xy is not None:
+        local_xy = [float(support_local_xy[0]), float(support_local_xy[1])]
+    else:
+        local_xy = supports.world_xy_to_surface_local(
+            host, surface, [main.location.x, main.location.y]
+        )
+    supports.set_support_local_xy(main, local_xy)
+    for part in objects_for_id(store, object_id):
+        if part is not main and main.get("layoutlab_support_local_xy"):
+            part["layoutlab_support_local_xy"] = main["layoutlab_support_local_xy"]
+    _apply_pose_from_support(session, object_id, delta_rz=0.0)
+    validity = refresh_validity(store, session._rooms, object_id)
+    out = semantic_summary(store, object_id)
+    out["validity"] = validity
+    out["support_local_xy"] = supports.support_local_xy_of(main)
+    return out
+
+
+def place_on(
+    session,
+    object_id: str,
+    host_object_id: str,
+    *,
+    surface_id: str = supports.SURFACE_TOP,
+    location=None,
+    honour_lock: bool = True,
+) -> dict:
+    """Convenience: set_support to host surface; optional world XY for child corner."""
+    store = session.mesh_store
+    main = main_part(store, object_id)
+    if main is None:
+        raise ValueError(f"object not found: {object_id}")
+    host = main_part(store, host_object_id)
+    if host is None:
+        raise ValueError(f"host not found: {host_object_id}")
+    supports.stamp_host_surfaces(host)
+    surface = supports.find_surface(host, surface_id)
+    if surface is None:
+        raise ValueError(f"surface {surface_id!r} not found on host")
+    if location is not None:
+        if not isinstance(location, (list, tuple)) or len(location) < 2:
+            raise ValueError("place_on location must be [x, y] or [x, y, z]")
+        local_xy = supports.world_xy_to_surface_local(host, surface, location)
+    else:
+        local_xy = supports.surface_centre_local(surface)
+        # Convert surface-centre (point on top) to child corner: place corner so
+        # footprint centre lands on surface centre.
+        params = _parse_params(main)
+        hx, hy = footprint_half_xy(params, main.get("layoutlab_generator"))
+        # Approx without child rz: store centre as local, then corner = centre - half
+        # in surface frame before host rotation — use child rz ≈ 0 relative to host.
+        local_xy = [local_xy[0] - hx, local_xy[1] - hy]
+    ref = supports.format_object_support(str(host_object_id), str(surface_id))
+    return set_support(
+        session,
+        object_id,
+        ref,
+        support_local_xy=local_xy,
+        honour_lock=honour_lock,
+    )
+
 def refresh_validity(store, rooms: dict, object_id: str) -> str:
     state = compute_validity(store, rooms, object_id)
     for obj in objects_for_id(store, object_id):
@@ -295,6 +530,7 @@ def semantic_summary(store, object_id: str) -> dict[str, Any]:
         "location": [round(loc[0], 4), round(loc[1], 4), round(loc[2], 4)],
         "rotation_z_deg": round(float(main.rotation_z_deg), 4),
         "support_ref": support_ref(main),
+        "support_local_xy": supports.support_local_xy_of(main),
         "room_id": main.get("layoutlab_room_id"),
         "validity": validity_of(main),
         "locked": is_locked(main),
@@ -342,10 +578,14 @@ def footprint_half_xy(params: dict | None, generator: str | None = None) -> tupl
     if gen == "bed_basic":
         sx = float(p.get("length") or 2.0)
         sy = float(p.get("width") or 1.2)
+    elif gen == "lamp_basic":
+        base = float(p.get("base") or 0.12)
+        sx = base
+        sy = base
     else:
         # desk_basic / wardrobe_basic / unknown: width×depth
         sx = float(p.get("width") or 1.0)
-        sy = float(p.get("depth") or 0.6)
+        sy = float(p.get("depth") or p.get("base") or 0.6)
     return max(sx, 0.01) * 0.5, max(sy, 0.01) * 0.5
 
 
@@ -362,7 +602,7 @@ def center_to_corner(center, half_x: float, half_y: float, rotation_z_deg: float
 
 
 def move_object(session, object_id: str, location, *, honour_lock: bool = True) -> dict:
-    """Set Main Part world XY location; Z follows floor support (MVP)."""
+    """Set Main Part world XY location; Z follows support_ref (floor or host surface)."""
     store = session.mesh_store
     main = main_part(store, object_id)
     if main is None:
@@ -373,9 +613,32 @@ def move_object(session, object_id: str, location, *, honour_lock: bool = True) 
         raise ValueError("move requires location [x, y] or [x, y, z]")
 
     x, y = float(location[0]), float(location[1])
+    ref = support_ref(main)
+    parsed = supports.parse_object_support(ref)
+
+    if parsed:
+        host_id, surface_id = parsed
+        host = main_part(store, host_id)
+        if host is not None:
+            supports.stamp_host_surfaces(host)
+            surface = supports.find_surface(host, surface_id)
+            if surface is not None:
+                local_xy = supports.world_xy_to_surface_local(host, surface, [x, y])
+                supports.set_support_local_xy(main, local_xy)
+                for part in objects_for_id(store, object_id):
+                    if part is not main and main.get("layoutlab_support_local_xy"):
+                        part["layoutlab_support_local_xy"] = main["layoutlab_support_local_xy"]
+                _apply_pose_from_support(session, object_id, delta_rz=0.0)
+                validity = refresh_validity(store, session._rooms, object_id)
+                # Host itself moved? Children follow below when this object is a host.
+                follow_support_children(session, object_id, delta_rz=0.0)
+                out = semantic_summary(store, object_id)
+                out["validity"] = validity
+                return out
+
     # Floor support: keep Z on room floor / current floor height.
     z = float(main.location.z)
-    if support_ref(main) == SUPPORT_ROOM_FLOOR:
+    if ref == SUPPORT_ROOM_FLOOR:
         room_id = main.get("layoutlab_room_id")
         model = session.get_by_id(room_id) if room_id else None
         if model is None:
@@ -403,6 +666,7 @@ def move_object(session, object_id: str, location, *, honour_lock: bool = True) 
             _write_params(part, params)
 
     validity = refresh_validity(store, session._rooms, object_id)
+    follow_support_children(session, object_id, delta_rz=0.0)
     out = semantic_summary(store, object_id)
     out["validity"] = validity
     return out
@@ -457,6 +721,8 @@ def rotate_object_z(
             _write_params(part, params)
 
     validity = refresh_validity(store, session._rooms, object_id)
+    delta_rz = float(main.rotation_z_deg) - old_rz
+    follow_support_children(session, object_id, delta_rz=delta_rz)
     out = semantic_summary(store, object_id)
     out["validity"] = validity
     out["pivot"] = pivot
@@ -491,18 +757,10 @@ def set_object_flags(session, object_id: str, flags: dict, *, honour_lock: bool 
             part["included_in_analysis"] = bool(updates["included_in_analysis"])
         if "protected_from_ai" in updates:
             part["protected_from_ai"] = bool(updates["protected_from_ai"])
-        if "support_ref" in updates:
-            ref = str(updates["support_ref"] or SUPPORT_ROOM_FLOOR)
-            part["layoutlab_support_ref"] = ref
 
-    if main and "support_ref" in updates and updates["support_ref"] == SUPPORT_ROOM_FLOOR:
-        # Snap Z to floor when (re)attaching to floor.
-        move_object(
-            session,
-            object_id,
-            [main.location.x, main.location.y, main.location.z],
-            honour_lock=False,
-        )
+    if "support_ref" in updates:
+        ref = str(updates["support_ref"] or SUPPORT_ROOM_FLOOR)
+        return set_support(session, object_id, ref, honour_lock=False)
 
     return semantic_summary(store, object_id)
 
@@ -518,10 +776,11 @@ def delete_object(session, object_id: str, *, honour_lock: bool = True) -> dict:
         raise ValueError(f"object not found: {object_id}")
     if honour_lock:
         _require_unlocked(main, action="delete")
+    dangling = mark_dangling_support_children(session, str(object_id))
     n = store.delete_by_object_id(str(object_id))
     if getattr(session, "selected_object_id", None) == str(object_id):
         session.selected_object_id = None
-    return {"deleted": n, "object_id": str(object_id)}
+    return {"deleted": n, "object_id": str(object_id), "dangling_support": dangling}
 
 
 def duplicate_object(
@@ -616,6 +875,7 @@ def _capture_semantic_state(store, object_id: str) -> dict[str, Any]:
         "location": [float(loc[0]), float(loc[1]), float(loc[2])],
         "rotation_z_deg": float(main.rotation_z_deg or 0.0),
         "support_ref": support_ref(main),
+        "support_local_xy": supports.support_local_xy_of(main),
         "room_id": main.get("layoutlab_room_id"),
         "locked": is_locked(main),
         "visible": is_visible(main),
@@ -642,6 +902,13 @@ def _restore_semantic_state(store, object_id: str, state: dict) -> None:
         part["visible"] = bool(state.get("visible", True))
         part["included_in_analysis"] = bool(state.get("included_in_analysis", True))
         part["protected_from_ai"] = bool(state.get("protected_from_ai"))
+    if state.get("support_local_xy") is not None:
+        supports.set_support_local_xy(main, state["support_local_xy"])
+        for part in objects_for_id(store, object_id):
+            if part is not main and main.get("layoutlab_support_local_xy"):
+                part["layoutlab_support_local_xy"] = main["layoutlab_support_local_xy"]
+    else:
+        supports.set_support_local_xy(main, None)
     params = _parse_params(main)
     params["location"] = list(state.get("location") or params.get("location") or [0, 0, 0])
     params["rotation_z_deg"] = main.rotation_z_deg
@@ -726,6 +993,8 @@ def regenerate_object(
         _write_params(new_main, params)
 
     validity = refresh_validity(store, session._rooms, oid)
+    supports.stamp_host_surfaces(main_part(store, oid) or new_main)
+    follow_support_children(session, oid, delta_rz=0.0)
     if was_selected:
         session.selected_object_id = oid
 
@@ -850,10 +1119,49 @@ def apply_furniture_command(session, cmd: dict) -> Any:
         ):
             if key in cmd:
                 flags[key] = cmd[key]
-        flags.pop("object_id", None)
-        flags.pop("object", None)
-        flags.pop("name", None)
         return set_object_flags(session, oid, flags)
+
+    if action == "set_support":
+        oid = resolve_object_id(
+            session.mesh_store, object_id=object_id, object_name=object_name
+        )
+        ref = cmd.get("support_ref") or params.get("support_ref")
+        if ref is None:
+            raise ValueError("set_support requires support_ref")
+        local_xy = cmd.get("support_local_xy", params.get("support_local_xy"))
+        return set_support(session, oid, ref, support_local_xy=local_xy)
+
+    if action == "place_on":
+        oid = resolve_object_id(
+            session.mesh_store, object_id=object_id, object_name=object_name
+        )
+        host_id = (
+            cmd.get("host_object_id")
+            or params.get("host_object_id")
+            or cmd.get("host_id")
+            or params.get("host_id")
+        )
+        if not host_id:
+            host_name = cmd.get("host") or params.get("host")
+            if host_name:
+                host_id = resolve_object_id(
+                    session.mesh_store, object_id=None, object_name=host_name
+                )
+        if not host_id:
+            raise ValueError("place_on requires host_object_id")
+        surface_id = (
+            cmd.get("surface_id")
+            or params.get("surface_id")
+            or supports.SURFACE_TOP
+        )
+        location = cmd.get("location") or params.get("location")
+        return place_on(
+            session,
+            oid,
+            str(host_id),
+            surface_id=str(surface_id),
+            location=location,
+        )
 
     if action == "set_locked":
         oid = resolve_object_id(

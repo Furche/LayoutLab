@@ -371,7 +371,24 @@ Removes **all scene objects** whose names start with `prefix`. Use before re-run
 | `set_locked` | `{ "object_id", "locked" }` | Blocks edit ops |
 | `set_flags` | flags + `object_id` | `locked`, `visible`, `protected_from_ai`, `included_in_analysis`, `support_ref` |
 
-Export `layoutlab` may include `support_ref`, `room_id`, `validity`, `locked`. Validity: `VALID`, `INVALID_OUTSIDE_ROOM`, `INVALID_INTERSECTS_WALL`.
+Export `layoutlab` may include `support_ref`, `support_local_xy`, `room_id`, `validity`, `locked`. Validity: `VALID`, `INVALID_OUTSIDE_ROOM`, `INVALID_INTERSECTS_WALL`, `INVALID_OFF_SUPPORT`, `INVALID_NO_SUPPORT`.
+
+------------------------------------------------------------------------
+
+## 5.9c Support surfaces / stacking `[IMPLEMENTED]` Core `0.10.64` (DD-021)
+
+Place furniture on named host surfaces (MVP: `desk_basic` → `surface_top`, child `lamp_basic`).
+
+```json
+{ "action": "place_on", "object_id": "<lamp>", "host_object_id": "<desk>", "surface_id": "surface_top" }
+{ "action": "set_support", "object_id": "<lamp>", "support_ref": "object:<desk>#surface_top", "support_local_xy": [0.4, 0.2] }
+{ "action": "set_support", "object_id": "<lamp>", "support_ref": "room_floor" }
+```
+
+- Host **move/rotate**: children follow via `support_local_xy`.
+- Host **resize**: offset kept; child may become `INVALID_OFF_SUPPORT` (no silent snap-back).
+- Host **delete**: dangling `support_ref` + `INVALID_NO_SUPPORT` (no auto-floor).
+- On-surface test: footprint **centre** in surface (not full containment).
 
 ------------------------------------------------------------------------
 

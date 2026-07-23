@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **FC-001/WP-07 support surfaces (`0.10.64`):** DD-021 Accepted — `place_on`/`set_support`, desk `surface_top`, `lamp_basic`, follow on host move/rotate, `INVALID_OFF_SUPPORT` / `INVALID_NO_SUPPORT` (no silent repair).
 - **Oriented room attachments after Z-rotate (`0.10.63`):** Door/window openings and fixed elements (radiators) export as oriented meshes so they rotate with the room instead of world AABB boxes.
 - **Room rotate ring pick reliability (`0.10.62`):** DoubleSide opacity-0 hit meshes, matrixWorld refresh, world-XY annulus fallback; empty clicks no longer clear selection (Esc still does).
 - **Room rotate ring pick fix (`0.10.61`):** wider hit band + higher pick priority so clicks hit the ring instead of furniture underneath.

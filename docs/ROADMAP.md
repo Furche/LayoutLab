@@ -1,6 +1,6 @@
 # LayoutLab — Product Roadmap
 
-**Status:** Binding · **Updated:** 2026-07-23 (`0.10.63` oriented attachments; WP-07 DD-021 Proposed)
+**Status:** Binding · **Updated:** 2026-07-23 (`0.10.64` WP-07 support surfaces)
 
 > **This file is the only authoritative source for product priorities and work order.**
 >
@@ -63,9 +63,9 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 
 | ID | Scope | Concept / DDs | Status |
 |---|---|---|---|
-| [FC-001/WP-07](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Advanced support surfaces / stacking | [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · [DD-021](design_decisions/DD-021-advanced-support-surfaces.md) **Proposed** — Accept before coding | **Current** |
+| *(none locked)* | Pick next from Refinement / Later | — | Awaiting product choice |
 
-Product surface remains Standalone Viewer + Core ([`AI_CONTEXT.md`](../AI_CONTEXT.md)). Blender = runtime adapter.
+FC-001/WP-01…WP-07 complete. Product surface remains Standalone Viewer + Core ([`AI_CONTEXT.md`](../AI_CONTEXT.md)). Blender = runtime adapter.
 
 ------------------------------------------------------------------------
 
@@ -119,7 +119,7 @@ Need a Feature Concept and/or DD before implementation — **not** active commit
 
 | Topic | Notes |
 |---|---|
-| [FC-001/WP-07](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Also listed under Queued with late entry — behaviour in FC-001 only |
+| [FC-001/WP-07](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Done `0.10.64` — see Implemented Foundations |
 | Persisted project variants | Save, name, compare, favorite — **not** the same as ephemeral candidates |
 | Walkway / navigation analysis | Experimental idea in [`Future_Ideas.md`](Future_Ideas.md) §5 |
 | Polygon rooms | DD-010 next (`footprint.kind = polygon`) — after FC-001 WP-01…WP-06 |
