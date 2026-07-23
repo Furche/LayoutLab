@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Lamp join anchor at foot (`0.10.67`):** Multi-mesh join prefers lowest-Z piece so overhanging shades no longer become the object origin.
 - **Furniture magnet snap (`0.10.66`):** Drag snaps onto host surfaces (`place_on`); hold **Alt** to disable magnet and stay on floor.
 - **Viewer Add menu (`0.10.65`):** Viewport **Add** creates a room or furniture (bed/desk/wardrobe/lamp) into the focused room via Core commands.
 - **FC-001/WP-07 support surfaces (`0.10.64`):** DD-021 Accepted — `place_on`/`set_support`, desk `surface_top`, `lamp_basic`, follow on host move/rotate, `INVALID_OFF_SUPPORT` / `INVALID_NO_SUPPORT` (no silent repair).

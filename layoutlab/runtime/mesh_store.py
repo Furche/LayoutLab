@@ -185,7 +185,9 @@ def join_mesh_objects(objects, result_name, collection):
     if not meshes:
         return None
 
-    meshes = sorted(meshes, key=lambda o: (o.location.x, o.location.y, o.location.z))
+    # Anchor = lowest / SW footprint corner (Z first) so table lamps / desks sit on their foot,
+    # not on an overhanging shade or tabletop that sorts earlier in X/Y.
+    meshes = sorted(meshes, key=lambda o: (o.location.z, o.location.x, o.location.y))
     anchor = meshes[0]
     ax, ay, az = anchor.location.x, anchor.location.y, anchor.location.z
     all_verts = [tuple(v) for v in anchor.vertices]
