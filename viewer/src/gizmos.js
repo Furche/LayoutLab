@@ -22,10 +22,11 @@ const GIZMO_RENDER_ORDER = 1000;
 const PICK = {
   move_axis: 50,
   move_xy: 45,
+  rotate_room_z: 55, // room ring is large / easy to miss — prefer over wall discs
   scale_axis: 40,
   wall: 40,
   corner: 40,
-  rotate_z: 25,
+  rotate_z: 35,
 };
 
 let hoveredRoot = null;
@@ -153,6 +154,7 @@ function markVisual(mesh, baseColor) {
 function pickPriorityFor(meta) {
   if (meta.kind === "move_axis" && meta.axis === "xy") return PICK.move_xy;
   if (meta.kind === "move_axis") return PICK.move_axis;
+  if (meta.kind === "rotate_room_z") return PICK.rotate_room_z;
   if (meta.kind === "rotate_z") return PICK.rotate_z;
   if (meta.kind === "scale_axis") return PICK.scale_axis;
   if (meta.kind === "wall") return PICK.wall;
@@ -275,10 +277,17 @@ function makePlaneHandle(color, size, meta) {
   return finishHandle(group, meta);
 }
 
-/** Opaque annular ring — thin band so it rarely overlaps arrows/scale. */
-function makeRotateRing(radius, color, meta) {
+/**
+ * Opaque annular ring.
+ * @param {number} radius outer radius
+ * @param {number} color
+ * @param {object} meta
+ * @param {{ band?: number, hitPad?: number }} [opts] — room rings need a wider hit band
+ */
+function makeRotateRing(radius, color, meta, opts = {}) {
   const group = new THREE.Group();
-  const band = 0.055;
+  const band = Math.max(Number(opts.band) || 0.055, 0.04);
+  const hitPad = Math.max(Number(opts.hitPad) || 0.04, 0.02);
   const inner = Math.max(radius - band, 0.08);
   const ring = markVisual(
     new THREE.Mesh(new THREE.RingGeometry(inner, radius, 72), fillMat(color)),
@@ -292,8 +301,11 @@ function makeRotateRing(radius, color, meta) {
   );
   outerRim.position.z = 0.002;
   styleOverlay(outerRim);
-  // Hit matches the visible band (+small pad), not the whole disc interior.
-  const hit = makeHit(new THREE.RingGeometry(inner - 0.01, radius + 0.02, 56), meta);
+  // Generous invisible hit annulus — thin visuals are otherwise nearly unclickable.
+  const hitInner = Math.max(inner - hitPad, 0.05);
+  const hitOuter = radius + hitPad;
+  const hit = makeHit(new THREE.RingGeometry(hitInner, hitOuter, 64), meta);
+  hit.position.z = 0.01;
   group.add(ring, outerRim, hit);
   return finishHandle(group, meta);
 }
@@ -332,7 +344,7 @@ export function buildFurnitureGizmo(bounds, objectId) {
       ...base,
       kind: "rotate_z",
       label: "rotate-z",
-    }),
+    }, { band: 0.07, hitPad: 0.08 }),
   );
 
   for (const [axis, sign, x, y] of [
@@ -391,14 +403,20 @@ export function buildRoomGizmo(room) {
     }),
   );
   const half = Math.max(w, d) * 0.5;
-  const ringR = Math.max(half + 0.12, 0.55);
+  // Keep ring inside wall discs so wall handles stay reachable; widen band for picking.
+  const ringR = Math.max(half * 0.72, 0.85);
   moveRoot.add(
-    makeRotateRing(ringR, ROTATE, {
-      ...base,
-      kind: "rotate_room_z",
-      label: "room-rotate-z",
-      startRotationZ: rz,
-    }),
+    makeRotateRing(
+      ringR,
+      ROTATE,
+      {
+        ...base,
+        kind: "rotate_room_z",
+        label: "room-rotate-z",
+        startRotationZ: rz,
+      },
+      { band: 0.14, hitPad: 0.22 },
+    ),
   );
   group.add(moveRoot);
 
