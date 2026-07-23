@@ -2943,14 +2943,10 @@ renderer.domElement.addEventListener(
     if (ev.button !== 0) return;
     pointerDown = { x: ev.clientX, y: ev.clientY };
     pendingBodyDrag = null;
-    const body = liveCoreSession ? pickBodyDragTarget(ev.clientX, ev.clientY) : null;
     const gizmoHit = pickGizmo(ev.clientX, ev.clientY);
-    // Prefer switching to another furniture under the cursor over gizmo of the current selection.
-    const switchFurniture =
-      body?.type === "furniture" &&
-      selectionTarget?.type === "furniture" &&
-      body.objectId !== selectionTarget.objectId;
-    if (gizmoHit && !switchFurniture) {
+    // Gizmo handles always win — even if another mesh sits above the selection.
+    // (Object switching used to steal move/scale clicks on buried selections.)
+    if (gizmoHit) {
       // Stop OrbitControls before it can leave orthographic top view.
       ev.preventDefault();
       ev.stopImmediatePropagation();
@@ -2962,6 +2958,7 @@ renderer.domElement.addEventListener(
       return;
     }
     if (!liveCoreSession) return;
+    const body = pickBodyDragTarget(ev.clientX, ev.clientY);
     if (!body) return;
     ev.preventDefault();
     ev.stopImmediatePropagation();

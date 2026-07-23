@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo pick over occluding furniture (`0.10.74`):** Move/scale/rotate handles of the selection always win over meshes sitting above it (no accidental re-select of the top object).
 - **Keep camera on Add (`0.10.73`):** Adding furniture/rooms via the viewport menu no longer resets the camera angle; only the first scene load still fits the view.
 - **Drag grid under furniture (`0.10.72`):** Move grid renders in the main scene with depth test so the dragged object sits on top of it (not overdrawn).
 - **Compact furniture gizmos (`0.10.71`):** Rotate/move stay capped at the centre; scale discs sit on footprint edges. Large objects no longer grow a huge rotate hit-ring that blocked empty-click deselect.
