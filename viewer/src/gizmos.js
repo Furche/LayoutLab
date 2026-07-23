@@ -56,6 +56,51 @@ function rotateZxy(x, y, deg) {
   return [x * c - y * s, x * s + y * c];
 }
 
+/** Parse generator params JSON stamped on export objects. */
+export function parseLayoutlabParams(obj) {
+  const raw =
+    obj?.custom_properties?.layoutlab_params ||
+    obj?.layoutlab?.params ||
+    null;
+  if (!raw) return {};
+  if (typeof raw === "object") return raw;
+  try {
+    return JSON.parse(String(raw));
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Local footprint size [sx, sy, sz] from generator params (not world AABB).
+ * World AABB dimensions grow under Z-rotation and mis-place gizmos.
+ */
+export function footprintSizeFromObject(obj) {
+  const params = parseLayoutlabParams(obj);
+  const gen = String(
+    obj?.layoutlab?.generator ||
+      obj?.custom_properties?.layoutlab_generator ||
+      "",
+  ).toLowerCase();
+  const dims = obj?.dimensions || [0.2, 0.2, 0.2];
+  if (gen.includes("bed")) {
+    return [
+      Math.max(0.05, Number(params.length) || Number(dims[0]) || 2),
+      Math.max(0.05, Number(params.width) || Number(dims[1]) || 1.2),
+      Math.max(0.05, Number(params.height) || Number(dims[2]) || 0.5),
+    ];
+  }
+  if (gen.includes("lamp")) {
+    const base = Math.max(0.05, Number(params.base) || Number(dims[0]) || 0.12);
+    return [base, base, Math.max(0.05, Number(params.height) || Number(dims[2]) || 0.38)];
+  }
+  return [
+    Math.max(0.05, Number(params.width) || Number(dims[0]) || 1),
+    Math.max(0.05, Number(params.depth) || Number(dims[1]) || 0.6),
+    Math.max(0.05, Number(params.height) || Number(dims[2]) || 0.75),
+  ];
+}
+
 /** Room-local (SW frame) → world XY. */
 export function roomLocalToWorld(rect, lx, ly) {
   const [rx, ry] = rotateZxy(lx, ly, rect.rz || 0);
@@ -92,10 +137,7 @@ export function furnitureBounds(exportData, objectId) {
         0,
     ) || 0;
   const loc = main.location || [0, 0, 0];
-  const dims = main.dimensions || [0.2, 0.2, 0.2];
-  const sx = Math.max(Number(dims[0]) || 0.2, 0.05);
-  const sy = Math.max(Number(dims[1]) || 0.2, 0.05);
-  const sz = Math.max(Number(dims[2]) || 0.05, 0.05);
+  const [sx, sy, sz] = footprintSizeFromObject(main);
   const hx = sx * 0.5;
   const hy = sy * 0.5;
   const [ox, oy] = rotateZxy(hx, hy, rz);

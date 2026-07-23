@@ -4,8 +4,8 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-23 (furniture gizmo rotation `0.10.75`)
-**Plugin / Core version:** 0.10.75 · **Branch:** `main`
+**Last updated:** 2026-07-23 (gizmo local footprint centre `0.10.76`)
+**Plugin / Core version:** 0.10.76 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
 **FC-001/WP-07** shipped; host scale now detaches/reattaches ([DD-021](design_decisions/DD-021-advanced-support-surfaces.md)). Next: see ROADMAP §2 / Refinement.

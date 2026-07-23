@@ -4,6 +4,7 @@
  */
 
 import * as THREE from "three";
+import { footprintSizeFromObject } from "./gizmos.js";
 
 const ROOM_FABRIC_ROLES = new Set([
   "room_floor",
@@ -292,8 +293,8 @@ export function furnitureHalfXyFromExport(exportData, objectId) {
       (o) => (o?.layoutlab?.object_id || o?.custom_properties?.layoutlab_object_id) === objectId,
     );
   if (!main) return [0.1, 0.1];
-  const dims = main.dimensions || [0.2, 0.2, 0.2];
-  return [Math.max(0.02, Number(dims[0]) * 0.5), Math.max(0.02, Number(dims[1]) * 0.5)];
+  const [sx, sy] = footprintSizeFromObject(main);
+  return [sx * 0.5, sy * 0.5];
 }
 
 export function rotateCommand(objectId, degrees) {

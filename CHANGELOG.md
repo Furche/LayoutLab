@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Gizmo centre from local footprint (`0.10.76`):** Furniture gizmos use generator params (not world AABB dimensions) for size/centre, so they stay centered while scaling — especially after rotation.
 - **Furniture gizmos follow object rotation (`0.10.75`):** Scale (and move) handles use local footprint + `rotation_euler_deg`, so after rotating an object the scale discs sit on the correct sides.
 - **Gizmo pick over occluding furniture (`0.10.74`):** Move/scale/rotate handles of the selection always win over meshes sitting above it (no accidental re-select of the top object).
 - **Keep camera on Add (`0.10.73`):** Adding furniture/rooms via the viewport menu no longer resets the camera angle; only the first scene load still fits the view.
