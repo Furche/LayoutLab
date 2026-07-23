@@ -665,13 +665,22 @@ def footprint_half_xy(params: dict | None, generator: str | None = None) -> tupl
     if gen == "bed_basic":
         sx = float(p.get("length") or 2.0)
         sy = float(p.get("width") or 1.2)
-    elif gen == "lamp_basic":
-        base = float(p.get("base") or 0.12)
-        sx = base
-        sy = base
+    elif gen in ("lamp_basic", "floor_lamp_basic"):
+        base = float(p.get("base") or (0.28 if gen == "floor_lamp_basic" else 0.12))
+        shade = float(p.get("shade") or base)
+        sx = max(base, shade)
+        sy = sx
+    elif gen == "plant_basic":
+        pot = float(p.get("pot") or 0.14)
+        foliage = float(p.get("foliage") or pot * 1.35)
+        sx = max(pot, foliage)
+        sy = sx
+    elif gen == "mug_basic":
+        sx = float(p.get("width") or 0.08) + 0.015
+        sy = float(p.get("depth") or 0.08)
     else:
-        # desk_basic / wardrobe_basic / unknown: width×depth
-        sx = float(p.get("width") or 1.0)
+        # desk / wardrobe / decor defaults: width×depth
+        sx = float(p.get("width") or p.get("base") or 1.0)
         sy = float(p.get("depth") or p.get("base") or 0.6)
     return max(sx, 0.01) * 0.5, max(sy, 0.01) * 0.5
 

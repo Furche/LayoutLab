@@ -92,11 +92,17 @@ export function footprintSizeFromObject(obj) {
   }
   if (gen.includes("lamp")) {
     const base = Math.max(0.05, Number(params.base) || Number(dims[0]) || 0.12);
-    return [base, base, Math.max(0.05, Number(params.height) || Number(dims[2]) || 0.38)];
+    const shade = Math.max(base, Number(params.shade) || base);
+    return [shade, shade, Math.max(0.05, Number(params.height) || Number(dims[2]) || 0.38)];
+  }
+  if (gen.includes("plant")) {
+    const pot = Math.max(0.05, Number(params.pot) || 0.14);
+    const foliage = Math.max(pot, Number(params.foliage) || pot * 1.35);
+    return [foliage, foliage, Math.max(0.05, Number(params.height) || Number(dims[2]) || 0.4)];
   }
   return [
-    Math.max(0.05, Number(params.width) || Number(dims[0]) || 1),
-    Math.max(0.05, Number(params.depth) || Number(dims[1]) || 0.6),
+    Math.max(0.05, Number(params.width) || Number(params.base) || Number(dims[0]) || 1),
+    Math.max(0.05, Number(params.depth) || Number(params.base) || Number(dims[1]) || 0.6),
     Math.max(0.05, Number(params.height) || Number(dims[2]) || 0.75),
   ];
 }

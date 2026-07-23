@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Decor props + Add → Deko (`0.10.77`):** 18 minimal Decor generators (desk tech, soft goods, floor props) plus Floor lamp; Viewer Add menu groups them under **Deko** (scrollable).
 - **Gizmo centre from local footprint (`0.10.76`):** Furniture gizmos use generator params (not world AABB dimensions) for size/centre, so they stay centered while scaling — especially after rotation.
 - **Furniture gizmos follow object rotation (`0.10.75`):** Scale (and move) handles use local footprint + `rotation_euler_deg`, so after rotating an object the scale discs sit on the correct sides.
 - **Gizmo pick over occluding furniture (`0.10.74`):** Move/scale/rotate handles of the selection always win over meshes sitting above it (no accidental re-select of the top object).
