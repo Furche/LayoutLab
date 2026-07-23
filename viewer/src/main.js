@@ -1073,8 +1073,12 @@ const gizmoRoot = createWorldRoot();
 gizmoRoot.name = "gizmo_blender_z_up";
 gizmoScene.add(gizmoRoot);
 
+/** Drag grid lives in the main scene (depth-tested) so furniture draws on top of it. */
+const dragGridRoot = createWorldRoot();
+dragGridRoot.name = "drag_grid_blender_z_up";
+scene.add(dragGridRoot);
 const dragGrid = createDragGrid();
-gizmoRoot.add(dragGrid.root);
+dragGridRoot.add(dragGrid.root);
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -1943,8 +1947,8 @@ function frame(now = performance.now()) {
   controls.update();
   renderer.autoClear = true;
   renderer.render(scene, camera);
-  // Overlay: gizmos and drag-grid (depth cleared so they sit above scene).
-  if (gizmoGroup || dragGrid.root.visible) {
+  // Overlay: gizmos only (depth cleared so handles sit above clearances).
+  if (gizmoGroup) {
     renderer.autoClear = false;
     renderer.clearDepth();
     renderer.render(gizmoScene, camera);

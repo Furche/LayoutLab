@@ -1,5 +1,5 @@
 /**
- * World-anchored fine grid under the dragged object.
+ * World-anchored fine grid under the dragged object (main scene, depth-tested).
  * Line positions stay on world multiples; fade centre follows the object.
  */
 
@@ -9,7 +9,8 @@ const STEP = 0.1; // 10 cm — finer than the scene 1 m GridHelper
 const HALF = 2.4; // visible extent before fade dies (±m)
 const INNER = 0.55;
 const OUTER = 2.1;
-const Z_BIAS = 0.003;
+/** Slightly above support Z so the grid clears the floor / desktop without covering furniture. */
+const Z_BIAS = 0.002;
 
 /**
  * @returns {{ root: THREE.Group, setFadeCenter: Function, setHeight: Function, show: Function, hide: Function, dispose: Function }}
@@ -18,7 +19,7 @@ export function createDragGrid() {
   const root = new THREE.Group();
   root.name = "drag_grid";
   root.visible = false;
-  root.renderOrder = 20;
+  root.renderOrder = -2;
 
   const n = Math.ceil(HALF / STEP);
   const positions = [];
@@ -36,6 +37,9 @@ export function createDragGrid() {
     depthTest: true,
     depthWrite: false,
     toneMapped: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1,
     uniforms: {
       uCenter: { value: new THREE.Vector2(0, 0) },
       uInner: { value: INNER },
@@ -68,7 +72,7 @@ export function createDragGrid() {
 
   const lines = new THREE.LineSegments(geo, mat);
   lines.frustumCulled = false;
-  lines.renderOrder = 20;
+  lines.renderOrder = -2;
   root.add(lines);
 
   let windowOx = 0;

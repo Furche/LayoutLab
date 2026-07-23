@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Drag grid under furniture (`0.10.72`):** Move grid renders in the main scene with depth test so the dragged object sits on top of it (not overdrawn).
 - **Compact furniture gizmos (`0.10.71`):** Rotate/move stay capped at the centre; scale discs sit on footprint edges. Large objects no longer grow a huge rotate hit-ring that blocked empty-click deselect.
 - **Furniture scale from edge (`0.10.70`):** Object scale gizmos resize like room walls — only the grabbed side moves; the opposite edge stays fixed (`resize` `anchor`). API default remains centre-fixed.
 - **Support detach/reattach on host scale (`0.10.69`):** Shrinking a desk under a lamp drops the lamp to the floor and clears the support link (no floating tether). Growing the desk back under a floor lamp re-attaches via `place_on`. Empty/floor click deselects furniture; clicking another object wins over the current gizmo.
