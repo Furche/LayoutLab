@@ -4,8 +4,8 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-23 (furniture edge scale `0.10.70`)
-**Plugin / Core version:** 0.10.70 · **Branch:** `main`
+**Last updated:** 2026-07-23 (compact furniture gizmos `0.10.71`)
+**Plugin / Core version:** 0.10.71 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
 **FC-001/WP-07** shipped; host scale now detaches/reattaches ([DD-021](design_decisions/DD-021-advanced-support-surfaces.md)). Next: see ROADMAP §2 / Refinement.

@@ -335,7 +335,8 @@ function makeRotateRing(radius, color, meta, opts = {}) {
 }
 
 /**
- * Furniture: arrows inside ring, scale discs outside ring (no overlap).
+ * Furniture: compact move/rotate at centre; scale discs at footprint edges.
+ * Ring must not grow with the object — a large hit annulus blocked empty-click deselect.
  */
 export function buildFurnitureGizmo(bounds, objectId) {
   const group = new THREE.Group();
@@ -346,9 +347,13 @@ export function buildFurnitureGizmo(bounds, objectId) {
   group.rotation.z = ((Number(bounds.rotation_z_deg) || 0) * Math.PI) / 180;
 
   const base = { target: "furniture", objectId, generator: bounds.generator || "" };
-  const half = Math.max(sx, sy) * 0.5;
-  const ringR = Math.max(half + 0.1, 0.48);
-  const scaleDist = ringR + 0.2;
+  const halfX = Math.max(Number(sx) || 0.2, 0.05) * 0.5;
+  const halfY = Math.max(Number(sy) || 0.2, 0.05) * 0.5;
+  // Cap rotate ring so big desks don't create a huge click-steal annulus.
+  const ringR = Math.min(0.7, Math.max(0.42, Math.min(halfX, halfY) * 0.9));
+  const scalePad = 0.16;
+  const scaleX = Math.max(halfX + scalePad, ringR + 0.18);
+  const scaleY = Math.max(halfY + scalePad, ringR + 0.18);
 
   group.add(
     makeArrow("x", MOVE_X, { ...base, kind: "move_axis", axis: "x", label: "move-x" }),
@@ -373,10 +378,10 @@ export function buildFurnitureGizmo(bounds, objectId) {
   );
 
   for (const [axis, sign, x, y] of [
-    ["x", 1, scaleDist, 0],
-    ["x", -1, -scaleDist, 0],
-    ["y", 1, 0, scaleDist],
-    ["y", -1, 0, -scaleDist],
+    ["x", 1, scaleX, 0],
+    ["x", -1, -scaleX, 0],
+    ["y", 1, 0, scaleY],
+    ["y", -1, 0, -scaleY],
   ]) {
     const disc = makeDisc(SCALE, 0.1, {
       ...base,
