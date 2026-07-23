@@ -63,24 +63,54 @@ export function roomLocalToWorld(rect, lx, ly) {
 }
 
 /**
- * Union AABB of furniture parts for object_id (skip clearances).
- * @returns {{ min: number[], max: number[], center: number[], size: number[] } | null}
+ * Local footprint bounds for furniture gizmos (size/centre/rz — not world AABB).
+ * Scale handles must track object-local edges after Z rotation.
+ * @returns {{ min: number[], max: number[], center: number[], size: number[], generator: string, rotation_z_deg: number } | null}
  */
 export function furnitureBounds(exportData, objectId) {
   const objects = Array.isArray(exportData?.objects) ? exportData.objects : [];
+  const matches = objects.filter((o) => {
+    const id = o?.layoutlab?.object_id || o?.custom_properties?.layoutlab_object_id;
+    if (id !== objectId) return false;
+    const role = o?.layoutlab?.role || o?.custom_properties?.layoutlab_role || "";
+    return role !== "clearance";
+  });
+  if (!matches.length) return null;
+
+  const main =
+    matches.find((o) => {
+      const pt = o?.layoutlab?.part_type || o?.custom_properties?.layoutlab_part_type;
+      return pt === "main";
+    }) || matches[0];
+
+  const generator = main?.layoutlab?.generator || main?.custom_properties?.layoutlab_generator || "";
+  const rz =
+    Number(
+      main.rotation_euler_deg?.[2] ??
+        main.rotation_z_deg ??
+        main.layoutlab?.rotation_z_deg ??
+        0,
+    ) || 0;
+  const loc = main.location || [0, 0, 0];
+  const dims = main.dimensions || [0.2, 0.2, 0.2];
+  const sx = Math.max(Number(dims[0]) || 0.2, 0.05);
+  const sy = Math.max(Number(dims[1]) || 0.2, 0.05);
+  const sz = Math.max(Number(dims[2]) || 0.05, 0.05);
+  const hx = sx * 0.5;
+  const hy = sy * 0.5;
+  const [ox, oy] = rotateZxy(hx, hy, rz);
+  const cx = (Number(loc[0]) || 0) + ox;
+  const cy = (Number(loc[1]) || 0) + oy;
+  const cz = Number(loc[2]) || 0;
+
+  // World AABB still useful for fit / diagnostics.
   let minX = Infinity;
   let minY = Infinity;
   let minZ = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
   let maxZ = -Infinity;
-  let generator = "";
-  for (const o of objects) {
-    const id = o?.layoutlab?.object_id || o?.custom_properties?.layoutlab_object_id;
-    if (id !== objectId) continue;
-    const role = o?.layoutlab?.role || o?.custom_properties?.layoutlab_role || "";
-    if (role === "clearance") continue;
-    if (!generator) generator = o?.layoutlab?.generator || "";
+  for (const o of matches) {
     const corners = o.world_bbox_corners;
     if (Array.isArray(corners) && corners.length) {
       for (const c of corners) {
@@ -92,40 +122,24 @@ export function furnitureBounds(exportData, objectId) {
         maxY = Math.max(maxY, Number(c[1]));
         maxZ = Math.max(maxZ, Number(c[2]));
       }
-    } else if (Array.isArray(o.location) && Array.isArray(o.dimensions)) {
-      const x = Number(o.location[0]) || 0;
-      const y = Number(o.location[1]) || 0;
-      const z = Number(o.location[2]) || 0;
-      const dx = Math.max(Number(o.dimensions[0]) || 0.01, 0.01);
-      const dy = Math.max(Number(o.dimensions[1]) || 0.01, 0.01);
-      const dz = Math.max(Number(o.dimensions[2]) || 0.01, 0.01);
-      minX = Math.min(minX, x);
-      minY = Math.min(minY, y);
-      minZ = Math.min(minZ, z);
-      maxX = Math.max(maxX, x + dx);
-      maxY = Math.max(maxY, y + dy);
-      maxZ = Math.max(maxZ, z + dz);
     }
   }
-  if (!Number.isFinite(minX)) return null;
-  let rotationZ = 0;
-  const main = objects.find((o) => {
-    const id = o?.layoutlab?.object_id || o?.custom_properties?.layoutlab_object_id;
-    if (id !== objectId) return false;
-    const pt = o?.layoutlab?.part_type || o?.custom_properties?.layoutlab_part_type;
-    return pt === "main" || !pt;
-  });
-  if (main) {
-    rotationZ =
-      Number(main.rotation_z_deg ?? main.layoutlab?.rotation_z_deg ?? 0) || 0;
+  if (!Number.isFinite(minX)) {
+    minX = cx - hx;
+    minY = cy - hy;
+    minZ = cz;
+    maxX = cx + hx;
+    maxY = cy + hy;
+    maxZ = cz + sz;
   }
+
   return {
     min: [minX, minY, minZ],
     max: [maxX, maxY, maxZ],
-    center: [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2],
-    size: [maxX - minX, maxY - minY, maxZ - minZ],
+    center: [cx, cy, cz],
+    size: [sx, sy, sz],
     generator,
-    rotation_z_deg: rotationZ,
+    rotation_z_deg: rz,
   };
 }
 

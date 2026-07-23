@@ -2655,8 +2655,22 @@ async function updateGesture(ev) {
     let dx = floor.x - gesture.startFloor.x;
     let dy = floor.y - gesture.startFloor.y;
     if (gesture.target === "furniture") {
-      if (gesture.axis === "x") dy = 0;
-      else if (gesture.axis === "y") dx = 0;
+      // Constrain along object-local axes (gizmo arrows rotate with the furniture).
+      if (gesture.axis === "x" || gesture.axis === "y") {
+        const rz = gesture.startPose?.rotation_z_deg || 0;
+        const inv = (-rz * Math.PI) / 180;
+        const c = Math.cos(inv);
+        const s = Math.sin(inv);
+        let lx = dx * c - dy * s;
+        let ly = dx * s + dy * c;
+        if (gesture.axis === "x") ly = 0;
+        else lx = 0;
+        const fwd = (rz * Math.PI) / 180;
+        const cf = Math.cos(fwd);
+        const sf = Math.sin(fwd);
+        dx = lx * cf - ly * sf;
+        dy = lx * sf + ly * cf;
+      }
       const nextXY = [
         gesture.startPose.location[0] + dx,
         gesture.startPose.location[1] + dy,
