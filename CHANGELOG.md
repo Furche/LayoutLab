@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Keep camera on Add (`0.10.73`):** Adding furniture/rooms via the viewport menu no longer resets the camera angle; only the first scene load still fits the view.
 - **Drag grid under furniture (`0.10.72`):** Move grid renders in the main scene with depth test so the dragged object sits on top of it (not overdrawn).
 - **Compact furniture gizmos (`0.10.71`):** Rotate/move stay capped at the centre; scale discs sit on footprint edges. Large objects no longer grow a huge rotate hit-ring that blocked empty-click deselect.
 - **Furniture scale from edge (`0.10.70`):** Object scale gizmos resize like room walls — only the grabbed side moves; the opposite edge stays fixed (`resize` `anchor`). API default remains centre-fixed.

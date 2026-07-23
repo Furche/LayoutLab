@@ -517,7 +517,7 @@ function getLlmConfigForRequest() {
   };
 }
 
-async function postCommandsToCore(commandsPayload, sourceLabel) {
+async function postCommandsToCore(commandsPayload, sourceLabel, opts = {}) {
   const base = getCoreUrl();
   persistCoreUrl();
   setStatus(`Sending commands to Core (${base})…`);
@@ -549,8 +549,14 @@ async function postCommandsToCore(commandsPayload, sourceLabel) {
     const detail = payload.errors?.[0]?.error || "command failed";
     setStatus(`Core reported errors: ${detail}`, "warn");
   }
+  const hadScene = Boolean(lastExportData) || liveCoreSession;
   liveCoreSession = true;
-  loadExportData(payload.export, sourceLabel);
+  loadExportData(payload.export, sourceLabel, {
+    preserveCamera: opts.preserveCamera ?? hadScene,
+    preserveSelection: Boolean(opts.preserveSelection),
+    preserveTarget: opts.preserveTarget,
+    quiet: opts.quiet,
+  });
 }
 
 async function postCoreJson(path, body = {}) {
@@ -2841,7 +2847,7 @@ async function addRoomFromMenu() {
   );
   const created = (lastExportData?.rooms || []).find((r) => r?.name === params.name);
   if (created?.room_id) {
-    selectRoom(created.room_id, { fit: true });
+    selectRoom(created.room_id, { fit: false, announce: false });
     setSelectionTarget({ type: "room", roomId: created.room_id });
   }
   setStatus(`Added room ${params.name}`);
