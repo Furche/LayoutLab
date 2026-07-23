@@ -45,6 +45,7 @@ import {
   cornerMoveCommand,
 } from "./manipulate.js";
 import { createDragGrid } from "./dragGrid.js";
+import { buildRoomCopyClipboard, isRoomCopyClipboard } from "./roomCopy.js";
 import kidsRoomFixture from "../../tests/fixtures/reference_kids_room_export.json";
 import kidsRoomFindings from "../../tests/fixtures/reference_kids_room_export_findings.json";
 
@@ -65,6 +66,7 @@ const el = {
   btnCoreKids: document.getElementById("btn-core-kids"),
   btnCoreMultiroom: document.getElementById("btn-core-multiroom"),
   btnCoreCommands: document.getElementById("btn-core-commands"),
+  btnCopyRoom: document.getElementById("btn-copy-room"),
   coreUrl: document.getElementById("core-url"),
   coreVersion: document.getElementById("core-version"),
   pasteDialog: document.getElementById("paste-dialog"),
@@ -1708,6 +1710,9 @@ function parseExportText(text) {
   if (!data || typeof data !== "object") {
     throw new Error("Expected a scene export object");
   }
+  if (isRoomCopyClipboard(data)) {
+    return data;
+  }
   if (Array.isArray(data.commands) && !Array.isArray(data.objects)) {
     throw new Error(
       "This looks like commands JSON (Apply in Blender). Use Copy Scene Layout, then paste that here.",
@@ -1718,6 +1723,47 @@ function parseExportText(text) {
   }
   if (!Array.isArray(data.objects)) data.objects = [];
   return data;
+}
+
+function loadFromPasteText(text, sourceLabel = "clipboard paste") {
+  const data = parseExportText(text);
+  if (isRoomCopyClipboard(data)) {
+    const n = data.source?.object_count ?? data.objects?.length ?? data.commands.length;
+    setStatus(`Room copy detected (${n} objects) — applying via Core…`);
+    postCommandsToCore({ commands: data.commands }, sourceLabel || "Core · paste room copy").catch(
+      (err) => setStatus(err.message, "error"),
+    );
+    return;
+  }
+  liveCoreSession = false;
+  previewClient.resetLocal();
+  loadExportData(data, sourceLabel);
+}
+
+function resolveCopyRoomId() {
+  if (selectedRoomId) return selectedRoomId;
+  if (selectionTarget?.roomId) return selectionTarget.roomId;
+  const rooms = Array.isArray(lastExportData?.rooms) ? lastExportData.rooms : [];
+  if (rooms.length === 1) return rooms[0].room_id;
+  return null;
+}
+
+async function copyFocusedRoomToClipboard() {
+  if (!lastExportData) throw new Error("No scene loaded");
+  const roomId = resolveCopyRoomId();
+  if (!roomId) throw new Error("Select a room first (Inspector → Rooms)");
+  const room = (lastExportData.rooms || []).find((r) => r?.room_id === roomId);
+  const width = Number(room?.footprint?.width) || 4;
+  // Place the paste copy beside the original so it does not stack.
+  const { payload, objectCount, roomName } = buildRoomCopyClipboard(lastExportData, roomId, {
+    offset: [width + 1.0, 0, 0],
+  });
+  const text = JSON.stringify(payload, null, 2);
+  await navigator.clipboard.writeText(text);
+  setStatus(
+    `Copied room “${roomName}” (${objectCount} object${objectCount === 1 ? "" : "s"}) to clipboard`,
+    "ok",
+  );
 }
 
 function loadExportData(data, sourceLabel, opts = {}) {
@@ -1781,13 +1827,6 @@ function loadExportData(data, sourceLabel, opts = {}) {
       : "";
     setStatus(`Loaded ${sourceLabel} · ${n} objects${findingNote}`, "ok");
   }
-}
-
-function loadFromPasteText(text, sourceLabel = "clipboard paste") {
-  const data = parseExportText(text);
-  liveCoreSession = false;
-  previewClient.resetLocal();
-  loadExportData(data, sourceLabel);
 }
 
 async function loadFixture() {
@@ -1965,6 +2004,10 @@ function frame(now = performance.now()) {
 
 el.btnPaste.addEventListener("click", () => {
   pasteFromClipboard().catch((err) => setStatus(`Error: ${err.message}`, "error"));
+});
+
+el.btnCopyRoom?.addEventListener("click", () => {
+  copyFocusedRoomToClipboard().catch((err) => setStatus(err.message, "error"));
 });
 
 el.btnCoreEmpty?.addEventListener("click", () => {

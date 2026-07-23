@@ -780,6 +780,18 @@ button:hover {
   color: var(--muted);
 }
 
+.room-actions {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.room-actions button {
+  flex: 1;
+  font-size: 0.72rem;
+  padding: 0.28rem 0.45rem;
+}
+
 .selection-info {
   margin: 0;
   font-size: 0.85rem;

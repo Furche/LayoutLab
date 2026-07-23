@@ -218,6 +218,11 @@
           <section>
             <h2>Rooms</h2>
             <ul id="room-list" class="room-list" aria-label="Project rooms"></ul>
+            <div class="room-actions">
+              <button type="button" id="btn-copy-room" title="Copy focused room to clipboard (commands)">
+                Copy room
+              </button>
+            </div>
             <div id="room-floorplan" class="room-floorplan" hidden></div>
           </section>
           <section>
@@ -249,7 +254,7 @@
           <section class="help">
             <h2>Shortcuts</h2>
             <ul class="shortcuts">
-              <li><kbd>⌘V</kbd> paste export</li>
+              <li><kbd>⌘V</kbd> paste export / room copy</li>
               <li><kbd>F</kbd> fit · <kbd>1</kbd>–<kbd>4</kbd> camera</li>
               <li>Click object/room → transform gizmos</li>
               <li>Arrows = 1 axis · amber square = XY · ring = rotate · böppel = scale</li>
@@ -257,6 +262,7 @@
               <li>Drag furniture: fine world grid under the object · magnet snaps to desks · <kbd>Alt</kbd> = free</li>
               <li><kbd>⌘Z</kbd> / <kbd>⇧⌘Z</kbd> Undo / Redo (Core)</li>
               <li><strong>Add</strong> — room or furniture into focus room</li>
+              <li><strong>Copy room</strong> — Inspector → Rooms (paste with ⌘V)</li>
             </ul>
           </section>
         </div>

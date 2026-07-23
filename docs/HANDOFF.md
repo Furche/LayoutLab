@@ -4,8 +4,8 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-24 (Decor / Deko props `0.10.77`)
-**Plugin / Core version:** 0.10.77 · **Branch:** `main`
+**Last updated:** 2026-07-24 (Copy room clipboard `0.10.78`)
+**Plugin / Core version:** 0.10.78 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
 **FC-001/WP-07** shipped; host scale now detaches/reattaches ([DD-021](design_decisions/DD-021-advanced-support-surfaces.md)). Next: see ROADMAP §2 / Refinement.
@@ -100,12 +100,12 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 
 | Component | Version |
 |---|---|
-| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.60** |
+| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.78** |
 | `bed_basic` | **0.7.0** — raised frame; optional `bed_entry` clearances; sizes in meters |
 | `wardrobe_basic` | **0.7.0** — `front_side`, `create_clearance`, part `clearance_front_access` |
 | `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.10.60.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.78.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -117,6 +117,8 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 - FC-001 Core WP-01…WP-06 (`0.10.36`–`0.10.40`): transactions, furniture ops, resize, wall/corner, Spatial Project
 - Viewer multi-room + direct manipulation → Core preview/commit (`0.10.41`–`0.10.57`)
 - Viewer planning feedback: proposed vs committed (`0.10.58`)
+- Decor / Deko generators + Add menu (`0.10.77`)
+- **Copy room** clipboard → paste recreates room + furniture (`0.10.78`)
 - Default boot: furnished bedroom via Core; clearances as oriented mesh wireframes
 - Bundled generator sync; diagnostic checks; reference kids room fixtures under `tests/fixtures/`
 
