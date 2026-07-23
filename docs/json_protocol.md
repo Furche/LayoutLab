@@ -371,7 +371,9 @@ Removes **all scene objects** whose names start with `prefix`. Use before re-run
 | `set_locked` | `{ "object_id", "locked" }` | Blocks edit ops |
 | `set_flags` | flags + `object_id` | `locked`, `visible`, `protected_from_ai`, `included_in_analysis`, `support_ref` |
 
-Export `layoutlab` may include `support_ref`, `support_local_xy`, `room_id`, `validity`, `locked`. Validity: `VALID`, `INVALID_OUTSIDE_ROOM`, `INVALID_INTERSECTS_WALL`, `INVALID_OFF_SUPPORT`, `INVALID_NO_SUPPORT`.
+Export `layoutlab` may include `support_ref`, `support_local_xy`, `surfaces` (host), `room_id`, `validity`, `locked`. Validity: `VALID`, `INVALID_OUTSIDE_ROOM`, `INVALID_INTERSECTS_WALL`, `INVALID_OFF_SUPPORT`, `INVALID_NO_SUPPORT`.
+
+**Viewer magnet (0.10.66):** Furniture XY drag snaps onto host `surfaces` (margin). Holding **Alt** disables magnet (floor / free). Commit uses `place_on` when snapped, else `set_support`→`room_floor` + `move` when leaving a host.
 
 ------------------------------------------------------------------------
 

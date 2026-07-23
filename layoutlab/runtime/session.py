@@ -43,7 +43,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.65"
+LAYOUTLAB_VERSION = "0.10.66"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -355,6 +355,7 @@ def _furniture_export_object(obj):
             "part_type": obj.get("layoutlab_part_type"),
             "support_ref": obj.get("layoutlab_support_ref") or furniture_ops.SUPPORT_ROOM_FLOOR,
             "support_local_xy": support_surfaces.support_local_xy_of(obj),
+            "surfaces": support_surfaces.surfaces_of(obj),
             "room_id": obj.get("layoutlab_room_id"),
             "validity": obj.get("layoutlab_validity") or furniture_ops.VALIDITY_VALID,
             "locked": bool(obj.props.get("locked") or obj.props.get("layoutlab_locked")),

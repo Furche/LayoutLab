@@ -163,6 +163,139 @@ export function moveCommand(objectId, location) {
   };
 }
 
+export function placeOnCommand(objectId, hostObjectId, surfaceId, location) {
+  const cmd = {
+    action: "place_on",
+    object_id: objectId,
+    host_object_id: hostObjectId,
+    surface_id: surfaceId || "surface_top",
+  };
+  if (location) {
+    cmd.location = [location[0], location[1], location[2] ?? 0];
+  }
+  return cmd;
+}
+
+export function setSupportCommand(objectId, supportRef) {
+  return {
+    action: "set_support",
+    object_id: objectId,
+    support_ref: supportRef || "room_floor",
+  };
+}
+
+/** Default XY margin (m) for magnet snap onto host surfaces. */
+export const MAGNET_MARGIN_M = 0.08;
+
+function _rotateZ(x, y, deg) {
+  const r = (Number(deg) || 0) * (Math.PI / 180);
+  const c = Math.cos(r);
+  const s = Math.sin(r);
+  return [x * c - y * s, x * s + y * c];
+}
+
+function _worldToHostLocal(hostLoc, hostRz, worldXY) {
+  const wx = Number(worldXY[0]) - Number(hostLoc[0] || 0);
+  const wy = Number(worldXY[1]) - Number(hostLoc[1] || 0);
+  return _rotateZ(wx, wy, -(Number(hostRz) || 0));
+}
+
+/**
+ * Collect host surfaces from export (main parts with layoutlab.surfaces).
+ * @param {object} exportData
+ * @returns {Array<{hostId:string, surface:object, location:number[], rz:number, name:string}>}
+ */
+export function listHostSurfaces(exportData) {
+  const objects = Array.isArray(exportData?.objects) ? exportData.objects : [];
+  const out = [];
+  const seen = new Set();
+  for (const o of objects) {
+    const hostId = o?.layoutlab?.object_id || o?.custom_properties?.layoutlab_object_id;
+    if (!hostId || seen.has(hostId)) continue;
+    const partType = o?.layoutlab?.part_type || o?.custom_properties?.layoutlab_part_type;
+    const surfaces = o?.layoutlab?.surfaces;
+    if (!Array.isArray(surfaces) || !surfaces.length) continue;
+    if (partType && partType !== "main") continue;
+    seen.add(hostId);
+    const loc = o.location || [0, 0, 0];
+    const rz = o.rotation_euler_deg?.[2] ?? o.layoutlab?.rotation_z_deg ?? 0;
+    for (const surface of surfaces) {
+      if (!surface?.id) continue;
+      out.push({
+        hostId,
+        surface,
+        location: [Number(loc[0]) || 0, Number(loc[1]) || 0, Number(loc[2]) || 0],
+        rz: Number(rz) || 0,
+        name: o.name || hostId,
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * Find magnet host under a world XY sample point (typically furniture footprint centre).
+ * Prefers the highest surface Z when several overlap.
+ * @returns {{ hostId: string, surfaceId: string, worldZ: number, localXy: number[], hostName: string } | null}
+ */
+export function findMagnetHost(exportData, worldXY, { excludeObjectId = null, margin = MAGNET_MARGIN_M } = {}) {
+  const hosts = listHostSurfaces(exportData);
+  let best = null;
+  for (const h of hosts) {
+    if (excludeObjectId && h.hostId === excludeObjectId) continue;
+    const [lx, ly] = _worldToHostLocal(h.location, h.rz, worldXY);
+    const mn = h.surface.local_min_xy || [0, 0];
+    const mx = h.surface.local_max_xy || [0, 0];
+    const m = Number(margin) || 0;
+    if (
+      lx < Number(mn[0]) - m ||
+      ly < Number(mn[1]) - m ||
+      lx > Number(mx[0]) + m ||
+      ly > Number(mx[1]) + m
+    ) {
+      continue;
+    }
+    const worldZ = Number(h.location[2] || 0) + Number(h.surface.local_z || 0);
+    if (!best || worldZ >= best.worldZ) {
+      best = {
+        hostId: h.hostId,
+        surfaceId: String(h.surface.id),
+        worldZ,
+        localXy: [lx, ly],
+        hostName: h.name,
+      };
+    }
+  }
+  return best;
+}
+
+/**
+ * Footprint centre from min-corner location + half extents (approx from export dims).
+ */
+export function footprintCentreFromPose(pose, halfX = 0.1, halfY = 0.1) {
+  const loc = pose?.location || [0, 0, 0];
+  const rz = pose?.rotation_z_deg || 0;
+  const [ox, oy] = _rotateZ(halfX, halfY, rz);
+  return [Number(loc[0]) + ox, Number(loc[1]) + oy, Number(loc[2]) || 0];
+}
+
+export function furnitureHalfXyFromExport(exportData, objectId) {
+  const objects = Array.isArray(exportData?.objects) ? exportData.objects : [];
+  const main =
+    objects.find(
+      (o) =>
+        (o?.layoutlab?.object_id || o?.custom_properties?.layoutlab_object_id) === objectId &&
+        (o?.layoutlab?.part_type === "main" ||
+          o?.custom_properties?.layoutlab_part_type === "main"),
+    ) ||
+    objects.find(
+      (o) => (o?.layoutlab?.object_id || o?.custom_properties?.layoutlab_object_id) === objectId,
+    );
+  if (!main) return [0.1, 0.1];
+  const dims = main.dimensions || [0.2, 0.2, 0.2];
+  return [Math.max(0.02, Number(dims[0]) * 0.5), Math.max(0.02, Number(dims[1]) * 0.5)];
+}
+
 export function rotateCommand(objectId, degrees) {
   return {
     action: "rotate_z",

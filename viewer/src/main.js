@@ -25,15 +25,20 @@ import {
 } from "./gizmos.js";
 import {
   createPreviewClient,
+  findMagnetHost,
   findMeshForObjectId,
+  footprintCentreFromPose,
+  furnitureHalfXyFromExport,
   hitBlenderFloorXY,
   isFurnitureMesh,
   isWallMesh,
   moveCommand,
   MOVE_THROTTLE_MS,
+  placeOnCommand,
   poseFromExport,
   rotateCommand,
   ROTATE_DEG_PER_PX,
+  setSupportCommand,
   wallDeltaFromDrag,
   wallMoveCommand,
   cornerMoveCommand,
@@ -2159,11 +2164,12 @@ function applyExportFromCore(payload, label, opts = {}) {
   });
 }
 
-function offsetObjectMeshes(objectId, dx, dy) {
+function offsetObjectMeshes(objectId, dx, dy, dz = 0) {
   for (const mesh of collectMeshes()) {
     if (mesh.userData?.object_id === objectId) {
       mesh.position.x += dx;
       mesh.position.y += dy;
+      mesh.position.z += dz;
     }
   }
   // Keep gizmos glued to the object during optimistic drag (avoid preview lag).
@@ -2174,6 +2180,7 @@ function offsetObjectMeshes(objectId, dx, dy) {
   ) {
     gizmoGroup.position.x += dx;
     gizmoGroup.position.y += dy;
+    gizmoGroup.position.z += dz;
   }
 }
 
@@ -2207,7 +2214,11 @@ function gestureLabel(g) {
   if (g.kind === "wall") return `Moving ${g.wallSide} wall`;
   if (g.kind === "corner") return `Moving ${g.corner} corner`;
   if (g.kind === "move_axis") {
-    if (g.axis === "xy") return `Moving ${g.target} XY`;
+    if (g.axis === "xy") {
+      if (g._magnet && !g._altOff) return `Snap → ${g._magnet.hostName || "surface"}`;
+      if (g._altOff) return `Moving ${g.target} XY (magnet off)`;
+      return `Moving ${g.target} XY`;
+    }
     return `Moving ${g.target} ${g.axis}`;
   }
   if (g.kind === "rotate_z") return "Rotating";
@@ -2443,6 +2454,7 @@ function beginMoveAxisGesture(target, axis, ids, floor, clientX) {
       setStatus("Object not found in export", "error");
       return false;
     }
+    const half = furnitureHalfXyFromExport(lastExportData, objectId);
     gesture = {
       kind: "move_axis",
       target: "furniture",
@@ -2451,14 +2463,49 @@ function beginMoveAxisGesture(target, axis, ids, floor, clientX) {
       startPose: pose,
       startFloor: floor,
       startClientX: clientX,
-      lastLocal: { x: 0, y: 0 },
+      lastLocal: { x: 0, y: 0, z: 0 },
+      halfXy: half,
+      floorZ: Number(pose.location[2]) || 0,
+      // If already on a host, floor drop target is room Z 0 (MVP).
+      _detachFloorZ: 0,
+      _magnet: null,
+      _altOff: false,
+      _wasMagnet: false,
       started: false,
       _beginning: false,
       commands() {
         const loc = this._location || this.startPose.location;
-        return [moveCommand(this.objectId, loc)];
+        if (this._magnet && !this._altOff) {
+          return [
+            placeOnCommand(this.objectId, this._magnet.hostId, this._magnet.surfaceId, [
+              loc[0],
+              loc[1],
+            ]),
+          ];
+        }
+        const cmds = [];
+        const startRef = String(this.startPose.support_ref || "room_floor");
+        if (startRef.startsWith("object:") || this._wasMagnet) {
+          cmds.push(setSupportCommand(this.objectId, "room_floor"));
+        }
+        cmds.push(
+          moveCommand(this.objectId, [
+            loc[0],
+            loc[1],
+            this._altOff || !this._magnet ? this._detachFloorZ : loc[2],
+          ]),
+        );
+        return cmds;
       },
     };
+    // Starting already on a host → detach floor Z is 0; keep start Z as floorZ only for free move.
+    if (String(pose.support_ref || "").startsWith("object:")) {
+      gesture.floorZ = 0;
+      gesture._detachFloorZ = 0;
+    } else {
+      gesture.floorZ = Number(pose.location[2]) || 0;
+      gesture._detachFloorZ = gesture.floorZ;
+    }
     return true;
   }
   const roomId = ids.roomId || ids.room_id;
@@ -2562,17 +2609,42 @@ async function updateGesture(ev) {
     if (gesture.target === "furniture") {
       if (gesture.axis === "x") dy = 0;
       else if (gesture.axis === "y") dx = 0;
-      const optimisticDx = dx - gesture.lastLocal.x;
-      const optimisticDy = dy - gesture.lastLocal.y;
-      if (optimisticDx || optimisticDy) {
-        offsetObjectMeshes(gesture.objectId, optimisticDx, optimisticDy);
-        gesture.lastLocal = { x: dx, y: dy };
-      }
-      gesture._location = [
+      const nextXY = [
         gesture.startPose.location[0] + dx,
         gesture.startPose.location[1] + dy,
-        gesture.startPose.location[2],
       ];
+      gesture._altOff = Boolean(ev.altKey);
+      let nextZ = gesture._detachFloorZ;
+      let magnet = null;
+      if (!gesture._altOff) {
+        const trialPose = {
+          location: [nextXY[0], nextXY[1], gesture.startPose.location[2]],
+          rotation_z_deg: gesture.startPose.rotation_z_deg,
+        };
+        const [hx, hy] = gesture.halfXy || [0.1, 0.1];
+        const centre = footprintCentreFromPose(trialPose, hx, hy);
+        magnet = findMagnetHost(lastExportData, centre, {
+          excludeObjectId: gesture.objectId,
+        });
+      }
+      if (magnet) {
+        gesture._magnet = magnet;
+        gesture._wasMagnet = true;
+        nextZ = magnet.worldZ;
+      } else {
+        gesture._magnet = null;
+        nextZ = gesture._detachFloorZ;
+      }
+      const optimisticDx = dx - gesture.lastLocal.x;
+      const optimisticDy = dy - gesture.lastLocal.y;
+      const appliedZ = gesture.lastLocal.z || 0;
+      const targetAppliedZ = nextZ - gesture.startPose.location[2];
+      const ddz = targetAppliedZ - appliedZ;
+      if (optimisticDx || optimisticDy || ddz) {
+        offsetObjectMeshes(gesture.objectId, optimisticDx, optimisticDy, ddz);
+        gesture.lastLocal = { x: dx, y: dy, z: targetAppliedZ };
+      }
+      gesture._location = [nextXY[0], nextXY[1], nextZ];
       skipExportReload = true;
     } else {
       // Constrain along room-local axes when the room is rotated.
