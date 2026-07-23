@@ -42,7 +42,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.59"
+LAYOUTLAB_VERSION = "0.10.60"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -59,6 +59,8 @@ SESSION_ACTIONS = frozenset(
         "move_corner",
         # FC-001/WP-06 Spatial Project / independent rooms
         "move_room",
+        "rotate_room",
+        "rotate_room_z",
         "duplicate_room",
         "hide_room",
         "show_room",
@@ -171,6 +173,7 @@ def _room_objects(model):
     prefix = f"{model['name']}_"
     objects = []
 
+    floor_corners = [round_corner(c) for c in room_core.floor_world_corners(model)]
     floor_loc, floor_dims = room_core.floor_display_box(model)
     objects.append(
         _object_dict(
@@ -180,8 +183,8 @@ def _room_objects(model):
             dimensions=floor_dims,
             role="room_floor",
             object_id=room_id,
-            world_bbox_corners=_box_corners(floor_loc, floor_dims),
-            viewer=viewer_block_for_role("room_floor"),
+            world_bbox_corners=floor_corners,
+            viewer=viewer_block_for_role("room_floor", corners=floor_corners),
             extra_props={"layoutlab_room_id": room_id},
             layoutlab_extra={"room_id": room_id},
         )
@@ -655,6 +658,8 @@ class RoomSession:
 
         if action in (
             "move_room",
+            "rotate_room",
+            "rotate_room_z",
             "duplicate_room",
             "hide_room",
             "show_room",

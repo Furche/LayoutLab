@@ -1,6 +1,6 @@
 # LayoutLab — Product Roadmap
 
-**Status:** Binding · **Updated:** 2026-07-23 (`0.10.58` planning feedback)
+**Status:** Binding · **Updated:** 2026-07-23 (`0.10.60` room Z-rotate)
 
 > **This file is the only authoritative source for product priorities and work order.**
 >
@@ -44,6 +44,7 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 | Viewer multi-room UX | `0.10.41`–`0.10.42` (focus / floorplan / meta) |
 | Viewer direct manipulation → Core | `0.10.43`–`0.10.57` (preview/commit, wall/corner, selection gizmos, overlay/pick polish) |
 | Viewer planning feedback polish | `0.10.58` — proposed vs committed (banner, reason, proposal findings, Inspector Planning, Apply-Gate copy) |
+| Room Z-rotate | `0.10.60` — Core `rotate_room` + Viewer rotate ring; center pivot; VALID follows / INVALID stays |
 
 **Begriffsklärung (heute vs. später):**
 
@@ -62,7 +63,7 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 
 | ID | Scope | Concept / DDs | Status |
 |---|---|---|---|
-| **Room Z-rotate** | Semantic room rotation about Z with fabric (openings/fixed) and VALID furniture participation — Viewer gesture after Core supports it | Requires Core contract (likely DD-019 / Room Model extension — confirm with DD before coding) · Viewer surface [DD-014](design_decisions/DD-014-standalone-runtime-path.md) | **Current** |
+| [FC-001/WP-07](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Advanced support surfaces / stacking | [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · confirm DD before coding | **Current** |
 
 Product surface remains Standalone Viewer + Core ([`AI_CONTEXT.md`](../AI_CONTEXT.md)). Blender = runtime adapter.
 
@@ -72,7 +73,7 @@ Product surface remains Standalone Viewer + Core ([`AI_CONTEXT.md`](../AI_CONTEX
 
 | ID | Scope | Entry condition |
 |---|---|---|
-| [FC-001/WP-07](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Advanced support surfaces / stacking | After Room Z-rotate unless product reprioritizes |
+| *(none locked)* | — | Promote from Refinement / Later when product asks |
 
 ------------------------------------------------------------------------
 

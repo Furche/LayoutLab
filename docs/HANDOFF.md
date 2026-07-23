@@ -4,11 +4,11 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-23 (Chat thinking indicator `0.10.59`)
-**Plugin / Core version:** 0.10.59 · **Branch:** `main`
+**Last updated:** 2026-07-23 (Room Z-rotate `0.10.60`)
+**Plugin / Core version:** 0.10.60 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
-**Room Z-rotate**
+**FC-001/WP-07** (advanced supports / stacking)
 
 ------------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ Respond to Alexander in **German**.
 ```
 LayoutLab — semantic interior planning (Standalone Viewer + Core).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Core/plugin v0.10.59.
+Branch: main. Core/plugin v0.10.60.
 
 Lies in dieser Reihenfolge:
 1. 00_READ_THIS_FIRST.md
@@ -45,8 +45,8 @@ Lies in dieser Reihenfolge:
 
 Aktueller Stand (2026-07-23):
 - Produktfokus: Standalone Web Viewer (`viewer/`) + Core HTTP (`server/`)
-- FC-001/WP-01…WP-06 ✅; Viewer direct manipulation ✅; planning feedback ✅ (`0.10.58`)
-- Active: Room Z-rotate (siehe ROADMAP §2)
+- FC-001/WP-01…WP-06 ✅; Viewer DM ✅; planning feedback ✅; Room Z-rotate ✅ (`0.10.60`)
+- Active: FC-001/WP-07 (siehe ROADMAP §2)
 - Blender = Runtime-Adapter, kein Default für neue Features
 - Core: python3 -m server (:8765); Viewer: cd viewer && npm run dev (:5173)
 
@@ -100,12 +100,12 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 
 | Component | Version |
 |---|---|
-| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.59** |
+| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.60** |
 | `bed_basic` | **0.7.0** — raised frame; optional `bed_entry` clearances; sizes in meters |
 | `wardrobe_basic` | **0.7.0** — `front_side`, `create_clearance`, part `clearance_front_access` |
 | `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.10.59.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.60.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -209,7 +209,8 @@ If **next work** changes, update [`ROADMAP.md`](ROADMAP.md) first, then point he
 
 | Date | Change |
 |---|---|
-| 2026-07-23 | `0.10.59` Chat thinking indicator; `0.10.58` planning feedback polish; Active → Room Z-rotate |
+| 2026-07-23 | `0.10.60` Room Z-rotate; Active → FC-001/WP-07 |
+| 2026-07-23 | `0.10.59` Chat thinking indicator; `0.10.58` planning feedback polish |
 | 2026-07-23 | Roadmap ownership moved to `docs/ROADMAP.md`; HANDOFF = session/as-built only |
 | 2026-07-23 | `0.10.57` Bed scale axes; Viewer gizmo/overlay polish through `0.10.56` |
 | 2026-07-22 | `0.10.46` Selection transform gizmos; product focus Viewer-first |

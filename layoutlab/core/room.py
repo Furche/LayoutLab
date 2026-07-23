@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import math
 import uuid
 
 FOOTPRINT_KINDS = ("rectangle", "polygon")
@@ -28,6 +29,69 @@ def _f(value, default=0.0):
         return float(default)
 
 
+def normalize_rotation_z_deg(degrees: float) -> float:
+    """Normalize to (-180, 180]."""
+    d = float(degrees) % 360.0
+    if d > 180.0:
+        d -= 360.0
+    if d <= -180.0:
+        d += 360.0
+    return d
+
+
+def rotate_z_xy(x: float, y: float, degrees: float) -> tuple[float, float]:
+    """Rotate XY around origin by degrees (counter-clockwise)."""
+    rad = math.radians(float(degrees))
+    c, s = math.cos(rad), math.sin(rad)
+    return (float(x) * c - float(y) * s, float(x) * s + float(y) * c)
+
+
+def room_rotation_z(model) -> float:
+    return _f(model.get("rotation_z_deg", 0.0), 0.0)
+
+
+def room_local_to_world(model, local_xyz) -> list[float]:
+    """Map room-local (SW-origin frame) → world. Z is not rotated."""
+    ox, oy, oz = (_f(v) for v in (model.get("origin") or [0, 0, 0]))
+    lx = _f(local_xyz[0]) if local_xyz else 0.0
+    ly = _f(local_xyz[1]) if local_xyz is not None and len(local_xyz) > 1 else 0.0
+    lz = _f(local_xyz[2]) if local_xyz is not None and len(local_xyz) > 2 else 0.0
+    rx, ry = rotate_z_xy(lx, ly, room_rotation_z(model))
+    return [ox + rx, oy + ry, oz + lz]
+
+
+def room_world_to_local(model, world_xyz) -> list[float]:
+    """Map world → room-local (inverse of room_local_to_world)."""
+    ox, oy, oz = (_f(v) for v in (model.get("origin") or [0, 0, 0]))
+    wx = _f(world_xyz[0]) if world_xyz else 0.0
+    wy = _f(world_xyz[1]) if world_xyz is not None and len(world_xyz) > 1 else 0.0
+    wz = _f(world_xyz[2]) if world_xyz is not None and len(world_xyz) > 2 else 0.0
+    lx, ly = rotate_z_xy(wx - ox, wy - oy, -room_rotation_z(model))
+    return [lx, ly, wz - oz]
+
+
+def room_footprint_center(model) -> list[float]:
+    """World XY center of the rectangle footprint (pivot for rotate_room)."""
+    width = _f(model["footprint"]["width"])
+    depth = _f(model["footprint"]["depth"])
+    return room_local_to_world(model, [width * 0.5, depth * 0.5, 0.0])
+
+
+def footprint_local_corners(model) -> list[list[float]]:
+    width = _f(model["footprint"]["width"])
+    depth = _f(model["footprint"]["depth"])
+    return [
+        [0.0, 0.0, 0.0],
+        [width, 0.0, 0.0],
+        [width, depth, 0.0],
+        [0.0, depth, 0.0],
+    ]
+
+
+def footprint_world_corners(model) -> list[list[float]]:
+    return [room_local_to_world(model, c) for c in footprint_local_corners(model)]
+
+
 def wall_length_for_side(width, depth, side):
     if side in ("south", "north"):
         return float(width)
@@ -36,16 +100,18 @@ def wall_length_for_side(width, depth, side):
     raise ValueError(f"unknown wall side {side!r}")
 
 
-def derive_rectangle_walls(origin, width, depth, height, thickness, existing=None):
+def derive_rectangle_walls(origin, width, depth, height, thickness, existing=None, rotation_z_deg=0.0):
     """Return four wall dicts for a rectangle footprint.
 
     If ``existing`` is a list of walls with ``side`` keys, reuse their wall_ids.
+    Segments are written in world space (origin + R_z · local).
     """
     ox, oy, oz = (_f(origin[0]), _f(origin[1]), _f(origin[2]) if len(origin) > 2 else 0.0)
     width = _f(width)
     depth = _f(depth)
     height = _f(height)
     thickness = _f(thickness, DEFAULT_WALL_THICKNESS)
+    rz = _f(rotation_z_deg, 0.0)
     by_side = {}
     if existing:
         for wall in existing:
@@ -53,11 +119,15 @@ def derive_rectangle_walls(origin, width, depth, height, thickness, existing=Non
             if side:
                 by_side[side] = wall
 
+    def _pt(lx, ly):
+        rx, ry = rotate_z_xy(lx, ly, rz)
+        return [ox + rx, oy + ry, oz]
+
     segments = {
-        "south": {"start": [ox, oy, oz], "end": [ox + width, oy, oz]},
-        "east": {"start": [ox + width, oy, oz], "end": [ox + width, oy + depth, oz]},
-        "north": {"start": [ox, oy + depth, oz], "end": [ox + width, oy + depth, oz]},
-        "west": {"start": [ox, oy, oz], "end": [ox, oy + depth, oz]},
+        "south": {"start": _pt(0.0, 0.0), "end": _pt(width, 0.0)},
+        "east": {"start": _pt(width, 0.0), "end": _pt(width, depth)},
+        "north": {"start": _pt(0.0, depth), "end": _pt(width, depth)},
+        "west": {"start": _pt(0.0, 0.0), "end": _pt(0.0, depth)},
     }
     walls = []
     for side in RECT_WALL_ORDER:
@@ -117,7 +187,9 @@ def create_room_model(params):
         "height": height,
         "wall_thickness": thickness,
         "footprint": {"kind": "rectangle", "width": width, "depth": depth},
-        "walls": derive_rectangle_walls(origin, width, depth, height, thickness),
+        "walls": derive_rectangle_walls(
+            origin, width, depth, height, thickness, rotation_z_deg=rotation_z
+        ),
         "openings": [],
         "fixed_elements": [],
         "collection": str(params.get("collection") or "layoutlab_room"),
@@ -185,11 +257,13 @@ def update_room_model(model, params):
         if height <= 0:
             raise ValueError("room height must be > 0")
         model["height"] = height
+    if "rotation_z_deg" in params:
+        model["rotation_z_deg"] = normalize_rotation_z_deg(params["rotation_z_deg"])
     if "wall_thickness" in params:
         model["wall_thickness"] = _f(params["wall_thickness"], DEFAULT_WALL_THICKNESS)
 
     _apply_rectangle_footprint(model, existing=model.get("walls"))
-    # Wall-resize must re-anchor openings/fixed in world-U. Pure origin translation
+    # Wall-resize must re-anchor openings/fixed in world space. Pure origin translation
     # must keep wall-local offsets so windows/doors/radiators move with the room.
     size_changed = (
         abs(prev["width"] - footprint["width"]) > 1e-9
@@ -207,6 +281,7 @@ def _footprint_snapshot(model):
         "origin": origin,
         "width": _f(fp["width"]),
         "depth": _f(fp["depth"]),
+        "rotation_z_deg": room_rotation_z(model),
     }
 
 
@@ -219,28 +294,62 @@ def _apply_rectangle_footprint(model, *, existing=None):
         model["height"],
         model["wall_thickness"],
         existing=existing if existing is not None else model.get("walls"),
+        rotation_z_deg=room_rotation_z(model),
     )
     _revalidate_attachments(model)
 
 
-def _attachment_world_u(model, wall, offset):
-    """World coordinate along the wall's primary axis at ``offset``."""
-    ox, oy = _f(model["origin"][0]), _f(model["origin"][1])
+def _attachment_local_point(model, wall, offset):
+    """Room-local point of an attachment start on the wall plane."""
+    width = _f(model["footprint"]["width"])
+    depth = _f(model["footprint"]["depth"])
+    o = _f(offset)
+    side = wall.get("side")
+    if side == "south":
+        return [o, 0.0, 0.0]
+    if side == "north":
+        return [o, depth, 0.0]
+    if side == "west":
+        return [0.0, o, 0.0]
+    if side == "east":
+        return [width, o, 0.0]
+    raise ValueError(f"unknown wall side {side!r}")
+
+
+def _attachment_world_xy(model, wall, offset):
+    """World XY of attachment start (for wall-resize remapping under rotation)."""
+    pt = room_local_to_world(model, _attachment_local_point(model, wall, offset))
+    return [pt[0], pt[1]]
+
+
+def _offset_from_world_xy(model, wall, world_xy):
+    local = room_world_to_local(model, [world_xy[0], world_xy[1], 0.0])
     side = wall.get("side")
     if side in ("south", "north"):
-        return ox + _f(offset)
+        return local[0]
     if side in ("west", "east"):
-        return oy + _f(offset)
+        return local[1]
+    raise ValueError(f"unknown wall side {side!r}")
+
+
+def _attachment_world_u(model, wall, offset):
+    """Deprecated scalar helper — prefer ``_attachment_world_xy`` when rz ≠ 0."""
+    xy = _attachment_world_xy(model, wall, offset)
+    side = wall.get("side")
+    if side in ("south", "north"):
+        return xy[0]
+    if side in ("west", "east"):
+        return xy[1]
     raise ValueError(f"unknown wall side {side!r}")
 
 
 def _offset_from_world_u(model, wall, world_u):
-    ox, oy = _f(model["origin"][0]), _f(model["origin"][1])
+    """Legacy path for axis-aligned rooms; rotated rooms should use world_xy snaps."""
     side = wall.get("side")
     if side in ("south", "north"):
-        return _f(world_u) - ox
+        return _offset_from_world_xy(model, wall, [world_u, room_footprint_center(model)[1]])
     if side in ("west", "east"):
-        return _f(world_u) - oy
+        return _offset_from_world_xy(model, wall, [room_footprint_center(model)[0], world_u])
     raise ValueError(f"unknown wall side {side!r}")
 
 
@@ -249,7 +358,7 @@ def _attachment_fits(wall, offset, span):
 
 
 def _snapshot_attachments(model):
-    """Capture world-U anchors before a footprint change (DD-019 preserve world)."""
+    """Capture world anchors before a footprint change (DD-019 preserve world)."""
     snaps = []
     for opening in model.get("openings", []):
         wall = find_wall(model, opening["wall_id"])
@@ -258,7 +367,7 @@ def _snapshot_attachments(model):
                 "kind": "opening",
                 "id": opening.get("opening_id"),
                 "wall_id": opening["wall_id"],
-                "world_u": _attachment_world_u(model, wall, opening.get("offset", 0.0)),
+                "world_xy": _attachment_world_xy(model, wall, opening.get("offset", 0.0)),
                 "span": _f(opening.get("width")),
             }
         )
@@ -269,7 +378,7 @@ def _snapshot_attachments(model):
                 "kind": "fixed",
                 "id": fixed.get("fixed_element_id"),
                 "wall_id": fixed["wall_id"],
-                "world_u": _attachment_world_u(model, wall, fixed.get("offset", 0.0)),
+                "world_xy": _attachment_world_xy(model, wall, fixed.get("offset", 0.0)),
                 "span": _f(fixed.get("width")),
             }
         )
@@ -278,12 +387,10 @@ def _snapshot_attachments(model):
 
 def _reconcile_wall_attachments(model, prev_footprint=None):
     """Recompute offsets from preserved world anchors; inactive when swallowed."""
-    # If prev given, use snapshots from that geometry conceptually — callers snapshot
-    # before mutating. When prev is a footprint dict we rebuild anchors using current
-    # attachments' offsets against *prev* geometry via a temporary view.
     if prev_footprint is not None:
         temp = {
             "origin": list(prev_footprint["origin"]),
+            "rotation_z_deg": _f(prev_footprint.get("rotation_z_deg"), room_rotation_z(model)),
             "footprint": {
                 "kind": "rectangle",
                 "width": prev_footprint["width"],
@@ -296,6 +403,7 @@ def _reconcile_wall_attachments(model, prev_footprint=None):
                 model["height"],
                 model.get("wall_thickness", DEFAULT_WALL_THICKNESS),
                 existing=model.get("walls"),
+                rotation_z_deg=_f(prev_footprint.get("rotation_z_deg"), room_rotation_z(model)),
             ),
             "openings": model.get("openings", []),
             "fixed_elements": model.get("fixed_elements", []),
@@ -310,7 +418,9 @@ def _reconcile_wall_attachments(model, prev_footprint=None):
     for opening in model.get("openings", []):
         snap = by_opening.get(opening.get("opening_id"))
         wall = find_wall(model, opening["wall_id"])
-        if snap:
+        if snap and snap.get("world_xy"):
+            opening["offset"] = _offset_from_world_xy(model, wall, snap["world_xy"])
+        elif snap and "world_u" in snap:
             opening["offset"] = _offset_from_world_u(model, wall, snap["world_u"])
         span = _f(opening.get("width"))
         if _attachment_fits(wall, _f(opening.get("offset")), span):
@@ -322,7 +432,9 @@ def _reconcile_wall_attachments(model, prev_footprint=None):
     for fixed in model.get("fixed_elements", []):
         snap = by_fixed.get(fixed.get("fixed_element_id"))
         wall = find_wall(model, fixed["wall_id"])
-        if snap:
+        if snap and snap.get("world_xy"):
+            fixed["offset"] = _offset_from_world_xy(model, wall, snap["world_xy"])
+        elif snap and "world_u" in snap:
             fixed["offset"] = _offset_from_world_u(model, wall, snap["world_u"])
         span = _f(fixed.get("width"))
         if _attachment_fits(wall, _f(fixed.get("offset")), span):
@@ -612,38 +724,63 @@ def remove_fixed_element(model, params):
 
 
 def _wall_slot_box(model, wall, offset, span, z0, height, depth, inward):
-    """AABB along a wall plane (zero-thickness fabric).
+    """Oriented AABB along a wall plane in room-local space, returned as world loc+dims AABB.
 
-    Offset/span: south/north from west along +X; west/east from south along +Y.
+    Also used for export boxes; oriented corners go through ``_wall_slot_corners``.
+    Offset/span: south/north from west along +local-X; west/east from south along +local-Y.
     ``inward=True`` grows into the room from the wall plane.
     """
-    ox, oy, oz = (_f(v) for v in model["origin"])
+    corners = _wall_slot_corners(model, wall, offset, span, z0, height, depth, inward)
+    xs = [c[0] for c in corners]
+    ys = [c[1] for c in corners]
+    zs = [c[2] for c in corners]
+    loc = [min(xs), min(ys), min(zs)]
+    dims = [
+        max(xs) - min(xs) or 0.001,
+        max(ys) - min(ys) or 0.001,
+        max(zs) - min(zs) or 0.001,
+    ]
+    return loc, dims
+
+
+def _wall_slot_corners(model, wall, offset, span, z0, height, depth, inward):
+    """Eight world corners of a wall-slot box (local then R_z)."""
     width = _f(model["footprint"]["width"])
     room_depth = _f(model["footprint"]["depth"])
     side = wall.get("side")
     d = max(_f(depth), 0.005)
+    o = _f(offset)
+    s = _f(span)
+    z0 = _f(z0)
+    h = _f(height)
 
+    # Local AABB min + size in room frame.
     if side == "south":
-        x = ox + offset
-        if inward:
-            return [x, oy, oz + z0], [span, d, height]
-        return [x, oy - d, oz + z0], [span, d, height]
-    if side == "north":
-        x = ox + offset
-        if inward:
-            return [x, oy + room_depth - d, oz + z0], [span, d, height]
-        return [x, oy + room_depth, oz + z0], [span, d, height]
-    if side == "west":
-        y = oy + offset
-        if inward:
-            return [ox, y, oz + z0], [d, span, height]
-        return [ox - d, y, oz + z0], [d, span, height]
-    if side == "east":
-        y = oy + offset
-        if inward:
-            return [ox + width - d, y, oz + z0], [d, span, height]
-        return [ox + width, y, oz + z0], [d, span, height]
-    raise ValueError(f"unknown wall side {side!r}")
+        lx, ly = o, (0.0 if inward else -d)
+        sx, sy = s, d
+    elif side == "north":
+        lx, ly = o, (room_depth - d if inward else room_depth)
+        sx, sy = s, d
+    elif side == "west":
+        lx, ly = (0.0 if inward else -d), o
+        sx, sy = d, s
+    elif side == "east":
+        lx, ly = (width - d if inward else width), o
+        sx, sy = d, s
+    else:
+        raise ValueError(f"unknown wall side {side!r}")
+
+    local_corners = [
+        [lx, ly, z0],
+        [lx + sx, ly, z0],
+        [lx + sx, ly + sy, z0],
+        [lx, ly + sy, z0],
+        [lx, ly, z0 + h],
+        [lx + sx, ly, z0 + h],
+        [lx + sx, ly + sy, z0 + h],
+        [lx, ly + sy, z0 + h],
+    ]
+    return [room_local_to_world(model, c) for c in local_corners]
 
 
 def opening_world_box(model, opening):
@@ -765,40 +902,41 @@ def subtract_rects(outer, holes, eps=1e-9):
 
 def wall_panel_corners(model, wall, u0, u1, v0, v1):
     """Four world corners for a wall sub-panel in local (u along wall, v up)."""
-    ox, oy, oz = (_f(v) for v in model["origin"])
     width = _f(model["footprint"]["width"])
     depth = _f(model["footprint"]["depth"])
     side = wall.get("side")
     u0, u1, v0, v1 = _f(u0), _f(u1), _f(v0), _f(v1)
     if side == "south":
-        return [
-            [ox + u0, oy, oz + v0],
-            [ox + u0, oy, oz + v1],
-            [ox + u1, oy, oz + v1],
-            [ox + u1, oy, oz + v0],
+        local = [
+            [u0, 0.0, v0],
+            [u0, 0.0, v1],
+            [u1, 0.0, v1],
+            [u1, 0.0, v0],
         ]
-    if side == "north":
-        return [
-            [ox + u0, oy + depth, oz + v0],
-            [ox + u1, oy + depth, oz + v0],
-            [ox + u1, oy + depth, oz + v1],
-            [ox + u0, oy + depth, oz + v1],
+    elif side == "north":
+        local = [
+            [u0, depth, v0],
+            [u1, depth, v0],
+            [u1, depth, v1],
+            [u0, depth, v1],
         ]
-    if side == "west":
-        return [
-            [ox, oy + u0, oz + v0],
-            [ox, oy + u1, oz + v0],
-            [ox, oy + u1, oz + v1],
-            [ox, oy + u0, oz + v1],
+    elif side == "west":
+        local = [
+            [0.0, u0, v0],
+            [0.0, u1, v0],
+            [0.0, u1, v1],
+            [0.0, u0, v1],
         ]
-    if side == "east":
-        return [
-            [ox + width, oy + u0, oz + v0],
-            [ox + width, oy + u0, oz + v1],
-            [ox + width, oy + u1, oz + v1],
-            [ox + width, oy + u1, oz + v0],
+    elif side == "east":
+        local = [
+            [width, u0, v0],
+            [width, u0, v1],
+            [width, u1, v1],
+            [width, u1, v0],
         ]
-    raise ValueError(f"unknown wall side {side!r}")
+    else:
+        raise ValueError(f"unknown wall side {side!r}")
+    return [room_local_to_world(model, c) for c in local]
 
 
 def wall_display_panels(model, wall):
@@ -839,21 +977,51 @@ def wall_display_box(model, wall):
 
 
 def floor_display_box(model):
-    ox, oy, oz = (_f(v) for v in model["origin"])
+    """AABB loc+dims covering the (possibly rotated) floor — prefer ``floor_world_corners``."""
+    corners = floor_world_corners(model)
+    xs = [c[0] for c in corners]
+    ys = [c[1] for c in corners]
+    zs = [c[2] for c in corners]
+    loc = [min(xs), min(ys), min(zs)]
+    dims = [
+        max(xs) - min(xs) or 0.001,
+        max(ys) - min(ys) or 0.001,
+        max(max(zs) - min(zs), 0.005),
+    ]
+    return loc, dims
+
+
+def floor_world_corners(model):
+    """Four world corners of the floor quad (bottom face)."""
     width = _f(model["footprint"]["width"])
     depth = _f(model["footprint"]["depth"])
-    return [ox, oy, oz], [width, depth, 0.005]
+    local = [
+        [0.0, 0.0, 0.0],
+        [width, 0.0, 0.0],
+        [width, depth, 0.0],
+        [0.0, depth, 0.0],
+    ]
+    return [room_local_to_world(model, c) for c in local]
 
 
 def room_world_bounds(model):
-    ox, oy, oz = (_f(v) for v in model["origin"])
+    """Axis-aligned world AABB of the rotated footprint + height (export/debug)."""
+    oz = _f(model["origin"][2]) if len(model.get("origin") or []) > 2 else 0.0
+    height = _f(model["height"])
+    corners = footprint_world_corners(model)
+    xs = [c[0] for c in corners]
+    ys = [c[1] for c in corners]
+    return {
+        "min": [min(xs), min(ys), oz],
+        "max": [max(xs), max(ys), oz + height],
+    }
+
+
+def room_local_bounds_xy(model):
+    """Local AABB of the rectangle footprint (for containment / validity)."""
     width = _f(model["footprint"]["width"])
     depth = _f(model["footprint"]["depth"])
-    height = _f(model["height"])
-    return {
-        "min": [ox, oy, oz],
-        "max": [ox + width, oy + depth, oz + height],
-    }
+    return (0.0, 0.0, width, depth)
 
 
 def export_room_block(model):

@@ -18,6 +18,7 @@ import {
   resizeParamsForAxis,
   resolveGizmoPick,
   roomMoveCommand,
+  roomRotateCommand,
   resizeCommand,
   setGizmoHover,
 } from "./gizmos.js";
@@ -2191,6 +2192,7 @@ function gestureLabel(g) {
     return `Moving ${g.target} ${g.axis}`;
   }
   if (g.kind === "rotate_z") return "Rotating";
+  if (g.kind === "rotate_room_z") return "Rotating room";
   if (g.kind === "scale_axis") return `Scaling ${g.axis}`;
   return "Editing";
 }
@@ -2279,6 +2281,7 @@ async function startGesture(ev, mesh) {
       kind: "wall",
       roomId: ud.roomId,
       wallSide: String(ud.wallSide || "").toLowerCase(),
+      roomRz: Number(ud.roomRz) || 0,
       startFloor: floor,
       startClientX: ev.clientX,
       _delta: 0,
@@ -2293,6 +2296,7 @@ async function startGesture(ev, mesh) {
       kind: "corner",
       roomId: ud.roomId,
       corner: String(ud.corner || "").toLowerCase(),
+      roomRz: Number(ud.roomRz) || 0,
       startFloor: floor,
       startClientX: ev.clientX,
       _dx: 0,
@@ -2300,7 +2304,15 @@ async function startGesture(ev, mesh) {
       started: false,
       _beginning: false,
       commands() {
-        return [cornerMoveCommand(this.roomId, this.corner, this._dx || 0, this._dy || 0)];
+        // World deltas → room-local for move_corner (axis-aligned in local frame).
+        const r = (-(this.roomRz || 0) * Math.PI) / 180;
+        const c = Math.cos(r);
+        const s = Math.sin(r);
+        const wx = this._dx || 0;
+        const wy = this._dy || 0;
+        const lx = wx * c - wy * s;
+        const ly = wx * s + wy * c;
+        return [cornerMoveCommand(this.roomId, this.corner, lx, ly)];
       },
     };
   } else if (kind === "move_axis") {
@@ -2323,6 +2335,28 @@ async function startGesture(ev, mesh) {
         const dx = (this._clientX ?? this.startClientX) - this.startClientX;
         const degrees = this.startPose.rotation_z_deg + dx * ROTATE_DEG_PER_PX;
         return [rotateCommand(this.objectId, degrees)];
+      },
+    };
+  } else if (kind === "rotate_room_z") {
+    const roomId = ud.roomId || ud.room_id;
+    if (!roomId) {
+      setStatus("Room id missing", "error");
+      return false;
+    }
+    const startRz = Number(ud.startRotationZ) || 0;
+    gesture = {
+      kind: "rotate_room_z",
+      roomId,
+      startRotationZ: startRz,
+      startClientX: ev.clientX,
+      startFloor: floor,
+      started: false,
+      _beginning: false,
+      commands() {
+        const dx = (this._clientX ?? this.startClientX) - this.startClientX;
+        // Relative delta for Core rotate_room (not absolute).
+        const degrees = dx * ROTATE_DEG_PER_PX;
+        return [roomRotateCommand(this.roomId, degrees)];
       },
     };
   } else if (kind === "scale_axis") {
@@ -2418,6 +2452,7 @@ function beginMoveAxisGesture(target, axis, ids, floor, clientX) {
     target: "room",
     axis,
     roomId,
+    roomRz: Number(ids.roomRz) || 0,
     startFloor: floor,
     startClientX: clientX,
     _dx: 0,
@@ -2498,17 +2533,16 @@ async function updateGesture(ev) {
   if (gesture.kind === "wall" && floor && gesture.startFloor) {
     const dx = floor.x - gesture.startFloor.x;
     const dy = floor.y - gesture.startFloor.y;
-    gesture._delta = wallDeltaFromDrag(gesture.wallSide, dx, dy);
+    gesture._delta = wallDeltaFromDrag(gesture.wallSide, dx, dy, gesture.roomRz || 0);
   } else if (gesture.kind === "corner" && floor && gesture.startFloor) {
     gesture._dx = floor.x - gesture.startFloor.x;
     gesture._dy = floor.y - gesture.startFloor.y;
   } else if (gesture.kind === "move_axis" && floor && gesture.startFloor) {
     let dx = floor.x - gesture.startFloor.x;
     let dy = floor.y - gesture.startFloor.y;
-    if (gesture.axis === "x") dy = 0;
-    else if (gesture.axis === "y") dx = 0;
-    // axis === "xy" → free plane move (both axes)
     if (gesture.target === "furniture") {
+      if (gesture.axis === "x") dy = 0;
+      else if (gesture.axis === "y") dx = 0;
       const optimisticDx = dx - gesture.lastLocal.x;
       const optimisticDy = dy - gesture.lastLocal.y;
       if (optimisticDx || optimisticDy) {
@@ -2522,6 +2556,20 @@ async function updateGesture(ev) {
       ];
       skipExportReload = true;
     } else {
+      // Constrain along room-local axes when the room is rotated.
+      const rz = gesture.roomRz || 0;
+      const inv = (-rz * Math.PI) / 180;
+      const c = Math.cos(inv);
+      const s = Math.sin(inv);
+      let lx = dx * c - dy * s;
+      let ly = dx * s + dy * c;
+      if (gesture.axis === "x") ly = 0;
+      else if (gesture.axis === "y") lx = 0;
+      const fwd = (rz * Math.PI) / 180;
+      const cf = Math.cos(fwd);
+      const sf = Math.sin(fwd);
+      dx = lx * cf - ly * sf;
+      dy = lx * sf + ly * cf;
       const prevDx = gesture._dx || 0;
       const prevDy = gesture._dy || 0;
       const odx = dx - prevDx;

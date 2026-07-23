@@ -35,6 +35,7 @@ Blender meshes (adapter)
 | `move_wall` | Parallel wall move (`delta`, outward-positive) — FC-001/WP-05 |
 | `move_corner` | Corner `sw\|se\|nw\|ne` with `dx`/`dy` — FC-001/WP-05 |
 | `move_room` | Whole-room translate; VALID furniture follows, INVALID stays world-fixed (DD-020) |
+| `rotate_room` | Whole-room Z-rotate about footprint center; fabric + VALID follow; INVALID stays (local offsets kept) |
 | `duplicate_room` | Copy fabric + members (incl. invalid / inactive) with new IDs |
 | `hide_room` / `show_room` / `set_room_flags` / `set_room_locked` | Room visibility / lock / analysis / AI protection |
 | `delete_room` | Remove all meshes for `room_id` |

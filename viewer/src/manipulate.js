@@ -111,12 +111,18 @@ export function poseFromExport(exportData, objectId) {
  * @param {number} dx
  * @param {number} dy
  */
-export function wallDeltaFromDrag(wallSide, dx, dy) {
+export function wallDeltaFromDrag(wallSide, dx, dy, roomRzDeg = 0) {
+  // Project world drag into room-local axes when the room is rotated.
+  const r = (-Number(roomRzDeg || 0) * Math.PI) / 180;
+  const c = Math.cos(r);
+  const s = Math.sin(r);
+  const lx = dx * c - dy * s;
+  const ly = dx * s + dy * c;
   const side = String(wallSide || "").toLowerCase();
-  if (side === "north") return dy;
-  if (side === "south") return -dy;
-  if (side === "east") return dx;
-  if (side === "west") return -dx;
+  if (side === "north") return ly;
+  if (side === "south") return -ly;
+  if (side === "east") return lx;
+  if (side === "west") return -lx;
   return 0;
 }
 

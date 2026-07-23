@@ -260,9 +260,9 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 | Track | Focus | Status |
 |---|---|---|
 | Historical A–E | Docs → generators → module split → object model → clearances/analysis | Complete |
-| Planning + FC-001 Core | Recipes/shortlist; WP-01…WP-06; Viewer direct manipulation; planning feedback | Shipped (`0.10.24`–`0.10.58`) |
-| **Active** | Room Z-rotate (Core contract first) | See [docs/ROADMAP.md](docs/ROADMAP.md) §2 |
-| Queued | FC-001/WP-07 | After Active |
+| Planning + FC-001 Core | Recipes/shortlist; WP-01…WP-06; Viewer DM; planning feedback; room Z-rotate | Shipped (`0.10.24`–`0.10.60`) |
+| **Active** | FC-001/WP-07 advanced supports / stacking | See [docs/ROADMAP.md](docs/ROADMAP.md) §2 |
+| Queued | — | — |
 | Refinement / later / deferred | Recipes on demand; aesthetics privacy; capture; shared walls; … | [docs/ROADMAP.md](docs/ROADMAP.md) §§4–6 |
 
 **Authoritative priorities:** [docs/ROADMAP.md](docs/ROADMAP.md) · Session as-built: [docs/HANDOFF.md](docs/HANDOFF.md) · Long-term phases: [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) §17 · Module phases: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9

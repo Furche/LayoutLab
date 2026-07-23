@@ -1,7 +1,7 @@
-"""Spatial Project room ops (DD-020 / FC-001/WP-06).
+"""Spatial Project room ops (DD-020 / FC-001/WP-06 + room Z-rotate).
 
 Independent rooms: transform participation, duplicate, flags, delete with members.
-Furniture remains stored in world space; local = world - room.origin (translation MVP).
+Furniture remains stored in world space; local = R(-rz)·(world - origin).
 """
 
 from __future__ import annotations
@@ -38,15 +38,11 @@ def ensure_room_defaults(model: dict) -> dict:
 
 
 def local_location(world_xyz, model: dict) -> list[float]:
-    ox, oy, oz = (float(v) for v in (model.get("origin") or [0, 0, 0]))
-    wz = float(world_xyz[2]) if len(world_xyz) > 2 else 0.0
-    return [float(world_xyz[0]) - ox, float(world_xyz[1]) - oy, wz - oz]
+    return room_core.room_world_to_local(model, world_xyz)
 
 
 def world_from_local(local_xyz, model: dict) -> list[float]:
-    ox, oy, oz = (float(v) for v in (model.get("origin") or [0, 0, 0]))
-    lz = float(local_xyz[2]) if len(local_xyz) > 2 else 0.0
-    return [ox + float(local_xyz[0]), oy + float(local_xyz[1]), oz + lz]
+    return room_core.room_local_to_world(model, local_xyz)
 
 
 def furniture_ids_for_room(store, room_id: str) -> list[str]:
@@ -92,25 +88,59 @@ def apply_room_transform_participation(
     session,
     model: dict,
     *,
-    dx: float,
-    dy: float,
+    dx: float = 0.0,
+    dy: float = 0.0,
     dz: float = 0.0,
+    pivot_xy=None,
+    degrees: float = 0.0,
 ) -> dict[str, list[str]]:
-    """Move VALID furniture with the room; leave INVALID at world pose (membership kept).
+    """Move/rotate VALID furniture with the room; leave INVALID at world pose.
 
-    Uses stored validity stamps from *before* the origin change (do not refresh first).
+    Uses stored validity stamps from *before* the fabric change (do not refresh first).
+    Translation: ``dx/dy/dz``. Rotation: spin furniture by ``degrees`` then orbit
+    its location around ``pivot_xy`` by the same delta.
     """
     room_id = model["room_id"]
     followed: list[str] = []
     left_behind: list[str] = []
     store = session.mesh_store
+    deg = float(degrees)
+    do_rotate = pivot_xy is not None and abs(deg) >= 1e-12
+    px = py = None
+    if do_rotate:
+        px, py = float(pivot_xy[0]), float(pivot_xy[1])
 
     for oid in furniture_ids_for_room(store, room_id):
         main = furniture_ops.main_part(store, oid)
         if main is None:
             continue
         state = furniture_ops.validity_of(main)
-        if state == furniture_ops.VALIDITY_VALID:
+        if state != furniture_ops.VALIDITY_VALID:
+            left_behind.append(oid)
+            continue
+
+        if do_rotate:
+            # Spin in place, then orbit footprint center around room pivot.
+            furniture_ops.rotate_object_z(
+                session, oid, degrees=deg, absolute=False, honour_lock=False
+            )
+            main = furniture_ops.main_part(store, oid)
+            params = furniture_ops._parse_params(main)
+            gen = main.get("layoutlab_generator")
+            hx, hy = furniture_ops.footprint_half_xy(params, gen)
+            loc = [
+                float(main.location.x),
+                float(main.location.y),
+                float(main.location.z),
+            ]
+            center = furniture_ops.corner_to_center(loc, hx, hy, float(main.rotation_z_deg or 0.0))
+            rx, ry = room_core.rotate_z_xy(center[0] - px, center[1] - py, deg)
+            new_center = [px + rx, py + ry, center[2]]
+            new_loc = furniture_ops.center_to_corner(
+                new_center, hx, hy, float(main.rotation_z_deg or 0.0)
+            )
+            furniture_ops.move_object(session, oid, new_loc, honour_lock=False)
+        else:
             furniture_ops.move_object(
                 session,
                 oid,
@@ -121,9 +151,7 @@ def apply_room_transform_participation(
                 ],
                 honour_lock=False,
             )
-            followed.append(oid)
-        else:
-            left_behind.append(oid)
+        followed.append(oid)
 
     furniture_ops.refresh_all_validity(store, session._rooms)
     return {"followed": followed, "left_behind": left_behind}
@@ -149,6 +177,7 @@ def move_room(
         return {
             "room_id": model["room_id"],
             "origin": list(model["origin"]),
+            "rotation_z_deg": float(model.get("rotation_z_deg") or 0.0),
             "followed": [],
             "left_behind": [],
             "unchanged": True,
@@ -160,9 +189,82 @@ def move_room(
         "room_id": model["room_id"],
         "name": model.get("name"),
         "origin": list(model["origin"]),
+        "rotation_z_deg": float(model.get("rotation_z_deg") or 0.0),
         "dx": dx,
         "dy": dy,
         "dz": dz,
+        **participation,
+        "world_bounds": room_core.room_world_bounds(model),
+    }
+
+
+def rotate_room(
+    session,
+    room_ref,
+    *,
+    degrees: float,
+    absolute: bool = False,
+    honour_lock: bool = True,
+) -> dict:
+    """Rotate room about Z around footprint center; fabric + VALID furniture follow.
+
+    Footprint stays locally axis-aligned; ``rotation_z_deg`` and ``origin`` update so
+    the center stays fixed. Openings/fixed keep wall-local offsets.
+    """
+    model = _resolve_live(session, room_ref)
+    ensure_room_defaults(model)
+    if honour_lock:
+        _require_room_unlocked(model, action="rotate_room")
+
+    old_rz = float(model.get("rotation_z_deg") or 0.0)
+    if absolute:
+        new_rz = room_core.normalize_rotation_z_deg(degrees)
+        delta = new_rz - old_rz
+        # Shortest signed delta on circle
+        if delta > 180.0:
+            delta -= 360.0
+        elif delta <= -180.0:
+            delta += 360.0
+    else:
+        delta = float(degrees)
+        new_rz = room_core.normalize_rotation_z_deg(old_rz + delta)
+
+    if abs(delta) < 1e-12:
+        return {
+            "room_id": model["room_id"],
+            "origin": list(model["origin"]),
+            "rotation_z_deg": old_rz,
+            "degrees": 0.0,
+            "followed": [],
+            "left_behind": [],
+            "unchanged": True,
+        }
+
+    pivot = room_core.room_footprint_center(model)
+    width = float(model["footprint"]["width"])
+    depth = float(model["footprint"]["depth"])
+    # New origin = center - R(new_rz)·(w/2, d/2)
+    half_x, half_y = room_core.rotate_z_xy(width * 0.5, depth * 0.5, new_rz)
+    new_origin = [
+        float(pivot[0]) - half_x,
+        float(pivot[1]) - half_y,
+        float(model["origin"][2]) if len(model["origin"]) > 2 else 0.0,
+    ]
+
+    model["origin"] = new_origin
+    model["rotation_z_deg"] = new_rz
+    room_core._apply_rectangle_footprint(model, existing=model.get("walls"))
+
+    participation = apply_room_transform_participation(
+        session, model, pivot_xy=pivot, degrees=delta
+    )
+    return {
+        "room_id": model["room_id"],
+        "name": model.get("name"),
+        "origin": list(model["origin"]),
+        "rotation_z_deg": new_rz,
+        "degrees": delta,
+        "pivot": [float(pivot[0]), float(pivot[1]), float(pivot[2]) if len(pivot) > 2 else 0.0],
         **participation,
         "world_bounds": room_core.room_world_bounds(model),
     }
@@ -334,6 +436,19 @@ def apply_room_command(session, cmd: dict) -> Any:
             dy = delta[1] if len(delta) > 1 else 0.0
             dz = delta[2] if len(delta) > 2 else 0.0
         return move_room(session, model, dx=dx, dy=dy, dz=dz)
+
+    if action in ("rotate_room", "rotate_room_z"):
+        model = _resolve_live(session, room_ref or params or cmd)
+        degrees = params.get("degrees", cmd.get("degrees"))
+        if degrees is None:
+            degrees = params.get("rotation_z_deg", cmd.get("rotation_z_deg"))
+        if degrees is None:
+            raise ValueError("rotate_room requires degrees")
+        absolute = bool(params.get("absolute", cmd.get("absolute", False)))
+        if "rotation_z_deg" in params or "rotation_z_deg" in cmd:
+            absolute = True
+            degrees = params.get("rotation_z_deg", cmd.get("rotation_z_deg"))
+        return rotate_room(session, model, degrees=float(degrees), absolute=absolute)
 
     if action == "duplicate_room":
         offset = cmd.get("offset") or params.get("offset") or (2.0, 0.0, 0.0)

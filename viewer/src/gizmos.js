@@ -42,8 +42,23 @@ export function roomRect(room) {
   const w = Number(room.footprint?.width) || 0;
   const d = Number(room.footprint?.depth) || 0;
   const h = Number(room.height) || 2.5;
+  const rz =
+    Number(room.rotation_z_deg ?? room.transform?.rotation_z_deg ?? 0) || 0;
   if (w <= 0 || d <= 0) return null;
-  return { ox, oy, oz, w, d, h };
+  return { ox, oy, oz, w, d, h, rz };
+}
+
+function rotateZxy(x, y, deg) {
+  const r = (Number(deg) * Math.PI) / 180;
+  const c = Math.cos(r);
+  const s = Math.sin(r);
+  return [x * c - y * s, x * s + y * c];
+}
+
+/** Room-local (SW frame) → world XY. */
+export function roomLocalToWorld(rect, lx, ly) {
+  const [rx, ry] = rotateZxy(lx, ly, rect.rz || 0);
+  return [rect.ox + rx, rect.oy + ry];
 }
 
 /**
@@ -343,7 +358,7 @@ export function buildFurnitureGizmo(bounds, objectId) {
 }
 
 /**
- * Room: move at center; wall/corner discs outside footprint.
+ * Room: move + rotate at center; wall/corner discs outside footprint (rotated).
  */
 export function buildRoomGizmo(room) {
   const group = new THREE.Group();
@@ -352,15 +367,15 @@ export function buildRoomGizmo(room) {
   if (!rect) return group;
   if (room.locked) return group;
 
-  const { ox, oy, oz, w, d } = rect;
+  const { oz, w, d, rz } = rect;
   const roomId = room.room_id;
   const z = oz + HANDLE_Z;
-  const cx = ox + w * 0.5;
-  const cy = oy + d * 0.5;
-  const base = { target: "room", roomId };
+  const [cx, cy] = roomLocalToWorld(rect, w * 0.5, d * 0.5);
+  const base = { target: "room", roomId, roomRz: rz };
 
   const moveRoot = new THREE.Group();
   moveRoot.position.set(cx, cy, z);
+  moveRoot.rotation.z = (rz * Math.PI) / 180;
   moveRoot.add(
     makeArrow("x", MOVE_X, { ...base, kind: "move_axis", axis: "x", label: "room-move-x" }),
   );
@@ -375,39 +390,51 @@ export function buildRoomGizmo(room) {
       label: "room-move-xy",
     }),
   );
+  const half = Math.max(w, d) * 0.5;
+  const ringR = Math.max(half + 0.12, 0.55);
+  moveRoot.add(
+    makeRotateRing(ringR, ROTATE, {
+      ...base,
+      kind: "rotate_room_z",
+      label: "room-rotate-z",
+      startRotationZ: rz,
+    }),
+  );
   group.add(moveRoot);
 
   const walls = [
-    { side: "south", x: ox + w * 0.5, y: oy - OUTSET },
-    { side: "north", x: ox + w * 0.5, y: oy + d + OUTSET },
-    { side: "west", x: ox - OUTSET, y: oy + d * 0.5 },
-    { side: "east", x: ox + w + OUTSET, y: oy + d * 0.5 },
+    { side: "south", lx: w * 0.5, ly: -OUTSET },
+    { side: "north", lx: w * 0.5, ly: d + OUTSET },
+    { side: "west", lx: -OUTSET, ly: d * 0.5 },
+    { side: "east", lx: w + OUTSET, ly: d * 0.5 },
   ];
   for (const wall of walls) {
+    const [x, y] = roomLocalToWorld(rect, wall.lx, wall.ly);
     const mesh = makeDisc(SCALE, 0.11, {
       ...base,
       kind: "wall",
       wallSide: wall.side,
       label: `${room.name || "room"}:${wall.side}`,
     });
-    mesh.position.set(wall.x, wall.y, z);
+    mesh.position.set(x, y, z);
     group.add(mesh);
   }
 
   const corners = [
-    { corner: "sw", x: ox - OUTSET * 0.7, y: oy - OUTSET * 0.7 },
-    { corner: "se", x: ox + w + OUTSET * 0.7, y: oy - OUTSET * 0.7 },
-    { corner: "nw", x: ox - OUTSET * 0.7, y: oy + d + OUTSET * 0.7 },
-    { corner: "ne", x: ox + w + OUTSET * 0.7, y: oy + d + OUTSET * 0.7 },
+    { corner: "sw", lx: -OUTSET * 0.7, ly: -OUTSET * 0.7 },
+    { corner: "se", lx: w + OUTSET * 0.7, ly: -OUTSET * 0.7 },
+    { corner: "nw", lx: -OUTSET * 0.7, ly: d + OUTSET * 0.7 },
+    { corner: "ne", lx: w + OUTSET * 0.7, ly: d + OUTSET * 0.7 },
   ];
   for (const c of corners) {
+    const [x, y] = roomLocalToWorld(rect, c.lx, c.ly);
     const mesh = makeDisc(CORNER, 0.12, {
       ...base,
       kind: "corner",
       corner: c.corner,
       label: `${room.name || "room"}:${c.corner}`,
     });
-    mesh.position.set(c.x, c.y, z);
+    mesh.position.set(x, y, z);
     group.add(mesh);
   }
 
@@ -509,6 +536,10 @@ export function resizeParamsForAxis(generator, axis, startSize, delta) {
 
 export function roomMoveCommand(roomId, dx, dy) {
   return { action: "move_room", room_id: roomId, dx, dy };
+}
+
+export function roomRotateCommand(roomId, degrees) {
+  return { action: "rotate_room", room_id: roomId, degrees };
 }
 
 export function resizeCommand(objectId, params) {

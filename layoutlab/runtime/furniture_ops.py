@@ -215,25 +215,42 @@ def compute_validity(store, rooms: dict, object_id: str) -> str:
     rmin = bounds["min"]
     rmax = bounds["max"]
     fx0, fy0, fx1, fy1 = bbox
-    # Outside room footprint (XY).
+    # Outside room footprint (XY) — test in room-local frame so rotation works.
+    corners_xy = [
+        (fx0, fy0),
+        (fx1, fy0),
+        (fx0, fy1),
+        (fx1, fy1),
+    ]
+    local_pts = [
+        room_core.room_world_to_local(model, [x, y, 0.0]) for x, y in corners_xy
+    ]
+    lx0 = min(p[0] for p in local_pts)
+    ly0 = min(p[1] for p in local_pts)
+    lx1 = max(p[0] for p in local_pts)
+    ly1 = max(p[1] for p in local_pts)
+    width = float(model["footprint"]["width"])
+    depth = float(model["footprint"]["depth"])
     if (
-        fx0 < rmin[0] - _BOUNDS_EPS
-        or fy0 < rmin[1] - _BOUNDS_EPS
-        or fx1 > rmax[0] + _BOUNDS_EPS
-        or fy1 > rmax[1] + _BOUNDS_EPS
+        lx0 < -_BOUNDS_EPS
+        or ly0 < -_BOUNDS_EPS
+        or lx1 > width + _BOUNDS_EPS
+        or ly1 > depth + _BOUNDS_EPS
     ):
         return VALIDITY_OUTSIDE
 
-    # Intersects wall display panels (inward plane AABBs).
+    # Intersects wall display panels (inward plane AABBs in local space).
     for wall in model.get("walls") or []:
         for panel in room_core.wall_display_panels(model, wall):
             corners = panel.get("corners") or []
             if len(corners) < 2:
                 continue
-            xs = [c[0] for c in corners]
-            ys = [c[1] for c in corners]
+            local_wall = [
+                room_core.room_world_to_local(model, c) for c in corners
+            ]
+            xs = [c[0] for c in local_wall]
+            ys = [c[1] for c in local_wall]
             wall_bb = (min(xs), min(ys), max(xs), max(ys))
-            # Inflate thin wall AABBs slightly so zero-thickness planes still collide.
             wx0, wy0, wx1, wy1 = wall_bb
             if abs(wx1 - wx0) < _WALL_HIT_EPS:
                 mid = 0.5 * (wx0 + wx1)
@@ -241,7 +258,7 @@ def compute_validity(store, rooms: dict, object_id: str) -> str:
             if abs(wy1 - wy0) < _WALL_HIT_EPS:
                 mid = 0.5 * (wy0 + wy1)
                 wy0, wy1 = mid - _WALL_HIT_EPS, mid + _WALL_HIT_EPS
-            if _aabb_overlap_2d(bbox, (wx0, wy0, wx1, wy1), eps=0.0):
+            if _aabb_overlap_2d((lx0, ly0, lx1, ly1), (wx0, wy0, wx1, wy1), eps=0.0):
                 return VALIDITY_WALL
 
     return VALIDITY_VALID

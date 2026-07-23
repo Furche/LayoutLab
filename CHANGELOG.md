@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Room Z-rotate (`0.10.60`):** Core `rotate_room` (footprint-center pivot, fabric + VALID furniture follow, INVALID stays); room `rotation_z_deg` drives world projection; Viewer room rotate ring + local wall/corner drag.
 - **Chat thinking indicator (`0.10.59`):** AI-Chat zeigt „Denkt nach…“ mit animierten Dots; Input/Send gesperrt bis die Antwort da ist.
 - **Viewer planning feedback polish (`0.10.58`):** Proposal vs committed klarer — Viewport-Banner, Chat-Badge „nicht in der Scene“, `selection_reason`, Proposal-Findings (max. 5), Inspector-Planning, Apply-Gate-Copy, Status „Committed · revision N“. Kein Metrics-Dashboard.
 - **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).

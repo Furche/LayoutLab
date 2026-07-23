@@ -173,6 +173,8 @@ def ai_protection_violations(rooms: dict, mesh_store, commands: list) -> list[di
             "move_wall",
             "move_corner",
             "move_room",
+            "rotate_room",
+            "rotate_room_z",
             "duplicate_room",
             "hide_room",
             "show_room",

@@ -3,8 +3,8 @@
 VIEWER_SCHEMA = "0.1.2"
 
 WIRE_ROLES = frozenset({"clearance", "room_opening"})
-QUAD_ROLES = frozenset({"room_wall"})
-BOX_ROLES = frozenset({"room_floor", "room_fixed", "room_opening", "clearance"})
+QUAD_ROLES = frozenset({"room_wall", "room_floor"})
+BOX_ROLES = frozenset({"room_fixed", "room_opening", "clearance"})
 SKIP_VIEWER_ROLES = frozenset({"label"})
 
 # Keep paste payloads usable; beds/desks are well under this after join.
