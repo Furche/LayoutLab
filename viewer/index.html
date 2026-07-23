@@ -163,6 +163,17 @@
           <button type="button" data-cam="front" title="Front (3)">Front</button>
           <button type="button" data-cam="side" title="Side (4)">Side</button>
           <span class="view-controls-sep" aria-hidden="true"></span>
+          <details class="add-menu" id="add-menu">
+            <summary title="Add room or furniture">Add</summary>
+            <div class="add-menu-panel" role="menu">
+              <button type="button" data-add="room" role="menuitem">Room</button>
+              <div class="add-menu-label">Furniture</div>
+              <button type="button" data-add="bed_basic" role="menuitem">Bed</button>
+              <button type="button" data-add="desk_basic" role="menuitem">Desk</button>
+              <button type="button" data-add="wardrobe_basic" role="menuitem">Wardrobe</button>
+              <button type="button" data-add="lamp_basic" role="menuitem">Lamp</button>
+            </div>
+          </details>
           <button type="button" id="btn-undo" title="Undo (⌘Z)">Undo</button>
           <button type="button" id="btn-redo" title="Redo (⇧⌘Z)">Redo</button>
         </div>
@@ -225,6 +236,7 @@
               <li>Arrows = 1 axis · amber square = XY · ring = rotate · böppel = scale</li>
               <li>Drag empty space to orbit · <kbd>Esc</kbd> clear / cancel</li>
               <li><kbd>⌘Z</kbd> / <kbd>⇧⌘Z</kbd> Undo / Redo (Core)</li>
+              <li><strong>Add</strong> — room or furniture into focus room</li>
             </ul>
           </section>
         </div>

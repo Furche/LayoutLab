@@ -101,6 +101,7 @@ const el = {
   roomFloorplan: document.getElementById("room-floorplan"),
   btnUndo: document.getElementById("btn-undo"),
   btnRedo: document.getElementById("btn-redo"),
+  addMenu: document.getElementById("add-menu"),
 };
 
 /** Default viewer bedroom shell (4.5 × 3.6 m). */
@@ -2646,6 +2647,158 @@ el.btnUndo?.addEventListener("click", () => {
 });
 el.btnRedo?.addEventListener("click", () => {
   coreRedo().catch((err) => setStatus(err.message, "error"));
+});
+
+const ADD_FURNITURE = {
+  bed_basic: {
+    label: "Bed",
+    params: { length: 2.0, width: 1.2, head_side: "x_min" },
+  },
+  desk_basic: {
+    label: "Desk",
+    params: { width: 1.2, depth: 0.6, height: 0.75, show_clearance: true },
+  },
+  wardrobe_basic: {
+    label: "Wardrobe",
+    params: { width: 1.0, depth: 0.6, height: 2.0, show_clearance: true },
+  },
+  lamp_basic: {
+    label: "Lamp",
+    params: { base: 0.12, height: 0.38 },
+  },
+};
+
+function resolveAddTargetRoom() {
+  const rooms = Array.isArray(lastExportData?.rooms) ? lastExportData.rooms : [];
+  if (!rooms.length) return null;
+  const prefer =
+    selectionTarget?.roomId || selectedRoomId || rooms[0]?.room_id || null;
+  return rooms.find((r) => r?.room_id === prefer) || rooms[0] || null;
+}
+
+function nextRoomAddParams() {
+  const rooms = Array.isArray(lastExportData?.rooms) ? lastExportData.rooms : [];
+  let maxX = 0;
+  for (const r of rooms) {
+    const mx = r?.world_bounds?.max?.[0];
+    if (typeof mx === "number") {
+      maxX = Math.max(maxX, mx);
+      continue;
+    }
+    const ox = Number(r?.origin?.[0]) || 0;
+    const w = Number(r?.footprint?.width) || 4;
+    maxX = Math.max(maxX, ox + w);
+  }
+  const n = rooms.length + 1;
+  const name = rooms.length ? `ROOM_${n}` : "ROOM";
+  const collection = rooms.length ? `layoutlab_room_${n}` : "layoutlab_room";
+  return {
+    name,
+    location: [rooms.length ? maxX + 1.0 : 0, 0, 0],
+    width: 4.0,
+    depth: 3.2,
+    height: 2.6,
+    wall_thickness: 0.02,
+    collection,
+  };
+}
+
+function furnitureSpawnLocation(room) {
+  const origin = room?.origin || [0, 0, 0];
+  const ox = Number(origin[0]) || 0;
+  const oy = Number(origin[1]) || 0;
+  const oz = Number(origin[2]) || 0;
+  return [ox + 0.45, oy + 0.45, oz];
+}
+
+async function addRoomFromMenu() {
+  const params = nextRoomAddParams();
+  await postCommandsToCore(
+    [{ action: "create_room", params }],
+    `Add · room ${params.name}`,
+  );
+  const created = (lastExportData?.rooms || []).find((r) => r?.name === params.name);
+  if (created?.room_id) {
+    selectRoom(created.room_id, { fit: true });
+    setSelectionTarget({ type: "room", roomId: created.room_id });
+  }
+  setStatus(`Added room ${params.name}`);
+}
+
+async function addFurnitureFromMenu(generator) {
+  const spec = ADD_FURNITURE[generator];
+  if (!spec) throw new Error(`Unknown furniture ${generator}`);
+  let room = resolveAddTargetRoom();
+  if (!room) {
+    await addRoomFromMenu();
+    room = resolveAddTargetRoom();
+  }
+  if (!room) throw new Error("No room available for furniture");
+  const collection = room.collection || "layoutlab_room";
+  const location = furnitureSpawnLocation(room);
+  const name = `${spec.label.toUpperCase()}_${String(Date.now()).slice(-4)}`;
+  await postCommandsToCore(
+    [
+      {
+        action: "run_generator",
+        generator,
+        params: {
+          name,
+          location,
+          collection,
+          ...spec.params,
+        },
+      },
+    ],
+    `Add · ${spec.label}`,
+  );
+  const objects = Array.isArray(lastExportData?.objects) ? lastExportData.objects : [];
+  const match =
+    [...objects]
+      .reverse()
+      .find(
+        (o) =>
+          o?.layoutlab?.generator === generator &&
+          (o?.collection === collection || o?.layoutlab?.room_id === room.room_id) &&
+          (o?.layoutlab?.part_type === "main" ||
+            o?.custom_properties?.layoutlab_part_type === "main"),
+      ) ||
+    [...objects].reverse().find((o) => String(o?.name || "").startsWith(name));
+  const oid = match?.layoutlab?.object_id;
+  if (oid) {
+    setSelectionTarget({ type: "furniture", objectId: oid, roomId: room.room_id });
+    if (room.room_id && room.room_id !== selectedRoomId) {
+      selectRoom(room.room_id, { fit: false, announce: false });
+    }
+    rebuildGizmos();
+  }
+  setStatus(`Added ${spec.label} in ${room.name || "room"}`);
+}
+
+async function handleAddMenuAction(kind) {
+  if (gesture || previewClient.active) {
+    throw new Error("Finish or cancel the current gesture first");
+  }
+  if (kind === "room") {
+    await addRoomFromMenu();
+    return;
+  }
+  await addFurnitureFromMenu(kind);
+}
+
+el.addMenu?.addEventListener("click", (ev) => {
+  const btn = ev.target?.closest?.("[data-add]");
+  if (!btn || !el.addMenu.contains(btn)) return;
+  ev.preventDefault();
+  const kind = btn.getAttribute("data-add");
+  el.addMenu.open = false;
+  handleAddMenuAction(kind).catch((err) => setStatus(err.message, "error"));
+});
+
+document.addEventListener("click", (ev) => {
+  if (!el.addMenu?.open) return;
+  if (el.addMenu.contains(ev.target)) return;
+  el.addMenu.open = false;
 });
 
 // Leave ortho only after real orbit drag; gizmo presses never start OrbitControls.
