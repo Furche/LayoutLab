@@ -131,25 +131,35 @@ Adjust Blender version path as needed.
 
 ## Documentation
 
-Read in this order:
+**Agent binding order** (priorities + as-built):
+
+1. [00_READ_THIS_FIRST.md](00_READ_THIS_FIRST.md)
+2. [AI_CONTEXT.md](AI_CONTEXT.md)
+3. [docs/ROADMAP.md](docs/ROADMAP.md) — product priorities / work order
+4. Feature Concept for the Active ROADMAP entry
+5. Related Accepted DDs under [docs/design_decisions/](docs/design_decisions/)
+6. [docs/HANDOFF.md](docs/HANDOFF.md) — technical as-built / session notes
+
+Full index and maintenance rules: [docs/documentation_map.md](docs/documentation_map.md).
 
 | # | Document | Purpose |
 |---|---|---|
-| 0 | [docs/documentation_map.md](docs/documentation_map.md) | **Which doc to update when** — maintenance index for all documentation |
+| 0 | [docs/documentation_map.md](docs/documentation_map.md) | **Which doc to update when** |
 | 1 | [00_READ_THIS_FIRST.md](00_READ_THIS_FIRST.md) | Team roles, dev rules, mandatory doc checklist |
-| 2 | [docs/HANDOFF.md](docs/HANDOFF.md) | **Current status & next steps** — start here for new chat sessions |
-| 3 | [AI_CONTEXT.md](AI_CONTEXT.md) | Mental model, vocabulary, design priorities |
-| 4 | [LayoutLab_Manifest.md](LayoutLab_Manifest.md) | Why this project exists |
-| 5 | [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) | Vision, roadmap, architecture overview |
-| 6 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | As-built vs. target architecture, migration plan |
-| 7 | [docs/json_protocol.md](docs/json_protocol.md) | JSON command and export specification |
-| 8 | [docs/generator_api.md](docs/generator_api.md) | Generator API reference (`api` dict) |
-| 9 | [docs/object_model.md](docs/object_model.md) | Semantic object representation in scenes |
-| 10 | [docs/units_and_coordinates.md](docs/units_and_coordinates.md) | Scale, axes, placement conventions |
-| 11 | [docs/concepts/](docs/concepts/) | Complete Feature Concepts (`FC-xxx`) before DD and implementation decomposition |
-| 12 | [docs/design_decisions/](docs/design_decisions/) | Formal architecture decisions (DD-001+) |
-| 13 | [LayoutLab_Generator_Specification.md](LayoutLab_Generator_Specification.md) | Normative generator standard |
-| 14 | [docs/how_to_write_generators.md](docs/how_to_write_generators.md) | **How to write generators** — guide, examples, debugging |
+| 2 | [AI_CONTEXT.md](AI_CONTEXT.md) | Mental model, vocabulary, design priorities |
+| 3 | [docs/ROADMAP.md](docs/ROADMAP.md) | **Binding product priorities and work order** |
+| 4 | [docs/HANDOFF.md](docs/HANDOFF.md) | Session / as-built status (not the priority list) |
+| 5 | [LayoutLab_Manifest.md](LayoutLab_Manifest.md) | Why this project exists |
+| 6 | [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) | Vision and long-term phase summary |
+| 7 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | As-built vs. target architecture, migration plan |
+| 8 | [docs/json_protocol.md](docs/json_protocol.md) | JSON command and export specification |
+| 9 | [docs/generator_api.md](docs/generator_api.md) | Generator API reference (`api` dict) |
+| 10 | [docs/object_model.md](docs/object_model.md) | Semantic object representation in scenes |
+| 11 | [docs/units_and_coordinates.md](docs/units_and_coordinates.md) | Scale, axes, placement conventions |
+| 12 | [docs/concepts/](docs/concepts/) | Feature Concepts (`FC-xxx`) |
+| 13 | [docs/design_decisions/](docs/design_decisions/) | Formal architecture decisions (DD-001+) |
+| 14 | [LayoutLab_Generator_Specification.md](LayoutLab_Generator_Specification.md) | Normative generator standard |
+| 15 | [docs/how_to_write_generators.md](docs/how_to_write_generators.md) | How to write generators |
 
 ------------------------------------------------------------------------
 
@@ -181,6 +191,8 @@ LayoutLab/                          # repository root
 ├── LayoutLab_Master_Design_Document.md
 ├── LayoutLab_Generator_Specification.md
 └── docs/
+    ├── ROADMAP.md                  # binding product priorities
+    ├── HANDOFF.md                  # session / as-built
     ├── documentation_map.md        # which doc to update when
     ├── ARCHITECTURE.md
     ├── json_protocol.md
@@ -191,7 +203,7 @@ LayoutLab/                          # repository root
     ├── concepts/
     │   └── FC-001 …
     └── design_decisions/
-        └── DD-001 … DD-005
+        └── DD-001 …
 ```
 
 **Generators at runtime** are copied to Blender's user directory on first load
@@ -248,13 +260,12 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 | Track | Focus | Status |
 |---|---|---|
 | Historical A–E | Docs → generators → module split → object model → clearances/analysis | Complete |
-| Planning slice | Recipes, candidates, shortlist, Apply-Gate, optional AI aesthetics | Shipped (`0.10.24`–`0.10.35`) |
-| **Active** | [FC-001/WP-02](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) transactions (DD-018) | Current |
-| Queued | FC-001/WP-03 … WP-06 | After WP-02 |
-| Refinement | Staged Viewer explanation; aesthetics privacy stage 1; recipes on demand only | Not blocking FC-001 |
-| Later / deferred | WP-07, persisted variants, walkways, capture, shared walls, cloud; aesthetics privacy stage 2 | See MDD §17 |
+| Planning + FC-001 Core | Recipes/shortlist; WP-01…WP-06; Viewer direct manipulation; planning feedback | Shipped (`0.10.24`–`0.10.58`) |
+| **Active** | Room Z-rotate (Core contract first) | See [docs/ROADMAP.md](docs/ROADMAP.md) §2 |
+| Queued | FC-001/WP-07 | After Active |
+| Refinement / later / deferred | Recipes on demand; aesthetics privacy; capture; shared walls; … | [docs/ROADMAP.md](docs/ROADMAP.md) §§4–6 |
 
-Full roadmap: [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) §17 · Session focus: [docs/HANDOFF.md](docs/HANDOFF.md) · Module phases: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9
+**Authoritative priorities:** [docs/ROADMAP.md](docs/ROADMAP.md) · Session as-built: [docs/HANDOFF.md](docs/HANDOFF.md) · Long-term phases: [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) §17 · Module phases: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9
 
 ------------------------------------------------------------------------
 

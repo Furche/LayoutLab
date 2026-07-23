@@ -22,6 +22,20 @@ problem.
 
 ------------------------------------------------------------------------
 
+# Binding reading order (Cursor / agents)
+
+1. **This file** (`00_READ_THIS_FIRST.md`)
+2. [`AI_CONTEXT.md`](AI_CONTEXT.md)
+3. [`docs/ROADMAP.md`](docs/ROADMAP.md) — product priorities and work order
+4. The Feature Concept linked by the **Active** ROADMAP entry
+5. Related **Accepted** Design Decisions under `docs/design_decisions/`
+6. [`docs/HANDOFF.md`](docs/HANDOFF.md) — technical as-built and session notes
+
+Do not invent a parallel work queue in chat or HANDOFF. If priorities change,
+update `docs/ROADMAP.md`.
+
+------------------------------------------------------------------------
+
 # Team Roles
 
 ## Alexander
@@ -155,7 +169,7 @@ After **every** code change, actively walk this list. Mark each item **yes**
 
 | # | Document | Update if the change affects… |
 |---|---|---|
-| 1 | **README.md** | Installation, quick start, visible features, project structure, roadmap summary |
+| 1 | **README.md** | Installation, quick start, visible features, project structure, roadmap **summary** (link only) |
 | 2 | **CHANGELOG.md** | Any user-visible or contributor-relevant change (almost always **yes**) |
 | 3 | **DEVLOG.md** | Non-obvious technical decision, phase completion, lesson learned, rejected approach |
 | 4 | **docs/generator_api.md** | New/changed/removed `api` function or behaviour passed to generators |
@@ -168,10 +182,12 @@ After **every** code change, actively walk this list. Mark each item **yes**
 | 11 | **docs/object_model.md** | Custom properties, object grouping, semantic export |
 | 12 | **docs/units_and_coordinates.md** | Scale, axes, placement conventions |
 | 13 | **docs/concepts/FC-xxx-*.md** | Product behaviour or scope of a cross-cutting feature changes; roadmap work package derived |
-| 14 | **docs/documentation_map.md** | New doc file added, or document responsibility moved |
-| 15 | **AI_CONTEXT.md** | Vocabulary, mental model, team workflow, project philosophy for agents |
-| 16 | **LayoutLab_Master_Design_Document.md** | Roadmap phases, product scope (rare) |
-| 17 | **Design Decision (DD-xxx)** | Significant fork: new DD + index in `docs/design_decisions/README.md` |
+| 14 | **docs/ROADMAP.md** | Product priority, Active/Queued order, deferred scope |
+| 15 | **docs/HANDOFF.md** | Version, as-built snapshot, session gotchas (not the priority list) |
+| 16 | **docs/documentation_map.md** | New doc file added, or document responsibility moved |
+| 17 | **AI_CONTEXT.md** | Vocabulary, mental model, team workflow, project philosophy for agents |
+| 18 | **LayoutLab_Master_Design_Document.md** | Long-term vision / product-phase summary only (rare) |
+| 19 | **Design Decision (DD-xxx)** | Significant fork: new DD + index in `docs/design_decisions/README.md` |
 
 **Minimum for most commits:** CHANGELOG (**yes**) + every other row explicitly
 **yes** or **no** in your completion summary.

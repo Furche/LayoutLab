@@ -54,6 +54,7 @@ Viewer UX on top of FC-001 Core (transactions, furniture/room ops, multi-room pr
 4. ~~Wall drag + furniture-first pick~~ ✅ (`0.10.44`)
 5. ~~Wall/corner gizmos~~ ✅ (`0.10.45`)
 6. ~~Selection transform gizmos (arrows / ring / böppel)~~ ✅ (`0.10.46`)
-7. Planning / shortlist feedback polish; room Z-rotate when Core supports it
+7. ~~Planning / shortlist feedback polish~~ ✅ (`0.10.58`)
+8. Room Z-rotate when Core supports it
 
-See [docs/HANDOFF.md](../docs/HANDOFF.md).
+Priorities: [docs/ROADMAP.md](../docs/ROADMAP.md) · As-built: [docs/HANDOFF.md](../docs/HANDOFF.md).

@@ -21,8 +21,9 @@ Objekte besitzen eigene Logik; eine KI kann auf semantischer Ebene planen;
 das Plugin führt deterministisch aus (DD-009 Accepted).
 
 **Heute:** Execution Layer (Generatoren, JSON, Clearances, Analyse) plus Planning-Grundlage
-(Recipes, Candidates, Shortlist, optional AI-Ästhetik) — geordnete Übersicht in Roadmap §17.
-**Blender** bleibt die Referenz-Runtime; Standalone Core HTTP + Viewer sind bereits da.
+(Recipes, Candidates, Shortlist, optional AI-Ästhetik) und Viewer-Manipulation auf Core —
+verbindliche Arbeitsreihenfolge: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+**Blender** bleibt Runtime-Adapter; Standalone Core HTTP + Viewer sind die Produktfläche.
 
 **Langfristig (Problem-first):** Nutzer beschreibt Ziele, nicht zwingend Möbeltypen.
 
@@ -65,7 +66,7 @@ nutzbar sein können — ohne Blender-Kenntnisse und ohne JSON-Copy-Paste. Blend
 **aktuell** die erste, vollständig unterstützte Runtime.
 
 Die aktuelle Entwicklung (Phase E: Clearances, Constraints, `analyze_layout` und
-Execution-Layer-Arbeit) bleibt die richtige Basisebene — siehe §17 Roadmap (**unverändert**).
+Execution-Layer-Arbeit) bleibt die richtige Basisebene — siehe [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 Ausführlich: [docs/Future_Ideas.md](docs/Future_Ideas.md) (§1, §11–§19). Keine Schemas und
 keine Implementierung in diesem Dokument.
@@ -283,21 +284,21 @@ siehe `docs/Future_Ideas.md` §19. Spatial Project / Multi-Room: [DD-020](docs/d
 
 docs/
 
-vision.md
+ROADMAP.md          # verbindliche Produktprioritäten
 
-architecture.md
+HANDOFF.md          # Session-/Ist-Zustand
 
-generator_spec.md
+ARCHITECTURE.md
 
 json_protocol.md
 
-roadmap.md
+Future_Ideas.md
 
-devlog.md
-
-CHANGELOG.md
+concepts/
 
 design_decisions/
+
+CHANGELOG.md · DEVLOG.md
 
 ------------------------------------------------------------------------
 
@@ -365,123 +366,26 @@ Vermeiden:
 
 ------------------------------------------------------------------------
 
-# 17. Roadmap
+# 17. Long-term product phases (summary)
 
-> Verbindliche Produktübersicht. Aktueller Arbeitsfokus und Session-Details:
-> [`docs/HANDOFF.md`](docs/HANDOFF.md). Vollständiges FC-001-Verhalten:
-> [`docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md`](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md)
-> — hier nur stabile WP-IDs, kein Verhaltens-Copy.
->
-> Historische Modulphasen A–E (Docs → Generatoren → Split → Object Model → Clearances):
-> abgeschlossen; siehe `docs/ARCHITECTURE.md` §9 und `README.md`.
+> **Arbeitsreihenfolge und Prioritäten** gehören nicht mehr hierher.
+> Verbindliche Quelle: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> Session-/Ist-Zustand: [`docs/HANDOFF.md`](docs/HANDOFF.md).
 
-### Implemented Foundations
+Historische Modulphasen A–E (Docs → Generatoren → Split → Object Model → Clearances)
+sind abgeschlossen — siehe `docs/ARCHITECTURE.md` §9.
 
-| Foundation | Notes |
+**Langfristige Produktphasen (Orientierung, nicht Queue):**
+
+| Phase | Meaning |
 |---|---|
-| JSON commands + scene export | DD-003 · `json_protocol.md` |
-| Parametric generators + regeneration | DD-001 / DD-002 · Browser DD-004 (Basis) · Metadata DD-005 (Basis) |
-| Clearances + layout analysis | DD-007 / DD-008 · soft metrics DD-015 |
-| Room Model (single space, rectangle MVP) | DD-010 · `room_model.md` |
-| Standalone Core HTTP + read-only Viewer | DD-014 Phase A/B/B2 |
-| AI chat / agent path (Core tools, Apply-Gate) | DD-009 · `agent_tool_contract.md` |
-| Deterministic layout recipes | DD-016 · e.g. `bedroom_basic` |
-| Candidate expansion + soft ranking | DD-011 · `plan_layout` `mode=candidates` (`0.10.24`) |
-| Evaluation schema, signed scores, veto, shortlist, revision | DD-017 · `0.10.25` / `0.10.26` |
-| Shortlist selection + blueprint cards | `0.10.29`–`0.10.33` |
-| Experimental AI aesthetics + visual evidence | `0.10.34` / `0.10.35` (opt-in flag) |
-| Semantic transactions / revision / Undo (DD-018) | `0.10.36` (FC-001/WP-02) |
-| Semantic furniture manipulation (DD-019 WP-03) | `0.10.37` |
-| Parametric resize / regenerate (DD-019 WP-04) | `0.10.38` |
-| Wall/corner resize + inactive openings (DD-019 WP-05) | `0.10.39` |
-| Spatial Project / independent rooms (DD-020 WP-06) | `0.10.40` |
-| Feature Concept FC-001 (behaviour captured) | `docs/concepts/` — WP-01…WP-06 shipped; WP-07 later |
+| Execution Layer | Generators, JSON, clearances, analysis — **shipped** |
+| Planning foundation | Recipes, candidates, shortlist, optional AI aesthetics — **shipped** |
+| Semantic editing / Spatial Project | FC-001 WP-01…WP-06 + Viewer direct manipulation — **shipped** (WP-07 later) |
+| Problem-first planning | Intent → requirements → solutions — **vision**; see `docs/Future_Ideas.md` |
+| Connected apartments / capture / cloud | **Deferred** — see ROADMAP §6 |
 
-**Begriffsklärung (bereits vs. später):**
-
-| Term | Heute | Später |
-|---|---|---|
-| **Varianten** | Ephemere Planning-Candidates + Shortlist (DD-011/017) | Persistente, benannte Projekt-/Raumvarianten |
-| **Automatische Raumplanung** | Recipe-driven Candidates + Force-Path | Vollständiger Problem-first-Planner / „Optimierer“ |
-| **KI bewertet Layouts** | Deterministische Scores + optionale AI-Ästhetik auf Shortlist | Breitere Produkt-UX, kalibrierte Rubriken |
-| **Möbelbibliothek** | Bundled generators + Browser-Liste | Katalog / Import / Asset-Polish |
-| **Komplette Wohnungsplanung** | Independent Multi-Room (DD-020 / `0.10.40`) | Verbundene Topologie / Shared Walls |
-| **Laufwege** | — | Navigations-/Erreichbarkeitsanalyse (nur Future Idea) |
-| **Undo** | Semantische Transaktionen Core (`0.10.36`) | Viewport-Gesten / Multi-Room history polish |
-
-### Active
-
-| ID | Scope | Status |
-|---|---|---|
-| Viewer UX | Standalone Viewer as product: multi-room, direct manipulation → Core preview/commit, planning feedback | **Current** |
-
-WP-01…WP-06 Core complete through `0.10.40`. [DD-020](docs/design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** and implemented. Product focus: [AI_CONTEXT.md](AI_CONTEXT.md) (Viewer first).
-
-### Queued
-
-| ID | Scope | Entry |
-|---|---|---|
-| [FC-001/WP-07](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Erweiterte Support Surfaces und Stapeln | Explizit später |
-
-### Refinement / On demand
-
-Nicht blockierend für **FC-001/WP-06+**. Keine festen Sprint-Zusagen außer dem
-Minimal-Hinweis für experimentelle AI-Ästhetik (Stufe 1 unten).
-
-**Viewer Score- / Trade-off-Erklärung (Refinement)**
-
-- **MVP heute ausreichend:** Soft-Warnungen, `selection_reason` / Auswahlbegründung,
-  optionaler Ästhetik-Hinweis — kein Zahlen-Dashboard.
-- **Zielbild (gestuft):** zuerst eine kurze, verständliche Zusammenfassung der wichtigsten
-  Vorteile, Nachteile und Trade-offs; später optional aufklappbare Detailansicht mit
-  funktionalen Scores, Penalties, Vetos und Ästhetikbewertung.
-- Kein komplexes Metrics-Dashboard einplanen.
-
-**Weitere Recipes (streng on-demand)**
-
-- Kein zweites Recipe verbindlich einplanen.
-- Erst wenn ein konkretes reales Planungsszenario das vorhandene Recipe nicht trägt,
-  entscheiden wir das nächste Recipe.
-- `kids_room` ist ein naheliegender Kandidat, **keine** feste Zusage.
-
-**AI-Ästhetik: Privacy- / Provider-Transparenz (zweistufig)**
-
-| Stufe | Wann | Inhalt |
-|---|---|---|
-| **1 — Minimum** | Sobald experimentelle AI-Ästhetik aktiviert ist und Bilder/Raumdaten an einen externen Provider gehen | Offenlegen: dass Daten/Bilder übertragen werden; Provider und Modell; mögliche API-Kosten; dass die Funktion experimentell und optional ist |
-| **2 — Ausgearbeitet** | Bevor Default-on oder produktives Angebot | Einwilligungsdialoge, detaillierte Einstellungen, Default-on-Verhalten |
-
-Stufe 1 ist eine bekannte Lücke zur aktuellen Opt-in-Flag-Nutzung und gehört zum
-Ästhetik-Refinement — **nicht** zum FC-001-Track. Stufe 2 bleibt zurückgestellt.
-
-**Weitere Refinements**
-
-- DD-017-Rubriken und Gewichtungen an realen Räumen kalibrieren; Nutzerfeedback auswerten
-
-### Later Feature Concepts
-
-Brauchen vor Implementierung ein Feature Concept und/oder DD — **nicht** aktive Zusagen:
-
-| Topic | Notes |
-|---|---|
-| [FC-001/WP-07](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Erweiterte Support Surfaces und Stapeln |
-| Persistente Projektvarianten | Speichern, benennen, vergleichen, favorisieren — **nicht** dasselbe wie ephemere Candidates |
-| Laufweg- / Navigationsanalyse | Experimental Idea in `Future_Ideas.md` §5 |
-| Polygonale Räume | DD-010 Next (`footprint.kind = polygon`) — nach FC-001 WP-01…WP-05, nicht davor |
-
-### Explicitly Deferred
-
-Nicht jetzt bauen (Details: `docs/Future_Ideas.md` §18):
-
-- Capture / LiDAR / Rekonstruktion / Floor-Plan-OCR
-- Verbundene Räume, Shared-Wall-Topologie, Passagen
-- Multi-Floor / Building Model
-- IKEA- / Produktkatalog-Import
-- Asset-Browser-Polish (Thumbnails, Favoriten, Drag-and-drop, Live Preview) — DD-004 `[PLANNED]`, zurückgestellt
-- Cloud, Auth, Sync
-- Custom Render Engine
-- Vollständige Standalone-Authoring-App (Viewport-Schreiben jenseits Viewer + Chat-Grundlage)
-- AI-Ästhetik Privacy **Stufe 2** (Einwilligung / Default-on) — erst vor produktivem Angebot
+Do not expand this section into a second working roadmap. Update [`docs/ROADMAP.md`](docs/ROADMAP.md) instead.
 
 ------------------------------------------------------------------------
 
@@ -507,4 +411,5 @@ Der Fokus liegt auf Raumplanung.
 >
 > Meshes und Möbel sind Mittel, nicht das Ziel.
 
-Dieses Prinzip soll zukünftige Entscheidungen leiten. Die technische Roadmap (§17) bleibt bestehen.
+Dieses Prinzip soll zukünftige Entscheidungen leiten. Die verbindliche Arbeits-Roadmap:
+[`docs/ROADMAP.md`](docs/ROADMAP.md).

@@ -86,7 +86,7 @@ From the user’s perspective, LayoutLab is one coherent surface:
 
 ### Relationship to today
 
-Today the product still speaks largely in generators and JSON commands — that remains correct for the Execution Layer. **Additionally shipped:** recipes, ephemeral candidates/shortlist, Core agent chat, and a read-only Viewer. This vision describes **where the full product is heading**, not what to build next. Ordered work: `LayoutLab_Master_Design_Document.md` §17 · `docs/HANDOFF.md`.
+Today the product still speaks largely in generators and JSON commands — that remains correct for the Execution Layer. **Additionally shipped:** recipes, ephemeral candidates/shortlist, Core agent chat, and Viewer edit on Core. This vision describes **where the full product is heading**, not what to build next. Ordered work: [`docs/ROADMAP.md`](ROADMAP.md) · session as-built: [`docs/HANDOFF.md`](HANDOFF.md).
 
 ------------------------------------------------------------------------
 
@@ -361,7 +361,7 @@ The AI should then:
 For experimental AI aesthetics, a **minimum disclosure** is required whenever the feature runs
 (transfer of data/images, provider/model, possible API cost, experimental/optional). Full privacy
 UX, auth, subscriptions, and default-on behaviour wait until before a production offering —
-see MDD §17 Refinement and DD-017. Do not invent remaining policy here.
+see [`docs/ROADMAP.md`](ROADMAP.md) Refinement and DD-017. Do not invent remaining policy here.
 
 End-to-end empty-app journey: §12.
 
@@ -414,7 +414,9 @@ Security and sandboxing need a separate DD before implementation.
 
 **Status:** Current foundation — **Implemented** / **Planned** (not Future Vision)
 
-This section documents ideas that are **actively being built** or **queued on the roadmap**. They support the Execution Layer and remain necessary regardless of the broader product vision.
+This section documents Execution-Layer ideas that are **implemented** or may still appear
+on [`docs/ROADMAP.md`](ROADMAP.md). They remain necessary regardless of the broader product vision.
+They are **not** a second priority list — use ROADMAP for work order.
 
 ### Semantic Objects
 
@@ -811,7 +813,7 @@ Do **not** implement from this vision until separate DDs / Feature Concepts and 
 - Sync service / cloud backend
 - Custom render engine
 
-**Current focus:** Standalone **Viewer UX** on Core (multi-room, direct manipulation → preview/commit) — see MDD §17 · `docs/HANDOFF.md` · [AI_CONTEXT.md](../AI_CONTEXT.md). Blender is a runtime adapter, not the default product surface.
+**Current focus:** see [`docs/ROADMAP.md`](ROADMAP.md) Active · as-built [`docs/HANDOFF.md`](HANDOFF.md) · mental model [AI_CONTEXT.md](../AI_CONTEXT.md). Blender is a runtime adapter, not the default product surface.
 
 ------------------------------------------------------------------------
 
@@ -822,8 +824,8 @@ Do **not** implement from this vision until separate DDs / Feature Concepts and 
 | [DD-010](design_decisions/DD-010-room-model.md) | Room Model (single space) | **Accepted** (2026-07-16) — MVP in plugin v0.9.0 |
 | [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) | Layout Variants and Comparison | **Accepted** (2026-07-20) — Planning v1; amended by DD-017 (shortlist → AI recommend → User) |
 | [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) | Collaborative Planning + Contextual Evaluation | **Accepted** (2026-07-21) — schema, shortlist, revision, aesthetics slice shipped; calibration/UX refinement on demand |
-| [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) | Semantic Transactions / Authority | **Accepted** (2026-07-22) — FC-001/WP-01; next WP-02 |
-| [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) | Semantic Direct Manipulation | **Accepted** (2026-07-22) — FC-001/WP-01 |
+| [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) | Semantic Transactions / Authority | **Accepted** (2026-07-22) — FC-001/WP-01; WP-02 shipped |
+| [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) | Semantic Direct Manipulation | **Accepted** (2026-07-22) — FC-001/WP-01; WP-03…05 shipped |
 | [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) | Spatial Project / Independent Rooms | **Accepted** (2026-07-22) — project `rooms[]` only; no legacy single-room export |
 | DD-012 | Integrated AI Product Experience | **Not created** — reserve when implementing §7 / §12 |
 | DD-013 | Capture and Reconstruction Pipeline | **Not created** — reserve when implementing §14–§15 |

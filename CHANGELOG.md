@@ -8,8 +8,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Roadmap ownership:** `docs/ROADMAP.md` is now the only binding source for product priorities and work order. MDD §17 is a short long-term phase summary; `docs/HANDOFF.md` is session/as-built only. Entry docs (`00_READ_THIS_FIRST.md`, `AI_CONTEXT.md`, `README.md`, `documentation_map.md`, agent rule) use the new reading order.
+
 ### Added
 
+- **Chat thinking indicator (`0.10.59`):** AI-Chat zeigt „Denkt nach…“ mit animierten Dots; Input/Send gesperrt bis die Antwort da ist.
+- **Viewer planning feedback polish (`0.10.58`):** Proposal vs committed klarer — Viewport-Banner, Chat-Badge „nicht in der Scene“, `selection_reason`, Proposal-Findings (max. 5), Inspector-Planning, Apply-Gate-Copy, Status „Committed · revision N“. Kein Metrics-Dashboard.
 - **Bed scale axis fix (`0.10.57`):** furniture scale gizmos map X→`length`, Y→`width` for `bed_basic` (was swapped).
 - **Gizmo overlay clear fix (`0.10.56`):** overlay pass disables `autoClear` so the main scene is not wiped when gizmos render.
 - **Gizmo overlay pass (`0.10.55`):** gizmos render after the scene (clear depth) so translucent clearances no longer tint/darken handles over empty floor.

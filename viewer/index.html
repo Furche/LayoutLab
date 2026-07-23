@@ -87,7 +87,7 @@
           <pre id="commands-view-json" class="commands-view-json"></pre>
           <div class="paste-actions">
             <button type="submit" value="close" class="ghost">Close</button>
-            <button type="button" id="btn-commands-view-apply" class="primary">Apply to Core</button>
+            <button type="button" id="btn-commands-view-apply" class="primary">Apply → Scene</button>
           </div>
         </form>
       </dialog>
@@ -96,17 +96,20 @@
         <div class="chat-panel-header">
           <h2>AI Chat</h2>
           <p class="muted chat-hint">
-            Shortlist als Grundriss — Variante tippen, dann <strong>Apply</strong>.
+            Shortlist wählen → <strong>Apply → Scene</strong> schreibt in Core. Viewport bleibt bis dahin committed.
           </p>
         </div>
         <div id="chat-log" class="chat-log" aria-live="polite"></div>
         <div id="chat-proposal-bar" class="chat-proposal-bar" hidden>
+          <p class="chat-proposal-badge">Vorschlag · nicht in der Scene</p>
           <p id="chat-proposal-meta" class="chat-proposal-meta muted"></p>
+          <p id="chat-proposal-reason" class="chat-proposal-reason" hidden></p>
           <div id="chat-shortlist" class="chat-shortlist" hidden></div>
+          <ul id="chat-proposal-findings" class="chat-proposal-findings" hidden></ul>
           <div class="chat-proposal-actions">
             <button type="button" id="btn-chat-discard" class="ghost">Discard</button>
             <button type="button" id="btn-chat-view" class="ghost">View commands</button>
-            <button type="button" id="btn-chat-apply" class="primary">Apply</button>
+            <button type="button" id="btn-chat-apply" class="primary">Apply → Scene</button>
           </div>
         </div>
         <form id="chat-form" class="chat-form">
@@ -150,6 +153,9 @@
       </aside>
 
       <main id="viewport" class="viewport" aria-label="3D viewport">
+        <div id="proposal-banner" class="proposal-banner" hidden role="status">
+          Vorschlag offen — Viewport zeigt die <strong>committed</strong> Scene. Apply schreibt eine neue Revision.
+        </div>
         <div class="view-controls" role="toolbar" aria-label="Camera and edit">
           <button type="button" data-cam="fit" title="Fit (F)">Fit</button>
           <button type="button" data-cam="iso" title="Iso (1)">Iso</button>
@@ -189,7 +195,12 @@
             <p id="selection" class="muted">Click an object in the viewport.</p>
           </section>
           <section>
+            <h2>Planning</h2>
+            <div id="planning-status" class="planning-status muted">Keine offene Proposal.</div>
+          </section>
+          <section>
             <h2>Analysis</h2>
+            <p id="analysis-scope" class="muted analysis-scope">Committed scene</p>
             <div id="summary" class="summary"></div>
             <ul id="findings" class="findings"></ul>
           </section>

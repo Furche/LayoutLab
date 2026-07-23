@@ -71,9 +71,15 @@ const el = {
   chatLog: document.getElementById("chat-log"),
   chatForm: document.getElementById("chat-form"),
   chatInput: document.getElementById("chat-input"),
+  btnChatSend: document.getElementById("btn-chat-send"),
   chatProposalBar: document.getElementById("chat-proposal-bar"),
   chatProposalMeta: document.getElementById("chat-proposal-meta"),
+  chatProposalReason: document.getElementById("chat-proposal-reason"),
+  chatProposalFindings: document.getElementById("chat-proposal-findings"),
   chatShortlist: document.getElementById("chat-shortlist"),
+  proposalBanner: document.getElementById("proposal-banner"),
+  planningStatus: document.getElementById("planning-status"),
+  analysisScope: document.getElementById("analysis-scope"),
   btnChatApply: document.getElementById("btn-chat-apply"),
   btnChatView: document.getElementById("btn-chat-view"),
   btnChatDiscard: document.getElementById("btn-chat-discard"),
@@ -601,6 +607,33 @@ function appendChatBubble(role, text) {
   div.textContent = text;
   el.chatLog.appendChild(div);
   el.chatLog.scrollTop = el.chatLog.scrollHeight;
+  return div;
+}
+
+let chatThinkingEl = null;
+
+function setChatThinking(on) {
+  if (el.btnChatSend) el.btnChatSend.disabled = Boolean(on);
+  if (el.chatInput) el.chatInput.disabled = Boolean(on);
+  if (!el.chatLog) return;
+  if (on) {
+    if (chatThinkingEl) return;
+    const div = document.createElement("div");
+    div.className = "chat-bubble assistant chat-thinking";
+    div.setAttribute("role", "status");
+    div.setAttribute("aria-live", "polite");
+    div.innerHTML =
+      `<span class="chat-thinking-label">Denkt nach</span>` +
+      `<span class="chat-thinking-dots" aria-hidden="true"><span></span><span></span><span></span></span>`;
+    el.chatLog.appendChild(div);
+    el.chatLog.scrollTop = el.chatLog.scrollHeight;
+    chatThinkingEl = div;
+    return;
+  }
+  if (chatThinkingEl) {
+    chatThinkingEl.remove();
+    chatThinkingEl = null;
+  }
 }
 
 function clearChatProposal() {
@@ -611,11 +644,30 @@ function clearChatProposal() {
   pendingSelectedId = null;
   if (el.chatProposalBar) el.chatProposalBar.hidden = true;
   if (el.chatProposalMeta) el.chatProposalMeta.textContent = "";
+  if (el.chatProposalReason) {
+    el.chatProposalReason.hidden = true;
+    el.chatProposalReason.textContent = "";
+  }
+  if (el.chatProposalFindings) {
+    el.chatProposalFindings.hidden = true;
+    el.chatProposalFindings.innerHTML = "";
+  }
   if (el.chatShortlist) {
     el.chatShortlist.hidden = true;
     el.chatShortlist.innerHTML = "";
   }
   if (el.commandsViewDialog?.open) el.commandsViewDialog.close();
+  refreshProposalChrome();
+}
+
+function selectionReasonText(payload) {
+  const p = payload || {};
+  return String(p.planning?.selection_reason || p.selection_reason || "").trim();
+}
+
+function proposalBaseRevision(payload) {
+  const p = payload || {};
+  return p.proposal?.base_revision ?? p.base_revision ?? null;
 }
 
 function proposalMetaText(payload, commands) {
@@ -646,7 +698,100 @@ function proposalMetaText(payload, commands) {
     pendingShortlist?.find((c) => c.candidate_id === selected)?.label_de ||
     selected;
   const selHint = selectedLabel ? ` · ${selectedLabel}` : "";
-  return `${commands.length} command${commands.length === 1 ? "" : "s"}${title}${selHint} · mode=${mode}${tools ? ` · ${tools} tools` : ""}${qualityHint}`;
+  const baseRev = proposalBaseRevision(payload);
+  const sceneRev = lastExportData?.revision;
+  let revHint = "";
+  if (baseRev != null || sceneRev != null) {
+    revHint = ` · base rev ${baseRev ?? "?"} / scene ${sceneRev ?? "?"}`;
+  }
+  return `Proposed · ${commands.length} command${commands.length === 1 ? "" : "s"}${title}${selHint} · mode=${mode}${tools ? ` · ${tools} tools` : ""}${revHint}${qualityHint}`;
+}
+
+function renderProposalReason(payload) {
+  if (!el.chatProposalReason) return;
+  const reason = selectionReasonText(payload);
+  if (!reason) {
+    el.chatProposalReason.hidden = true;
+    el.chatProposalReason.textContent = "";
+    return;
+  }
+  el.chatProposalReason.hidden = false;
+  el.chatProposalReason.textContent = `Warum: ${reason}`;
+}
+
+function renderProposalFindingsList() {
+  if (!el.chatProposalFindings) return;
+  el.chatProposalFindings.innerHTML = "";
+  const findings = Array.isArray(pendingChatQuality?.findings)
+    ? pendingChatQuality.findings
+    : [];
+  if (!findings.length) {
+    el.chatProposalFindings.hidden = true;
+    return;
+  }
+  el.chatProposalFindings.hidden = false;
+  const max = 5;
+  findings.slice(0, max).forEach((f) => {
+    const li = document.createElement("li");
+    const sev = f.severity || "warning";
+    li.className = `proposal-finding sev-${sev}`;
+    li.textContent = `${sev}: ${f.message || f.constraint_type || "Finding"}`;
+    el.chatProposalFindings.appendChild(li);
+  });
+  if (findings.length > max) {
+    const more = document.createElement("li");
+    more.className = "muted";
+    more.textContent = `+${findings.length - max} weitere Findings (Proposal)`;
+    el.chatProposalFindings.appendChild(more);
+  }
+}
+
+function renderPlanningInspector() {
+  if (!el.planningStatus) return;
+  if (!pendingChatCommands?.length) {
+    el.planningStatus.className = "planning-status muted";
+    el.planningStatus.textContent =
+      "Keine offene Proposal — Viewport und Analysis = committed Scene.";
+    if (el.analysisScope) el.analysisScope.textContent = "Committed scene";
+    return;
+  }
+  const payload = pendingChatProposalPayload || {};
+  const selected =
+    payload.selected_id || payload.planning?.selected_id || pendingSelectedId || "";
+  const label =
+    payload.planning?.selected_label_de ||
+    pendingShortlist?.find((c) => c.candidate_id === selected)?.label_de ||
+    selected ||
+    "Proposal";
+  const reason = selectionReasonText(payload);
+  const baseRev = proposalBaseRevision(payload);
+  const sceneRev = lastExportData?.revision ?? "—";
+  const nShort = Array.isArray(pendingShortlist) ? pendingShortlist.length : 0;
+  const q = pendingChatQuality || {};
+  const bits = [
+    `<strong>Pending proposal</strong> · ${escapeHtml(String(label))}`,
+    `${pendingChatCommands.length} command${pendingChatCommands.length === 1 ? "" : "s"}`,
+    `base rev ${escapeHtml(String(baseRev ?? "?"))} · scene ${escapeHtml(String(sceneRev))}`,
+  ];
+  if (nShort >= 2) bits.push(`Shortlist ${nShort}`);
+  if (q.has_solid_collisions) bits.push("WALL HIT");
+  else if (q.has_hard_errors) bits.push("hard errors");
+  else if (q.has_soft_warnings) bits.push("soft warnings");
+  const reasonLine = reason
+    ? `<p class="planning-reason">Warum: ${escapeHtml(reason)}</p>`
+    : "";
+  el.planningStatus.className = "planning-status";
+  el.planningStatus.innerHTML = `<p>${bits.join(" · ")}</p>${reasonLine}<p class="muted">Viewport bleibt committed bis Apply → Scene.</p>`;
+  if (el.analysisScope) {
+    el.analysisScope.textContent =
+      "Committed scene (Proposal-Findings siehe Chat-Bar / Planning)";
+  }
+}
+
+function refreshProposalChrome() {
+  const open = Boolean(pendingChatCommands?.length);
+  if (el.proposalBanner) el.proposalBanner.hidden = !open;
+  renderPlanningInspector();
 }
 
 function renderShortlistButtons() {
@@ -737,10 +882,13 @@ function selectShortlistCandidate(candidateId) {
     el.chatProposalMeta.textContent = `${proposalMetaText(
       pendingChatProposalPayload || {},
       pendingChatCommands,
-    )} — bereit zum Apply`;
+    )} — Apply → Scene schreibt Revision`;
   }
+  renderProposalReason(pendingChatProposalPayload);
+  renderProposalFindingsList();
   renderShortlistButtons();
-  setStatus(`Variante gewählt: ${label} — Apply zum Ausführen`, "ok");
+  refreshProposalChrome();
+  setStatus(`Variante gewählt: ${label} — noch nicht committed`, "ok");
 }
 
 function showChatProposal(payload) {
@@ -758,9 +906,12 @@ function showChatProposal(payload) {
   if (!el.chatProposalBar) return;
   el.chatProposalBar.hidden = false;
   if (el.chatProposalMeta) {
-    el.chatProposalMeta.textContent = `${proposalMetaText(payload, commands)} — bereit zum Apply`;
+    el.chatProposalMeta.textContent = `${proposalMetaText(payload, commands)} — Apply → Scene schreibt Revision`;
   }
+  renderProposalReason(payload);
+  renderProposalFindingsList();
   renderShortlistButtons();
+  refreshProposalChrome();
 }
 
 function openCommandsView() {
@@ -792,10 +943,13 @@ function applyPendingChatCommands() {
     return;
   }
   const q = pendingChatQuality || {};
+  const baseRevision =
+    proposalBaseRevision(pendingChatProposalPayload) ?? null;
+  const sceneRev = lastExportData?.revision ?? "?";
   if (q.blocks_apply || q.has_solid_collisions) {
     const msgs = (q.solid_messages || []).slice(0, 3).join("\n") || "Möbel durchdringt Wand.";
     window.alert(
-      `Apply blockiert — physikalisch ungültig (kein Kompromiss):\n\n${msgs}\n\nBitte neu planen.`,
+      `Apply blockiert — noch nicht in der Scene.\n\nPhysikalisch ungültig (kein Kompromiss):\n${msgs}\n\nBitte neu planen.`,
     );
     setStatus("Apply blockiert: Wand-Durchdringung", "error");
     return;
@@ -807,17 +961,15 @@ function applyPendingChatCommands() {
     if (q.has_expected_risks) parts.push("dokumentierte Kompromisse");
     const detail = parts.length ? parts.join(", ") : "Qualitäts-Hinweise";
     const ok = window.confirm(
-      `Apply trotz ${detail}?\n\nLayoutLab führt die Commands aus; Apply gilt als Zustimmung zum Kompromiss.`,
+      `Noch nicht in der Scene.\nApply schreibt die Proposal in Core (base rev ${baseRevision ?? "?"} → neue Revision; aktuell scene ${sceneRev}).\n\nTrotzdem trotz ${detail} fortfahren?\n\nApply gilt als Zustimmung zum Kompromiss.`,
     );
     if (!ok) {
-      setStatus("Apply abgebrochen — Proposal unverändert", "warn");
+      setStatus("Apply abgebrochen — Proposal unverändert (nicht committed)", "warn");
       return;
     }
   }
   const commands = pendingChatCommands;
   const proposal = pendingChatProposalPayload?.proposal || {};
-  const baseRevision =
-    proposal.base_revision ?? pendingChatProposalPayload?.base_revision ?? null;
   if (el.commandsViewDialog?.open) el.commandsViewDialog.close();
   clearChatProposal();
   const applyBody = {
@@ -828,7 +980,11 @@ function applyPendingChatCommands() {
   };
   if (baseRevision != null) applyBody.base_revision = baseRevision;
   postCommandsToCore(applyBody, "Core · chat Apply")
-    .then(() => appendChatBubble("assistant", "Applied to Core."))
+    .then(() => {
+      const rev = lastExportData?.revision ?? "?";
+      appendChatBubble("assistant", `Committed · revision ${rev}.`);
+      setStatus(`Committed · revision ${rev}`, "ok");
+    })
     .catch((err) => {
       appendChatBubble("assistant", err.message);
       setStatus(err.message, "error");
@@ -1573,6 +1729,7 @@ function loadExportData(data, sourceLabel, opts = {}) {
   renderMeta(data, sourceLabel);
   renderRooms(data);
   renderAnalysis(data);
+  refreshProposalChrome();
   if (preserveRoomId) {
     selectRoom(preserveRoomId, { fit: false, announce: false, setTarget: false });
   }
@@ -1778,15 +1935,18 @@ el.btnCoreEmpty?.addEventListener("click", () => {
 
 el.chatForm?.addEventListener("submit", (ev) => {
   ev.preventDefault();
+  if (el.btnChatSend?.disabled) return;
   const message = (el.chatInput?.value || "").trim();
   if (!message) return;
   appendChatBubble("user", message);
   chatTurnHistory.push({ role: "user", content: message });
   el.chatInput.value = "";
   clearChatProposal();
+  setChatThinking(true);
   setStatus("Agent planning via Core /v1/agent/turn…");
   postChatToCore(message)
     .then((payload) => {
+      setChatThinking(false);
       let reply = payload.reply || payload.error || "(no reply)";
       const qs = payload.questions || [];
       if (qs.length) {
@@ -1797,12 +1957,16 @@ el.chatForm?.addEventListener("submit", (ev) => {
       const commands = payload.proposal?.commands || payload.commands || [];
       if (commands.length) {
         showChatProposal(payload);
-        setStatus(`Agent proposal · ${commands.length} commands — Apply to run`, "ok");
+        setStatus(
+          `Proposal offen · ${commands.length} commands — Viewport noch committed`,
+          "ok",
+        );
       } else {
         setStatus("Agent: no commands proposed", "warn");
       }
     })
     .catch((err) => {
+      setChatThinking(false);
       appendChatBubble("assistant", err.message);
       setStatus(err.message, "error");
     });
@@ -1817,7 +1981,7 @@ el.chatInput?.addEventListener("keydown", (ev) => {
 
 el.btnChatDiscard?.addEventListener("click", () => {
   clearChatProposal();
-  setStatus("Chat proposal discarded");
+  setStatus("Proposal verworfen — Scene unverändert (committed)", "ok");
 });
 
 el.btnChatView?.addEventListener("click", () => {
@@ -2658,6 +2822,7 @@ window.addEventListener("keydown", (ev) => {
 
 window.addEventListener("resize", resize);
 resize();
+refreshProposalChrome();
 frame();
 
 async function loadDefaultScene() {

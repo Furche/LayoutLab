@@ -41,8 +41,8 @@ or UI patterns — check this index first.
 Integrated AI and Capture Pipeline. **DD-011** + **DD-017** are **Accepted** (ephemeral
 candidates + collaborative evaluation shipped through `0.10.35`; persisted project variants
 remain later). **DD-014** is the Standalone Runtime path (Phase A + B room write + B2
-generators Accepted). **DD-018…DD-020** (**Accepted**, FC-001/WP-01) — next implementation
-is **FC-001/WP-02** (transactions), then WP-03…06 per MDD §17.
-Ordered product roadmap: [LayoutLab_Master_Design_Document.md](../../LayoutLab_Master_Design_Document.md) §17.
+generators Accepted). **DD-018…DD-020** (**Accepted**, FC-001/WP-01) — WP-02…WP-06 shipped;
+see [docs/ROADMAP.md](../ROADMAP.md) for Active / Queued work.
+Ordered product roadmap: [docs/ROADMAP.md](../ROADMAP.md).
 Agent tools: see [../agent_tool_contract.md](../agent_tool_contract.md).
 Do not invent files for remaining reserved IDs until an actual proposal is written.

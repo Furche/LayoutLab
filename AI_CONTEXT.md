@@ -1,9 +1,14 @@
 # AI_CONTEXT.md
 
-Version: 1.1 · Updated: 2026-07-22
+Version: 1.2 · Updated: 2026-07-23
 
 > This document is not a specification. It is the mental model behind
 > LayoutLab. Read this to understand how the project "thinks".
+
+**Binding reading order for agents:** `00_READ_THIS_FIRST.md` → this file →
+[`docs/ROADMAP.md`](docs/ROADMAP.md) → Active Feature Concept → Accepted DDs →
+[`docs/HANDOFF.md`](docs/HANDOFF.md) (as-built / session). Priorities live only in
+`docs/ROADMAP.md`.
 
 ------------------------------------------------------------------------
 
@@ -59,8 +64,8 @@ Viewer (UX)  ←→  Core HTTP API  ←→  Spatial Project (rooms[], revision, 
 ```
 
 Planning (candidates / shortlist / chat) and semantic edit commands already run against Core.
-Direct-manipulation gestures in the Viewer (gizmos, drag → preview/commit) are the next
-product work — Core already owns transactions and furniture/room ops ([FC-001](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md)).
+Viewer direct manipulation (gizmos, drag → preview/commit) is shipped; next product work is
+in [`docs/ROADMAP.md`](docs/ROADMAP.md) (Active). Behaviour: [FC-001](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md).
 
 Geometry is the final step, not the first.
 

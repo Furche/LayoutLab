@@ -433,7 +433,7 @@ AI aesthetics is an opinionated, probabilistic signal. It must be labeled accord
 confidence, and never be presented as an objective building-code or usability verdict.
 
 Visual evaluation may send room images to a configured model provider. Disclosure is
-**two-stage** (product decision 2026-07-22; see MDD §17 Refinement):
+**two-stage** (product decision 2026-07-22; see [`docs/ROADMAP.md`](../ROADMAP.md) Refinement):
 
 1. **Minimum (required whenever experimental aesthetics is enabled):** disclose that
    data/images are transferred; which provider/model; that API costs may apply; that the
@@ -581,7 +581,7 @@ Narrow DD-011/DD-015 amendments are in place. Remaining work is staged implement
     next recipe only when a real planning scenario outgrows `bedroom_basic`. `kids_room` is a
     plausible candidate, not a commitment.
 
-Product roadmap placement: [LayoutLab_Master_Design_Document.md](../../LayoutLab_Master_Design_Document.md) §17 (Refinement / On demand). Active implementation focus is **FC-001/WP-01**, not further DD-017 schema expansion.
+Product roadmap placement: [`docs/ROADMAP.md`](../ROADMAP.md) (Refinement / On demand). Active implementation focus is whatever ROADMAP §2 lists — not further DD-017 schema expansion by default.
 
 ------------------------------------------------------------------------
 

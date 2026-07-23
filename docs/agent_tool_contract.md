@@ -254,7 +254,7 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 17. … **optionale AI-Ästhetik** ✅ (`0.10.34` Flag) · **Visual Evidence PNGs** ✅ (`0.10.35`, Blueprint multimodal; ASCII Fallback)
 18. More recipes (room-use and/or goal) ← **strictly on demand**; no second recipe scheduled (`kids_room` = candidate only)
 19. Persisted project variants / compare UI (Future_Ideas §16) ← later
-20. **Product focus:** FC-001/WP-01 architecture package (not further agent-tool expansion) ← current — see `docs/HANDOFF.md` / MDD §17
+20. **Product focus:** follow `docs/ROADMAP.md` Active entry (not further agent-tool expansion by default) — as-built: `docs/HANDOFF.md`
 21. Refinement (not FC-001): staged Viewer explanation; aesthetics privacy stage 1 when flag on; stage 2 before default-on
 
 ### Requirements (v0)

@@ -231,7 +231,7 @@ User/AI priority overrides (e.g. `prefer_bed_wall: "north"`) force that family o
 
 DD-017 evaluation schema, shortlist, revision and aesthetics are tracked in
 [DD-017](DD-017-collaborative-planning-and-contextual-evaluation.md) (shipped through `0.10.35`).
-Active product focus after that slice: FC-001/WP-01 (see MDD §17).
+Active product focus after that slice: see [`docs/ROADMAP.md`](../ROADMAP.md).
 
 ------------------------------------------------------------------------
 

@@ -7,9 +7,17 @@ alwaysApply: true
 
 **Mental model:** Read `AI_CONTEXT.md` before architecture or product-direction questions.
 
+**Binding reading order:**
+1. `00_READ_THIS_FIRST.md`
+2. `AI_CONTEXT.md`
+3. `docs/ROADMAP.md` — product priorities and work order (only authoritative queue)
+4. Feature Concept linked by the Active ROADMAP entry
+5. Related Accepted Design Decisions
+6. `docs/HANDOFF.md` — technical as-built and session notes
+
 **Current product focus:** Standalone **web viewer** (`viewer/`) + **Core** (`layoutlab/`, `server/`) — not new Blender plugin UX by default. Blender is a runtime adapter. Long-term vision: `docs/Future_Ideas.md`; cross-cutting behaviour: `docs/concepts/`. Do not skip Idea → Feature Concept → DD(s) → work packages → implementation.
 
-**Key docs:** `CHANGELOG.md`, `docs/HANDOFF.md` (ordered work), `docs/ARCHITECTURE.md`, `docs/concepts/`, `docs/json_protocol.md`, `docs/design_decisions/`, `viewer/README.md`.
+**Key docs:** `docs/ROADMAP.md` (priorities), `docs/HANDOFF.md` (as-built), `CHANGELOG.md`, `docs/ARCHITECTURE.md`, `docs/concepts/`, `docs/json_protocol.md`, `docs/design_decisions/`, `viewer/README.md`.
 
 **Diagnostics:** When reporting LayoutLab diagnostics, reference the report file or paste only failing checks — not the full check dump inline.
 

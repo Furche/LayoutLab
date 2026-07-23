@@ -16,10 +16,12 @@ Version: 0.5.0 (Living Document)
 Related documents:
 
 - `AI_CONTEXT.md` — mental model and vocabulary
+- `docs/ROADMAP.md` — binding product priorities and work order
+- `docs/HANDOFF.md` — session as-built / technical gotchas
 - `docs/Future_Ideas.md` — long-term product vision (problem-first, accessibility, planning layers)
 - `docs/json_protocol.md` — AI ↔ plugin JSON contract
 - `docs/documentation_map.md` — which document to update when (maintenance index)
-- `LayoutLab_Master_Design_Document.md` — vision, roadmap, team roles
+- `LayoutLab_Master_Design_Document.md` — vision, long-term phase summary, team roles
 - `LayoutLab_Generator_Specification.md` — generator authoring rules
 
 ------------------------------------------------------------------------
@@ -623,7 +625,7 @@ Split into two design decisions (do not merge):
 
 Implementation order after DD-007 acceptance: API → wardrobe refactor → export → diagnostics → DD-008 → analyze_layout → bed clearances. Bridge / Expert Mode: **Future Idea** per DD-009 — separate DD before code.
 
-See Master Design Document §17 for the full product roadmap.
+See [`docs/ROADMAP.md`](ROADMAP.md) for the binding product roadmap.
 
 ------------------------------------------------------------------------
 

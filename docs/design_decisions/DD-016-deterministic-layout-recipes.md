@@ -11,7 +11,7 @@
 
 Locks Planning Layer v0: **AI chooses recipe / requirements**; **Core owns standard bedroom geometry** via `plan_layout` + `bedroom_basic`. Free LLM xy remains only for custom overrides after a recipe baseline.
 
-Shipped beyond the original v0 sketch: mini-`requirements` object, recipe baseline enforcement, light `agent_state`, bedroom intent/placement helpers under `layoutlab/runtime/planning/`. Further recipes stay **strictly on demand** — not authorized by this accept alone; `kids_room` is a plausible candidate, not a scheduled commitment (MDD §17).
+Shipped beyond the original v0 sketch: mini-`requirements` object, recipe baseline enforcement, light `agent_state`, bedroom intent/placement helpers under `layoutlab/runtime/planning/`. Further recipes stay **strictly on demand** — not authorized by this accept alone; `kids_room` is a plausible candidate, not a scheduled commitment ([`docs/ROADMAP.md`](../ROADMAP.md) Refinement).
 
 ------------------------------------------------------------------------
 
@@ -135,7 +135,7 @@ Exact numbers live in code + tests; this DD locks the **intent** of the rules.
 4. ~~Slim down free-placement heuristics into `planning/` (intent + placement).~~ ✅ (v0.10.21)
 5. **Strictly on demand:** more recipes on the same contract — **no second recipe is scheduled.**
    Decide the next recipe only when a real planning scenario outgrows `bedroom_basic`.
-   `kids_room` is a plausible candidate, not a commitment. See MDD §17 Refinement.
+   `kids_room` is a plausible candidate, not a commitment. See [`docs/ROADMAP.md`](../ROADMAP.md) Refinement.
    Multi-candidate planning: [DD-011](DD-011-layout-variants-and-comparison.md) **Accepted** and shipped.
 
 See also: recipe as goal-oriented strategy in DD-011 (not room-type-only).
