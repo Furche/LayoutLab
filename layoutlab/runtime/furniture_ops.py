@@ -688,6 +688,51 @@ def center_to_corner(center, half_x: float, half_y: float, rotation_z_deg: float
     return [cx - ox, cy - oy, cz]
 
 
+def location_after_size_change(
+    location,
+    old_half_x: float,
+    old_half_y: float,
+    new_half_x: float,
+    new_half_y: float,
+    rotation_z_deg: float,
+    *,
+    anchor: str = "center",
+) -> list[float]:
+    """New min-corner location after a footprint size change.
+
+    ``anchor``:
+    - ``center`` — keep footprint centre fixed (default for API resize)
+    - ``min_x`` / ``max_x`` / ``min_y`` / ``max_y`` — keep that local edge fixed
+      (Viewer scale gizmos: opposite edge to the dragged handle)
+    """
+    a = str(anchor or "center").lower().replace("-", "_")
+    if a in ("center", "centre", ""):
+        center = corner_to_center(location, old_half_x, old_half_y, rotation_z_deg)
+        return center_to_corner(center, new_half_x, new_half_y, rotation_z_deg)
+
+    dsx = 2.0 * (float(new_half_x) - float(old_half_x))
+    dsy = 2.0 * (float(new_half_y) - float(old_half_y))
+    local_dx = 0.0
+    local_dy = 0.0
+    if a in ("max_x", "pos_x", "+x"):
+        local_dx = -dsx
+    elif a in ("min_x", "neg_x", "-x"):
+        local_dx = 0.0
+    elif a in ("max_y", "pos_y", "+y"):
+        local_dy = -dsy
+    elif a in ("min_y", "neg_y", "-y"):
+        local_dy = 0.0
+    else:
+        center = corner_to_center(location, old_half_x, old_half_y, rotation_z_deg)
+        return center_to_corner(center, new_half_x, new_half_y, rotation_z_deg)
+
+    lx = float(location[0])
+    ly = float(location[1])
+    lz = float(location[2] if len(location) > 2 else 0.0)
+    wx, wy = _rotate_offset_z(local_dx, local_dy, rotation_z_deg)
+    return [lx + wx, ly + wy, lz]
+
+
 def move_object(session, object_id: str, location, *, honour_lock: bool = True) -> dict:
     """Set Main Part world XY location; Z follows support_ref (floor or host surface)."""
     store = session.mesh_store
@@ -1012,6 +1057,7 @@ def regenerate_object(
     object_name: str | None = None,
     params_override: dict | None = None,
     honour_lock: bool = True,
+    anchor: str = "center",
 ) -> dict:
     """Rebuild furniture from generator params (DD-002 / FC-001/WP-04). Same object_id."""
     from ..util import merge_generator_params
@@ -1030,14 +1076,26 @@ def regenerate_object(
     if not generator:
         raise ValueError("Object has no layoutlab_generator metadata")
 
-    merged = merge_generator_params(state["params"], params_override or {})
-    # Keep footprint center fixed when size changes (min-corner location adjusts).
-    if not (params_override and "location" in params_override):
+    overrides = dict(params_override or {})
+    # Non-generator keys (pose anchors) — strip before merge.
+    override_anchor = overrides.pop("anchor", None) or overrides.pop("resize_anchor", None)
+    resize_anchor = str(override_anchor or anchor or "center")
+
+    merged = merge_generator_params(state["params"], overrides)
+    # Adjust min-corner so the chosen edge (or centre) stays fixed in world.
+    if "location" not in overrides:
         old_hx, old_hy = footprint_half_xy(state["params"], generator)
-        center = corner_to_center(state["location"], old_hx, old_hy, state["rotation_z_deg"])
         new_hx, new_hy = footprint_half_xy(merged, generator)
-        merged["location"] = center_to_corner(center, new_hx, new_hy, state["rotation_z_deg"])
-    if not (params_override and "rotation_z_deg" in params_override):
+        merged["location"] = location_after_size_change(
+            state["location"],
+            old_hx,
+            old_hy,
+            new_hx,
+            new_hy,
+            state["rotation_z_deg"],
+            anchor=resize_anchor,
+        )
+    if "rotation_z_deg" not in overrides:
         merged["rotation_z_deg"] = state["rotation_z_deg"]
     if not merged.get("collection"):
         merged["collection"] = state["collection"]
@@ -1055,8 +1113,8 @@ def regenerate_object(
 
     new_main = main_part(store, oid)
     if new_main is not None:
-        if params_override and "location" in params_override:
-            loc = params_override["location"]
+        if "location" in overrides:
+            loc = overrides["location"]
             new_main.location.x = float(loc[0])
             new_main.location.y = float(loc[1])
             new_main.location.z = float(loc[2]) if len(loc) > 2 else float(new_main.location.z)
@@ -1065,8 +1123,8 @@ def regenerate_object(
             new_main.location.x = float(loc[0])
             new_main.location.y = float(loc[1])
             new_main.location.z = float(loc[2])
-        if params_override and "rotation_z_deg" in params_override:
-            new_main.rotation_z_deg = float(params_override["rotation_z_deg"])
+        if "rotation_z_deg" in overrides:
+            new_main.rotation_z_deg = float(overrides["rotation_z_deg"])
         else:
             new_main.rotation_z_deg = float(state["rotation_z_deg"])
         # Re-sync params JSON after pose fix.
@@ -1093,6 +1151,7 @@ def regenerate_object(
         "generator": generator,
         "params": merged,
         "object": summary,
+        "anchor": resize_anchor,
     }
     if isinstance(result, dict):
         for key in ("parts", "main_part", "part_object_count"):
@@ -1110,6 +1169,7 @@ def set_parameter(
     parameter: str | None = None,
     value: Any = None,
     honour_lock: bool = True,
+    anchor: str = "center",
 ) -> dict:
     """Change generator parameter(s) and regenerate (semantic resize — no mesh scale)."""
     overrides = dict(params or {})
@@ -1123,9 +1183,12 @@ def set_parameter(
         object_name=object_name,
         params_override=overrides,
         honour_lock=honour_lock,
+        anchor=anchor,
     )
     result["set_parameter"] = True
-    result["overrides"] = overrides
+    result["overrides"] = {
+        k: v for k, v in overrides.items() if k not in ("anchor", "resize_anchor")
+    }
     return result
 
 
@@ -1262,15 +1325,32 @@ def apply_furniture_command(session, cmd: dict) -> Any:
     if action == "regenerate":
         overrides = dict(params) if params else {}
         for key, value in cmd.items():
-            if key in ("action", "object_id", "object", "name", "params", "generator"):
+            if key in (
+                "action",
+                "object_id",
+                "object",
+                "name",
+                "params",
+                "generator",
+                "anchor",
+                "resize_anchor",
+            ):
                 continue
             if key not in overrides:
                 overrides[key] = value
+        anchor = (
+            cmd.get("anchor")
+            or cmd.get("resize_anchor")
+            or overrides.pop("anchor", None)
+            or overrides.pop("resize_anchor", None)
+            or "center"
+        )
         return regenerate_object(
             session,
             object_id=object_id,
             object_name=object_name,
             params_override=overrides or None,
+            anchor=str(anchor),
         )
 
     if action in ("set_parameter", "resize"):
@@ -1289,15 +1369,25 @@ def apply_furniture_command(session, cmd: dict) -> Any:
                 "param",
                 "value",
                 "generator",
+                "anchor",
+                "resize_anchor",
             ):
                 continue
             if key not in overrides:
                 overrides[key] = val
+        anchor = (
+            cmd.get("anchor")
+            or cmd.get("resize_anchor")
+            or overrides.pop("anchor", None)
+            or overrides.pop("resize_anchor", None)
+            or "center"
+        )
         return set_parameter(
             session,
             object_id=object_id,
             object_name=object_name,
             params=overrides or None,
+            anchor=str(anchor),
         )
 
     raise ValueError(f"unhandled furniture action {action!r}")

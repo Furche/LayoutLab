@@ -16,6 +16,7 @@ import {
   furnitureBounds,
   isGizmoMesh,
   resizeParamsForAxis,
+  resizeAnchorForHandle,
   resolveGizmoPick,
   roomMoveCommand,
   roomRotateCommand,
@@ -2427,6 +2428,7 @@ async function startGesture(ev, mesh) {
       setStatus("Object bounds missing", "error");
       return false;
     }
+    const pose = poseFromExport(lastExportData, ud.objectId);
     gesture = {
       kind: "scale_axis",
       objectId: ud.objectId,
@@ -2436,6 +2438,7 @@ async function startGesture(ev, mesh) {
       startSize: bounds.size,
       startFloor: floor,
       startClientX: ev.clientX,
+      startRz: Number(pose?.rotation_z_deg) || 0,
       _delta: 0,
       started: false,
       _beginning: false,
@@ -2446,7 +2449,8 @@ async function startGesture(ev, mesh) {
           this.startSize,
           (this._delta || 0) * (this.sign || 1),
         );
-        return [resizeCommand(this.objectId, params)];
+        const anchor = resizeAnchorForHandle(this.axis, this.sign);
+        return [resizeCommand(this.objectId, params, { anchor })];
       },
     };
   } else {
@@ -2708,7 +2712,14 @@ async function updateGesture(ev) {
   } else if (gesture.kind === "scale_axis" && floor && gesture.startFloor) {
     const dx = floor.x - gesture.startFloor.x;
     const dy = floor.y - gesture.startFloor.y;
-    gesture._delta = gesture.axis === "x" ? dx : dy;
+    // Project onto object-local axes so rotated furniture scales along its width/depth.
+    const rz = gesture.startRz || 0;
+    const inv = (-rz * Math.PI) / 180;
+    const c = Math.cos(inv);
+    const s = Math.sin(inv);
+    const lx = dx * c - dy * s;
+    const ly = dx * s + dy * c;
+    gesture._delta = gesture.axis === "x" ? lx : ly;
   }
   // rotate_z uses client X delta in commands()
 

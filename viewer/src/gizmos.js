@@ -108,12 +108,24 @@ export function furnitureBounds(exportData, objectId) {
     }
   }
   if (!Number.isFinite(minX)) return null;
+  let rotationZ = 0;
+  const main = objects.find((o) => {
+    const id = o?.layoutlab?.object_id || o?.custom_properties?.layoutlab_object_id;
+    if (id !== objectId) return false;
+    const pt = o?.layoutlab?.part_type || o?.custom_properties?.layoutlab_part_type;
+    return pt === "main" || !pt;
+  });
+  if (main) {
+    rotationZ =
+      Number(main.rotation_z_deg ?? main.layoutlab?.rotation_z_deg ?? 0) || 0;
+  }
   return {
     min: [minX, minY, minZ],
     max: [maxX, maxY, maxZ],
     center: [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2],
     size: [maxX - minX, maxY - minY, maxZ - minZ],
     generator,
+    rotation_z_deg: rotationZ,
   };
 }
 
@@ -331,6 +343,7 @@ export function buildFurnitureGizmo(bounds, objectId) {
   const [cx, cy, cz] = bounds.center;
   const [sx, sy] = bounds.size;
   group.position.set(cx, cy, cz + HANDLE_Z);
+  group.rotation.z = ((Number(bounds.rotation_z_deg) || 0) * Math.PI) / 180;
 
   const base = { target: "furniture", objectId, generator: bounds.generator || "" };
   const half = Math.max(sx, sy) * 0.5;
@@ -601,6 +614,12 @@ export function resizeParamsForAxis(generator, axis, startSize, delta) {
   return { depth: rounded };
 }
 
+/** Opposite local edge stays fixed when dragging a scale handle (room-like). */
+export function resizeAnchorForHandle(axis, sign) {
+  if (axis === "x") return Number(sign) >= 0 ? "min_x" : "max_x";
+  return Number(sign) >= 0 ? "min_y" : "max_y";
+}
+
 export function roomMoveCommand(roomId, dx, dy) {
   return { action: "move_room", room_id: roomId, dx, dy };
 }
@@ -609,6 +628,8 @@ export function roomRotateCommand(roomId, degrees) {
   return { action: "rotate_room", room_id: roomId, degrees };
 }
 
-export function resizeCommand(objectId, params) {
-  return { action: "resize", object_id: objectId, params };
+export function resizeCommand(objectId, params, { anchor } = {}) {
+  const cmd = { action: "resize", object_id: objectId, params };
+  if (anchor) cmd.anchor = anchor;
+  return cmd;
 }

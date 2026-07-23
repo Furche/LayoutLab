@@ -117,6 +117,54 @@ class TestParametricResize(unittest.TestCase):
         self.assertEqual(before_parts, before_parts)  # sanity: store still consistent
         _assert_no_bpy()
 
+    def test_resize_anchor_keeps_opposite_edge(self):
+        """Viewer scale gizmos: grow one side only (room-like), not from centre."""
+        from layoutlab.runtime import furniture_ops as fo
+
+        # Desk at (1,1), width 1.2 → footprint X [1.0, 2.2]
+        main = fo.main_part(self.session.mesh_store, self.object_id)
+        x0 = float(main.location.x)
+        y0 = float(main.location.y)
+
+        # Drag +X handle → anchor min_x: west edge stays, east moves.
+        self.session.commit_commands(
+            [
+                {
+                    "action": "resize",
+                    "object_id": self.object_id,
+                    "params": {"width": 1.8},
+                    "anchor": "min_x",
+                }
+            ],
+            actor="user",
+        )
+        main = fo.main_part(self.session.mesh_store, self.object_id)
+        self.assertAlmostEqual(float(main.location.x), x0, places=3)
+        self.assertAlmostEqual(float(main.location.y), y0, places=3)
+        params = fo._parse_params(main)
+        self.assertAlmostEqual(float(params["width"]), 1.8, places=3)
+        # East edge moved +0.6
+        self.assertAlmostEqual(float(main.location.x) + float(params["width"]), 2.8, places=3)
+
+        # Drag −X handle → anchor max_x: east edge stays, west moves.
+        east = float(main.location.x) + float(params["width"])
+        self.session.commit_commands(
+            [
+                {
+                    "action": "resize",
+                    "object_id": self.object_id,
+                    "params": {"width": 2.2},
+                    "anchor": "max_x",
+                }
+            ],
+            actor="user",
+        )
+        main = fo.main_part(self.session.mesh_store, self.object_id)
+        params = fo._parse_params(main)
+        self.assertAlmostEqual(float(params["width"]), 2.2, places=3)
+        self.assertAlmostEqual(float(main.location.x) + float(params["width"]), east, places=3)
+        self.assertAlmostEqual(float(main.location.x), east - 2.2, places=3)
+
     def test_regenerate_alias_and_undo(self):
         from layoutlab.runtime import furniture_ops as fo
 

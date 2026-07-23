@@ -476,6 +476,10 @@ Parametric resize — **no mesh scale**. Alias `resize` → same path.
 { "action": "resize", "object_id": "…", "width": 1.8 }
 ```
 
+Optional **`anchor`** (default `"center"`): which footprint edge stays fixed when size changes —
+`"center"` | `"min_x"` | `"max_x"` | `"min_y"` | `"max_y"`. Viewer scale gizmos use the
+edge opposite the dragged handle (room-like one-sided resize).
+
 Merges overrides then runs `regenerate`. Honours `locked`. One Undo unit via `commit_commands`.
 
 ------------------------------------------------------------------------

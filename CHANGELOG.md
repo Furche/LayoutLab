@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Furniture scale from edge (`0.10.70`):** Object scale gizmos resize like room walls — only the grabbed side moves; the opposite edge stays fixed (`resize` `anchor`). API default remains centre-fixed.
 - **Support detach/reattach on host scale (`0.10.69`):** Shrinking a desk under a lamp drops the lamp to the floor and clears the support link (no floating tether). Growing the desk back under a floor lamp re-attaches via `place_on`. Empty/floor click deselects furniture; clicking another object wins over the current gizmo.
 - **Drag world grid (`0.10.68`):** While moving furniture, a fine (10 cm) world-anchored grid appears at the object Z with a soft radial fade that follows the selection.
 - **Lamp join anchor at foot (`0.10.67`):** Multi-mesh join prefers lowest-Z piece so overhanging shades no longer become the object origin.
