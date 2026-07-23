@@ -371,13 +371,100 @@ def iter_children_on_host(store, host_object_id: str):
 
 
 def follow_support_children(session, host_object_id: str, *, delta_rz: float = 0.0) -> list[str]:
-    """Reproject all children attached to host (move/rotate participation)."""
+    """Reproject children on host; detach to floor when centre leaves the surface.
+
+    After host resize, also re-attach floor furniture whose footprint centre lies on
+    the host surface again (grow-back).
+    """
+    store = session.mesh_store
+    host_id = str(host_object_id)
+    host = main_part(store, host_id)
+    if host is None:
+        return []
+    supports.stamp_host_surfaces(host)
+
     followed = []
-    for child_id, _surface_id in iter_children_on_host(session.mesh_store, host_object_id):
+    for child_id, surface_id in list(iter_children_on_host(store, host_id)):
+        main = main_part(store, child_id)
+        if main is None:
+            continue
+        surface = supports.find_surface(host, surface_id)
+        if surface is None:
+            set_support(session, child_id, SUPPORT_ROOM_FLOOR, honour_lock=False)
+            continue
+        local_xy = supports.support_local_xy_of(main)
+        if local_xy is None:
+            local_xy = supports.world_xy_to_surface_local(
+                host, surface, [main.location.x, main.location.y]
+            )
+            supports.set_support_local_xy(main, local_xy)
+        params = _parse_params(main)
+        hx, hy = footprint_half_xy(params, main.get("layoutlab_generator"))
+        # Approx footprint centre in surface-local (MVP: ignore child↔host relative rz).
+        local_centre = [float(local_xy[0]) + hx, float(local_xy[1]) + hy]
+        if not supports.centre_in_surface(surface, local_centre):
+            # Detach at current world XY (do not reproject onto a missing surface).
+            set_support(session, child_id, SUPPORT_ROOM_FLOOR, honour_lock=False)
+            continue
         _apply_pose_from_support(session, child_id, delta_rz=delta_rz)
-        refresh_validity(session.mesh_store, session._rooms, child_id)
+        refresh_validity(store, session._rooms, child_id)
         followed.append(child_id)
+    followed.extend(attach_floor_objects_over_host(session, host_id))
     return followed
+
+
+def attach_floor_objects_over_host(session, host_object_id: str) -> list[str]:
+    """Place room_floor furniture onto host when their footprint centre lies on a surface."""
+    store = session.mesh_store
+    host_id = str(host_object_id)
+    host = main_part(store, host_id)
+    if host is None:
+        return []
+    supports.stamp_host_surfaces(host)
+    host_surfaces = supports.surfaces_of(host)
+    if not host_surfaces:
+        return []
+
+    attached = []
+    seen = set()
+    for obj in store.objects:
+        if not is_furniture_part(obj):
+            continue
+        oid = obj.get("layoutlab_object_id")
+        if not oid or oid in seen or oid == host_id:
+            continue
+        main = main_part(store, oid)
+        if main is None:
+            continue
+        seen.add(oid)
+        if support_ref(main) != SUPPORT_ROOM_FLOOR:
+            continue
+        # Same collection / room as host when possible.
+        if (main.collection or "") and (host.collection or ""):
+            if main.collection != host.collection:
+                continue
+        params = _parse_params(main)
+        hx, hy = footprint_half_xy(params, main.get("layoutlab_generator"))
+        loc = [float(main.location.x), float(main.location.y), float(main.location.z)]
+        centre = corner_to_center(loc, hx, hy, float(main.rotation_z_deg or 0.0))
+        for surface in host_surfaces:
+            sid = str(surface.get("id") or "")
+            if not sid:
+                continue
+            local_xy = supports.world_xy_to_surface_local(host, surface, centre)
+            if not supports.centre_in_surface(surface, local_xy):
+                continue
+            place_on(
+                session,
+                oid,
+                host_id,
+                surface_id=sid,
+                location=[loc[0], loc[1]],
+                honour_lock=False,
+            )
+            attached.append(oid)
+            break
+    return attached
 
 
 def mark_dangling_support_children(session, host_object_id: str) -> list[str]:

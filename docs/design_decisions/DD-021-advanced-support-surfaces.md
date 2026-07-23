@@ -15,10 +15,10 @@
 1. **On-surface test:** footprint **centre** must lie in the host surface (not full containment).
 2. **Host delete:** keep dangling `support_ref` + `INVALID_NO_SUPPORT`; **no** auto-floor.
 3. **MVP child:** new minimal **`lamp_basic`** generator.
-4. **Host resize / scale:** child keeps its surface-local offset and may become
-   **`INVALID_OFF_SUPPORT`** (“lost” from the host) — same no-silent-repair spirit as (2).
-   Never clamp/snap the child back onto the surface. Host **move/rotate** still
-   **follows** via explicit `support_local_xy`.
+4. **Host resize / scale:** when the child’s footprint centre leaves the host surface,
+   detach to `room_floor` (lose connection, Z to floor). When the host grows again and
+   a floor object’s centre lies on the surface, re-attach via `place_on` (same world XY).
+   Host **move/rotate** still **follows** via explicit `support_local_xy` while attached.
 
 ------------------------------------------------------------------------
 
@@ -55,7 +55,7 @@ other objects (lamp on desk). Without a binding support model:
 - Z derived from support surface
 - XY validated by centre-in-surface
 - Host move / rotate: children **follow** (`support_local_xy`)
-- Host resize / regenerate: offset preserved; may become `INVALID_OFF_SUPPORT`
+- Host resize / regenerate: detach to floor when centre leaves surface; re-attach floor objects when centre lies on surface again
 - Host delete: dangling ref + `INVALID_NO_SUPPORT`
 - Viewer: inspector shows support; minimal place affordance
 - Export: `support_ref`, `support_local_xy`, surface metadata
@@ -115,7 +115,7 @@ Surfaces survive regenerate (DD-002): same `id`, recomputed from params.
 | Host change | Child with this support |
 |---|---|
 | move / rotate_z | **Follow** — reproject from `support_local_xy` (+ inherit host Δrz on child rz) |
-| resize / regenerate | Keep `support_local_xy`; reproject; may become **`INVALID_OFF_SUPPORT`** |
+| Host resize / regenerate | Keep `support_local_xy` and reproject; if centre leaves surface → **detach to `room_floor`**. Floor objects whose centre lies on the surface → **re-attach** |
 | delete | Keep world pose + dangling `support_ref` → **`INVALID_NO_SUPPORT`** |
 | hide | Child visibility unchanged (own flags) |
 

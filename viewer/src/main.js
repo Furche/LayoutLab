@@ -2922,8 +2922,14 @@ renderer.domElement.addEventListener(
     if (ev.button !== 0) return;
     pointerDown = { x: ev.clientX, y: ev.clientY };
     pendingBodyDrag = null;
+    const body = liveCoreSession ? pickBodyDragTarget(ev.clientX, ev.clientY) : null;
     const gizmoHit = pickGizmo(ev.clientX, ev.clientY);
-    if (gizmoHit) {
+    // Prefer switching to another furniture under the cursor over gizmo of the current selection.
+    const switchFurniture =
+      body?.type === "furniture" &&
+      selectionTarget?.type === "furniture" &&
+      body.objectId !== selectionTarget.objectId;
+    if (gizmoHit && !switchFurniture) {
       // Stop OrbitControls before it can leave orthographic top view.
       ev.preventDefault();
       ev.stopImmediatePropagation();
@@ -2935,13 +2941,21 @@ renderer.domElement.addEventListener(
       return;
     }
     if (!liveCoreSession) return;
-    const body = pickBodyDragTarget(ev.clientX, ev.clientY);
     if (!body) return;
     ev.preventDefault();
     ev.stopImmediatePropagation();
     controls.enabled = false;
     orthoOrbitArmed = false;
     renderer.domElement.setPointerCapture?.(ev.pointerId);
+    // Floor/wall click while furniture is selected → deselect (Blender-like empty click).
+    if (body.type === "room" && selectionTarget?.type === "furniture") {
+      clearSelection();
+      setStatus("Selection cleared");
+      pendingBodyDrag = null;
+      pointerDown = null;
+      controls.enabled = true;
+      return;
+    }
     // Select first so gizmos appear before any move (needed for rotate-ring UX).
     selectMesh(body.mesh, { quiet: true });
     const floor = hitBlenderFloorXY(
@@ -3016,8 +3030,8 @@ renderer.domElement.addEventListener("pointerup", (ev) => {
   const hit = pickObject(ev.clientX, ev.clientY, { preferFurniture: true });
   if (hit && !isGizmoMesh(hit)) selectMesh(hit);
   else if (!hit) {
-    // Empty space: keep room/furniture selection — only clear via Esc.
-    // Accidental "through ring" clicks used to deselect here.
+    clearSelection();
+    setStatus("Selection cleared");
   }
 });
 

@@ -112,7 +112,7 @@ class TestSupportSurfaces(unittest.TestCase):
         self.assertEqual(fo.validity_of(lamp), fo.VALIDITY_NO_SUPPORT)
         self.assertIn(self.desk_id, fo.support_ref(lamp))
 
-    def test_host_shrink_may_off_support(self):
+    def test_host_shrink_detaches_to_floor(self):
         # Place lamp near the edge of a wide desk, then shrink width so centre falls off.
         self.session.apply_command(
             {
@@ -124,6 +124,8 @@ class TestSupportSurfaces(unittest.TestCase):
         )
         lamp = fo.main_part(self.session.mesh_store, self.lamp_id)
         self.assertEqual(fo.validity_of(lamp), fo.VALIDITY_VALID)
+        lx = float(lamp.location.x)
+        ly = float(lamp.location.y)
         self.session.apply_command(
             {
                 "action": "set_parameter",
@@ -133,7 +135,43 @@ class TestSupportSurfaces(unittest.TestCase):
             }
         )
         lamp = fo.main_part(self.session.mesh_store, self.lamp_id)
-        self.assertEqual(fo.validity_of(lamp), fo.VALIDITY_OFF_SUPPORT)
+        self.assertEqual(fo.support_ref(lamp), fo.SUPPORT_ROOM_FLOOR)
+        self.assertAlmostEqual(float(lamp.location.z), 0.0, places=2)
+        self.assertAlmostEqual(float(lamp.location.x), lx, places=2)
+        self.assertAlmostEqual(float(lamp.location.y), ly, places=2)
+
+    def test_host_grow_reattaches_floor_lamp(self):
+        self.session.apply_command(
+            {
+                "action": "place_on",
+                "object_id": self.lamp_id,
+                "host_object_id": self.desk_id,
+                "location": [2.05, 1.25],
+            }
+        )
+        self.session.apply_command(
+            {
+                "action": "set_parameter",
+                "object_id": self.desk_id,
+                "parameter": "width",
+                "value": 0.5,
+            }
+        )
+        lamp = fo.main_part(self.session.mesh_store, self.lamp_id)
+        self.assertEqual(fo.support_ref(lamp), fo.SUPPORT_ROOM_FLOOR)
+        # Grow desk back under the lamp.
+        self.session.apply_command(
+            {
+                "action": "set_parameter",
+                "object_id": self.desk_id,
+                "parameter": "width",
+                "value": 1.4,
+            }
+        )
+        lamp = fo.main_part(self.session.mesh_store, self.lamp_id)
+        self.assertTrue(fo.support_ref(lamp).startswith(f"object:{self.desk_id}#"))
+        self.assertAlmostEqual(float(lamp.location.z), 0.75, places=2)
+        self.assertEqual(fo.validity_of(lamp), fo.VALIDITY_VALID)
 
 
 if __name__ == "__main__":

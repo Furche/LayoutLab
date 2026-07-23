@@ -4,11 +4,11 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-23 (WP-07 support surfaces `0.10.64`)
-**Plugin / Core version:** 0.10.64 · **Branch:** `main`
+**Last updated:** 2026-07-23 (support detach/reattach `0.10.69`)
+**Plugin / Core version:** 0.10.69 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
-**FC-001/WP-07** shipped `0.10.64` ([DD-021](design_decisions/DD-021-advanced-support-surfaces.md) Accepted). Next: see ROADMAP §2 / Refinement.
+**FC-001/WP-07** shipped; host scale now detaches/reattaches ([DD-021](design_decisions/DD-021-advanced-support-surfaces.md)). Next: see ROADMAP §2 / Refinement.
 
 ------------------------------------------------------------------------
 
