@@ -6,6 +6,7 @@ from ..util import aabb_intersects, axis_aligned_bounds_from_points
 
 CONSTRAINT_TYPE_SOFT_PACKING = "soft_packing"
 CONSTRAINT_TYPE_OPENING_ACCESS = "opening_access"
+CONSTRAINT_TYPE_ZONE_MUST_BE_CLEAR = "zone_must_be_clear"
 
 # Furniture XY / room XY
 PACKING_INFO_RATIO = 0.35
@@ -159,11 +160,19 @@ def analyze_soft_metrics(session) -> list:
 
 
 def soft_summary_from_findings(findings) -> dict:
-    soft = [
-        f
-        for f in findings or []
-        if f.get("constraint_type") in (CONSTRAINT_TYPE_SOFT_PACKING, CONSTRAINT_TYPE_OPENING_ACCESS)
-    ]
+    """Count soft packing, opening access, and preferred/info clearance findings.
+
+    Required clearance errors (severity=error) stay out of soft_summary — they are
+    Stage A hard findings via analysis.summary.errors.
+    """
+    soft = []
+    for f in findings or []:
+        ctype = f.get("constraint_type")
+        sev = str(f.get("severity") or "").lower()
+        if ctype in (CONSTRAINT_TYPE_SOFT_PACKING, CONSTRAINT_TYPE_OPENING_ACCESS):
+            soft.append(f)
+        elif ctype == CONSTRAINT_TYPE_ZONE_MUST_BE_CLEAR and sev in ("warning", "info"):
+            soft.append(f)
     return {
         "count": len(soft),
         "warnings": sum(1 for f in soft if f.get("severity") == "warning"),

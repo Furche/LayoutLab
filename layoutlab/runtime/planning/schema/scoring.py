@@ -1,7 +1,12 @@
-"""DD-017 Evaluation v0.1 — signed score components, veto, candidate state.
+"""DD-017 Evaluation — signed score components, veto, candidate state.
 
-Provisional numbers — labeled Evaluation v0.1. Maps known DD-015 soft findings
-into explainable signed components. No preference/aesthetics engine.
+Evaluation v0.2 — calibrated soft→component map:
+- preferred / informational ``zone_must_be_clear`` → object_usability (Stage B)
+- required clearance errors stay Stage A (hard), not score components
+- soft packing also nudges circulation
+- light context weights for bed/desk/wardrobe access zones
+
+Provisional numbers remain labeled; no preference/aesthetics engine.
 """
 
 from __future__ import annotations
@@ -17,16 +22,19 @@ SEVERE_VETO_THRESHOLD = -50
 # Optional soft cap on positive contribution per category when summing total.
 POSITIVE_CAP_PER_CATEGORY = 40
 
-# Provisional DD-015 → component map (Evaluation v0.1).
+# Calibrated DD-015 → component map (Evaluation v0.2).
 _OPENING_ACCESS_VALUE = -40
 _SOFT_PACKING_WARNING_VALUE = -15
 _SOFT_PACKING_INFO_VALUE = -5
+_SOFT_PACKING_CIRCULATION_WARN = -8
+_SOFT_PACKING_CIRCULATION_INFO = -3
+_PREFERRED_CLEARANCE_WARNING = -24
+_PREFERRED_CLEARANCE_INFO = -8
 
 # Hard / non-negotiable types — validity only, never score components.
 _HARD_CONSTRAINT_TYPES = frozenset(
     {
         "solid_wall_penetration",
-        "zone_must_be_clear",  # required clearance failures stay Stage A
     }
 )
 
@@ -35,17 +43,49 @@ def _empty_category_vector() -> dict[str, int]:
     return {cat: 0 for cat in SCORE_CATEGORIES}
 
 
+def _finding_text_blob(finding: dict) -> str:
+    cref = finding.get("clearance_ref") if isinstance(finding.get("clearance_ref"), dict) else {}
+    parts = [
+        finding.get("message"),
+        finding.get("clearance_name"),
+        finding.get("furniture_name"),
+        cref.get("clearance_name"),
+        cref.get("furniture_name"),
+    ]
+    return " ".join(str(p) for p in parts if p).lower()
+
+
+def _context_multiplier(finding: dict) -> float:
+    """Stage-C style nudge from clearance / furniture hints (Evaluation v0.2)."""
+    blob = _finding_text_blob(finding)
+    if "bed_entry" in blob or ("bed" in blob and "entry" in blob):
+        return 1.5
+    if "chair_access" in blob or ("desk" in blob and "chair" in blob):
+        return 1.35
+    if "front_access" in blob or "wardrobe" in blob:
+        return 1.25
+    return 1.0
+
+
+def _scaled_penalty(base: int, finding: dict) -> int:
+    """Apply context multiplier; keep signed integers, never flip sign."""
+    raw = float(base) * _context_multiplier(finding)
+    if raw >= 0:
+        return int(round(raw))
+    return -int(round(abs(raw)))
+
+
 def soft_findings_to_components(
     analysis_or_soft_summary: Any = None,
     findings: list | None = None,
 ) -> list[dict]:
-    """Map known DD-015 soft findings into signed explainable components.
+    """Map known soft / preferred findings into signed explainable components.
 
     Accepts either:
     - an analysis dict with ``findings`` / ``soft_summary``, or
     - a soft_summary dict, plus optional explicit ``findings``.
-    Hard errors (e.g. solid_wall_penetration) are skipped — they are invalid,
-    not score components.
+    Hard errors (solid wall; required clearance severity=error) are skipped —
+    they are invalid, not score components.
     """
     analysis: dict = {}
     soft_summary: dict = {}
@@ -67,8 +107,11 @@ def soft_findings_to_components(
     seen_opening = 0
     seen_packing_warn = 0
     seen_packing_info = 0
+    seen_preferred = 0
 
     for f in raw_findings or []:
+        if not isinstance(f, dict):
+            continue
         ctype = str(f.get("constraint_type") or "")
         if ctype in _HARD_CONSTRAINT_TYPES:
             continue
@@ -98,6 +141,15 @@ def soft_findings_to_components(
                         "label": msg or "High packing density",
                     }
                 )
+                components.append(
+                    {
+                        "id": "soft_packing_circulation",
+                        "category": "circulation",
+                        "value": _SOFT_PACKING_CIRCULATION_WARN,
+                        "severity": "ordinary",
+                        "label": "Dense packing reduces circulation",
+                    }
+                )
             elif sev == "info":
                 seen_packing_info += 1
                 components.append(
@@ -109,6 +161,41 @@ def soft_findings_to_components(
                         "label": msg or "Elevated packing density",
                     }
                 )
+                components.append(
+                    {
+                        "id": "soft_packing_circulation",
+                        "category": "circulation",
+                        "value": _SOFT_PACKING_CIRCULATION_INFO,
+                        "severity": "ordinary",
+                        "label": "Elevated packing nudges circulation",
+                    }
+                )
+        elif ctype == "zone_must_be_clear":
+            # Required (error) → Stage A invalidity via hard_errors, not a soft component.
+            if sev == "error":
+                continue
+            if sev == "warning":
+                seen_preferred += 1
+                components.append(
+                    {
+                        "id": "preferred_clearance",
+                        "category": "object_usability",
+                        "value": _scaled_penalty(_PREFERRED_CLEARANCE_WARNING, f),
+                        "severity": "ordinary",
+                        "label": msg or "Preferred clearance blocked",
+                    }
+                )
+            elif sev == "info":
+                seen_preferred += 1
+                components.append(
+                    {
+                        "id": "preferred_clearance",
+                        "category": "object_usability",
+                        "value": _scaled_penalty(_PREFERRED_CLEARANCE_INFO, f),
+                        "severity": "ordinary",
+                        "label": msg or "Informational clearance blocked",
+                    }
+                )
 
     # Fallback when only soft_summary counts/types are available (no findings).
     if not components and soft_summary:
@@ -116,10 +203,7 @@ def soft_findings_to_components(
         warnings = int(soft_summary.get("warnings") or 0)
         info = int(soft_summary.get("info") or 0)
         if "opening_access" in types and seen_opening == 0:
-            # Attribute at least one severe opening_access if type is present.
             n_open = max(1, warnings) if warnings else 1
-            # Prefer assigning warnings to opening_access when both types present;
-            # remaining warnings → packing.
             for _ in range(n_open if "soft_packing" not in types else 1):
                 components.append(
                     {
@@ -143,6 +227,15 @@ def soft_findings_to_components(
                         "label": "High packing density (soft_summary)",
                     }
                 )
+                components.append(
+                    {
+                        "id": "soft_packing_circulation",
+                        "category": "circulation",
+                        "value": _SOFT_PACKING_CIRCULATION_WARN,
+                        "severity": "ordinary",
+                        "label": "Dense packing reduces circulation",
+                    }
+                )
             for _ in range(max(0, info)):
                 components.append(
                     {
@@ -151,6 +244,27 @@ def soft_findings_to_components(
                         "value": _SOFT_PACKING_INFO_VALUE,
                         "severity": "ordinary",
                         "label": "Elevated packing density (soft_summary)",
+                    }
+                )
+                components.append(
+                    {
+                        "id": "soft_packing_circulation",
+                        "category": "circulation",
+                        "value": _SOFT_PACKING_CIRCULATION_INFO,
+                        "severity": "ordinary",
+                        "label": "Elevated packing nudges circulation",
+                    }
+                )
+        if "zone_must_be_clear" in types and seen_preferred == 0:
+            # Prefer warnings count for preferred clearances when findings absent.
+            for _ in range(max(1, warnings) if warnings else 1):
+                components.append(
+                    {
+                        "id": "preferred_clearance",
+                        "category": "object_usability",
+                        "value": _PREFERRED_CLEARANCE_WARNING,
+                        "severity": "ordinary",
+                        "label": "Preferred clearance blocked (soft_summary)",
                     }
                 )
 
@@ -180,7 +294,7 @@ def score_breakdown(components: list | None) -> dict:
             if hint not in hints:
                 hints.append(hint)
 
-    # Apply positive soft caps when computing total (provisional v0.1).
+    # Apply positive soft caps when computing total (provisional).
     total = 0
     for cat, raw in category_vector.items():
         if raw > POSITIVE_CAP_PER_CATEGORY:

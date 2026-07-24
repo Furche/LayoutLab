@@ -1,6 +1,6 @@
 # LayoutLab — Product Roadmap
 
-**Status:** Binding · **Updated:** 2026-07-25 (`0.10.79` aesthetics privacy stage 1)
+**Status:** Binding · **Updated:** 2026-07-25 (`0.10.80` AI-01 evaluation calibration)
 
 > **This file is the only authoritative source for product priorities and work order.**
 >
@@ -36,6 +36,7 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 | Evaluation schema, shortlist, revision | [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) · `0.10.25`–`0.10.33` |
 | Experimental AI aesthetics (opt-in) | `0.10.34` / `0.10.35` |
 | AI aesthetics privacy stage 1 | `0.10.79` — transfer/provider/model/cost disclosure when flag on |
+| Evaluation schema v0.2 (AI-01) | `0.10.80` — preferred clearances scored; context weights; rank tie-break |
 | FC-001/WP-01 — DD package | [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** |
 | FC-001/WP-02 — semantic transactions | `0.10.36` · [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) |
 | FC-001/WP-03 — furniture ops | `0.10.37` · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) |
@@ -64,9 +65,9 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 
 | ID | Scope | Concept / DDs | Status |
 |---|---|---|---|
-| *(none locked)* | Pick next from Refinement / Later | — | Awaiting product choice |
+| AI-02 `kids_room` recipe | Second deterministic recipe for kids-room scenarios | [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) · AI competence queue | Next |
 
-FC-001/WP-01…WP-07 complete. Product surface remains Standalone Viewer + Core ([`AI_CONTEXT.md`](../AI_CONTEXT.md)). Blender = runtime adapter.
+AI-01 Evaluation v0.2 shipped (`0.10.80`). Continue AI competence queue in §3 order.
 
 ------------------------------------------------------------------------
 
@@ -74,7 +75,15 @@ FC-001/WP-01…WP-07 complete. Product surface remains Standalone Viewer + Core 
 
 | ID | Scope | Entry condition |
 |---|---|---|
-| *(none locked)* | — | Promote from Refinement / Later when product asks |
+| AI-03 Trade-off explanation | Short pros/cons/trade-offs in Viewer (no metrics dashboard) | After AI-02 |
+| AI-04 Allowlist expansion | More roles / semantic intentions / preference keys | After AI-03 |
+| AI-05 Circulation soft metric | Lightweight circulation proxy (walkway precursor) | After AI-04 |
+| AI-06 Walkway / navigation FC | Full navigation analysis Feature Concept → DD → impl | After AI-05; needs FC |
+| AI-07 Persisted variants | Save/name/compare/favorite (not ephemeral shortlist) | After AI-06; needs FC/DD |
+| AI-08 Problem-first Intent | Stronger requirements extraction before placement | After AI-07 |
+| AI-09 Automatic repair proposals | Explainable replans from findings (never silent) | After AI-08 |
+
+Not in this queue (deferred / UX-only): aesthetics privacy stage 2, DM polish, Capture, shared walls.
 
 ------------------------------------------------------------------------
 
@@ -84,20 +93,17 @@ Not blocking the Active/Queued track. No fixed sprint commitments except the aes
 
 **Viewer score / trade-off explanation (refinement)**
 
-- MVP today is enough: soft warnings, `selection_reason`, optional aesthetics note — no numbers dashboard.
-- Target (staged): short understandable summary of main pros/cons/trade-offs; later optional expandable detail (scores, penalties, vetoes, aesthetics).
-- Do not schedule a complex metrics dashboard.
+- Queued as **AI-03** — short pros/cons first; optional expandable detail later. No metrics dashboard.
 
 **Shortlist / proposal comparison UX (later polish)**
 
 - Current cards + reason + findings are enough for now (`0.10.58`).
 - Later: richer comparison without a metrics dashboard (e.g. clearer trade-offs, optional larger selected-card preview).
 
-**Further recipes (strictly on demand)**
+**Further recipes**
 
-- No second recipe is scheduled by default.
-- Only when a real planning scenario outgrows `bedroom_basic`.
-- `kids_room` is a plausible candidate, **not** a commitment.
+- Queued as **AI-02** (`kids_room`) in the AI competence track (§3).
+- No other recipes scheduled by default.
 
 **AI aesthetics: privacy / provider transparency (two-stage)**
 
@@ -110,7 +116,7 @@ Stage 1 is closed for the opt-in flag. Stage 2 stays deferred.
 
 **Other refinements**
 
-- Calibrate DD-017 rubrics/weights on real rooms; incorporate user feedback
+- DD-017 scoring calibration is **Active as AI-01**. Further passes after user feedback.
 
 ------------------------------------------------------------------------
 

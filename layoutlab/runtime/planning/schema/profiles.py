@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-SCHEMA_VERSION = "0.1.0"
+SCHEMA_VERSION = "0.2.0"
 
 # Provisional profile catalog. Capabilities/anchors are declarative only —
 # no preference scoring engine lives here yet.

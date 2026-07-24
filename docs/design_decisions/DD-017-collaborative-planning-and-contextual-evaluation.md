@@ -569,7 +569,7 @@ Narrow DD-011/DD-015 amendments are in place. Remaining work is staged implement
 
 **Remaining refinement (not blocking FC-001/WP-01):**
 
-8. Calibrate rubrics/weights using real rooms and user feedback; avoid hard-coding taste prematurely.
+8. ~~Calibrate rubrics/weights using real rooms and user feedback; avoid hard-coding taste prematurely.~~ ✅ Evaluation v0.2 (`0.10.80`) — preferred clearances + context weights + score tie-break; further passes after feedback.
 9. **Viewer explanation (staged Refinement):** MVP today = soft warnings + selection reason +
    aesthetic tip. Later: short plain-language pros/cons/trade-offs first; optional expandable
    detail (functional scores, penalties, vetos, aesthetic rubric). No metrics dashboard.

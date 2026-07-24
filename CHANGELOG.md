@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Evaluation v0.2 / AI-01 scoring calibration (`0.10.80`):** Preferred clearance warnings now count in soft summary and signed scores (`object_usability` + context weights); packing also nudges circulation; candidate rank uses functional total as tie-break.
 - **AI aesthetics privacy stage 1 (`0.10.79`):** When experimental aesthetics is enabled, Core exposes transfer/provider/model/cost disclosure via `/health` and aesthetic results; Viewer shows it in LLM settings and the proposal bar.
 - **Copy room to clipboard (`0.10.78`):** Inspector → Rooms → **Copy room** snapshots the focused room (footprint, openings, fixed elements, furniture params/pose/support) as JSON; paste with ⌘V recreates it beside the original via Core commands.
 - **Decor props + Add → Deko (`0.10.77`):** 18 minimal Decor generators (desk tech, soft goods, floor props) plus Floor lamp; Viewer Add menu groups them under **Deko** (scrollable).

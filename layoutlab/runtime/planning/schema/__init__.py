@@ -1,4 +1,4 @@
-"""DD-017 Evaluation schema v0.1 — profiles, roles, intentions, scoring."""
+"""DD-017 Evaluation schema v0.2 — profiles, roles, intentions, scoring."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from .scoring import (
     soft_findings_to_components,
 )
 
-EVALUATION_SCHEMA = SCHEMA_VERSION  # "0.1.0"
+EVALUATION_SCHEMA = SCHEMA_VERSION  # "0.2.0"
 
 __all__ = [
     "EVALUATION_SCHEMA",

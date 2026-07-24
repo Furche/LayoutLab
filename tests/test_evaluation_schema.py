@@ -72,8 +72,8 @@ class TestEvaluationSchema(unittest.TestCase):
             },
         )
         self.assertTrue(out["ok"], out)
-        self.assertEqual(out.get("schema_version"), "0.1.0")
-        self.assertEqual(out.get("evaluation_schema"), "0.1.0")
+        self.assertEqual(out.get("schema_version"), "0.2.0")
+        self.assertEqual(out.get("evaluation_schema"), "0.2.0")
         shortlist = out.get("shortlist_ids") or []
         self.assertIsInstance(shortlist, list)
         self.assertTrue(shortlist, "expected non-empty shortlist on 4x3.5")
@@ -89,6 +89,68 @@ class TestEvaluationSchema(unittest.TestCase):
             self.assertIn("severe_veto", ev)
             self.assertIn("functional", ev)
             self.assertIn("category_vector", ev)
+
+
+    def test_preferred_clearance_to_object_usability(self):
+        from layoutlab.runtime.planning.schema import soft_findings_to_components
+
+        findings = [
+            {
+                "severity": "warning",
+                "constraint_type": "zone_must_be_clear",
+                "message": "Preferred clearance 'front_access' on WARDROBE is blocked",
+                "clearance_name": "front_access",
+                "furniture_name": "WARDROBE",
+            }
+        ]
+        comps = soft_findings_to_components({"findings": findings}, findings=findings)
+        self.assertEqual(len(comps), 1)
+        c = comps[0]
+        self.assertEqual(c["id"], "preferred_clearance")
+        self.assertEqual(c["category"], "object_usability")
+        self.assertEqual(c["severity"], "ordinary")
+        # Wardrobe front_access gets 1.25× context weight on base -24 → -30
+        self.assertEqual(c["value"], -30)
+
+    def test_required_clearance_error_skipped_in_components(self):
+        from layoutlab.runtime.planning.schema import soft_findings_to_components
+
+        findings = [
+            {
+                "severity": "error",
+                "constraint_type": "zone_must_be_clear",
+                "message": "Required clearance 'chair_access' on DESK is blocked",
+            }
+        ]
+        comps = soft_findings_to_components({"findings": findings}, findings=findings)
+        self.assertEqual(comps, [])
+
+    def test_soft_summary_includes_preferred_clearance(self):
+        from layoutlab.core.soft_metrics import soft_summary_from_findings
+
+        summary = soft_summary_from_findings(
+            [
+                {
+                    "severity": "warning",
+                    "constraint_type": "zone_must_be_clear",
+                    "message": "Preferred clearance blocked",
+                },
+                {
+                    "severity": "error",
+                    "constraint_type": "zone_must_be_clear",
+                    "message": "Required clearance blocked",
+                },
+                {
+                    "severity": "info",
+                    "constraint_type": "soft_packing",
+                    "message": "packing",
+                },
+            ]
+        )
+        self.assertEqual(summary["warnings"], 1)
+        self.assertEqual(summary["info"], 1)
+        self.assertIn("zone_must_be_clear", summary["types"])
+        self.assertIn("soft_packing", summary["types"])
 
 
 if __name__ == "__main__":

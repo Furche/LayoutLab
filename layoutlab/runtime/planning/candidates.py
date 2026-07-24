@@ -64,6 +64,11 @@ def evaluate_candidate_commands(session, commands) -> dict[str, Any]:
     }
     findings = analysis.get("findings") or []
     hard_errors = int(summary.get("errors") or 0)
+    # Defensive: count severity=error findings even if summary is incomplete.
+    hard_from_findings = sum(
+        1 for f in findings if str((f or {}).get("severity") or "").lower() == "error"
+    )
+    hard_errors = max(hard_errors, hard_from_findings)
     apply_ok = bool(dry.get("apply_ok"))
     valid = bool(validation.get("ok", True)) and apply_ok
     has_hard = (not valid) or hard_errors > 0 or not apply_ok
@@ -71,14 +76,18 @@ def evaluate_candidate_commands(session, commands) -> dict[str, Any]:
     if not apply_ok or not validation.get("ok", True):
         hard_errors = max(hard_errors, 1)
 
+    soft_warnings = int(soft.get("warnings") or 0)
+    # Preferred clearance warnings live in soft_summary after Evaluation v0.2.
+    soft_info = int(soft.get("info") or 0)
+
     return {
         "ok": bool(dry.get("ok")) and valid and hard_errors == 0,
         "apply_ok": apply_ok,
         "valid": bool(validation.get("ok", True)),
         "has_hard_errors": has_hard,
         "hard_errors": hard_errors,
-        "soft_warnings": int(soft.get("warnings") or 0),
-        "soft_info": int(soft.get("info") or 0),
+        "soft_warnings": soft_warnings,
+        "soft_info": soft_info,
         "summary": summary,
         "soft_summary": soft,
         "findings": findings,
@@ -92,14 +101,19 @@ def evaluate_candidate_commands(session, commands) -> dict[str, Any]:
 
 
 def _rank_key(item: dict) -> tuple:
-    """Best-first sort key: valid first, fewer hard/soft issues, stable id."""
+    """Best-first sort key: valid first, fewer hard/soft issues, higher score, stable id."""
     q = item.get("quality") or {}
+    ev = item.get("evaluation") or {}
+    total = (ev.get("functional") or {}).get("total")
+    if total is None:
+        total = 0
     invalid = 1 if q.get("has_hard_errors") or not q.get("apply_ok") else 0
     return (
         invalid,
         int(q.get("hard_errors") or 0),
         int(q.get("soft_warnings") or 0),
         int(q.get("soft_info") or 0),
+        -int(total),
         str(item.get("candidate_id") or ""),
     )
 
