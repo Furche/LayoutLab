@@ -574,9 +574,9 @@ Narrow DD-011/DD-015 amendments are in place. Remaining work is staged implement
    aesthetic tip. Later: short plain-language pros/cons/trade-offs first; optional expandable
    detail (functional scores, penalties, vetos, aesthetic rubric). No metrics dashboard.
 10. **Aesthetics privacy/provider transparency (two-stage):**
-    - Stage 1 (minimum, whenever experimental aesthetics runs): transfer notice, provider/model,
-      possible API cost, experimental/optional labeling.
-    - Stage 2 (before default-on / production): consent dialogs and detailed settings.
+    - ~~Stage 1 (minimum, whenever experimental aesthetics runs): transfer notice, provider/model,
+      possible API cost, experimental/optional labeling.~~ ✅ (`0.10.79`)
+    - Stage 2 (before default-on / production): consent dialogs and detailed settings — deferred.
 11. **Additional recipes — strictly on demand only.** No second recipe is scheduled. Decide the
     next recipe only when a real planning scenario outgrows `bedroom_basic`. `kids_room` is a
     plausible candidate, not a commitment.

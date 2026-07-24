@@ -260,6 +260,13 @@ def format_planning_reply_note(summary: dict | None, *, enforced: bool = False) 
     aesthetic = summary.get("aesthetic") if isinstance(summary.get("aesthetic"), dict) else None
     if aesthetic and aesthetic.get("summary_de"):
         parts.append(f"Ästhetik (experimentell): {aesthetic['summary_de']}")
+    disclosure = (
+        aesthetic.get("privacy_disclosure")
+        if aesthetic and isinstance(aesthetic.get("privacy_disclosure"), dict)
+        else None
+    )
+    if disclosure and disclosure.get("summary_de"):
+        parts.append(str(disclosure["summary_de"]))
     if shortlist and len(shortlist) > 1:
         others = []
         for sid in shortlist:

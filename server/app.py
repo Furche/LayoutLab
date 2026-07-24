@@ -90,21 +90,32 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path in ("/health", "/health/"):
-            self._json(
-                200,
-                {
-                    "ok": True,
-                    "service": "layoutlab-core",
-                    "core_version": session_log.core_version_string(),
-                    "slice": "room+generators+analyze+agent_tools_0.5+transactions",
-                    "chat": "llm" if llm_configured() else "demo",
-                    "tools": sorted(TOOL_NAMES),
-                    "session_log": str(session_log.MARKDOWN_PATH),
-                    "revision": SESSION.revision,
-                    "can_undo": SESSION.can_undo,
-                    "can_redo": SESSION.can_redo,
-                },
+            from layoutlab.runtime.chat import resolve_llm_settings
+            from layoutlab.runtime.planning.aesthetics import (
+                aesthetics_enabled,
+                privacy_disclosure,
             )
+
+            aesthetics_on = aesthetics_enabled()
+            health = {
+                "ok": True,
+                "service": "layoutlab-core",
+                "core_version": session_log.core_version_string(),
+                "slice": "room+generators+analyze+agent_tools_0.5+transactions",
+                "chat": "llm" if llm_configured() else "demo",
+                "tools": sorted(TOOL_NAMES),
+                "session_log": str(session_log.MARKDOWN_PATH),
+                "revision": SESSION.revision,
+                "can_undo": SESSION.can_undo,
+                "can_redo": SESSION.can_redo,
+                "ai_aesthetics": {
+                    "enabled": aesthetics_on,
+                    "privacy_disclosure": (
+                        privacy_disclosure(resolve_llm_settings()) if aesthetics_on else None
+                    ),
+                },
+            }
+            self._json(200, health)
             return
         if path in ("/v1/session/log", "/v1/session/log/"):
             self._json(200, session_log.latest_summary())

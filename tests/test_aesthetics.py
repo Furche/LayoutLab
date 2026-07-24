@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -48,6 +49,80 @@ class TestAesthetics(unittest.TestCase):
         unchanged = apply_aesthetic_recommendation(planned, {"recommended_id": "outside"})
         self.assertEqual(unchanged["selected_id"], "a")
         self.assertNotIn("aesthetic", unchanged)
+
+    def test_privacy_disclosure_stage1_fields(self):
+        from layoutlab.runtime.planning.aesthetics import privacy_disclosure
+
+        disc = privacy_disclosure(
+            {"base_url": "https://api.openai.com/v1", "model": "gpt-4o-mini"},
+            evidence_kind="blueprint_png",
+        )
+        self.assertEqual(disc["stage"], 1)
+        self.assertTrue(disc["experimental"])
+        self.assertTrue(disc["optional"])
+        self.assertTrue(disc["data_leaves_device"])
+        self.assertTrue(disc["may_incur_api_cost"])
+        self.assertEqual(disc["provider"], "api.openai.com")
+        self.assertEqual(disc["model"], "gpt-4o-mini")
+        self.assertIn("API-Kosten", disc["summary_de"])
+        self.assertIn("api.openai.com", disc["summary_de"])
+
+    def test_assessment_includes_privacy_disclosure(self):
+        from layoutlab.runtime.planning.aesthetics import _parse_assessment
+
+        raw = {
+            "choices": [
+                {
+                    "message": {
+                        "content": json.dumps(
+                            {
+                                "recommended_id": "a",
+                                "confidence": 0.7,
+                                "style_context": "neutral",
+                                "summary_de": "A wirkt ruhiger.",
+                                "candidates": [
+                                    {
+                                        "candidate_id": "a",
+                                        "scores": {"visual_balance": 0.8},
+                                        "reason": "klar",
+                                    }
+                                ],
+                            }
+                        )
+                    }
+                }
+            ]
+        }
+        parsed = _parse_assessment(
+            raw,
+            {"a"},
+            "neutral",
+            {"base_url": "https://api.openai.com/v1", "model": "gpt-4o-mini"},
+            evidence_kind="ascii",
+        )
+        self.assertIsNotNone(parsed)
+        self.assertIn("privacy_disclosure", parsed)
+        self.assertEqual(parsed["privacy_disclosure"]["provider"], "api.openai.com")
+        self.assertIn("ASCII", parsed["privacy_disclosure"]["summary_de"])
+
+    def test_planning_reply_includes_privacy_disclosure(self):
+        from layoutlab.runtime.planning.selection_surface import format_planning_reply_note
+
+        note = format_planning_reply_note(
+            {
+                "selected_id": "a",
+                "selected_label_de": "Variante A",
+                "shortlist_ids": ["a"],
+                "aesthetic": {
+                    "summary_de": "A wirkt ruhiger.",
+                    "privacy_disclosure": {
+                        "summary_de": "Daten gehen an api.example.com (Modell x)."
+                    },
+                },
+            }
+        )
+        self.assertIn("Ästhetik (experimentell)", note)
+        self.assertIn("api.example.com", note)
 
     def test_blueprint_png_from_shortlist_preview(self):
         from layoutlab.runtime import agent as ag

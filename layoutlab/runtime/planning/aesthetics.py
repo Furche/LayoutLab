@@ -35,6 +35,58 @@ def aesthetics_enabled(params=None, llm_config=None, env=os.environ) -> bool:
     )
 
 
+def _provider_host(base_url: str | None) -> str:
+    raw = (base_url or "").strip()
+    if not raw:
+        return "unknown"
+    try:
+        from urllib.parse import urlparse
+
+        parsed = urlparse(raw if "://" in raw else f"https://{raw}")
+        return parsed.netloc or parsed.path or raw
+    except Exception:
+        return raw
+
+
+def privacy_disclosure(
+    llm_settings: dict | None = None,
+    *,
+    evidence_kind: str | None = None,
+) -> dict:
+    """Stage-1 minimum disclosure (DD-017 §7 / ROADMAP §4) — no consent UI yet."""
+    settings = llm_settings or resolve_llm_settings()
+    host = _provider_host(settings.get("base_url"))
+    model = str(settings.get("model") or "unknown")
+    kind = evidence_kind or "blueprint_png_or_ascii"
+    if kind == "blueprint_png":
+        transfer = "Grundriss-PNGs und Shortlist-Metadaten"
+    elif kind == "ascii":
+        transfer = "ASCII-Raumskizzen und Shortlist-Metadaten"
+    else:
+        transfer = "Grundriss-Bilder oder ASCII-Skizzen sowie Shortlist-Metadaten"
+    summary_de = (
+        "Experimentelle KI-Ästhetik (optional): beim Vergleich verlassen "
+        f"{transfer} dieses Gerät und gehen an {host} (Modell {model}). "
+        "Es können API-Kosten entstehen. Kein Bau-/Normurteil."
+    )
+    return {
+        "stage": 1,
+        "experimental": True,
+        "optional": True,
+        "data_leaves_device": True,
+        "may_incur_api_cost": True,
+        "provider": host,
+        "provider_base_url": settings.get("base_url"),
+        "model": model,
+        "evidence_kind": kind,
+        "transfers": [
+            "shortlist candidate metadata",
+            "blueprint PNG and/or ASCII room sketch",
+        ],
+        "summary_de": summary_de,
+    }
+
+
 def _extract_json_object(text: str) -> dict:
     text = (text or "").strip()
     if text.startswith("```"):
@@ -178,6 +230,9 @@ def _parse_assessment(
         "candidates": rows,
         "summary_de": str(parsed.get("summary_de") or "")[:600],
         "evidence_kind": evidence_kind,
+        "privacy_disclosure": privacy_disclosure(
+            llm_settings, evidence_kind=evidence_kind
+        ),
     }
 
 

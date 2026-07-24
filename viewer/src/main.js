@@ -86,6 +86,7 @@ const el = {
   chatProposalBar: document.getElementById("chat-proposal-bar"),
   chatProposalMeta: document.getElementById("chat-proposal-meta"),
   chatProposalReason: document.getElementById("chat-proposal-reason"),
+  chatAestheticsPrivacy: document.getElementById("chat-aesthetics-privacy"),
   chatProposalFindings: document.getElementById("chat-proposal-findings"),
   chatShortlist: document.getElementById("chat-shortlist"),
   proposalBanner: document.getElementById("proposal-banner"),
@@ -104,6 +105,7 @@ const el = {
   btnLlmClear: document.getElementById("btn-llm-clear"),
   btnSettings: document.getElementById("btn-settings"),
   settingsPopover: document.getElementById("settings-popover"),
+  aestheticsPrivacySettings: document.getElementById("aesthetics-privacy-settings"),
   inspector: document.getElementById("inspector"),
   btnInspectorToggle: document.getElementById("btn-inspector-toggle"),
   roomList: document.getElementById("room-list"),
@@ -445,14 +447,20 @@ async function refreshCoreVersion() {
     const response = await fetch(`${base}/health`);
     if (!response.ok) {
       setCoreVersionDisplay(null, { offline: true });
+      setAestheticsPrivacySettings(null);
       return null;
     }
     const data = await response.json();
     const ver = data.core_version || null;
     setCoreVersionDisplay(ver);
+    const aesthetics = data.ai_aesthetics;
+    setAestheticsPrivacySettings(
+      aesthetics?.enabled ? aesthetics.privacy_disclosure : null,
+    );
     return ver;
   } catch {
     setCoreVersionDisplay(null, { offline: true });
+    setAestheticsPrivacySettings(null);
     return null;
   }
 }
@@ -666,6 +674,10 @@ function clearChatProposal() {
     el.chatProposalReason.hidden = true;
     el.chatProposalReason.textContent = "";
   }
+  if (el.chatAestheticsPrivacy) {
+    el.chatAestheticsPrivacy.hidden = true;
+    el.chatAestheticsPrivacy.textContent = "";
+  }
   if (el.chatProposalFindings) {
     el.chatProposalFindings.hidden = true;
     el.chatProposalFindings.innerHTML = "";
@@ -735,6 +747,48 @@ function renderProposalReason(payload) {
   }
   el.chatProposalReason.hidden = false;
   el.chatProposalReason.textContent = `Warum: ${reason}`;
+}
+
+function aestheticPrivacyText(payload) {
+  const aesthetic =
+    payload?.aesthetic ||
+    payload?.planning?.aesthetic ||
+    null;
+  const disclosure = aesthetic?.privacy_disclosure;
+  if (disclosure?.summary_de) return String(disclosure.summary_de);
+  if (aesthetic?.summary_de) {
+    const host = aesthetic.provider || "LLM-Provider";
+    const model = aesthetic.model || "?";
+    return (
+      `Experimentelle KI-Ästhetik (optional): Shortlist-Daten/Bilder können an ${host} ` +
+      `(Modell ${model}) gehen; API-Kosten möglich.`
+    );
+  }
+  return "";
+}
+
+function renderAestheticsPrivacy(payload) {
+  if (!el.chatAestheticsPrivacy) return;
+  const text = aestheticPrivacyText(payload);
+  if (!text) {
+    el.chatAestheticsPrivacy.hidden = true;
+    el.chatAestheticsPrivacy.textContent = "";
+    return;
+  }
+  el.chatAestheticsPrivacy.hidden = false;
+  el.chatAestheticsPrivacy.textContent = text;
+}
+
+function setAestheticsPrivacySettings(disclosure) {
+  if (!el.aestheticsPrivacySettings) return;
+  const text = disclosure?.summary_de || "";
+  if (!text) {
+    el.aestheticsPrivacySettings.hidden = true;
+    el.aestheticsPrivacySettings.textContent = "";
+    return;
+  }
+  el.aestheticsPrivacySettings.hidden = false;
+  el.aestheticsPrivacySettings.textContent = text;
 }
 
 function renderProposalFindingsList() {
@@ -903,6 +957,7 @@ function selectShortlistCandidate(candidateId) {
     )} — Apply → Scene schreibt Revision`;
   }
   renderProposalReason(pendingChatProposalPayload);
+  renderAestheticsPrivacy(pendingChatProposalPayload);
   renderProposalFindingsList();
   renderShortlistButtons();
   refreshProposalChrome();
@@ -927,6 +982,7 @@ function showChatProposal(payload) {
     el.chatProposalMeta.textContent = `${proposalMetaText(payload, commands)} — Apply → Scene schreibt Revision`;
   }
   renderProposalReason(payload);
+  renderAestheticsPrivacy(payload);
   renderProposalFindingsList();
   renderShortlistButtons();
   refreshProposalChrome();

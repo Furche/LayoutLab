@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **AI aesthetics privacy stage 1 (`0.10.79`):** When experimental aesthetics is enabled, Core exposes transfer/provider/model/cost disclosure via `/health` and aesthetic results; Viewer shows it in LLM settings and the proposal bar.
 - **Copy room to clipboard (`0.10.78`):** Inspector → Rooms → **Copy room** snapshots the focused room (footprint, openings, fixed elements, furniture params/pose/support) as JSON; paste with ⌘V recreates it beside the original via Core commands.
 - **Decor props + Add → Deko (`0.10.77`):** 18 minimal Decor generators (desk tech, soft goods, floor props) plus Floor lamp; Viewer Add menu groups them under **Deko** (scrollable).
 - **Gizmo centre from local footprint (`0.10.76`):** Furniture gizmos use generator params (not world AABB dimensions) for size/centre, so they stay centered while scaling — especially after rotation.

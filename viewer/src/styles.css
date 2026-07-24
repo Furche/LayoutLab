@@ -348,6 +348,21 @@ button:hover {
   display: none;
 }
 
+.chat-aesthetics-privacy {
+  margin: 0;
+  padding: 0.35rem 0.45rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--panel) 88%, var(--accent, #c4a35a) 12%);
+}
+
+.chat-aesthetics-privacy[hidden] {
+  display: none;
+}
+
 .chat-proposal-findings {
   list-style: none;
   margin: 0;
@@ -606,6 +621,21 @@ button:hover {
   margin: 0.45rem 0 0.35rem;
   font-size: 0.7rem;
   line-height: 1.3;
+}
+
+.aesthetics-privacy-settings {
+  margin: 0.35rem 0 0.45rem;
+  padding: 0.4rem 0.45rem;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--panel) 86%, var(--accent, #c4a35a) 14%);
+}
+
+.aesthetics-privacy-settings[hidden] {
+  display: none;
 }
 
 /* —— Right: inspector rail / drawer —— */

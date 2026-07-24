@@ -1,6 +1,6 @@
 # LayoutLab — Product Roadmap
 
-**Status:** Binding · **Updated:** 2026-07-23 (`0.10.64` WP-07 support surfaces)
+**Status:** Binding · **Updated:** 2026-07-25 (`0.10.79` aesthetics privacy stage 1)
 
 > **This file is the only authoritative source for product priorities and work order.**
 >
@@ -35,6 +35,7 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 | Candidate expansion + soft ranking | [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) · `plan_layout` (`0.10.24`) |
 | Evaluation schema, shortlist, revision | [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) · `0.10.25`–`0.10.33` |
 | Experimental AI aesthetics (opt-in) | `0.10.34` / `0.10.35` |
+| AI aesthetics privacy stage 1 | `0.10.79` — transfer/provider/model/cost disclosure when flag on |
 | FC-001/WP-01 — DD package | [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** |
 | FC-001/WP-02 — semantic transactions | `0.10.36` · [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) |
 | FC-001/WP-03 — furniture ops | `0.10.37` · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) |
@@ -102,10 +103,10 @@ Not blocking the Active/Queued track. No fixed sprint commitments except the aes
 
 | Stage | When | Content |
 |---|---|---|
-| **1 — Minimum** | Whenever experimental AI aesthetics is on and images/room data leave the machine | Disclose transfer, provider/model, possible API cost, experimental/optional |
+| **1 — Minimum** | Whenever experimental AI aesthetics is on and images/room data leave the machine | Disclose transfer, provider/model, possible API cost, experimental/optional — **shipped `0.10.79`** (health + proposal + reply) |
 | **2 — Full** | Before default-on or production offer | Consent dialogs, detailed settings, default-on policy |
 
-Stage 1 is a known gap for the opt-in flag — aesthetics refinement, **not** FC-001. Stage 2 stays deferred.
+Stage 1 is closed for the opt-in flag. Stage 2 stays deferred.
 
 **Other refinements**
 
