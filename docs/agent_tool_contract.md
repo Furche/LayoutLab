@@ -28,17 +28,31 @@ Not the LLM transcript — a small object on `RoomSession.agent_state` (updated 
 
 ```json
 {
-  "schema": "0.1.0",
+  "schema": "0.2.0",
   "goal": "Schlafzimmer planen",
   "requirements": { "room_type": "bedroom", "windows": 2 },
   "open_questions": [],
   "last_proposal_id": null,
   "last_analysis_summary": null,
   "last_placement_fp": null,
-  "last_reply": null
+  "last_reply": null,
+  "last_turn_kind": "conversation",
+  "last_observed_revision": 3,
+  "last_observed_findings": []
 }
 ```
 
+`last_observed_revision` is stamped after each turn (FC-002/WP-A) so later slices can
+summarize manual changes since the last observation.
+
+------------------------------------------------------------------------
+
+## Turn kinds (FC-002/WP-A)
+
+Every agent result should include structured `turn_kind` and `observed_revision`.
+Non-mutating kinds (`conversation`, `question`, `observation_request`, `feedback`,
+`clarification`, and for now `styling_request`) **must** have empty `proposal.commands`.
+Empty commands are a valid success. Core must not force `plan_layout` on those turns.
 On LLM failure or missing API key, bedroom intents (and „nochmal“ when `requirements.room_type` is bedroom) use Core `plan_layout` — never the kids-room keyword demo.
 
 ------------------------------------------------------------------------
@@ -196,6 +210,7 @@ After tool rounds, the model emits:
 
 ```json
 {
+  "turn_kind": "conversation",
   "reply": "…",
   "questions": [],
   "proposal": {
@@ -208,16 +223,18 @@ After tool rounds, the model emits:
     "base_revision": 0
   },
   "base_revision": 0,
+  "observed_revision": 0,
   "suggested_next_tools": []
 }
 ```
 
 `base_revision` is stamped by Core from the live session revision when the proposal is
-produced (DD-018). UI shows `reply` primarily; Apply sends `proposal.commands` plus
-`base_revision` to `POST /v1/commands` (`actor: "ai"`). Core re-sanitizes against the
+produced (DD-018). `observed_revision` records what the agent inspected this turn.
+UI shows `reply` primarily; Apply sends `proposal.commands` plus
+`base_revision` to `POST /v1/commands` (`actor: "ai"`) only when commands are non-empty.
+Core re-sanitizes against the
 allowlist and **rejects** Apply when `base_revision ≠ current revision`
 (`error_code: "stale_base_revision"`).
-
 ------------------------------------------------------------------------
 
 ## HTTP mapping

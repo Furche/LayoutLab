@@ -4,7 +4,7 @@
 **Date:** 2026-07-23  
 **Accepted:** 2026-07-23  
 **Version:** 1.0  
-**Related:** [FC-001](../concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · [DD-019](DD-019-semantic-direct-manipulation.md) · [DD-002](DD-002-generators-rebuild-mesh.md) · [DD-018](DD-018-semantic-transactions-and-authority.md) · [ROADMAP](../ROADMAP.md) Active WP-07
+**Related:** [FC-001](../concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · [FC-002](../concepts/FC-002-conversational-design-collaboration-and-styling.md) · [DD-019](DD-019-semantic-direct-manipulation.md) · [DD-002](DD-002-generators-rebuild-mesh.md) · [DD-018](DD-018-semantic-transactions-and-authority.md) · [ROADMAP](../ROADMAP.md) Implemented Foundations
 
 ------------------------------------------------------------------------
 

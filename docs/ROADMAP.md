@@ -1,6 +1,6 @@
 # LayoutLab — Product Roadmap
 
-**Status:** Binding · **Updated:** 2026-07-25 (`0.10.82` agent blueprint vision)
+**Status:** Binding · **Updated:** 2026-07-25 (`0.10.83` FC-002/WP-A conversation-safe turns)
 
 > **This file is the only authoritative source for product priorities and work order.**
 >
@@ -26,7 +26,7 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 | ID / name | Notes |
 |---|---|
 | JSON commands + scene export | [DD-003](design_decisions/DD-003-json-only-communication.md) · [`json_protocol.md`](json_protocol.md) |
-| Parametric generators + regeneration | [DD-001](design_decisions/DD-001-generators-are-parametric-assets.md) / [DD-002](design_decisions/DD-002-generators-rebuild-instead-of-scale.md) |
+| Parametric generators + regeneration | [DD-001](design_decisions/DD-001-generators-are-parametric-assets.md) / [DD-002](design_decisions/DD-002-generators-rebuild-mesh.md) |
 | Clearances + layout analysis | [DD-007](design_decisions/DD-007-clearance-zones.md) / [DD-008](design_decisions/DD-008-constraints-and-layout-analysis.md) · soft metrics [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) |
 | Room Model (single space, rectangle MVP) | [DD-010](design_decisions/DD-010-room-model.md) · [`room_model.md`](room_model.md) |
 | Standalone Core HTTP + Viewer | [DD-014](design_decisions/DD-014-standalone-runtime-path.md) |
@@ -39,12 +39,14 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 | Evaluation schema v0.2 (AI-01) | `0.10.80` — preferred clearances scored; context weights; rank tie-break |
 | `kids_room_basic` recipe (AI-02) | `0.10.81` — sleep/play/homework strategies; Kinderzimmer routing |
 | Agent blueprint vision | `0.10.82` — multimodal top-down PNG in sketch/dry-run seed (ASCII fallback) |
+| FC-002/WP-A conversation-safe turns | `0.10.83` — `turn_kind`, no-command guarantees, `last_observed_revision` (FC-002 not Active) |
 | FC-001/WP-01 — DD package | [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** |
 | FC-001/WP-02 — semantic transactions | `0.10.36` · [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) |
 | FC-001/WP-03 — furniture ops | `0.10.37` · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) |
 | FC-001/WP-04 — parametric resize | `0.10.38` |
 | FC-001/WP-05 — wall/corner + inactive openings | `0.10.39` |
 | FC-001/WP-06 — Spatial Project / independent rooms | `0.10.40` · [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) |
+| FC-001/WP-07 — advanced support surfaces | `0.10.64` · [DD-021](design_decisions/DD-021-advanced-support-surfaces.md) |
 | Viewer multi-room UX | `0.10.41`–`0.10.42` (focus / floorplan / meta) |
 | Viewer direct manipulation → Core | `0.10.43`–`0.10.57` (preview/commit, wall/corner, selection gizmos, overlay/pick polish) |
 | Viewer planning feedback polish | `0.10.58` — proposed vs committed (banner, reason, proposal findings, Inspector Planning, Apply-Gate copy) |
@@ -69,7 +71,9 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 |---|---|---|---|
 | AI-03 Trade-off explanation | Short pros/cons/trade-offs in Viewer (no metrics dashboard) | [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) #9 | Next |
 
-AI-02 shipped (`0.10.81`). Agent blueprint vision shipped (`0.10.82`, on-demand ahead of AI-03). Continue AI competence queue with AI-03.
+AI-02 shipped (`0.10.81`). Agent blueprint vision shipped (`0.10.82`). FC-002/WP-A
+conversation-safe turns shipped (`0.10.83`) without making FC-002 Active. Continue AI
+competence queue with AI-03.
 
 ------------------------------------------------------------------------
 
@@ -117,7 +121,7 @@ Stage 1 is closed for the opt-in flag. Stage 2 stays deferred.
 
 **Other refinements**
 
-- DD-017 scoring calibration is **Active as AI-01**. Further passes after user feedback.
+- ~~DD-017 scoring calibration (AI-01)~~ ✅ (`0.10.80`). Further passes after user feedback.
 
 ------------------------------------------------------------------------
 
@@ -127,7 +131,7 @@ Need a Feature Concept and/or DD before implementation — **not** active commit
 
 | Topic | Notes |
 |---|---|
-| [FC-001/WP-07](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md#15-derived-work-packages) | Done `0.10.64` — see Implemented Foundations |
+| [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) | **Ready for decomposition** — WP-A shipped (`0.10.83`); remaining WPs later; not Active — natural no-command conversation, manual-change understanding and semantic decoration/styling; AI-03/04/08 remain useful foundations |
 | Persisted project variants | Save, name, compare, favorite — **not** the same as ephemeral candidates |
 | Walkway / navigation analysis | Experimental idea in [`Future_Ideas.md`](Future_Ideas.md) §5 |
 | Polygon rooms | DD-010 next (`footprint.kind = polygon`) — after FC-001 WP-01…WP-06 |

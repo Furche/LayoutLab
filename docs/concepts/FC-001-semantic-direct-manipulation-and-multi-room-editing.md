@@ -1,9 +1,9 @@
 # FC-001 — Semantic Direct Manipulation and Multi-Room Editing
 
-**Status:** Active (WP-06 complete — Spatial Project `0.10.40`; WP-07 later)
+**Status:** Implemented (WP-01…WP-07 shipped through `0.10.64`)
 **Date:** 2026-07-22
 **Owner:** Product / Architecture
-**Related:** [DD-009](../design_decisions/DD-009-ai-execution-boundary.md) · [DD-010](../design_decisions/DD-010-room-model.md) · [DD-014](../design_decisions/DD-014-standalone-runtime-path.md) · [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) (**Accepted**) · [DD-019](../design_decisions/DD-019-semantic-direct-manipulation.md) (**Accepted**) · [DD-020](../design_decisions/DD-020-spatial-project-independent-rooms.md) (**Accepted**) · [Room Model](../room_model.md) · [Spatial Project vision](../Future_Ideas.md#13-spatial-project-model)
+**Related:** [DD-009](../design_decisions/DD-009-ai-execution-boundary.md) · [DD-010](../design_decisions/DD-010-room-model.md) · [DD-014](../design_decisions/DD-014-standalone-runtime-path.md) · [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) (**Accepted**) · [DD-019](../design_decisions/DD-019-semantic-direct-manipulation.md) (**Accepted**) · [DD-020](../design_decisions/DD-020-spatial-project-independent-rooms.md) (**Accepted**) · [DD-021](../design_decisions/DD-021-advanced-support-surfaces.md) (**Accepted**) · [Room Model](../room_model.md) · [Spatial Project vision](../Future_Ideas.md#13-spatial-project-model)
 
 ------------------------------------------------------------------------
 
@@ -434,8 +434,7 @@ decisions for:
 DD-010 remains the accepted single-space foundation. This concept extends it; it
 does not rewrite it.
 
-**WP-01…WP-06 status:** complete through Spatial Project / independent rooms (`0.10.40`).
-Next optional: **FC-001/WP-07** (advanced supports / stacking — explicitly later).
+**WP-01…WP-07 status:** complete through advanced support surfaces (`0.10.64`).
 Locked Accept defaults include: session Undo ≥ 50
 with integer revision; duplicate includes invalid membership; fixed elements become inactive
 not deleted; Spatial Project is the only durable format (`rooms[]`, n = 1 normal; no legacy
@@ -456,7 +455,7 @@ themselves.
 | **FC-001/WP-04** | Parametric furniture resize through generator parameters and regeneration | **Done** — `0.10.38` (DD-019) |
 | **FC-001/WP-05** | Wall/corner resize, opening host behaviour, inactive opening restoration and invalid furniture visualization | **Done** — `0.10.39` (DD-019) |
 | **FC-001/WP-06** | Independent multi-room Spatial Project, local transforms and whole-room operations | **Done** — `0.10.40` (DD-020) |
-| **FC-001/WP-07** | Advanced support surfaces and stacking | Explicitly later |
+| **FC-001/WP-07** | Advanced support surfaces and stacking | **Done** — `0.10.64` ([DD-021](../design_decisions/DD-021-advanced-support-surfaces.md)) |
 
 Each work package must update binding contracts and tests in the same change. No
 work package may implement raw viewport-only state that bypasses Core.

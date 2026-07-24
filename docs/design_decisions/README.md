@@ -33,6 +33,7 @@ DDs; it does not make architectural choices binding by itself. Current example:
 | [DD-018](DD-018-semantic-transactions-and-authority.md) | Semantic transactions, revisions and authority | **Accepted** | 2026-07-22 |
 | [DD-019](DD-019-semantic-direct-manipulation.md) | Semantic direct manipulation | **Accepted** | 2026-07-22 |
 | [DD-020](DD-020-spatial-project-independent-rooms.md) | Spatial Project / independent multi-room MVP | **Accepted** | 2026-07-22 |
+| [DD-021](DD-021-advanced-support-surfaces.md) | Advanced support surfaces and stacking | **Accepted** | 2026-07-23 |
 
 When implementing anything that touches APIs, JSON protocol, generator behaviour,
 or UI patterns — check this index first.
@@ -41,7 +42,7 @@ or UI patterns — check this index first.
 Integrated AI and Capture Pipeline. **DD-011** + **DD-017** are **Accepted** (ephemeral
 candidates + collaborative evaluation shipped through `0.10.35`; persisted project variants
 remain later). **DD-014** is the Standalone Runtime path (Phase A + B room write + B2
-generators Accepted). **DD-018…DD-020** (**Accepted**, FC-001/WP-01) — WP-02…WP-06 shipped;
+generators Accepted). **DD-018…DD-021** (**Accepted**, FC-001) — WP-02…WP-07 shipped;
 see [docs/ROADMAP.md](../ROADMAP.md) for Active / Queued work.
 Ordered product roadmap: [docs/ROADMAP.md](../ROADMAP.md).
 Agent tools: see [../agent_tool_contract.md](../agent_tool_contract.md).

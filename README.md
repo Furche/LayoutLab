@@ -201,7 +201,7 @@ LayoutLab/                          # repository root
     ├── object_model.md
     ├── units_and_coordinates.md
     ├── concepts/
-    │   └── FC-001 …
+    │   └── FC-xxx …
     └── design_decisions/
         └── DD-001 …
 ```
@@ -260,8 +260,8 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 | Track | Focus | Status |
 |---|---|---|
 | Historical A–E | Docs → generators → module split → object model → clearances/analysis | Complete |
-| Planning + FC-001 Core | Recipes/shortlist; WP-01…WP-06; Viewer DM; planning feedback; room Z-rotate | Shipped (`0.10.24`–`0.10.60`) |
-| **Active** | FC-001/WP-07 advanced supports / stacking | See [docs/ROADMAP.md](docs/ROADMAP.md) §2 |
+| Planning + FC-001 Core | Recipes/shortlist; WP-01…WP-07; Viewer DM; planning feedback; support surfaces | Shipped (`0.10.24`–`0.10.64`) |
+| **Active** | AI-03 trade-off explanation | See [docs/ROADMAP.md](docs/ROADMAP.md) §2 |
 | Queued | — | — |
 | Refinement / later / deferred | Recipes on demand; aesthetics privacy; capture; shared walls; … | [docs/ROADMAP.md](docs/ROADMAP.md) §§4–6 |
 

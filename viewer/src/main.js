@@ -2101,7 +2101,7 @@ el.chatForm?.addEventListener("submit", (ev) => {
           "ok",
         );
       } else {
-        setStatus("Agent: no commands proposed", "warn");
+        setStatus("Agent: Einschätzung — keine Commands", "ok");
       }
     })
     .catch((err) => {

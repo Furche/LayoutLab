@@ -24,7 +24,7 @@ from . import transactions as tx
 
 # Keep in sync with layoutlab/__init__.py bl_info version when bumping the plugin.
 
-AGENT_STATE_SCHEMA = "0.1.0"
+AGENT_STATE_SCHEMA = "0.2.0"
 
 
 def empty_agent_state() -> dict:
@@ -40,10 +40,13 @@ def empty_agent_state() -> dict:
         "last_reply": None,
         "last_shortlist": None,
         "last_selected_id": None,
+        "last_turn_kind": None,
+        "last_observed_revision": None,
+        "last_observed_findings": None,
     }
 
 
-LAYOUTLAB_VERSION = "0.10.82"
+LAYOUTLAB_VERSION = "0.10.83"
 
 SESSION_ACTIONS = frozenset(
     {

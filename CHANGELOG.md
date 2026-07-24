@@ -14,6 +14,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **FC-002/WP-A conversation-safe turns (`0.10.83`):** Structured `turn_kind`, guaranteed empty commands for conversation/question/observation/feedback/clarification/styling-ack, `last_observed_revision` on agent state; Viewer treats no-command replies as success. AI-03 remains Active.
+- **FC-002 Conversational Design Collaboration and Styling:** complete feature concept for natural no-command conversation, semantic state, understanding manual edits, decor affordances, styling candidates and optional comparative AI aesthetics; added as **Ready for decomposition** without changing the Active roadmap priority.
 - **Agent blueprint vision (`0.10.82`):** `get_layout_sketch` / dry-run attach a top-down blueprint PNG; agent turns inject it as multimodal vision (ASCII stays fallback) with stage-1 privacy disclosure when images leave the device.
 - **`kids_room_basic` recipe (AI-02, `0.10.81`):** Deterministic Kinderzimmer strategies (sleep + play + homework); routes from „Kinderzimmer“ / `room_type=kids_room`; wardrobe optional; candidate mode + shortlist.
 - **Evaluation v0.2 / AI-01 scoring calibration (`0.10.80`):** Preferred clearance warnings now count in soft summary and signed scores (`object_usability` + context weights); packing also nudges circulation; candidate rank uses functional total as tie-break.

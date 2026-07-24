@@ -4,6 +4,23 @@ Why important decisions were made — complement to `CHANGELOG.md` (what changed
 
 ------------------------------------------------------------------------
 
+## 2026-07-25 — FC-002: conversation is not always a command
+
+**Why:** The existing agent path is effective for explicit planning requests, but a
+design collaboration also includes casual discussion, observation of manual user
+edits and high-level styling requests. Treating every utterance as immediate
+commands makes the conversation unnatural and exposes failed trial placements to
+the user.
+
+**Decision:** Capture the complete product behaviour in FC-002 before scheduling
+implementation. The AI may converse with no commands, compare semantic revisions,
+and develop decoration candidates internally. Core remains responsible for support,
+validity and functional analysis; optional AI aesthetics compares only viable
+results. Apply, revisions and Undo remain unchanged. FC-002 is Ready for
+decomposition and does not replace the Active AI-03 roadmap item.
+
+------------------------------------------------------------------------
+
 ## 2026-07-22 — Selection-based transform gizmos (`0.10.46`)
 
 **Why:** Mode switching (Orbit/Move/Rotate) forced users to hunt for the right

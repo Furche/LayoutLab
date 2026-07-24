@@ -95,10 +95,16 @@ Role (compassionate planner):
   If the user already answered or said you may choose, document defaults in proposal.assumes — do not ask again.
 - Soft metrics (packing density, opening_access) are comfort/usability proxies from Core — treat warnings seriously.
 
-Observation vs action (critical):
-- If the user only asks what is in the scene / whether you can see it / to describe the room:
-  answer from the seed/tools, set proposal.commands to [], do NOT rebuild or Apply anything.
-- Only emit mutating commands when the user asks to create, change, clear, or rearrange.
+Observation vs action (critical — FC-002):
+- Infer turn_kind: conversation | question | observation_request | feedback |
+  clarification | planning_request | action_request | styling_request.
+- Non-mutating kinds MUST set proposal.commands to [] — never rebuild or Apply.
+- Casual remarks, opinions ("Was meinst du?"), assessments, and feedback are valid
+  with zero commands. Empty commands are success, not failure.
+- Only emit mutating commands for planning_request / action_request (or when the
+  user explicitly accepts an offer to try a change).
+- If intent is ambiguous between assessment and mutation, ask one short clarification
+  and keep commands empty.
 
 Physics (non-negotiable):
 - Furniture must sit fully inside the room volume. Never place objects inside walls or through doors/windows.
@@ -124,6 +130,7 @@ Workflow:
 3. Do NOT loop tools forever. After you understand the plan, STOP tools and output final JSON.
 4. Finish with ONLY a JSON object (no markdown fences):
 {
+  "turn_kind": "conversation|question|observation_request|feedback|clarification|planning_request|action_request|styling_request",
   "reply": "short explanation in the user's language",
   "questions": [],
   "proposal": {
@@ -131,8 +138,8 @@ Workflow:
     "title": "short title",
     "rationale": "why this plan",
     "assumes": [],
-    "requirements": { /* structured intent for plan_layout */ },
-    "commands": [ /* full LayoutLab commands */ ],
+    "requirements": { /* structured intent for plan_layout — omit when non-mutating */ },
+    "commands": [ /* full LayoutLab commands, or [] */ ],
     "expected_risks": []
   },
   "suggested_next_tools": []
@@ -212,56 +219,207 @@ def _conversation_text(message: str, history: list | None) -> str:
 
 def _is_observation_query(message: str) -> bool:
     """True when the user only wants scene status/description, not mutations."""
-    t = (message or "").strip().lower()
-    if not t:
-        return False
-    # Explicit build/mutate verbs → not observation-only
-    mutate = (
-        "bau",
-        "erstell",
-        "einricht",
-        "lösch",
-        "losch",
-        "clear",
-        "leeren",
-        "platzi",
-        "verschieb",
-        "änder",
-        "ander",
-        "add ",
-        "remove",
-        "put ",
-        "make ",
-        "create",
-        "delete",
-        "move ",
-        "neu plan",
-        "neuplan",
-        "umplan",
+    from .planning.turn_kind import TURN_OBSERVATION, infer_turn_kind
+
+    return infer_turn_kind(message) == TURN_OBSERVATION
+
+
+def _slim_findings_for_state(quality: dict | None, analysis: dict | None = None) -> list:
+    findings = []
+    if isinstance(analysis, dict):
+        findings = list(analysis.get("findings") or [])
+    out = []
+    for f in findings[:12]:
+        if not isinstance(f, dict):
+            continue
+        out.append(
+            {
+                "severity": f.get("severity"),
+                "constraint_type": f.get("constraint_type"),
+                "message": f.get("message"),
+            }
+        )
+    if out:
+        return out
+    if isinstance(quality, dict) and quality.get("finding_types"):
+        return [{"constraint_type": t} for t in (quality.get("finding_types") or [])[:12]]
+    return []
+
+
+def _record_turn_observation(session, result: dict) -> None:
+    """Persist last observed revision + slim findings on agent_state (FC-002/WP-A)."""
+    from .session import empty_agent_state
+
+    state = getattr(session, "agent_state", None)
+    if not isinstance(state, dict):
+        state = empty_agent_state()
+        session.agent_state = state
+    rev = int(getattr(session, "revision", 0) or 0)
+    state["last_observed_revision"] = rev
+    state["last_turn_kind"] = result.get("turn_kind")
+    quality = result.get("quality") if isinstance(result.get("quality"), dict) else {}
+    findings = result.pop("_analysis_findings", None)
+    if not isinstance(findings, list):
+        findings = []
+    state["last_observed_findings"] = _slim_findings_for_state(
+        quality, {"findings": findings} if findings else None
     )
-    if any(k in t for k in mutate):
-        return False
-    patterns = (
-        r"\b(kannst|kann)\b.*\b(sehen|siehst)\b",
-        r"\bsiehst du\b",
-        r"\bwas (ist|steht|siehst|hast)\b",
-        r"\bbeschreib",
-        r"\baktuell\w*\s+(scene|szene|raum|zimmer)\b",
-        r"\b(scene|szene)\s+(sehen|zeigen|beschreib)",
-        r"\bcurrent scene\b",
-        r"\bwhat('?s| is)\b.*\b(scene|room)\b",
-        r"\bwelche m[oö]bel\b",
-        r"\bwas siehst du\b",
-        r"\bproblematisch\b",
-        r"\bproblem\b",
-        r"\bkollision\b",
-        r"\büberlapp",
-        r"\buberlapp",
-        r"\bim bett\b",
-        r"\bfalsch\b",
-        r"\bstimmt (das|etwas|was)\b",
+    if quality:
+        state["last_analysis_summary"] = {
+            "errors": (quality.get("summary") or {}).get("errors"),
+            "warnings": (quality.get("summary") or {}).get("warnings"),
+            "has_hard_errors": quality.get("has_hard_errors"),
+            "has_soft_warnings": quality.get("has_soft_warnings"),
+        }
+    state["last_reply"] = result.get("reply")
+    result["agent_state"] = dict(state)
+    result["observed_revision"] = rev
+
+
+def _apply_turn_kind_guards(result: dict, turn_kind: str) -> dict:
+    """Strip mutations for non-mutating turns; stamp turn_kind."""
+    from .planning.turn_kind import allows_commands
+
+    result = dict(result)
+    result["turn_kind"] = turn_kind
+    if allows_commands(turn_kind):
+        return result
+    result["commands"] = []
+    proposal = result.get("proposal") if isinstance(result.get("proposal"), dict) else {}
+    proposal = dict(proposal)
+    proposal["commands"] = []
+    if not proposal.get("rationale"):
+        proposal["rationale"] = "Non-mutating turn — no commands"
+    result["proposal"] = proposal
+    result.pop("plan_layout_enforced", None)
+    return result
+
+
+def _non_mutating_turn_reply(session, turn_kind: str, message: str) -> dict:
+    """Deterministic no-command reply for conversation / clarify / styling / feedback."""
+    from .planning.turn_kind import (
+        TURN_CLARIFY,
+        TURN_FEEDBACK,
+        TURN_QUESTION,
+        TURN_STYLING,
     )
-    return any(re.search(p, t) for p in patterns)
+
+    # Reuse observation tooling for factual grounding
+    base = _observation_reply(session)
+    summary = base.get("scene_summary") or {}
+    rooms = summary.get("rooms") or []
+    gens = summary.get("generators_present") or []
+    quality = base.get("quality") or {}
+    hard = quality.get("has_hard_errors")
+    soft = quality.get("has_soft_warnings")
+
+    questions: list[str] = []
+    if turn_kind == TURN_CLARIFY:
+        reply = (
+            "Magst du nur meine Einschätzung zum aktuellen Stand, "
+            "oder soll ich eine konkrete Variante ausprobieren?"
+        )
+        questions = [
+            "Nur Einschätzung, oder soll ich eine Variante vorschlagen (Apply-Gate)?"
+        ]
+        title = "Rückfrage"
+        rationale = "Ambiguous intent — clarification, no mutations"
+    elif turn_kind == TURN_STYLING:
+        reply = (
+            "Dekoration/Styling kann ich als Ideen besprechen. "
+            "Einen automatischen Styling-Vorschlag mit Apply-Gate gibt es in diesem Slice "
+            "noch nicht. "
+        )
+        if rooms:
+            reply += (
+                f"Aktuell sehe ich {len(rooms)} Raum/Räume"
+                + (f" und {', '.join(gens)}" if gens else "")
+                + ". "
+            )
+        if hard:
+            reply += "Zuerst würde ich die harten Layout-Probleme klären. "
+        reply += (
+            "Möchtest du nur Tipps, oder soll ich später eine dezente Deko-Variante "
+            "vorbereiten, sobald der Styling-Loop da ist?"
+        )
+        questions = ["Nur Tipps, oder später einen Styling-Vorschlag?"]
+        title = "Styling / Dekoration"
+        rationale = "Styling request acknowledged — no commands in WP-A"
+    elif turn_kind == TURN_FEEDBACK:
+        reply = (
+            "Alles klar — ich notiere dein Feedback und ändere nichts an der Scene. "
+            "Sag Bescheid, wenn du eine Anpassung ausprobieren willst."
+        )
+        title = "Feedback"
+        rationale = "Feedback only — no mutations"
+    elif turn_kind == TURN_QUESTION:
+        # Prefer the richer observation reply for factual questions
+        obs = base
+        obs["turn_kind"] = turn_kind
+        obs["mode"] = "converse"
+        obs["proposal"] = dict(obs.get("proposal") or {})
+        obs["proposal"]["title"] = "Antwort"
+        obs["proposal"]["rationale"] = "Question — no mutations"
+        return obs
+    else:
+        # conversation / opinion
+        bits = []
+        if not rooms:
+            bits.append("Die Scene ist leer — es gibt noch wenig zu beurteilen.")
+        else:
+            bits.append(
+                "Ich schaue mir den aktuellen Stand an, ohne etwas zu ändern."
+            )
+            if hard:
+                bits.append(
+                    "Funktional fallen harte Probleme auf (siehe Analysis) — "
+                    "die würde ich vor ästhetischen Feinschliff klären."
+                )
+            elif soft:
+                bits.append(
+                    "Physikalisch wirkt es machbar; es gibt aber Soft-Hinweise "
+                    "(Abstände/Packung), die den Raum enger oder unruhiger wirken lassen."
+                )
+            else:
+                bits.append(
+                    "Harte Fehler sehe ich gerade nicht. "
+                    "Große freie Flächen und gleichmäßige Abstände können sachlich "
+                    "oder kühl wirken — Textilien, eine Pflanze oder ein warmer "
+                    "Schwerpunkt am Bett/Arbeitsplatz würden das oft weicher machen."
+                )
+            if gens:
+                bits.append(f"Vorhandene Generator-Möbel: {', '.join(gens)}.")
+        bits.append(
+            "Möchtest du nur Ideen sammeln, oder soll ich eine dezente Variante "
+            "ausprobieren?"
+        )
+        reply = " ".join(bits)
+        questions = [
+            "Nur Einschätzung/Ideen, oder soll ich eine Variante vorschlagen?"
+        ]
+        title = "Einschätzung"
+        rationale = "Conversation / assessment — no mutations"
+
+    return {
+        "ok": True,
+        "mode": "converse",
+        "turn_kind": turn_kind,
+        "reply": reply,
+        "questions": questions,
+        "proposal": {
+            "proposal_id": str(uuid.uuid4()),
+            "title": title,
+            "rationale": rationale,
+            "assumes": [],
+            "commands": [],
+            "expected_risks": [],
+        },
+        "suggested_next_tools": [],
+        "commands": [],
+        "tool_trace": base.get("tool_trace") or [],
+        "scene_summary": summary,
+        "quality": quality,
+    }
 
 
 def _observation_reply(session) -> dict:
@@ -352,6 +510,7 @@ def _observation_reply(session) -> dict:
     return {
         "ok": True,
         "mode": "observe",
+        "turn_kind": "observation_request",
         "reply": reply,
         "questions": [],
         "proposal": {
@@ -367,6 +526,7 @@ def _observation_reply(session) -> dict:
         "tool_trace": tool_trace,
         "scene_summary": summary,
         "quality": quality,
+        "_analysis_findings": findings,
     }
 
 
@@ -586,7 +746,13 @@ def _ensure_core_recipe_plan(
     """Force Core plan_layout (mode=candidates) when a known recipe matches the intent.
 
     Runs even if the LLM skipped plan_layout and emitted free xy / dict locations.
+    Skipped for non-mutating turn kinds (FC-002/WP-A).
     """
+    from .planning.turn_kind import allows_commands
+
+    if result.get("turn_kind") and not allows_commands(result.get("turn_kind")):
+        return result
+
     from .planning import (
         RECIPE_ROOM_TYPES,
         merge_requirements,
@@ -791,22 +957,70 @@ def _maybe_soft_replan(session, settings, messages, result: dict, conversation: 
     return result
 
 
+def _resolve_turn_kind(message: str, model_kind: str | None) -> str:
+    """Core inference wins for non-mutating; otherwise prefer a valid model kind."""
+    from .planning.turn_kind import (
+        NON_MUTATING_KINDS,
+        TURN_ACTION,
+        TURN_CLARIFY,
+        TURN_CONVERSATION,
+        TURN_FEEDBACK,
+        TURN_OBSERVATION,
+        TURN_PLANNING,
+        TURN_QUESTION,
+        TURN_STYLING,
+        allows_commands,
+        infer_turn_kind,
+    )
+
+    valid = {
+        TURN_CONVERSATION,
+        TURN_QUESTION,
+        TURN_OBSERVATION,
+        TURN_FEEDBACK,
+        TURN_CLARIFY,
+        TURN_PLANNING,
+        TURN_ACTION,
+        TURN_STYLING,
+    }
+    inferred = infer_turn_kind(message)
+    model = str(model_kind or "").strip()
+    if model not in valid:
+        return inferred
+    if not allows_commands(inferred):
+        return inferred
+    if model in NON_MUTATING_KINDS:
+        return model
+    return model
+
+
 def _finish_agent_result(
-    session, settings, messages, result: dict, conversation: str, *, last_plan=None, llm_config: dict | None = None
+    session, settings, messages, result: dict, conversation: str, *, last_plan=None, llm_config: dict | None = None, turn_kind: str | None = None
 ) -> dict:
-    result = _maybe_repair_proposal(settings, messages, result, conversation)
-    result = _ensure_core_recipe_plan(session, result, conversation, last_plan, llm_config=llm_config)
-    result = _apply_plan_layout_baseline(session, result, conversation, last_plan, llm_config=llm_config)
-    if not result.get("plan_layout_enforced"):
-        result = _apply_deterministic_placement_fixes(conversation, result)
-    result = _attach_quality_preview(session, result)
-    if not result.get("plan_layout_enforced"):
-        result = _maybe_hard_replan(session, settings, messages, result, conversation)
-        result = _maybe_soft_replan(session, settings, messages, result, conversation)
-        result = _maybe_improve_replan(session, settings, messages, result, conversation)
+    from .planning.turn_kind import allows_commands
+
+    kind = _resolve_turn_kind(conversation, turn_kind or result.get("turn_kind"))
+    result = _apply_turn_kind_guards(result, kind)
+    if allows_commands(kind):
+        result = _maybe_repair_proposal(settings, messages, result, conversation)
+        result = _ensure_core_recipe_plan(session, result, conversation, last_plan, llm_config=llm_config)
+        result = _apply_plan_layout_baseline(session, result, conversation, last_plan, llm_config=llm_config)
+        if not result.get("plan_layout_enforced"):
+            result = _apply_deterministic_placement_fixes(conversation, result)
+        result = _attach_quality_preview(session, result)
+        if not result.get("plan_layout_enforced"):
+            result = _maybe_hard_replan(session, settings, messages, result, conversation)
+            result = _maybe_soft_replan(session, settings, messages, result, conversation)
+            result = _maybe_improve_replan(session, settings, messages, result, conversation)
+        # Re-apply guard in case repair/recipe paths added commands
+        result = _apply_turn_kind_guards(result, kind)
+    else:
+        result = _attach_quality_preview(session, result)
+        result = _apply_turn_kind_guards(result, kind)
     fp = _placement_fingerprint(result.get("commands") or [])
     placement.last_placement_fp = fp
     _update_agent_state(session, result, conversation, last_plan=last_plan, placement_fp=fp)
+    _record_turn_observation(session, result)
     result["agent_state"] = dict(getattr(session, "agent_state", {}) or {})
     return _stamp_base_revision(session, result)
 
@@ -1236,11 +1450,13 @@ def _normalize_proposal(parsed: dict) -> dict:
         from .planning import normalize_requirements
 
         out_proposal["requirements"] = normalize_requirements(requirements)
+    turn_kind = str(parsed.get("turn_kind") or "").strip() or None
     return {
         "reply": str(parsed.get("reply") or "Vorschlag bereit.").strip(),
         "questions": list(parsed.get("questions") or []),
         "proposal": out_proposal,
         "suggested_next_tools": list(parsed.get("suggested_next_tools") or []),
+        "turn_kind": turn_kind,
     }
 
 
@@ -1324,8 +1540,21 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             session, {"ok": False, "error": "message required", "commands": [], "reply": ""}
         )
 
-    if _is_observation_query(message):
-        return _stamp_base_revision(session, _observation_reply(session))
+    from .planning.turn_kind import NON_MUTATING_KINDS, infer_turn_kind
+
+    turn_kind = infer_turn_kind(message)
+
+    if turn_kind == "observation_request" or _is_observation_query(message):
+        result = _observation_reply(session)
+        result = _apply_turn_kind_guards(result, "observation_request")
+        _record_turn_observation(session, result)
+        return _stamp_base_revision(session, result)
+
+    if turn_kind in NON_MUTATING_KINDS and not llm_configured(llm_config):
+        result = _non_mutating_turn_reply(session, turn_kind, message)
+        result = _apply_turn_kind_guards(result, turn_kind)
+        _record_turn_observation(session, result)
+        return _stamp_base_revision(session, result)
 
     # DD-017: choose among Core functional shortlist before a new plan
     from .planning.selection_surface import (
@@ -1342,11 +1571,13 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
         )
         if selected.get("ok") and selected.get("commands"):
             selected = _attach_quality_preview(session, selected)
+            selected = _apply_turn_kind_guards(selected, "action_request")
             fp = _placement_fingerprint(selected.get("commands") or [])
             placement.last_placement_fp = fp
             _update_agent_state(
                 session, selected, message, last_plan=None, placement_fp=fp
             )
+            _record_turn_observation(session, selected)
             selected["agent_state"] = dict(getattr(session, "agent_state", {}) or {})
         return _stamp_base_revision(session, selected)
 
@@ -1395,6 +1626,20 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
         if role in ("user", "assistant") and isinstance(content, str) and content.strip():
             messages.append({"role": role, "content": content.strip()})
     messages.append({"role": "user", "content": message})
+    messages.append(
+        {
+            "role": "system",
+            "content": (
+                f"Core inferred turn_kind={turn_kind}. "
+                + (
+                    "Non-mutating turn: proposal.commands MUST be []. "
+                    "Do not call plan_layout unless the user explicitly asked to change the scene."
+                    if turn_kind in NON_MUTATING_KINDS
+                    else "Mutating commands are allowed only for explicit planning/action requests."
+                )
+            ),
+        }
+    )
 
     tool_trace = []
     last_plan = None
@@ -1405,6 +1650,9 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
         for round_i in range(MAX_TOOL_ROUNDS):
             # Last round: disallow tools so the model must answer.
             use_tools = tools if round_i < MAX_TOOL_ROUNDS - 1 else None
+            # Non-mutating: still allow read tools, but last round forces JSON
+            if turn_kind in NON_MUTATING_KINDS and round_i >= 2:
+                use_tools = None
             raw = _chat_completions(
                 settings,
                 messages,
@@ -1431,6 +1679,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                         conversation,
                         last_plan=last_plan,
                         llm_config=llm_config,
+                        turn_kind=turn_kind,
                     )
                 seen_tool_fps.add(fp)
 
@@ -1507,6 +1756,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                     conversation,
                     last_plan=last_plan,
                     llm_config=llm_config,
+                    turn_kind=turn_kind,
                 )
 
             normalized = _normalize_proposal(parsed)
@@ -1520,6 +1770,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 "suggested_next_tools": normalized["suggested_next_tools"],
                 "commands": normalized["proposal"]["commands"],
                 "tool_trace": tool_trace,
+                "turn_kind": normalized.get("turn_kind") or turn_kind,
             }
             if vision_meta.get("images_sent"):
                 result["visual_evidence"] = _agent_vision_disclosure(
@@ -1533,13 +1784,21 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 conversation,
                 last_plan=last_plan,
                 llm_config=llm_config,
+                turn_kind=turn_kind,
             )
 
         result = _finalize_proposal_from_messages(settings, messages, tool_trace)
         if vision_meta.get("images_sent"):
             result["visual_evidence"] = _agent_vision_disclosure(settings, vision_meta)
         return _finish_agent_result(
-            session, settings, messages, result, conversation, last_plan=last_plan, llm_config=llm_config
+            session,
+            settings,
+            messages,
+            result,
+            conversation,
+            last_plan=last_plan,
+            llm_config=llm_config,
+            turn_kind=turn_kind,
         )
     except Exception as exc:
         if _session_wants_recipe_planning(session, conversation):

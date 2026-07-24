@@ -4,11 +4,11 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-25 (agent blueprint vision `0.10.82`)
-**Plugin / Core version:** 0.10.82 · **Branch:** `main`
+**Last updated:** 2026-07-25 (FC-002/WP-A conversation-safe turns `0.10.83`)
+**Plugin / Core version:** 0.10.83 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
-**AI-03** trade-off explanation next. AI-01/AI-02 + agent blueprint vision shipped.
+**AI-03** trade-off explanation next. FC-002 remains Ready for decomposition (WP-A shipped).
 
 ------------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ Respond to Alexander in **German**.
 ```
 LayoutLab — semantic interior planning (Standalone Viewer + Core).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Core/plugin v0.10.60.
+Branch: main. Core/plugin v0.10.83.
 
 Lies in dieser Reihenfolge:
 1. 00_READ_THIS_FIRST.md
@@ -43,10 +43,11 @@ Lies in dieser Reihenfolge:
 5. zugehörige Accepted DDs
 6. docs/HANDOFF.md  ← Ist-Zustand / Gotchas
 
-Aktueller Stand (2026-07-23):
+Aktueller Stand (2026-07-25):
 - Produktfokus: Standalone Web Viewer (`viewer/`) + Core HTTP (`server/`)
-- FC-001/WP-01…WP-06 ✅; Viewer DM ✅; planning feedback ✅; Room Z-rotate ✅ (`0.10.60`)
-- Active: FC-001/WP-07 (siehe ROADMAP §2)
+- FC-001/WP-01…WP-07 ✅; Viewer DM ✅; planning feedback ✅; agent blueprint ✅ (`0.10.82`)
+- FC-002/WP-A conversation-safe turns ✅ (`0.10.83`); FC-002 insgesamt Ready for decomposition, nicht Active
+- Active: AI-03 Trade-off explanation (siehe ROADMAP §2)
 - Blender = Runtime-Adapter, kein Default für neue Features
 - Core: python3 -m server (:8765); Viewer: cd viewer && npm run dev (:5173)
 
@@ -100,12 +101,12 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 
 | Component | Version |
 |---|---|
-| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.82** |
+| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.83** |
 | `bed_basic` | **0.7.0** — raised frame; optional `bed_entry` clearances; sizes in meters |
 | `wardrobe_basic` | **0.7.0** — `front_side`, `create_clearance`, part `clearance_front_access` |
 | `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.10.82.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.83.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -114,15 +115,17 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 - Parts model (DD-006); generators `bed_basic`, `wardrobe_basic`, `desk_basic`
 - JSON: `run_generator`, `regenerate`, scene export, `create_clearance`, `analyze_layout`
 - Planning slice: recipes, candidates, shortlist, Apply-Gate, optional AI aesthetics
-- FC-001 Core WP-01…WP-06 (`0.10.36`–`0.10.40`): transactions, furniture ops, resize, wall/corner, Spatial Project
+- FC-001 Core WP-01…WP-07 (`0.10.36`–`0.10.40`, WP-07 `0.10.64`): transactions, furniture ops, resize, wall/corner, Spatial Project, support surfaces
 - Viewer multi-room + direct manipulation → Core preview/commit (`0.10.41`–`0.10.57`)
 - Viewer planning feedback: proposed vs committed (`0.10.58`)
-- Decor / Deko generators + Add menu (`0.10.77`)
+- Decor / Deko generators + Add menu (`0.10.77`) — meshes exist; most lack support/capability metadata
+- `desk_basic.surface_top` + `lamp_basic` / `place_on` (DD-021)
 - **Copy room** clipboard → paste recreates room + furniture (`0.10.78`)
 - **AI aesthetics privacy stage 1** disclosure (`0.10.79`)
 - **Evaluation v0.2** preferred clearances + score rank (`0.10.80`)
 - **`kids_room_basic`** recipe + Kinderzimmer routing (`0.10.81`)
 - **Agent blueprint vision** — sketch/dry-run PNG + multimodal agent messages (`0.10.82`)
+- **FC-002/WP-A** — conversation-safe turns (`turn_kind`, no-command, `last_observed_revision`) (`0.10.83`)
 - Default boot: furnished bedroom via Core; clearances as oriented mesh wireframes
 - Bundled generator sync; diagnostic checks; reference kids room fixtures under `tests/fixtures/`
 
@@ -147,6 +150,7 @@ Full ordered foundations list: [ROADMAP.md §1](ROADMAP.md#1-implemented-foundat
 | [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) | Semantic transactions | **Accepted** |
 | [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) | Semantic direct manipulation | **Accepted** |
 | [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) | Spatial Project / independent rooms | **Accepted** |
+| [DD-021](design_decisions/DD-021-advanced-support-surfaces.md) | Advanced support surfaces / stacking | **Accepted** |
 
 Index: [design_decisions/README.md](design_decisions/README.md).
 
@@ -215,6 +219,8 @@ If **next work** changes, update [`ROADMAP.md`](ROADMAP.md) first, then point he
 
 | Date | Change |
 |---|---|
+| 2026-07-25 | FC-002/WP-A conversation-safe turns (`0.10.83`); FC-002 still not Active |
+| 2026-07-25 | FC-002 Conversational Design Collaboration and Styling documented; Ready for decomposition, not Active |
 | 2026-07-23 | `0.10.60` Room Z-rotate; Active → FC-001/WP-07 |
 | 2026-07-23 | `0.10.59` Chat thinking indicator; `0.10.58` planning feedback polish |
 | 2026-07-23 | Roadmap ownership moved to `docs/ROADMAP.md`; HANDOFF = session/as-built only |

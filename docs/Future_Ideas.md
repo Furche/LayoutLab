@@ -338,6 +338,12 @@ See [DD-009](design_decisions/DD-009-ai-execution-boundary.md) (**Accepted**): A
 
 **Status:** Future Vision for the full standalone product UI — possible later **DD-012**. **Slice today:** Core HTTP agent chat + Viewer Apply-Gate (not clipboard-only Blender workflow).
 
+The coherent product behaviour for natural no-command conversation, assessment of
+manual user edits and AI-assisted decoration/styling is now captured in
+[FC-002 — Conversational Design Collaboration and Styling](concepts/FC-002-conversational-design-collaboration-and-styling.md).
+This section remains the broad vision; FC-002 owns that feature's detailed flows,
+boundaries and decomposition.
+
 In a future standalone LayoutLab app, the user talks to an AI **inside** the product — not only in an external chat that pastes JSON into Blender.
 
 Example intent:
