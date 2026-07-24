@@ -1,6 +1,6 @@
 # LayoutLab — Product Roadmap
 
-**Status:** Binding · **Updated:** 2026-07-25 (`0.10.80` AI-01 evaluation calibration)
+**Status:** Binding · **Updated:** 2026-07-25 (`0.10.81` AI-02 kids_room recipe)
 
 > **This file is the only authoritative source for product priorities and work order.**
 >
@@ -37,6 +37,7 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 | Experimental AI aesthetics (opt-in) | `0.10.34` / `0.10.35` |
 | AI aesthetics privacy stage 1 | `0.10.79` — transfer/provider/model/cost disclosure when flag on |
 | Evaluation schema v0.2 (AI-01) | `0.10.80` — preferred clearances scored; context weights; rank tie-break |
+| `kids_room_basic` recipe (AI-02) | `0.10.81` — sleep/play/homework strategies; Kinderzimmer routing |
 | FC-001/WP-01 — DD package | [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** |
 | FC-001/WP-02 — semantic transactions | `0.10.36` · [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) |
 | FC-001/WP-03 — furniture ops | `0.10.37` · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) |
@@ -65,9 +66,9 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 
 | ID | Scope | Concept / DDs | Status |
 |---|---|---|---|
-| AI-02 `kids_room` recipe | Second deterministic recipe for kids-room scenarios | [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) · AI competence queue | Next |
+| AI-03 Trade-off explanation | Short pros/cons/trade-offs in Viewer (no metrics dashboard) | [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) #9 | Next |
 
-AI-01 Evaluation v0.2 shipped (`0.10.80`). Continue AI competence queue in §3 order.
+AI-02 `kids_room_basic` shipped (`0.10.81`). Continue AI competence queue in §3 order.
 
 ------------------------------------------------------------------------
 
@@ -75,7 +76,6 @@ AI-01 Evaluation v0.2 shipped (`0.10.80`). Continue AI competence queue in §3 o
 
 | ID | Scope | Entry condition |
 |---|---|---|
-| AI-03 Trade-off explanation | Short pros/cons/trade-offs in Viewer (no metrics dashboard) | After AI-02 |
 | AI-04 Allowlist expansion | More roles / semantic intentions / preference keys | After AI-03 |
 | AI-05 Circulation soft metric | Lightweight circulation proxy (walkway precursor) | After AI-04 |
 | AI-06 Walkway / navigation FC | Full navigation analysis Feature Concept → DD → impl | After AI-05; needs FC |
@@ -102,7 +102,7 @@ Not blocking the Active/Queued track. No fixed sprint commitments except the aes
 
 **Further recipes**
 
-- Queued as **AI-02** (`kids_room`) in the AI competence track (§3).
+- ~~**AI-02** `kids_room_basic`~~ ✅ (`0.10.81`).
 - No other recipes scheduled by default.
 
 **AI aesthetics: privacy / provider transparency (two-stage)**

@@ -56,6 +56,14 @@ def strategy_label_de(strategy: str | None) -> str:
         storage = "Stauraum Ost"
     elif "storage_west" in s:
         storage = "Stauraum West"
+    elif "desk_north" in s:
+        storage = "Schreibtisch Nord"
+    elif "desk_south" in s:
+        storage = "Schreibtisch Süd"
+    elif "desk_east" in s:
+        storage = "Schreibtisch Ost"
+    elif "desk_west" in s:
+        storage = "Schreibtisch West"
     else:
         storage = None
 

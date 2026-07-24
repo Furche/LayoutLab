@@ -5,16 +5,41 @@ from __future__ import annotations
 from typing import Any
 
 from .bedroom_basic import (
-    RECIPE_GOALS,
-    RECIPE_KIND,
-    RECIPE_NAME,
+    RECIPE_GOALS as BEDROOM_GOALS,
+    RECIPE_KIND as BEDROOM_KIND,
+    RECIPE_NAME as BEDROOM_RECIPE,
     enumerate_bedroom_candidates,
+)
+from .kids_room_basic import (
+    RECIPE_GOALS as KIDS_GOALS,
+    RECIPE_KIND as KIDS_KIND,
+    RECIPE_NAME as KIDS_RECIPE,
+    enumerate_kids_room_candidates,
 )
 from .requirements import normalize_requirements, requirements_to_plan_params
 from .schema import EVALUATION_SCHEMA, SCHEMA_VERSION, build_evaluation
 
 # DD-017 interactive default: at most two internal revision rounds after first evaluate.
 MAX_REVISION_ROUNDS = 2
+
+# Backward-compatible aliases used by older call sites / tests.
+RECIPE_NAME = BEDROOM_RECIPE
+RECIPE_KIND = BEDROOM_KIND
+RECIPE_GOALS = BEDROOM_GOALS
+
+
+def _recipe_meta(recipe: str) -> tuple[str, list[str]]:
+    if recipe == KIDS_RECIPE:
+        return KIDS_KIND, list(KIDS_GOALS)
+    return BEDROOM_KIND, list(BEDROOM_GOALS)
+
+
+def _enumerate_candidates(recipe: str, flat: dict) -> list[dict]:
+    if recipe == BEDROOM_RECIPE:
+        return enumerate_bedroom_candidates(flat)
+    if recipe == KIDS_RECIPE:
+        return enumerate_kids_room_candidates(flat)
+    return []
 
 
 def _flat_plan_params(params: dict | None) -> tuple[dict, dict | None]:
@@ -153,7 +178,7 @@ def _needs_revision(shortlist, ranked) -> bool:
 
 
 def _majority_failing_bed_wall(ranked: list) -> str:
-    """Dominant bed wall among failing candidates: 'south' or 'north'."""
+    """Dominant bed wall among failing candidates."""
     failing = [
         c
         for c in ranked
@@ -162,24 +187,23 @@ def _majority_failing_bed_wall(ranked: list) -> str:
     ]
     if not failing:
         failing = list(ranked)
-    south = 0
-    north = 0
+    counts = {"south": 0, "north": 0, "east": 0, "west": 0}
     for c in failing:
         sid = str(c.get("strategy") or c.get("candidate_id") or "")
-        if "bed_south" in sid:
-            south += 1
-        elif "bed_north" in sid:
-            north += 1
-    if south >= north:
-        return "south"
-    return "north"
+        for wall in counts:
+            if f"bed_{wall}" in sid:
+                counts[wall] += 1
+                break
+    best = max(counts, key=counts.get)
+    return best if counts[best] else "south"
 
 
 def _revision_overlay(round_num: int, ranked: list) -> tuple[dict[str, Any], str]:
     """Allowlisted param overlay + intention id for one revision round (1-based)."""
     if round_num == 1:
         majority = _majority_failing_bed_wall(ranked)
-        wall = "north" if majority == "south" else "south"
+        opposite = {"south": "north", "north": "south", "east": "west", "west": "east"}
+        wall = opposite.get(majority, "north")
         return (
             {"prefer_bed_wall": wall, "bed_wall": wall},
             f"prefer_bed_wall_{wall}",
@@ -336,8 +360,10 @@ def _pick_selected(ranked: list, shortlist: list) -> tuple[dict | None, bool, li
 def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any]:
     """Enumerate → evaluate → shortlist; up to MAX_REVISION_ROUNDS allowlisted revisions."""
     flat, requirements = _flat_plan_params(params)
-    recipe = str(flat.get("recipe") or RECIPE_NAME).strip().lower()
-    if recipe != RECIPE_NAME:
+    recipe = str(flat.get("recipe") or BEDROOM_RECIPE).strip().lower()
+    kind, goals = _recipe_meta(recipe)
+    raw = _enumerate_candidates(recipe, flat)
+    if not raw:
         return {
             "ok": False,
             "mode": "candidates",
@@ -349,8 +375,8 @@ def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any
             "assumes": [],
             "notes": [],
             "recipe": recipe,
-            "recipe_kind": RECIPE_KIND,
-            "recipe_goals": list(RECIPE_GOALS),
+            "recipe_kind": kind,
+            "recipe_goals": goals,
             "requirements": requirements,
             "schema_version": SCHEMA_VERSION,
             "evaluation_schema": EVALUATION_SCHEMA,
@@ -360,9 +386,7 @@ def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any
         }
 
     working_flat = dict(flat)
-    evaluated = _evaluate_raw_candidates(
-        session, enumerate_bedroom_candidates(working_flat)
-    )
+    evaluated = _evaluate_raw_candidates(session, raw)
     ranked = _assign_ranks(rank_candidates(evaluated))
     shortlist = _functional_shortlist(ranked)
 
@@ -376,7 +400,7 @@ def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any
             break
         working_flat = {**working_flat, **overlay}
         newcomers = _evaluate_raw_candidates(
-            session, enumerate_bedroom_candidates(working_flat)
+            session, _enumerate_candidates(recipe, working_flat)
         )
         evaluated, added_ids = _merge_evaluated(evaluated, newcomers)
         ranked = _assign_ranks(rank_candidates(evaluated))
@@ -418,16 +442,16 @@ def plan_layout_candidates(session, params: dict | None = None) -> dict[str, Any
                     "width": p.get("width"),
                     "depth": p.get("depth"),
                     "height": p.get("height"),
-                    "name": p.get("name") or "BEDROOM",
+                    "name": p.get("name") or "ROOM",
                 }
                 break
 
     out = {
         "ok": bool(selected) and not (selected.get("quality") or {}).get("has_hard_errors"),
         "mode": "candidates",
-        "recipe": RECIPE_NAME,
-        "recipe_kind": RECIPE_KIND,
-        "recipe_goals": list(RECIPE_GOALS),
+        "recipe": recipe,
+        "recipe_kind": kind,
+        "recipe_goals": goals,
         "commands": list(selected.get("commands") or []) if selected else [],
         "candidates": ranked,
         "selected_id": selected_id,

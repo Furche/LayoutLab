@@ -11,7 +11,7 @@
 
 Locks Planning Layer v0: **AI chooses recipe / requirements**; **Core owns standard bedroom geometry** via `plan_layout` + `bedroom_basic`. Free LLM xy remains only for custom overrides after a recipe baseline.
 
-Shipped beyond the original v0 sketch: mini-`requirements` object, recipe baseline enforcement, light `agent_state`, bedroom intent/placement helpers under `layoutlab/runtime/planning/`. Further recipes stay **strictly on demand** — not authorized by this accept alone; `kids_room` is a plausible candidate, not a scheduled commitment ([`docs/ROADMAP.md`](../ROADMAP.md) Refinement).
+Shipped beyond the original v0 sketch: mini-`requirements` object, recipe baseline enforcement, light `agent_state`, bedroom intent/placement helpers under `layoutlab/runtime/planning/`. Further recipes stay **on the AI competence queue** — `kids_room_basic` shipped (`0.10.81`); additional room types only when product asks ([`docs/ROADMAP.md`](../ROADMAP.md)).
 
 ------------------------------------------------------------------------
 

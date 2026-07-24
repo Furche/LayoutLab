@@ -4,11 +4,11 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-25 (AI-01 Evaluation v0.2 `0.10.80`)
-**Plugin / Core version:** 0.10.80 · **Branch:** `main`
+**Last updated:** 2026-07-25 (AI-02 kids_room_basic `0.10.81`)
+**Plugin / Core version:** 0.10.81 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
-**AI-02** `kids_room` recipe next (AI competence queue). AI-01 shipped.
+**AI-03** trade-off explanation next. AI-01/AI-02 shipped.
 
 ------------------------------------------------------------------------
 
@@ -100,12 +100,12 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 
 | Component | Version |
 |---|---|
-| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.80** |
+| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.81** |
 | `bed_basic` | **0.7.0** — raised frame; optional `bed_entry` clearances; sizes in meters |
 | `wardrobe_basic` | **0.7.0** — `front_side`, `create_clearance`, part `clearance_front_access` |
 | `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.10.80.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.81.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -121,6 +121,7 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 - **Copy room** clipboard → paste recreates room + furniture (`0.10.78`)
 - **AI aesthetics privacy stage 1** disclosure (`0.10.79`)
 - **Evaluation v0.2** preferred clearances + score rank (`0.10.80`)
+- **`kids_room_basic`** recipe + Kinderzimmer routing (`0.10.81`)
 - Default boot: furnished bedroom via Core; clearances as oriented mesh wireframes
 - Bundled generator sync; diagnostic checks; reference kids room fixtures under `tests/fixtures/`
 

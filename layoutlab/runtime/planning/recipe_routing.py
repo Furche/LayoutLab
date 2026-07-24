@@ -11,11 +11,15 @@ from .intent import is_retry_request, user_wants_bed, user_wants_room
 # room_type → recipe id (extensible registry; bedroom is first entry only)
 ROOM_TYPE_RECIPES: dict[str, str] = {
     "bedroom": "bedroom_basic",
-    # future: "kids_room": "kids_room_basic", "home_office": "home_office_basic",
+    "kids_room": "kids_room_basic",
+    "kinderzimmer": "kids_room_basic",
 }
 
 # recipe id → default room_type (inverse for overlays)
-RECIPE_ROOM_TYPES: dict[str, str] = {v: k for k, v in ROOM_TYPE_RECIPES.items()}
+RECIPE_ROOM_TYPES: dict[str, str] = {
+    "bedroom_basic": "bedroom",
+    "kids_room_basic": "kids_room",
+}
 
 _LAYOUT_PLANNING_CUES = (
     "einricht",
@@ -43,6 +47,15 @@ _BEDROOM_CUES = (
     "schlafgemach",
 )
 
+_KIDS_CUES = (
+    "kinderzimmer",
+    "kids room",
+    "kidsroom",
+    "kindzimmer",
+    "children's room",
+    "childrens room",
+)
+
 
 def wants_layout_planning(text: str) -> bool:
     """User wants a (re)furnished room layout — not observation-only."""
@@ -62,6 +75,9 @@ def wants_layout_planning(text: str) -> bool:
 
 def _recipe_from_conversation(text: str) -> str | None:
     t = (text or "").lower()
+    # Kids before bedroom — "Kinderzimmer mit Bett" must not collapse to bedroom.
+    if any(k in t for k in _KIDS_CUES):
+        return ROOM_TYPE_RECIPES.get("kids_room")
     if any(k in t for k in _BEDROOM_CUES) or user_wants_bed(t):
         return ROOM_TYPE_RECIPES.get("bedroom")
     return None

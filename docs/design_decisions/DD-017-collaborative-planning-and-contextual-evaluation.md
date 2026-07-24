@@ -577,9 +577,7 @@ Narrow DD-011/DD-015 amendments are in place. Remaining work is staged implement
     - ~~Stage 1 (minimum, whenever experimental aesthetics runs): transfer notice, provider/model,
       possible API cost, experimental/optional labeling.~~ ✅ (`0.10.79`)
     - Stage 2 (before default-on / production): consent dialogs and detailed settings — deferred.
-11. **Additional recipes — strictly on demand only.** No second recipe is scheduled. Decide the
-    next recipe only when a real planning scenario outgrows `bedroom_basic`. `kids_room` is a
-    plausible candidate, not a commitment.
+11. ~~**Additional recipes — strictly on demand only.**~~ ✅ first extra recipe `kids_room_basic` (`0.10.81`); further recipes still only when product asks.
 
 Product roadmap placement: [`docs/ROADMAP.md`](../ROADMAP.md) (Refinement / On demand). Active implementation focus is whatever ROADMAP §2 lists — not further DD-017 schema expansion by default.
 

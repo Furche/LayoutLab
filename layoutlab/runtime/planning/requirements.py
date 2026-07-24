@@ -51,8 +51,13 @@ def normalize_requirements(raw: dict | None, *, room_type_default: str = "bedroo
     width = _f(raw.get("width"), 4.0) or 4.0
     depth = _f(raw.get("depth"), 3.5) or 3.5
     height = _f(raw.get("height"), 2.5) or 2.5
-    width = max(2.5, min(20.0, width))
-    depth = max(2.5, min(20.0, depth))
+    if room_type in ("kids_room", "kinderzimmer"):
+        width = max(2.4, min(20.0, width))
+        depth = max(2.1, min(20.0, depth))
+        room_type = "kids_room"
+    else:
+        width = max(2.5, min(20.0, width))
+        depth = max(2.5, min(20.0, depth))
     height = max(2.2, min(4.0, height))
 
     doors = max(0, min(3, _i(raw.get("doors"), 1)))
@@ -67,8 +72,15 @@ def normalize_requirements(raw: dict | None, *, room_type_default: str = "bedroo
                 furniture.append(key)
     if not furniture and room_type == "bedroom":
         furniture = ["bed", "wardrobe", "desk"]
+    if not furniture and room_type == "kids_room":
+        furniture = ["bed", "desk"]
+    # Kids default mattress is narrower unless explicitly set.
+    if room_type == "kids_room" and raw.get("bed_width") is None:
+        bed_w_default = 0.9
+    else:
+        bed_w_default = 1.2
 
-    bed_w = _f(raw.get("bed_width"), 1.2) or 1.2
+    bed_w = _f(raw.get("bed_width"), bed_w_default) or bed_w_default
     bed_l = _f(raw.get("bed_length"), 2.0) or 2.0
     # Swap if LLM put length first as the larger dim into bed_width by mistake
     if bed_w > bed_l and bed_w >= 1.6:

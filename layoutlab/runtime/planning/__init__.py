@@ -4,10 +4,20 @@ from __future__ import annotations
 
 from typing import Any
 
-from .bedroom_basic import RECIPE_GOALS as BEDROOM_BASIC_GOALS
-from .bedroom_basic import RECIPE_KIND as BEDROOM_BASIC_KIND
-from .bedroom_basic import RECIPE_NAME as BEDROOM_BASIC
-from .bedroom_basic import enumerate_bedroom_candidates, plan_bedroom_basic
+from .bedroom_basic import (
+    RECIPE_GOALS as BEDROOM_BASIC_GOALS,
+    RECIPE_KIND as BEDROOM_BASIC_KIND,
+    RECIPE_NAME as BEDROOM_BASIC,
+    enumerate_bedroom_candidates,
+    plan_bedroom_basic,
+)
+from .kids_room_basic import (
+    RECIPE_GOALS as KIDS_ROOM_BASIC_GOALS,
+    RECIPE_KIND as KIDS_ROOM_BASIC_KIND,
+    RECIPE_NAME as KIDS_ROOM_BASIC,
+    enumerate_kids_room_candidates,
+    plan_kids_room_basic,
+)
 from .candidates import MAX_REVISION_ROUNDS, plan_layout_candidates, rank_candidates
 from .schema import (
     EVALUATION_SCHEMA,
@@ -88,6 +98,7 @@ from .requirements import (
 
 RECIPES = {
     BEDROOM_BASIC: plan_bedroom_basic,
+    KIDS_ROOM_BASIC: plan_kids_room_basic,
 }
 
 
@@ -127,11 +138,15 @@ def plan_layout(params: dict | None = None) -> dict[str, Any]:
             "requirements": requirements,
         }
     out = handler(params)
-    out.setdefault("recipe_kind", BEDROOM_BASIC_KIND if recipe == BEDROOM_BASIC else None)
-    out.setdefault(
-        "recipe_goals",
-        list(BEDROOM_BASIC_GOALS) if recipe == BEDROOM_BASIC else [],
-    )
+    if recipe == BEDROOM_BASIC:
+        out.setdefault("recipe_kind", BEDROOM_BASIC_KIND)
+        out.setdefault("recipe_goals", list(BEDROOM_BASIC_GOALS))
+    elif recipe == KIDS_ROOM_BASIC:
+        out.setdefault("recipe_kind", KIDS_ROOM_BASIC_KIND)
+        out.setdefault("recipe_goals", list(KIDS_ROOM_BASIC_GOALS))
+    else:
+        out.setdefault("recipe_kind", None)
+        out.setdefault("recipe_goals", [])
     if requirements is not None:
         out["requirements"] = requirements
         # Prefer requirements assumes + recipe assumes
@@ -214,6 +229,9 @@ __all__ = [
     "BEDROOM_BASIC",
     "BEDROOM_BASIC_GOALS",
     "BEDROOM_BASIC_KIND",
+    "KIDS_ROOM_BASIC",
+    "KIDS_ROOM_BASIC_GOALS",
+    "KIDS_ROOM_BASIC_KIND",
     "EVALUATION_SCHEMA",
     "HIGH_IMPACT_ROLES",
     "INTENTIONS",
@@ -235,6 +253,7 @@ __all__ = [
     "count_requested_noun",
     "default_role_for_profile",
     "enumerate_bedroom_candidates",
+    "enumerate_kids_room_candidates",
     "gen_xy_aabb",
     "get_profile",
     "is_high_impact",
@@ -252,6 +271,8 @@ __all__ = [
     "parse_room_size_m",
     "placement_fingerprint",
     "plan_layout",
+    "plan_bedroom_basic",
+    "plan_kids_room_basic",
     "plan_layout_candidates",
     "proposal_wants_layout",
     "rank_candidates",

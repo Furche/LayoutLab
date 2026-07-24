@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **`kids_room_basic` recipe (AI-02, `0.10.81`):** Deterministic Kinderzimmer strategies (sleep + play + homework); routes from „Kinderzimmer“ / `room_type=kids_room`; wardrobe optional; candidate mode + shortlist.
 - **Evaluation v0.2 / AI-01 scoring calibration (`0.10.80`):** Preferred clearance warnings now count in soft summary and signed scores (`object_usability` + context weights); packing also nudges circulation; candidate rank uses functional total as tie-break.
 - **AI aesthetics privacy stage 1 (`0.10.79`):** When experimental aesthetics is enabled, Core exposes transfer/provider/model/cost disclosure via `/health` and aesthetic results; Viewer shows it in LLM settings and the proposal bar.
 - **Copy room to clipboard (`0.10.78`):** Inspector → Rooms → **Copy room** snapshots the focused room (footprint, openings, fixed elements, furniture params/pose/support) as JSON; paste with ⌘V recreates it beside the original via Core commands.
