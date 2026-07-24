@@ -1,6 +1,6 @@
 # LayoutLab — Product Roadmap
 
-**Status:** Binding · **Updated:** 2026-07-25 (`0.10.81` AI-02 kids_room recipe)
+**Status:** Binding · **Updated:** 2026-07-25 (`0.10.82` agent blueprint vision)
 
 > **This file is the only authoritative source for product priorities and work order.**
 >
@@ -38,6 +38,7 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 | AI aesthetics privacy stage 1 | `0.10.79` — transfer/provider/model/cost disclosure when flag on |
 | Evaluation schema v0.2 (AI-01) | `0.10.80` — preferred clearances scored; context weights; rank tie-break |
 | `kids_room_basic` recipe (AI-02) | `0.10.81` — sleep/play/homework strategies; Kinderzimmer routing |
+| Agent blueprint vision | `0.10.82` — multimodal top-down PNG in sketch/dry-run seed (ASCII fallback) |
 | FC-001/WP-01 — DD package | [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** |
 | FC-001/WP-02 — semantic transactions | `0.10.36` · [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) |
 | FC-001/WP-03 — furniture ops | `0.10.37` · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) |
@@ -68,7 +69,7 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 |---|---|---|---|
 | AI-03 Trade-off explanation | Short pros/cons/trade-offs in Viewer (no metrics dashboard) | [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) #9 | Next |
 
-AI-02 `kids_room_basic` shipped (`0.10.81`). Continue AI competence queue in §3 order.
+AI-02 shipped (`0.10.81`). Agent blueprint vision shipped (`0.10.82`, on-demand ahead of AI-03). Continue AI competence queue with AI-03.
 
 ------------------------------------------------------------------------
 

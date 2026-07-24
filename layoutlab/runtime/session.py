@@ -43,7 +43,7 @@ def empty_agent_state() -> dict:
     }
 
 
-LAYOUTLAB_VERSION = "0.10.81"
+LAYOUTLAB_VERSION = "0.10.82"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -388,7 +388,7 @@ def _furniture_export_object_with_room(obj, rooms_by_id: dict):
     return exported
 
 
-def export_viewer_scene(session: "RoomSession") -> dict:
+def export_viewer_scene(session: "RoomSession", *, include_analysis: bool = True) -> dict:
     """Build Spatial Project viewer export (DD-020): project + rooms[] + objects[]."""
     live_rooms = list(session._rooms.values())
     rooms_by_id = {m["room_id"]: m for m in live_rooms}
@@ -403,7 +403,7 @@ def export_viewer_scene(session: "RoomSession") -> dict:
     revision = int(getattr(session, "revision", 0) or 0)
     project_id = getattr(session, "project_id", None) or ""
     project_name = getattr(session, "project_name", None) or "Spatial Project"
-    return {
+    out = {
         "layoutlab_version": LAYOUTLAB_VERSION,
         "viewer_schema": VIEWER_SCHEMA,
         "unit": "METRIC",
@@ -428,8 +428,10 @@ def export_viewer_scene(session: "RoomSession") -> dict:
         "rooms": rooms,
         "objects": objects,
         "selected_object_id": getattr(session, "selected_object_id", None),
-        "analysis": analyze_session(session, {"scope": "scene", "include": ["clearances"]}),
     }
+    if include_analysis:
+        out["analysis"] = analyze_session(session, {"scope": "scene", "include": ["clearances"]})
+    return out
 
 
 class RoomSession:

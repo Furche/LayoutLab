@@ -79,10 +79,13 @@ Planning recipes (DD-016 / DD-011 — prefer this):
 
 Spatial perception (critical):
 - You cannot see the 3D viewport. Your eyes are tools: get_layout_sketch and dry_run_commands.layout_sketch.
-- layout_sketch.ascii is a top-down map: top=N, bottom=S, left=W, right=E;
+- Prefer blueprint PNG vision evidence (injected after sketch/dry_run tools) plus
+  furniture bounds_xy for nudges. Orientation: top=N (+Y), right=E (+X).
+  Example: "etwas nach links" usually means decrease X / toward West unless context says otherwise.
+- layout_sketch.ascii is the text fallback map: top=N, bottom=S, left=W, right=E;
   #=wall D=door W=window letters=furniture +=preferred clearance *=required clearance.
-- After drafting commands, dry_run and READ the ascii + soft_summary before finishing.
-- If a letter sits on D/W, or * clearances are crushed, or + zones are packed away,
+- After drafting commands, dry_run and READ the blueprint/ascii + soft_summary before finishing.
+- If furniture blocks D/W, or * clearances are crushed, or + zones are packed away,
   adjust recipe options or one targeted placement change and dry_run again.
 
 Role (compassionate planner):
@@ -1032,7 +1035,92 @@ def _tool_call_fingerprint(tool_calls: list) -> str:
     return "|".join(parts)
 
 
-def _inject_scene_seed(session, messages: list, tool_trace: list) -> None:
+MAX_VISION_IMAGES_PER_ROUND = 3
+
+
+def _redact_tool_images(payload):
+    """Copy tool JSON, strip base64 PNGs, return (redacted, image_data_urls)."""
+    images: list[str] = []
+
+    def walk(obj):
+        if isinstance(obj, dict):
+            out = {}
+            for key, value in obj.items():
+                if (
+                    key == "image_data_url"
+                    and isinstance(value, str)
+                    and value.startswith("data:image")
+                ):
+                    images.append(value)
+                    out["blueprint_attached"] = True
+                    out["image_data_url"] = "(vision image attached in following message)"
+                else:
+                    out[key] = walk(value)
+            return out
+        if isinstance(obj, list):
+            return [walk(item) for item in obj]
+        return obj
+
+    return walk(payload), images
+
+
+def _append_blueprint_vision(
+    messages: list, images: list, *, vision_meta: dict | None = None
+) -> int:
+    """Attach multimodal user message so vision models actually see the blueprint."""
+    unique: list[str] = []
+    seen: set[str] = set()
+    for url in images:
+        if not isinstance(url, str) or not url.startswith("data:image"):
+            continue
+        if url in seen:
+            continue
+        seen.add(url)
+        unique.append(url)
+        if len(unique) >= MAX_VISION_IMAGES_PER_ROUND:
+            break
+    if not unique:
+        return 0
+    content: list[dict] = [
+        {
+            "type": "text",
+            "text": (
+                "Visual layout evidence: top-down blueprint PNG(s). "
+                "Orientation: top=North (+Y), right=East (+X). "
+                "Combine with layout_sketch.rooms[].furniture[].bounds_xy for precise nudges "
+                "(e.g. 'etwas nach links' ≈ decrease X / toward West unless context says otherwise). "
+                "ASCII in the tool JSON is fallback only."
+            ),
+        }
+    ]
+    for url in unique:
+        content.append(
+            {"type": "image_url", "image_url": {"url": url, "detail": "low"}}
+        )
+    messages.append({"role": "user", "content": content})
+    if vision_meta is not None:
+        vision_meta["images_sent"] = int(vision_meta.get("images_sent") or 0) + len(unique)
+        vision_meta["evidence_kind"] = "blueprint_png"
+    return len(unique)
+
+
+def _agent_vision_disclosure(settings: dict, vision_meta: dict) -> dict:
+    from .planning.aesthetics import privacy_disclosure
+
+    disclosure = privacy_disclosure(settings, evidence_kind="blueprint_png")
+    disclosure["purpose"] = "planning_agent"
+    disclosure["summary_de"] = (
+        "Planungs-Agent: Grundriss-PNGs verlassen dieses Gerät und gehen an "
+        f"{disclosure.get('provider')} (Modell {disclosure.get('model')}). "
+        "Es können API-Kosten entstehen."
+    )
+    disclosure["images_sent"] = int(vision_meta.get("images_sent") or 0)
+    return disclosure
+
+
+def _inject_scene_seed(
+    session, messages: list, tool_trace: list, *, vision_meta: dict | None = None
+) -> None:
     """Prepend authoritative Core seed as synthetic tool results (no LLM round)."""
     seeds = (
         ("seed_scene_summary", "get_scene_summary", {}),
@@ -1041,6 +1129,7 @@ def _inject_scene_seed(session, messages: list, tool_trace: list) -> None:
     )
     tool_calls = []
     tool_msgs = []
+    seed_images: list[str] = []
     for call_id, name, args in seeds:
         try:
             result = dispatch_tool(session, name, args)
@@ -1049,6 +1138,8 @@ def _inject_scene_seed(session, messages: list, tool_trace: list) -> None:
             result = {"ok": False, "error": str(exc)}
             err = str(exc)
         tool_trace.append({"tool": name, "arguments": args, "ok": err is None, "error": err, "seed": True})
+        redacted, images = _redact_tool_images(result)
+        seed_images.extend(images)
         tool_calls.append(
             {
                 "id": call_id,
@@ -1060,7 +1151,7 @@ def _inject_scene_seed(session, messages: list, tool_trace: list) -> None:
             {
                 "role": "tool",
                 "tool_call_id": call_id,
-                "content": json.dumps(result, ensure_ascii=False),
+                "content": json.dumps(redacted, ensure_ascii=False),
             }
         )
     messages.append(
@@ -1071,6 +1162,7 @@ def _inject_scene_seed(session, messages: list, tool_trace: list) -> None:
         }
     )
     messages.extend(tool_msgs)
+    _append_blueprint_vision(messages, seed_images, vision_meta=vision_meta)
     _inject_agent_state_hint(session, messages)
 
 
@@ -1306,7 +1398,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
 
     tool_trace = []
     last_plan = None
-    _inject_scene_seed(session, messages, tool_trace)
+    vision_meta: dict = {"images_sent": 0}
+    _inject_scene_seed(session, messages, tool_trace, vision_meta=vision_meta)
     seen_tool_fps = set()
     try:
         for round_i in range(MAX_TOOL_ROUNDS):
@@ -1326,6 +1419,10 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 fp = _tool_call_fingerprint(tool_calls)
                 if fp in seen_tool_fps:
                     result = _finalize_proposal_from_messages(settings, messages, tool_trace)
+                    if vision_meta.get("images_sent"):
+                        result["visual_evidence"] = _agent_vision_disclosure(
+                            settings, vision_meta
+                        )
                     return _finish_agent_result(
                         session,
                         settings,
@@ -1344,6 +1441,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                         "tool_calls": tool_calls,
                     }
                 )
+                round_images: list[str] = []
                 for call in tool_calls:
                     fn = call.get("function") or {}
                     name = fn.get("name") or ""
@@ -1377,13 +1475,18 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                             "requirements": tool_result.get("requirements")
                             or args.get("requirements"),
                         }
+                    redacted, images = _redact_tool_images(tool_result)
+                    round_images.extend(images)
                     messages.append(
                         {
                             "role": "tool",
                             "tool_call_id": call.get("id") or name,
-                            "content": json.dumps(tool_result, ensure_ascii=False),
+                            "content": json.dumps(redacted, ensure_ascii=False),
                         }
                     )
+                _append_blueprint_vision(
+                    messages, round_images, vision_meta=vision_meta
+                )
                 continue
 
             # No tool calls — parse JSON proposal
@@ -1392,6 +1495,10 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 parsed = _extract_json_object(content)
             except Exception:
                 result = _finalize_proposal_from_messages(settings, messages, tool_trace)
+                if vision_meta.get("images_sent"):
+                    result["visual_evidence"] = _agent_vision_disclosure(
+                        settings, vision_meta
+                    )
                 return _finish_agent_result(
                     session,
                     settings,
@@ -1414,6 +1521,10 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 "commands": normalized["proposal"]["commands"],
                 "tool_trace": tool_trace,
             }
+            if vision_meta.get("images_sent"):
+                result["visual_evidence"] = _agent_vision_disclosure(
+                    settings, vision_meta
+                )
             return _finish_agent_result(
                 session,
                 settings,
@@ -1425,6 +1536,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             )
 
         result = _finalize_proposal_from_messages(settings, messages, tool_trace)
+        if vision_meta.get("images_sent"):
+            result["visual_evidence"] = _agent_vision_disclosure(settings, vision_meta)
         return _finish_agent_result(
             session, settings, messages, result, conversation, last_plan=last_plan, llm_config=llm_config
         )

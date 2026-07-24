@@ -54,6 +54,14 @@ class TestLayoutSketch(unittest.TestCase):
         self.assertNotIn("+", out["ascii"])
         self.assertNotIn("*", out["ascii"])
 
+    def test_sketch_includes_blueprint_png(self):
+        out = self.dispatch(self.session, "get_layout_sketch", {})
+        self.assertTrue(out["ok"])
+        self.assertEqual(out.get("evidence_kind"), "blueprint_png")
+        url = out.get("image_data_url") or ""
+        self.assertTrue(url.startswith("data:image/png;base64,"), url[:40])
+        self.assertIn("bounds_xy", out["rooms"][0]["furniture"][0])
+
     def test_dry_run_includes_layout_sketch(self):
         out = self.dispatch(
             self.session,

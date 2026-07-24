@@ -604,7 +604,7 @@ def dry_run_commands(session, params=None):
         "layout_sketch": get_layout_sketch(clone, {}),
         "note": (
             "Dry-run only — live session unchanged. User must Apply to commit. "
-            "Read layout_sketch.ascii before revising placement."
+            "Read layout_sketch blueprint/ascii + bounds_xy before revising placement."
         ),
     }
     if params.get("include_export"):
@@ -798,10 +798,11 @@ def openai_tool_definitions():
             "function": {
                 "name": "get_layout_sketch",
                 "description": (
-                    "Top-down XY layout sketch (ASCII map + furniture bounds_xy + "
-                    "openings + clearance zones). "
+                    "Top-down XY layout sketch: ASCII map + furniture bounds_xy + "
+                    "openings + clearance zones, plus a blueprint PNG for vision models "
+                    "(evidence_kind=blueprint_png when available). "
                     "+ = preferred clearance, * = required clearance. "
-                    "Not the 3D viewport — use to check placement and free usage space. "
+                    "Not the 3D viewport — use image + bounds_xy for nudges; ASCII is fallback. "
                     "Also returned inside dry_run_commands as layout_sketch."
                 ),
                 "parameters": {
@@ -822,10 +823,11 @@ def openai_tool_definitions():
                 "name": "dry_run_commands",
                 "description": (
                     "Clone session, apply commands, return scene_after + layout_sketch "
-                    "(ASCII top-down) + analysis/soft_summary. "
-                    "Does NOT mutate the live session. Always read layout_sketch.ascii "
-                    "and soft warnings before the final proposal; revise if furniture "
-                    "blocks doors/windows or packing looks wrong."
+                    "(ASCII + blueprint PNG when available) + analysis/soft_summary. "
+                    "Does NOT mutate the live session. Always read layout_sketch "
+                    "(prefer blueprint + bounds_xy; ascii fallback) and soft warnings "
+                    "before the final proposal; revise if furniture blocks doors/windows "
+                    "or packing looks wrong."
                 ),
                 "parameters": {
                     "type": "object",

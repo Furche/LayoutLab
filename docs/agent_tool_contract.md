@@ -109,25 +109,27 @@ Returns `{ ok, errors[], warnings[], command_count }`.
 1. Optionally validate (default stop if invalid).
 2. `RoomSession.clone()` → apply commands on the clone.
 3. Optional analyze (clearances + soft) + `scene_after` + `soft_summary`.
-4. Always includes **`layout_sketch`** (top-down ASCII + `bounds_xy`) for the clone.
+4. Always includes **`layout_sketch`** (top-down ASCII + `bounds_xy` + optional blueprint PNG) for the clone.
 5. **Live session is never mutated.**
 
 Enables Plan → Dry-Run → See sketch → Analyze → Revise without committing.
 
 ### `get_layout_sketch`
 
-**Params:** `{ "collection"?: string }`
+**Params:** `{ "collection"?: string, "include_clearances"?: true }`
 
 **Returns:** top-down spatial abstraction for the current (or dry-run) scene:
 
 - `ascii` — compact map (`#` wall, `D` door, `W` window, letters = furniture,
   `+` preferred clearance, `*` required clearance, `.` free floor)
+- `image_data_url` — standardized blueprint PNG (when renderable); `evidence_kind=blueprint_png`
 - `rooms[].openings` / `rooms[].furniture[].bounds_xy` (+ `head_side` when known)
 - `rooms[].clearances[]` with `clearance_name`, `requirement`, `bounds_xy` (default on;
   set `include_clearances: false` to omit)
 - `legend`, orientation notes (top = north / +Y)
 
-Not pixels and not the 3D viewport — intentional cheap “eyes” for the LLM.
+ASCII remains the text fallback. Agent turns redact base64 from tool JSON and attach the
+PNG as a multimodal vision message so the model can actually see the layout.
 
 ------------------------------------------------------------------------
 
@@ -242,7 +244,7 @@ MCP may later adapt the same tool functions; it is not the primary bus.
 5. Session clone + `dry_run_commands` ✅
 6. Automatic scene seed per turn ✅
 7. Soft metrics + quality preview + tradeoff prompt (DD-015) ✅
-8. Layout sketch (top-down ASCII) in seed + dry_run + quality ✅
+8. Layout sketch (ASCII + blueprint PNG vision) in seed + dry_run + quality ✅ (`0.10.82` agent multimodal)
 9. `plan_layout` + `bedroom_basic` recipe (DD-016) ✅
 10. **Recipe baseline enforcement** — final proposal uses Core `plan_layout` when called ✅
 11. **Mini-Requirements** object → `plan_layout` (language → structured intent) ✅
@@ -291,4 +293,3 @@ LLM fills requirements from language; Core owns geometry. Final proposals should
 - MCP as primary bus
 - Streaming product / auth (DD-012)
 - Dumping full viewer export / meshes into the model context
-- Bild-/Vision-Pipeline für Ästhetik (v0 nutzt ausschließlich ASCII-Skizzen)

@@ -595,6 +595,35 @@ class TestAgentTools(unittest.TestCase):
         ]
         self.assertGreaterEqual(len(wins), 2)
 
+    def test_redact_tool_images_and_vision_followup(self):
+        from layoutlab.runtime.agent import (
+            _append_blueprint_vision,
+            _redact_tool_images,
+        )
+
+        payload = {
+            "ok": True,
+            "layout_sketch": {
+                "ascii": "#",
+                "image_data_url": "data:image/png;base64,AAA",
+                "evidence_kind": "blueprint_png",
+            },
+        }
+        redacted, images = _redact_tool_images(payload)
+        self.assertEqual(len(images), 1)
+        self.assertTrue(redacted["layout_sketch"].get("blueprint_attached"))
+        self.assertNotIn("data:image/png;base64,AAA", json.dumps(redacted))
+        messages = []
+        meta = {"images_sent": 0}
+        n = _append_blueprint_vision(messages, images, vision_meta=meta)
+        self.assertEqual(n, 1)
+        self.assertEqual(meta["images_sent"], 1)
+        self.assertEqual(messages[0]["role"], "user")
+        parts = messages[0]["content"]
+        self.assertEqual(parts[0]["type"], "text")
+        self.assertEqual(parts[1]["type"], "image_url")
+        self.assertEqual(parts[1]["image_url"]["url"], images[0])
+
 
 if __name__ == "__main__":
     unittest.main()

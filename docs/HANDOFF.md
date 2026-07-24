@@ -4,11 +4,11 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-25 (AI-02 kids_room_basic `0.10.81`)
-**Plugin / Core version:** 0.10.81 · **Branch:** `main`
+**Last updated:** 2026-07-25 (agent blueprint vision `0.10.82`)
+**Plugin / Core version:** 0.10.82 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
-**AI-03** trade-off explanation next. AI-01/AI-02 shipped.
+**AI-03** trade-off explanation next. AI-01/AI-02 + agent blueprint vision shipped.
 
 ------------------------------------------------------------------------
 
@@ -100,12 +100,12 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 
 | Component | Version |
 |---|---|
-| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.81** |
+| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.82** |
 | `bed_basic` | **0.7.0** — raised frame; optional `bed_entry` clearances; sizes in meters |
 | `wardrobe_basic` | **0.7.0** — `front_side`, `create_clearance`, part `clearance_front_access` |
 | `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.10.81.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.82.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -122,6 +122,7 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 - **AI aesthetics privacy stage 1** disclosure (`0.10.79`)
 - **Evaluation v0.2** preferred clearances + score rank (`0.10.80`)
 - **`kids_room_basic`** recipe + Kinderzimmer routing (`0.10.81`)
+- **Agent blueprint vision** — sketch/dry-run PNG + multimodal agent messages (`0.10.82`)
 - Default boot: furnished bedroom via Core; clearances as oriented mesh wireframes
 - Bundled generator sync; diagnostic checks; reference kids room fixtures under `tests/fixtures/`
 

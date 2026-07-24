@@ -351,9 +351,10 @@ def build_layout_sketch(session, params=None) -> dict:
             "ascii": "(empty scene — no rooms)",
             "legend": {},
             "notes": notes + ["Call after dry_run_commands to see the proposed layout."],
+            "evidence_kind": "ascii",
         }
 
-    return {
+    sketch = {
         "ok": True,
         "unit": "METRIC",
         "include_clearances": include_clearances,
@@ -361,4 +362,32 @@ def build_layout_sketch(session, params=None) -> dict:
         "ascii": "\n\n".join(ascii_blocks),
         "legend": legend,
         "notes": notes,
+        "evidence_kind": "ascii",
     }
+    return _attach_blueprint_png(session, sketch)
+
+
+def _attach_blueprint_png(session, sketch: dict) -> dict:
+    """Add standardized top-down blueprint PNG for vision-capable agent models."""
+    try:
+        from .planning.blueprint_png import blueprint_data_url
+        from .planning.viewer_preview import slim_viewer_preview
+        from .session import export_viewer_scene
+
+        preview = slim_viewer_preview(export_viewer_scene(session, include_analysis=False))
+        data_url = blueprint_data_url(preview, max_side=384)
+        if not data_url:
+            return sketch
+        sketch = dict(sketch)
+        sketch["image_data_url"] = data_url
+        sketch["evidence_kind"] = "blueprint_png"
+        sketch["blueprint_orientation"] = "top=N (+Y), right=E (+X)"
+        notes = list(sketch.get("notes") or [])
+        notes.append(
+            "Blueprint PNG available for vision models (same orientation as ASCII). "
+            "Prefer image + furniture bounds_xy for nudges; ASCII is fallback."
+        )
+        sketch["notes"] = notes
+        return sketch
+    except Exception:
+        return sketch
