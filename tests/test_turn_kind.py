@@ -50,6 +50,28 @@ class TestTurnKind(unittest.TestCase):
             infer_turn_kind("vielleicht etwas gemütlicher?"),
             TURN_CLARIFY,
         )
+        self.assertEqual(
+            infer_turn_kind(
+                "irgendwie finde ich das zimmer nicht besonders schön eingerichtet oder?"
+            ),
+            TURN_CONVERSATION,
+        )
+        self.assertEqual(infer_turn_kind("kannst du das tun?"), TURN_ACTION)
+        self.assertEqual(infer_turn_kind("kann losgehen"), TURN_ACTION)
+        self.assertTrue(allows_commands(infer_turn_kind("kann losgehen")))
+
+    def test_accept_followup_not_blocked_without_llm(self):
+        from layoutlab.runtime.agent import run_agent_turn
+        from layoutlab.runtime.planning.turn_kind import TURN_ACTION, infer_turn_kind
+        from layoutlab.runtime.session import RoomSession
+
+        self.assertEqual(infer_turn_kind("kannst du das tun?"), TURN_ACTION)
+        session = RoomSession()
+        # Without LLM, action may fall through to demo empty reply — but must NOT
+        # be forced into the non-mutating converse path with a styling ack.
+        out = run_agent_turn(session, "kann losgehen", llm_config=None)
+        self.assertNotEqual(out.get("turn_kind"), "conversation")
+        self.assertNotEqual(out.get("mode"), "converse")
 
     def test_conversation_returns_no_commands(self):
         from layoutlab.runtime.agent import run_agent_turn

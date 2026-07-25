@@ -957,8 +957,14 @@ def _maybe_soft_replan(session, settings, messages, result: dict, conversation: 
     return result
 
 
-def _resolve_turn_kind(message: str, model_kind: str | None) -> str:
-    """Core inference wins for non-mutating; otherwise prefer a valid model kind."""
+def _resolve_turn_kind(
+    message: str,
+    model_kind: str | None,
+    history: list | None = None,
+    *,
+    core_kind: str | None = None,
+) -> str:
+    """Core inference wins for non-mutating; accept-followups stay action."""
     from .planning.turn_kind import (
         NON_MUTATING_KINDS,
         TURN_ACTION,
@@ -983,11 +989,14 @@ def _resolve_turn_kind(message: str, model_kind: str | None) -> str:
         TURN_ACTION,
         TURN_STYLING,
     }
-    inferred = infer_turn_kind(message)
+    inferred = core_kind or infer_turn_kind(message, history=history)
     model = str(model_kind or "").strip()
     if model not in valid:
         return inferred
     if not allows_commands(inferred):
+        return inferred
+    # Accept-followups inferred as action must not be downgraded by the model
+    if inferred == TURN_ACTION and model in NON_MUTATING_KINDS:
         return inferred
     if model in NON_MUTATING_KINDS:
         return model
@@ -995,11 +1004,27 @@ def _resolve_turn_kind(message: str, model_kind: str | None) -> str:
 
 
 def _finish_agent_result(
-    session, settings, messages, result: dict, conversation: str, *, last_plan=None, llm_config: dict | None = None, turn_kind: str | None = None
+    session,
+    settings,
+    messages,
+    result: dict,
+    conversation: str,
+    *,
+    last_plan=None,
+    llm_config: dict | None = None,
+    turn_kind: str | None = None,
+    history: list | None = None,
+    user_message: str | None = None,
 ) -> dict:
     from .planning.turn_kind import allows_commands
 
-    kind = _resolve_turn_kind(conversation, turn_kind or result.get("turn_kind"))
+    msg = (user_message or conversation or "").strip()
+    kind = _resolve_turn_kind(
+        msg,
+        result.get("turn_kind"),
+        history=history,
+        core_kind=turn_kind,
+    )
     result = _apply_turn_kind_guards(result, kind)
     if allows_commands(kind):
         result = _maybe_repair_proposal(settings, messages, result, conversation)
@@ -1542,7 +1567,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
 
     from .planning.turn_kind import NON_MUTATING_KINDS, infer_turn_kind
 
-    turn_kind = infer_turn_kind(message)
+    turn_kind = infer_turn_kind(message, history=history)
 
     if turn_kind == "observation_request" or _is_observation_query(message):
         result = _observation_reply(session)
@@ -1680,6 +1705,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                         last_plan=last_plan,
                         llm_config=llm_config,
                         turn_kind=turn_kind,
+                        history=history,
+                        user_message=message,
                     )
                 seen_tool_fps.add(fp)
 
@@ -1757,6 +1784,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                     last_plan=last_plan,
                     llm_config=llm_config,
                     turn_kind=turn_kind,
+                        history=history,
+                        user_message=message,
                 )
 
             normalized = _normalize_proposal(parsed)
@@ -1785,6 +1814,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 last_plan=last_plan,
                 llm_config=llm_config,
                 turn_kind=turn_kind,
+                        history=history,
+                        user_message=message,
             )
 
         result = _finalize_proposal_from_messages(settings, messages, tool_trace)
@@ -1799,6 +1830,8 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             last_plan=last_plan,
             llm_config=llm_config,
             turn_kind=turn_kind,
+                        history=history,
+                        user_message=message,
         )
     except Exception as exc:
         if _session_wants_recipe_planning(session, conversation):

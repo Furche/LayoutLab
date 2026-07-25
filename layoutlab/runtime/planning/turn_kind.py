@@ -25,10 +25,14 @@ NON_MUTATING_KINDS = frozenset(
     }
 )
 
+# Explicit mutate verbs — avoid bare "einricht" (matches "eingerichtet" opinions).
 _MUTATE_CUES = (
     "bau",
     "erstell",
-    "einricht",
+    "neu einricht",
+    "anders einricht",
+    "um einricht",
+    "einrichten",
     "lösch",
     "losch",
     "clear",
@@ -76,8 +80,6 @@ _PLANNING_CUES = (
     "plan_layout",
     "variante",
     "layout",
-    "einrichten",
-    "einricht",
     "möbel",
     "mobel",
     "furniture",
@@ -112,13 +114,34 @@ _OPINION_PATTERNS = (
     r"\bwas meinst du\b",
     r"\bwie findest du\b",
     r"\bwie wirkt\b",
-    r"\bfinde .{0,40}(kühl|kuehl|eng|leer|voll|schön|schon|gemütlich|gemutlich)",
+    r"\bfinde .{0,60}(kühl|kuehl|eng|leer|voll|schön|schon|hässlich|haesslich|gemütlich|gemutlich|eingerichtet)",
     r"\b(wirkt|sieht).{0,20}(kühl|kuehl|eng|leer|voll)\b",
+    r"\bnicht besonders (schön|schon)\b",
+    r"\b(schön|schon|hässlich|haesslich)\s+eingerichtet\b",
+    r"\beingerichtet oder\b",
     r"\bnur ideen\b",
     r"\beinschätz",
     r"\beinschaetz",
     r"\bmeinung\b",
     r"\btipps?\b",
+)
+
+# Accept / proceed after an AI offer ("soll ich ausprobieren?").
+_ACCEPT_ACTION_PATTERNS = (
+    r"\b(kannst|könntest|konntest)\s+du\s+(das|es|das mal)\s+(tun|machen|ausprobieren)\b",
+    r"\b(mach|macht)\s+(das|es|ruhig|bitte)\b",
+    r"\bja[,.]?\s*(bitte|mach|gern|gerne)\b",
+    r"\bbitte\s+(mach|ausprobieren|probieren)\b",
+    r"\bkann\s+losgehen\b",
+    r"\blosgehen\b",
+    r"\bleg(e)?\s+los\b",
+    r"\bloslegen\b",
+    r"\bprobier",
+    r"\bausprobieren\b",
+    r"\bdann\s+mach\b",
+    r"\bdo\s+it\b",
+    r"\bgo\s+ahead\b",
+    r"\btry\s+it\b",
 )
 
 _QUESTION_START = re.compile(
@@ -154,11 +177,31 @@ def allows_commands(turn_kind: str | None) -> bool:
     return kind not in NON_MUTATING_KINDS and kind != ""
 
 
-def infer_turn_kind(message: str) -> str:
-    """Infer FC-002 turn kind from a single user message (deterministic v0)."""
+def _is_opinion(text: str) -> bool:
+    return any(re.search(p, text) for p in _OPINION_PATTERNS)
+
+
+def _is_accept_action(text: str) -> bool:
+    return any(re.search(p, text) for p in _ACCEPT_ACTION_PATTERNS)
+
+
+def infer_turn_kind(message: str, history: list | None = None) -> str:
+    """Infer FC-002 turn kind from a user message (deterministic v0).
+
+    ``history`` is reserved for later offer-context; accept cues already map to action.
+    """
+    _ = history  # reserved for offer-context
     t = (message or "").strip().lower()
     if not t:
         return TURN_CLARIFY
+
+    # Accept / proceed — especially after "soll ich … ausprobieren?"
+    if _is_accept_action(t):
+        return TURN_ACTION
+
+    # Opinions / critiques before mutate heuristics ("…schön eingerichtet?")
+    if _is_opinion(t):
+        return TURN_CONVERSATION
 
     if any(k in t for k in _MUTATE_CUES) and any(
         k in t for k in ("zimmer", "raum", "room", "bett", "schrank", "tisch", "möbel", "mobel")
@@ -182,17 +225,13 @@ def infer_turn_kind(message: str) -> str:
     if any(re.search(p, t) for p in _CLARIFY_AMBIGUOUS):
         return TURN_CLARIFY
 
-    if any(re.search(p, t) for p in _OPINION_PATTERNS):
-        return TURN_CONVERSATION
-
     if any(k in t for k in _PLANNING_CUES) and (
-        "plan" in t or "einricht" in t or "richte" in t or "variante" in t
+        "plan" in t or "einrichten" in t or "richte" in t or "variante" in t
     ):
         return TURN_PLANNING
 
     if "?" in t or _QUESTION_START.search(t):
-        # Design opinion questions stay conversation; factual → question
-        if any(re.search(p, t) for p in _OPINION_PATTERNS):
+        if _is_opinion(t):
             return TURN_CONVERSATION
         if any(k in t for k in ("warum", "wieso", "weshalb", "clearance", "abstand")):
             return TURN_QUESTION
