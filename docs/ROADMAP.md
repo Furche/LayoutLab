@@ -1,6 +1,6 @@
 # LayoutLab — Product Roadmap
 
-**Status:** Binding · **Updated:** 2026-07-27 (FC-002/WP-03 conversation state `0.10.88`)
+**Status:** Binding · **Updated:** 2026-07-27 (FC-002/WP-04 change summaries `0.10.89`)
 
 > **This file is the only authoritative source for product priorities and work order.**
 >
@@ -40,7 +40,7 @@ Status legend:
 | Thema | Art | Status | Geplant? | Detail |
 |---|---|---|---|---|
 | [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) Semantic direct manipulation + multi-room | Feature Concept | **Done** (WP-01…WP-07) | Yes — closed | Non-goals (shared walls, polygon, physics stacking, …) → Later / Deferred |
-| [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) Conversation, collaboration & styling | Feature Concept | **Next** (Active; WP-A…WP-03 done) | Yes — **Active theme** | WP-04 now; WP-05…WP-07 in §3 · [DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) Accepted |
+| [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) Conversation, collaboration & styling | Feature Concept | **Next** (Active; WP-A…WP-04 done) | Yes — **Active theme** | WP-05 now; WP-06…WP-07 in §3 · [DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) Accepted |
 | AI-01 Evaluation scoring v0.2 | Competence slice | **Done** (`0.10.80`) | Yes — closed | §1 |
 | AI-02 `kids_room_basic` | Competence slice | **Done** (`0.10.81`) | Yes — closed | §1 |
 | AI-03 Trade-off explanation | Competence slice | **Later** | Yes — after FC-002 | §5 · DD-017 #9 |
@@ -91,6 +91,7 @@ Status legend:
 | FC-002/WP-01 architecture package | 2026-07-27 — [DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) Accepted + DD-017/018/021 amendments |
 | FC-002/WP-02 intent routing polish | `0.10.87` — vague asks → clarification; offer follow-ups; `open_question` |
 | FC-002/WP-03 conversation state | `0.10.88` — `agent_state` 0.3 focus/preferences/provenance; reference resolution |
+| FC-002/WP-04 change summaries | `0.10.89` — `summarize_changes` from transaction ops; observation replies |
 | FC-001/WP-01 — DD package | [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** |
 | FC-001/WP-02 — semantic transactions | `0.10.36` · [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) |
 | FC-001/WP-03 — furniture ops | `0.10.37` · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) |
@@ -120,20 +121,19 @@ Status legend:
 
 | ID | Scope | Concept / DDs | Status |
 |---|---|---|---|
-| **FC-002/WP-04** | Manual-change understanding from revisions + semantic operation summaries | [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) · [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) §7 · [DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) | **Next** |
+| **FC-002/WP-05** | Decor capability metadata + semantic placement helpers (DD-021 surfaces) | [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) · [DD-021](design_decisions/DD-021-advanced-support-surfaces.md) §9 · [DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) | **Next** |
 
 One theme at a time: finish FC-002 WPs before returning to the AI competence queue.
-WP-A…WP-03 done through conversation state (`0.10.88`).
+WP-A…WP-04 done through change summaries (`0.10.89`).
 
 ------------------------------------------------------------------------
 
 ## 3. Queued
 
-FC-002 work packages (after WP-04):
+FC-002 work packages (after WP-05):
 
 | ID | Scope | Entry condition |
 |---|---|---|
-| FC-002/WP-05 | Decor capability metadata + semantic placement helpers (DD-021 surfaces) | After WP-01; decor generators audited |
 | FC-002/WP-06 | Styling candidate loop (arrange → dry-run → analyze → aesthetic compare → preview) | After WP-02/03/05; DD-017 evidence boundary |
 | FC-002/WP-07 | User-controlled taste profile (may retain labeled inferred prefs across projects) | After real WP-06 usage shows need |
 

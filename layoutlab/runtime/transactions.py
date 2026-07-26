@@ -84,6 +84,16 @@ class TransactionHistory:
             return None
         return self._stack[-1]
 
+    def records(self) -> list[TransactionRecord]:
+        """Committed records in chronological order (oldest first)."""
+        return [entry.record for entry in self._stack]
+
+    @property
+    def oldest_base_revision(self) -> int | None:
+        if not self._stack:
+            return None
+        return int(self._stack[0].record.base_revision)
+
 
 def normalize_actor(actor: str | None, *, default: str = "user") -> str:
     value = str(actor or default).strip().lower()

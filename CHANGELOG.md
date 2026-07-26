@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **FC-002/WP-04 shipped:** Active → WP-05 (decor capability metadata + placement helpers).
 - **FC-002/WP-03 shipped:** Active → WP-04 (manual-change summaries).
 - **FC-002/WP-02 shipped:** Active → WP-03 (semantic conversation state).
 - **FC-002/WP-01 Accepted (2026-07-27):** DD-022 + DD-017/018/021 amendments Accepted. Defaults 1–4 as proposed; inferred taste **may** persist across projects via user-visible WP-07 taste profile (labeled, removable). Active → **FC-002/WP-02**.
@@ -20,6 +21,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **FC-002/WP-04 change summaries (`0.10.89`):** Core tool `summarize_changes` projects transaction ops into domain-language lines (DD-018 §7); observation replies include changes since `last_observed_revision`; history outside Undo window reports `history_available=false`.
 - **FC-002/WP-03 conversation state (`0.10.88`):** `agent_state` schema 0.3 with focus stack, labeled preferences + provenance, Core reference resolution (ambiguous → clarification; no guessing); empty-scene labeled actions still allowed.
 - **FC-002/WP-02 intent routing polish (`0.10.87`):** Vague mutation asks („Kannst du das verbessern?“) become `clarification` with `open_question`; follow-ups after an offer map to conversation vs action; Core clarification early-exit even when LLM is configured.
 - **FC-002/WP-01 architecture package (Accepted 2026-07-27):** [DD-022](docs/design_decisions/DD-022-conversational-collaboration-contracts.md) locks turn authority, semantic conversation-state tiers, preference provenance, and change-summary / styling boundaries; narrow amendments on DD-017 (styling evidence), DD-018 §7 (change summaries), DD-021 §9 (decor helpers). Inferred taste may persist across projects via WP-07 profile.

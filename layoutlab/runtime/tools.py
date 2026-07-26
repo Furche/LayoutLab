@@ -26,9 +26,9 @@ TOOL_NAMES = frozenset(
         "dry_run_commands",
         "get_layout_sketch",
         "plan_layout",
+        "summarize_changes",
     }
 )
-
 GENERATOR_KEY_PARAMS = {
     "bed_basic": ["name", "location", "length", "width", "head_side", "clearances", "collection"],
     "desk_basic": [
@@ -659,6 +659,17 @@ def plan_layout(session, params=None):
     return out
 
 
+def summarize_changes(session, params=None):
+    """Semantic change summary between revisions (DD-018 §7 / FC-002/WP-04)."""
+    params = params or {}
+    from_rev = params.get("from_revision")
+    to_rev = params.get("to_revision")
+    return session.summarize_changes(
+        from_revision=None if from_rev is None else int(from_rev),
+        to_revision=None if to_rev is None else int(to_rev),
+    )
+
+
 TOOL_HANDLERS = {
     "get_scene_summary": get_scene_summary,
     "get_room": get_room,
@@ -671,6 +682,7 @@ TOOL_HANDLERS = {
     "dry_run_commands": dry_run_commands,
     "get_layout_sketch": get_layout_sketch,
     "plan_layout": plan_layout,
+    "summarize_changes": summarize_changes,
 }
 
 
@@ -920,6 +932,31 @@ def openai_tool_definitions():
                         "bed_width": {"type": "number"},
                         "bed_length": {"type": "number"},
                         "collection": {"type": "string"},
+                    },
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "summarize_changes",
+                "description": (
+                    "Semantic change summary between two project revisions from Core "
+                    "transaction operations (DD-018). Default from_revision = "
+                    "agent_state.last_observed_revision. No mesh diffs. Outside the "
+                    "Undo window returns history_available=false."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "from_revision": {
+                            "type": "integer",
+                            "description": "Exclusive lower bound (default: last_observed_revision or 0)",
+                        },
+                        "to_revision": {
+                            "type": "integer",
+                            "description": "Inclusive upper bound (default: current revision)",
+                        },
                     },
                 },
             },

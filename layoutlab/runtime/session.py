@@ -40,7 +40,7 @@ def normalize_session_agent_state(state: dict | None) -> dict:
     return normalize_agent_state(state)
 
 
-LAYOUTLAB_VERSION = "0.10.88"
+LAYOUTLAB_VERSION = "0.10.89"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -490,6 +490,17 @@ class RoomSession:
     @property
     def undo_len(self) -> int:
         return len(self._undo)
+
+    def transaction_records(self) -> list:
+        """Committed DD-018 records in the Undo window (oldest first)."""
+        return self._undo.records()
+
+    def summarize_changes(
+        self, *, from_revision: int | None = None, to_revision: int | None = None
+    ) -> dict:
+        from .planning.change_summary import summarize_changes as _summarize
+
+        return _summarize(self, from_revision=from_revision, to_revision=to_revision)
 
     @property
     def redo_len(self) -> int:

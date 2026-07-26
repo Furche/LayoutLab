@@ -157,7 +157,7 @@ observation (FC-002 §6 / [DD-022](DD-022-conversational-collaboration-contracts
 - Summaries are **not** mesh diffs and **not** LLM inventions.
 - Available depth matches the session transaction/Undo history (default ≥ 50).
   Outside that window Core reports history unavailable.
-- Binding tool/API shape lands in WP-04 (`summarize_changes` or equivalent).
+- Binding tool/API shape: Core tool `summarize_changes` (`0.10.89` / FC-002/WP-04).
 
 ------------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 # FC-002 — Conversational Design Collaboration and Styling
 
-**Status:** Active (WP-04 next; WP-A…WP-03 Done)  
-**Date:** 2026-07-25 · **Activated:** 2026-07-26 · **WP-01 Accepted:** 2026-07-27 · **WP-02:** `0.10.87` · **WP-03:** `0.10.88`  
+**Status:** Active (WP-05 next; WP-A…WP-04 Done)  
+**Date:** 2026-07-25 · **Activated:** 2026-07-26 · **WP-01 Accepted:** 2026-07-27 · **WP-02:** `0.10.87` · **WP-03:** `0.10.88` · **WP-04:** `0.10.89`  
 **Owner:** Product / Architecture  
 **Related:** [DD-009](../design_decisions/DD-009-ai-execution-boundary.md) · [DD-017](../design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) · [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](../design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-021](../design_decisions/DD-021-advanced-support-surfaces.md) · [DD-022](../design_decisions/DD-022-conversational-collaboration-contracts.md) · [FC-001](FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · [ROADMAP](../ROADMAP.md)
 
@@ -489,12 +489,12 @@ follow-ups, furniture swap verbs, and `styling_request` as **acknowledgement onl
 | **FC-002/WP-01** | Architecture package: remaining turn contract details, semantic state ownership, manual-change summaries and styling boundary | **Done** 2026-07-27 — DD-022 + DD-017/018/021 amendments Accepted |
 | **FC-002/WP-02** | Conversation intent routing polish (clarification UX + offer follow-ups) | **Done** `0.10.87` |
 | **FC-002/WP-03** | Semantic conversation state, reference resolution and preference provenance | **Done** `0.10.88` |
-| **FC-002/WP-04** | Manual-change understanding from project revisions and semantic operation summaries | **Active** — DD-018 §7 change-summary contract |
-| **FC-002/WP-05** | Decor capability metadata and semantic placement helpers over DD-021 support surfaces | WP-01; existing decor generators audited |
+| **FC-002/WP-04** | Manual-change understanding from project revisions and semantic operation summaries | **Done** `0.10.89` |
+| **FC-002/WP-05** | Decor capability metadata and semantic placement helpers over DD-021 support surfaces | **Active** — DD-021 §9 |
 | **FC-002/WP-06** | Styling candidate loop: arrange, dry-run, analyze, render, aesthetic compare and preview | WP-02/03/05; DD-017 evidence boundary confirmed |
 | **FC-002/WP-07** | User-controlled taste profile (may retain labeled inferred prefs across projects) | Real WP-06 usage demonstrates need |
 
-**Still open for full FC-002:** WP-04…WP-07 (manual-change summaries, decor helpers,
+**Still open for full FC-002:** WP-05…WP-07 (decor helpers,
 styling candidates, eye-level aesthetics, taste profile).
 Automatic decoration does **not** exist yet.
 
@@ -538,5 +538,5 @@ Remaining implementation questions (not Accept blockers):
 - Which existing decor generators are safe for the first supported asset set? → WP-05
 - Exact eye-level camera poses for comparative styling? → WP-06
 - Concrete `agent_state` field freeze for provenance/focus? → **Done** WP-03 (`0.10.88`)
-- Concrete `summarize_changes` tool shape? → WP-04
+- Concrete `summarize_changes` tool shape? → **Done** WP-04 (`0.10.89`)
 - Taste-profile storage / promotion of inferred prefs across projects? → WP-07

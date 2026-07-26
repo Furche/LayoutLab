@@ -166,6 +166,31 @@ PNG as a multimodal vision message so the model can actually see the layout.
 
 ------------------------------------------------------------------------
 
+## Change summaries (DD-018 §7 / FC-002/WP-04)
+
+### `summarize_changes`
+
+**Params:**
+
+```json
+{
+  "from_revision": 12,
+  "to_revision": 15
+}
+```
+
+- `from_revision` optional — default `agent_state.last_observed_revision` (else `0`); exclusive lower bound
+- `to_revision` optional — default current project revision; inclusive upper bound
+
+**Returns:** `{ from_revision, to_revision, history_available, lines[], operations_count, … }`
+
+Projects committed transaction operations into domain-language lines (move, rotate, resize,
+`place_on`, …). Not a mesh diff and not an LLM invention. Outside the Undo window
+`history_available` is `false`. Observation turns may attach the same summary since
+`last_observed_revision`.
+
+------------------------------------------------------------------------
+
 ## Planning recipes (DD-016 / Agent-2.3)
 
 ### `plan_layout`

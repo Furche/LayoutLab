@@ -115,6 +115,9 @@ Physics (non-negotiable):
 Context:
 - A scene seed (get_scene_summary + list_generators) is already injected — trust it.
 - Call get_room / list_objects only when you need details the seed lacks.
+- For “what changed?” / “hast du dir das so vorgestellt?” call summarize_changes
+  (or trust observation replies that already include it). Narrate Core lines only —
+  never invent mesh diffs. Keep commands empty on observation turns.
 - Before a non-empty final proposal, prefer validate_commands then dry_run_commands.
 - After dry_run: READ layout_sketch.ascii + soft_summary. If furniture sits on a door (D)
   or packs the room badly, revise commands and dry_run again — do not ship the first draft.
@@ -485,8 +488,26 @@ def _observation_reply(session) -> dict:
         {"tool": "get_layout_sketch", "arguments": {}, "ok": True, "seed": False},
     ]
 
+    from .planning.change_summary import format_change_summary_de, summarize_changes
+
+    change_summary = summarize_changes(session)
+    tool_trace.append(
+        {
+            "tool": "summarize_changes",
+            "arguments": {
+                "from_revision": change_summary.get("from_revision"),
+                "to_revision": change_summary.get("to_revision"),
+            },
+            "ok": True,
+            "seed": False,
+        }
+    )
+
     if not rooms:
         reply = "Die aktuelle Scene ist leer — kein Raum im Core."
+        change_block = format_change_summary_de(change_summary)
+        if change_block and change_summary.get("lines"):
+            reply = reply + "\n\n" + change_block
     else:
         room_bits = []
         for r in rooms:
@@ -523,6 +544,12 @@ def _observation_reply(session) -> dict:
             if overlap_note:
                 lines.append(overlap_note)
 
+        # FC-002/WP-04: semantic changes since last observation
+        change_block = format_change_summary_de(change_summary)
+        if change_block:
+            lines.append("")
+            lines.append(change_block)
+
         reply = "\n".join(lines)
 
     quality = {
@@ -557,6 +584,7 @@ def _observation_reply(session) -> dict:
         "suggested_next_tools": [],
         "commands": [],
         "tool_trace": tool_trace,
+        "change_summary": change_summary,
         "scene_summary": summary,
         "quality": quality,
         "_analysis_findings": findings,

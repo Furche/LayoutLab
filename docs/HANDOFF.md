@@ -4,11 +4,11 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-27 (FC-002/WP-03 `0.10.88` → WP-04 Active)
-**Plugin / Core version:** 0.10.88 · **Branch:** `main`
+**Last updated:** 2026-07-27 (FC-002/WP-04 change summaries `0.10.89` → WP-05 Active)
+**Plugin / Core version:** 0.10.89 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
-**FC-002/WP-04** manual-change summaries. WP-03 conversation state shipped (`0.10.88`).
+**FC-002/WP-05** decor capability metadata + placement helpers. WP-04 change summaries shipped (`0.10.89`).
 **Overview:** [ROADMAP.md §0 Product map](ROADMAP.md#0-product-map) — now / done / planned at a glance.
 
 ------------------------------------------------------------------------
@@ -34,7 +34,7 @@ Respond to Alexander in **German**.
 ```
 LayoutLab — semantic interior planning (Standalone Viewer + Core).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Core/plugin v0.10.88.
+Branch: main. Core/plugin v0.10.89.
 
 Lies in dieser Reihenfolge:
 1. 00_READ_THIS_FIRST.md
@@ -47,7 +47,7 @@ Lies in dieser Reihenfolge:
 Aktueller Stand (2026-07-27):
 - Produktfokus: Standalone Web Viewer (`viewer/`) + Core HTTP (`server/`)
 - FC-001/WP-01…WP-07 ✅; Viewer DM ✅; planning feedback ✅; agent blueprint ✅ (`0.10.82`)
-- FC-002 **Active** — WP-A…WP-03 ✅ (`0.10.88`); **WP-04** next (change summaries)
+- FC-002 **Active** — WP-A…WP-04 ✅ (`0.10.89`); **WP-05** next (decor helpers)
 - styling_request in WP-A = Acknowledgement ohne Commands (Styling-Loop = WP-06)
 - Taste profile (WP-07): labeled inferred prefs **may** persist across projects
 - AI-03…AI-09 paused until FC-002 closes (ROADMAP §5 Later)
@@ -104,12 +104,12 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 
 | Component | Version |
 |---|---|
-| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.88** |
+| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.89** |
 | `bed_basic` | **0.7.0** — raised frame; optional `bed_entry` clearances; sizes in meters |
 | `wardrobe_basic` | **0.7.0** — `front_side`, `create_clearance`, part `clearance_front_access` |
 | `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.10.88.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.89.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -128,7 +128,7 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 - **Evaluation v0.2** preferred clearances + score rank (`0.10.80`)
 - **`kids_room_basic`** recipe + Kinderzimmer routing (`0.10.81`)
 - **Agent blueprint vision** — sketch/dry-run PNG + multimodal agent messages (`0.10.82`)
-- **FC-002/WP-A…WP-03** — conversation-safe turns, routing polish, semantic state (`0.10.83`–`0.10.88`): focus/preferences/provenance + reference resolution. **FC-002 Active** — WP-04 next.
+- **FC-002/WP-A…WP-04** — conversation-safe turns, routing polish, semantic state, change summaries (`0.10.83`–`0.10.89`): `summarize_changes` + observation replies. **FC-002 Active** — WP-05 next.
 - Default boot: furnished bedroom via Core; clearances as oriented mesh wireframes
 - Bundled generator sync; diagnostic checks; reference kids room fixtures under `tests/fixtures/`
 
@@ -223,6 +223,7 @@ If **next work** changes, update [`ROADMAP.md`](ROADMAP.md) first, then point he
 
 | Date | Change |
 |---|---|
+| 2026-07-27 | FC-002/WP-04 change summaries (`0.10.89`); Active → WP-05 |
 | 2026-07-27 | FC-002/WP-03 conversation state (`0.10.88`); Active → WP-04 |
 | 2026-07-27 | FC-002/WP-02 routing polish (`0.10.87`); Active → WP-03 |
 | 2026-07-27 | FC-002/WP-01 **Accepted** (DD-022 + amendments; inferred taste may persist via WP-07); Active → WP-02 |

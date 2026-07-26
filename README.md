@@ -261,8 +261,8 @@ Cursor implements — it does not silently redefine architecture. See [00_READ_T
 |---|---|---|
 | Historical A–E | Docs → generators → module split → object model → clearances/analysis | Complete |
 | Planning + FC-001 Core | Recipes/shortlist; WP-01…WP-07; Viewer DM; planning feedback; support surfaces | Shipped (`0.10.24`–`0.10.64`) |
-| **Active** | FC-002/WP-04 Manual-change summaries | See [docs/ROADMAP.md](docs/ROADMAP.md) §2 |
-| Queued | FC-002/WP-05…WP-07 | [docs/ROADMAP.md](docs/ROADMAP.md) §3 |
+| **Active** | FC-002/WP-05 Decor capability + placement helpers | See [docs/ROADMAP.md](docs/ROADMAP.md) §2 |
+| Queued | FC-002/WP-06…WP-07 | [docs/ROADMAP.md](docs/ROADMAP.md) §3 |
 | Later / deferred | AI-03…AI-09; polygon; capture; shared walls; … | [docs/ROADMAP.md](docs/ROADMAP.md) §§5–6 |
 
 **Authoritative priorities:** [docs/ROADMAP.md](docs/ROADMAP.md) · Session as-built: [docs/HANDOFF.md](docs/HANDOFF.md) · Long-term phases: [LayoutLab_Master_Design_Document.md](LayoutLab_Master_Design_Document.md) §17 · Module phases: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §9
