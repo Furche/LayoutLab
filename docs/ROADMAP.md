@@ -1,6 +1,6 @@
 # LayoutLab — Product Roadmap
 
-**Status:** Binding · **Updated:** 2026-07-26 (`0.10.86` FC-002/WP-A routing stabilize)
+**Status:** Binding · **Updated:** 2026-07-26 (product map overview)
 
 > **This file is the only authoritative source for product priorities and work order.**
 >
@@ -12,12 +12,57 @@
 
 1. [`00_READ_THIS_FIRST.md`](../00_READ_THIS_FIRST.md)
 2. [`AI_CONTEXT.md`](../AI_CONTEXT.md)
-3. **This file** (`docs/ROADMAP.md`)
+3. **This file** (`docs/ROADMAP.md`) — start with **§0 Product map**, then **§2 Active**
 4. The Feature Concept linked by the **Active** entry
 5. Related **Accepted** Design Decisions
 6. [`HANDOFF.md`](HANDOFF.md) for technical as-built state and session notes
 
 Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Document.md`](../LayoutLab_Master_Design_Document.md) §17.
+
+------------------------------------------------------------------------
+
+## 0. Product map
+
+One-page answer to: **what are we doing now**, **what is done**, **is a topic planned at all?**
+
+Status legend:
+
+| Status | Meaning |
+|---|---|
+| **Done** | Scoped work shipped (FC may still list intentional non-goals as later) |
+| **Next** | Active work — see §2 |
+| **Queued** | Ordered after Active — see §3 |
+| **Partial** | FC/slice exists; some WPs shipped, theme not Active |
+| **Later** | Named on this roadmap; needs FC/DD or waits behind queue — not started |
+| **Deferred** | Explicitly out of scope for now — see §6 |
+| **Idea only** | Vision / Future Ideas; **not** scheduled here |
+
+| Thema | Art | Status | Geplant? | Detail |
+|---|---|---|---|---|
+| [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) Semantic direct manipulation + multi-room | Feature Concept | **Done** (WP-01…WP-07) | Yes — closed | Non-goals (shared walls, polygon, physics stacking, …) → Later / Deferred |
+| [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) Conversation, collaboration & styling | Feature Concept | **Partial** (WP-A only) | Yes — written; **not Active** | WP-01, WP-03…WP-07 open; see §5 |
+| AI-01 Evaluation scoring v0.2 | Competence slice | **Done** (`0.10.80`) | Yes — closed | §1 |
+| AI-02 `kids_room_basic` | Competence slice | **Done** (`0.10.81`) | Yes — closed | §1 |
+| AI-03 Trade-off explanation | Competence slice | **Next** | Yes — Active | §2 · DD-017 #9 |
+| AI-04 Allowlist expansion | Competence slice | **Queued** | Yes | §3 |
+| AI-05 Circulation soft metric | Competence slice | **Queued** | Yes | §3 |
+| AI-06 Walkway / navigation | Future FC | **Later** | Yes — queued *to create FC* | §3 / §5 · no FC file yet |
+| AI-07 Persisted variants | Future FC | **Later** | Yes — queued *to create FC/DD* | §3 / §5 · no FC file yet |
+| AI-08 Problem-first Intent | Competence slice | **Queued** | Yes | §3 |
+| AI-09 Automatic repair proposals | Competence slice | **Queued** | Yes | §3 |
+| Polygon rooms | Room-model extension | **Later** | Yes — named | §5 · DD-010 next; no FC |
+| AI aesthetics privacy stage 1 | Refinement | **Done** (`0.10.79`) | Yes — closed | §4 |
+| AI aesthetics privacy stage 2 | Refinement | **Deferred** | Yes — deferred until production offer | §4 / §6 |
+| Shortlist comparison UX polish | Refinement | **Later** | On demand | §4 — not Active |
+| Further recipes (beyond kids room) | Refinement | **Idea only** | **No** — only when product asks | §4 |
+| Capture / LiDAR / floor-plan OCR | Vision | **Deferred** | Explicitly not now | §6 · [`Future_Ideas.md`](Future_Ideas.md) |
+| Shared walls / connected topology | Vision | **Deferred** | Explicitly not now | §6 |
+| Multi-floor / building model | Vision | **Deferred** | Explicitly not now | §6 |
+| Product catalog / IKEA import | Vision | **Deferred** | Explicitly not now | §6 |
+| Asset-browser polish (DD-004) | Planned DD | **Deferred** | DD exists `[PLANNED]`; not queued | §6 |
+| Cloud / auth / sync | Vision | **Deferred** | Explicitly not now | §6 |
+
+**How to use:** If a topic is missing from this table, it is **not planned** on the product roadmap (check [`Future_Ideas.md`](Future_Ideas.md) or add a row when you schedule it). §§2–3 remain the only binding work order.
 
 ------------------------------------------------------------------------
 
@@ -161,7 +206,8 @@ Do not build now (detail: [`Future_Ideas.md`](Future_Ideas.md) §18):
 
 | Change | Update |
 |---|---|
-| Priority / order / Active entry | **This file** (required) |
+| Priority / order / Active entry | **This file** (required) — keep **§0 Product map** in sync |
+| Theme done / partial / deferred / newly scheduled | **§0** row status (+ move detail into §1–§6 as needed) |
 | Session version, gotchas, as-built | [`HANDOFF.md`](HANDOFF.md) — link the Active ROADMAP row |
 | Long-term vision wording only | [`LayoutLab_Master_Design_Document.md`](../LayoutLab_Master_Design_Document.md) §17 summary + link here |
 | Feature behaviour | Relevant `docs/concepts/FC-xxx-*.md` |

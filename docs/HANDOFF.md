@@ -4,11 +4,12 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-26 (FC-002/WP-A routing stabilize `0.10.86`)
+**Last updated:** 2026-07-26 (ROADMAP §0 Product map)
 **Plugin / Core version:** 0.10.86 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
 **AI-03** trade-off explanation next. FC-002 remains Ready for decomposition (WP-A only).
+**Overview:** [ROADMAP.md §0 Product map](ROADMAP.md#0-product-map) — now / done / planned at a glance.
 
 ------------------------------------------------------------------------
 
@@ -38,7 +39,7 @@ Branch: main. Core/plugin v0.10.86.
 Lies in dieser Reihenfolge:
 1. 00_READ_THIS_FIRST.md
 2. AI_CONTEXT.md
-3. docs/ROADMAP.md  ← verbindliche Prioritäten
+3. docs/ROADMAP.md  ← verbindliche Prioritäten (zuerst §0 Product map, dann §2 Active)
 4. Feature Concept des Active-Eintrags
 5. zugehörige Accepted DDs
 6. docs/HANDOFF.md  ← Ist-Zustand / Gotchas
