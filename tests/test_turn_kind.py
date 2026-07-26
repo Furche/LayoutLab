@@ -59,6 +59,19 @@ class TestTurnKind(unittest.TestCase):
         self.assertEqual(infer_turn_kind("kannst du das tun?"), TURN_ACTION)
         self.assertEqual(infer_turn_kind("kann losgehen"), TURN_ACTION)
         self.assertTrue(allows_commands(infer_turn_kind("kann losgehen")))
+        self.assertEqual(
+            infer_turn_kind("kannst du mal bett und schreibtisch austauschen?"),
+            TURN_ACTION,
+        )
+        self.assertTrue(
+            allows_commands(
+                infer_turn_kind("kannst du mal bett und schreibtisch austauschen?")
+            )
+        )
+        self.assertEqual(
+            infer_turn_kind("wie findest du, ist das zimmer eingerichtet?"),
+            TURN_CONVERSATION,
+        )
 
     def test_accept_followup_not_blocked_without_llm(self):
         from layoutlab.runtime.agent import run_agent_turn

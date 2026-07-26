@@ -39,6 +39,13 @@ _MUTATE_CUES = (
     "leeren",
     "platzi",
     "verschieb",
+    "austausch",
+    "vertausch",
+    "tausche",
+    "tauschen",
+    "swap",
+    "dreh",
+    "rotier",
     "rückgängig",
     "ruckgangig",
     "änder",
@@ -58,6 +65,22 @@ _MUTATE_CUES = (
     "richte",
     "möblier",
     "moblier",
+)
+
+_FURNITURE_NOUNS = (
+    "zimmer",
+    "raum",
+    "room",
+    "bett",
+    "schrank",
+    "tisch",
+    "desk",
+    "wardrobe",
+    "bed",
+    "möbel",
+    "mobel",
+    "lampe",
+    "stuhl",
 )
 
 _STYLING_CUES = (
@@ -203,9 +226,7 @@ def infer_turn_kind(message: str, history: list | None = None) -> str:
     if _is_opinion(t):
         return TURN_CONVERSATION
 
-    if any(k in t for k in _MUTATE_CUES) and any(
-        k in t for k in ("zimmer", "raum", "room", "bett", "schrank", "tisch", "möbel", "mobel")
-    ):
+    if any(k in t for k in _MUTATE_CUES) and any(k in t for k in _FURNITURE_NOUNS):
         if any(k in t for k in _STYLING_CUES):
             return TURN_STYLING
         return TURN_ACTION
@@ -214,6 +235,14 @@ def infer_turn_kind(message: str, history: list | None = None) -> str:
         return TURN_STYLING
 
     if any(k in t for k in _MUTATE_CUES):
+        return TURN_ACTION
+
+    # "kannst du mal Bett und Schreibtisch …?" without matched verb yet — still action
+    # if a clear rearrange verb slipped past (covered above) or swap synonyms appear.
+    if re.search(
+        r"\b(kannst|könntest|konntest)\s+du\b.+\b(austausch|vertausch|tausch|verschieb|dreh|rotier|swap)\w*\b",
+        t,
+    ):
         return TURN_ACTION
 
     if any(re.search(p, t) for p in _OBSERVATION_PATTERNS):
