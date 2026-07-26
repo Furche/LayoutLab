@@ -3,8 +3,8 @@
 **Status:** Accepted
 **Date:** 2026-07-22
 **Accepted:** 2026-07-22
-**Version:** 1.0
-**Related:** [FC-001](../concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · [DD-003](DD-003-json-only-communication.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-014](DD-014-standalone-runtime-path.md) · [DD-017](DD-017-collaborative-planning-and-contextual-evaluation.md) · [DD-019](DD-019-semantic-direct-manipulation.md) · [DD-020](DD-020-spatial-project-independent-rooms.md)
+**Version:** 1.2  
+**Related:** [FC-001](../concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · [FC-002](../concepts/FC-002-conversational-design-collaboration-and-styling.md) · [DD-003](DD-003-json-only-communication.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-014](DD-014-standalone-runtime-path.md) · [DD-017](DD-017-collaborative-planning-and-contextual-evaluation.md) · [DD-019](DD-019-semantic-direct-manipulation.md) · [DD-020](DD-020-spatial-project-independent-rooms.md) · [DD-022](DD-022-conversational-collaboration-contracts.md)
 
 ------------------------------------------------------------------------
 
@@ -147,6 +147,18 @@ states without committing them.
 These remain separate flags (FC-001). This DD only requires that transaction
 application honour them.
 
+### 7. Semantic change summaries (FC-002)
+
+Committed transactions already record semantic `operations`. For conversational
+observation (FC-002 §6 / [DD-022](DD-022-conversational-collaboration-contracts.md)):
+
+- Core exposes a structured **change summary** between two revisions by projecting
+  those operations into domain language (move, rotate, resize params, place_on, …).
+- Summaries are **not** mesh diffs and **not** LLM inventions.
+- Available depth matches the session transaction/Undo history (default ≥ 50).
+  Outside that window Core reports history unavailable.
+- Binding tool/API shape lands in WP-04 (`summarize_changes` or equivalent).
+
 ------------------------------------------------------------------------
 
 ## Alternatives considered
@@ -205,3 +217,4 @@ application honour them.
 | 0.1 | 2026-07-22 | Proposed — FC-001/WP-01 decomposition |
 | 1.0 | 2026-07-22 | **Accepted** — session Undo ≥ 50; integer revision; import = one transaction |
 | 1.1 | 2026-07-22 | Implemented in Core `0.10.36` (FC-001/WP-02): `commit_commands`, preview, Undo/Redo, stale `base_revision` |
+| 1.2 | 2026-07-26 | **Proposed amendment (FC-002/WP-01)** — §7 semantic change summaries; pairs with DD-022 |

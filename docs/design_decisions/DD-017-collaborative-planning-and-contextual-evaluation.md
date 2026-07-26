@@ -6,7 +6,7 @@
 
 **Accepted:** 2026-07-21
 
-**Related:** [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-011](DD-011-layout-variants-and-comparison.md) · [DD-015](DD-015-soft-metrics-and-tradeoffs.md) · [DD-016](DD-016-deterministic-layout-recipes.md)
+**Related:** [DD-008](DD-008-constraints-and-layout-analysis.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-011](DD-011-layout-variants-and-comparison.md) · [DD-015](DD-015-soft-metrics-and-tradeoffs.md) · [DD-016](DD-016-deterministic-layout-recipes.md) · [FC-002](../concepts/FC-002-conversational-design-collaboration-and-styling.md) · [DD-022](DD-022-conversational-collaboration-contracts.md)
 
 ------------------------------------------------------------------------
 
@@ -583,6 +583,23 @@ Product roadmap placement: [`docs/ROADMAP.md`](../ROADMAP.md) (Refinement / On d
 
 ------------------------------------------------------------------------
 
+## FC-002 styling evidence boundary (Proposed amendment)
+
+Styling / decoration candidates (FC-002 WP-06) **reuse this DD's** functional-first
+evaluation and optional AI aesthetics channel. They do not create a second scoring
+or privacy model.
+
+Additional locks (with [DD-022](DD-022-conversational-collaboration-contracts.md)):
+
+- Only viable (or explicitly waived) styling candidates reach aesthetic compare.
+- Standardized evidence may include eye-level views; the exact deterministic camera
+  set is an implementation detail of WP-06, not a new aesthetics architecture.
+- Disclosure / opt-in rules from §7 / privacy stages remain binding.
+- Density / clutter is a soft collaboration signal, not a Core hard metric in the
+  first styling slice.
+
+------------------------------------------------------------------------
+
 ## History
 
 | Ver | Date | Note |
@@ -593,3 +610,4 @@ Product roadmap placement: [`docs/ROADMAP.md`](../ROADMAP.md) (Refinement / On d
 | 1.0 | 2026-07-21 | **Accepted** — target contract locked; DD-011/DD-015 amended narrowly; implementation remains staged |
 | 1.1 | 2026-07-22 | Status sync — shipped steps marked; remaining work = calibration / UX refinement / recipes on demand |
 | 1.2 | 2026-07-22 | Product decisions — staged Viewer explanation; recipes strictly on-demand; two-stage aesthetics privacy |
+| 1.3 | 2026-07-26 | **Proposed amendment (FC-002/WP-01)** — styling evidence reuses DD-017 channel; pairs with DD-022 |

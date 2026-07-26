@@ -3,7 +3,7 @@
 **Status:** Active (`agent_tools` 0.5 — DD-011/015/016/017 Accepted; evaluation schema v0.1 + shortlist shipped)
 **Version:** `agent_tools` 0.5
 **Date:** 2026-07-21
-**Related:** [DD-009](design_decisions/DD-009-ai-execution-boundary.md) · [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) · [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) · [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) · [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) · [json_protocol.md](json_protocol.md) · [DD-014](design_decisions/DD-014-standalone-runtime-path.md)
+**Related:** [DD-009](design_decisions/DD-009-ai-execution-boundary.md) · [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) · [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) · [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) · [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) · [DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) · [json_protocol.md](json_protocol.md) · [DD-014](design_decisions/DD-014-standalone-runtime-path.md)
 
 ------------------------------------------------------------------------
 

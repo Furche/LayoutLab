@@ -3,8 +3,8 @@
 **Status:** Accepted  
 **Date:** 2026-07-23  
 **Accepted:** 2026-07-23  
-**Version:** 1.0  
-**Related:** [FC-001](../concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · [FC-002](../concepts/FC-002-conversational-design-collaboration-and-styling.md) · [DD-019](DD-019-semantic-direct-manipulation.md) · [DD-002](DD-002-generators-rebuild-mesh.md) · [DD-018](DD-018-semantic-transactions-and-authority.md) · [ROADMAP](../ROADMAP.md) Implemented Foundations
+**Version:** 1.1  
+**Related:** [FC-001](../concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · [FC-002](../concepts/FC-002-conversational-design-collaboration-and-styling.md) · [DD-019](DD-019-semantic-direct-manipulation.md) · [DD-002](DD-002-generators-rebuild-mesh.md) · [DD-018](DD-018-semantic-transactions-and-authority.md) · [DD-022](DD-022-conversational-collaboration-contracts.md) · [ROADMAP](../ROADMAP.md) Implemented Foundations
 
 ------------------------------------------------------------------------
 
@@ -142,6 +142,16 @@ All via DD-018. No Viewer-only parenting.
 
 Inspector shows support; invalid → red validity styling; place affordance as needed.
 
+### 9. FC-002 decoration helpers (Proposed amendment)
+
+FC-002 styling may add Core helpers that **list host surfaces**, propose candidate
+positions on a surface, and place via existing `place_on` / `set_support` (see
+[DD-022](DD-022-conversational-collaboration-contracts.md)). Tool names are not frozen
+here.
+
+Still out of scope for this DD: wall/ceiling mounts, physics stacking, a mandatory
+generic `arrange_on_surface` operator (candidate positions + `place_on` suffice for MVP).
+
 ------------------------------------------------------------------------
 
 ## Alternatives rejected
@@ -161,3 +171,12 @@ Inspector shows support; invalid → red validity styling; place affordance as n
 2. Follow + validity + tests
 3. Viewer inspector / minimal UX
 4. Docs + version bump
+
+------------------------------------------------------------------------
+
+## History
+
+| Ver | Date | Note |
+|---|---|---|
+| 1.0 | 2026-07-23 | **Accepted** — WP-07 horizontal host surfaces |
+| 1.1 | 2026-07-26 | **Proposed amendment (FC-002/WP-01)** — §9 decoration helpers; pairs with DD-022 |

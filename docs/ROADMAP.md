@@ -1,6 +1,6 @@
 # LayoutLab — Product Roadmap
 
-**Status:** Binding · **Updated:** 2026-07-26 (FC-002 Active — WP-01 next)
+**Status:** Binding · **Updated:** 2026-07-26 (FC-002/WP-01 DD-022 Proposed)
 
 > **This file is the only authoritative source for product priorities and work order.**
 >
@@ -40,7 +40,7 @@ Status legend:
 | Thema | Art | Status | Geplant? | Detail |
 |---|---|---|---|---|
 | [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) Semantic direct manipulation + multi-room | Feature Concept | **Done** (WP-01…WP-07) | Yes — closed | Non-goals (shared walls, polygon, physics stacking, …) → Later / Deferred |
-| [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) Conversation, collaboration & styling | Feature Concept | **Next** (Active; WP-A done) | Yes — **Active theme** | WP-01 now; WP-02…WP-07 in §3 |
+| [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) Conversation, collaboration & styling | Feature Concept | **Next** (Active; WP-A done; WP-01 awaiting Accept) | Yes — **Active theme** | [DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) Proposed |
 | AI-01 Evaluation scoring v0.2 | Competence slice | **Done** (`0.10.80`) | Yes — closed | §1 |
 | AI-02 `kids_room_basic` | Competence slice | **Done** (`0.10.81`) | Yes — closed | §1 |
 | AI-03 Trade-off explanation | Competence slice | **Later** | Yes — after FC-002 | §5 · DD-017 #9 |
@@ -117,10 +117,11 @@ Status legend:
 
 | ID | Scope | Concept / DDs | Status |
 |---|---|---|---|
-| **FC-002/WP-01** | Architecture package: turn-contract details, semantic conversation-state ownership, durable change-summary contract, styling boundary | [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) · amend [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) / [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) / [DD-021](design_decisions/DD-021-advanced-support-surfaces.md) as needed; new DD only for a genuine new boundary | **Next** |
+| **FC-002/WP-01** | Architecture package: turn-contract details, semantic conversation-state ownership, durable change-summary contract, styling boundary | [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) · **[DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) Proposed** · amendments [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) / [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) / [DD-021](design_decisions/DD-021-advanced-support-surfaces.md) | **Awaiting Accept** |
 
 One theme at a time: finish FC-002 WPs before returning to the AI competence queue.
 WP-A (`0.10.83`–`0.10.86`) already shipped (`styling_request` = ack only until WP-06).
+**WP-01 closes when DD-022 + companion amendments are Accepted** — then Active moves to WP-02.
 
 ------------------------------------------------------------------------
 
