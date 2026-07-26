@@ -147,7 +147,7 @@ states without committing them.
 These remain separate flags (FC-001). This DD only requires that transaction
 application honour them.
 
-### 7. Semantic change summaries (FC-002)
+### 7. Semantic change summaries (FC-002) — Accepted 2026-07-27
 
 Committed transactions already record semantic `operations`. For conversational
 observation (FC-002 §6 / [DD-022](DD-022-conversational-collaboration-contracts.md)):
@@ -217,4 +217,4 @@ observation (FC-002 §6 / [DD-022](DD-022-conversational-collaboration-contracts
 | 0.1 | 2026-07-22 | Proposed — FC-001/WP-01 decomposition |
 | 1.0 | 2026-07-22 | **Accepted** — session Undo ≥ 50; integer revision; import = one transaction |
 | 1.1 | 2026-07-22 | Implemented in Core `0.10.36` (FC-001/WP-02): `commit_commands`, preview, Undo/Redo, stale `base_revision` |
-| 1.2 | 2026-07-26 | **Proposed amendment (FC-002/WP-01)** — §7 semantic change summaries; pairs with DD-022 |
+| 1.2 | 2026-07-27 | **Accepted** §7 change summaries (with DD-022; proposed 2026-07-26) |

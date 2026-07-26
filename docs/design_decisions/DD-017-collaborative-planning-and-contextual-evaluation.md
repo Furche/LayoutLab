@@ -583,7 +583,7 @@ Product roadmap placement: [`docs/ROADMAP.md`](../ROADMAP.md) (Refinement / On d
 
 ------------------------------------------------------------------------
 
-## FC-002 styling evidence boundary (Proposed amendment)
+## FC-002 styling evidence boundary (Accepted amendment 2026-07-27)
 
 Styling / decoration candidates (FC-002 WP-06) **reuse this DD's** functional-first
 evaluation and optional AI aesthetics channel. They do not create a second scoring
@@ -610,4 +610,4 @@ Additional locks (with [DD-022](DD-022-conversational-collaboration-contracts.md
 | 1.0 | 2026-07-21 | **Accepted** — target contract locked; DD-011/DD-015 amended narrowly; implementation remains staged |
 | 1.1 | 2026-07-22 | Status sync — shipped steps marked; remaining work = calibration / UX refinement / recipes on demand |
 | 1.2 | 2026-07-22 | Product decisions — staged Viewer explanation; recipes strictly on-demand; two-stage aesthetics privacy |
-| 1.3 | 2026-07-26 | **Proposed amendment (FC-002/WP-01)** — styling evidence reuses DD-017 channel; pairs with DD-022 |
+| 1.3 | 2026-07-27 | **Accepted** FC-002 styling evidence amendment (with DD-022; proposed 2026-07-26) |

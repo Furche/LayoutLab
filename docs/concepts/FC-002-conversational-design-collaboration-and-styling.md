@@ -1,7 +1,7 @@
 # FC-002 — Conversational Design Collaboration and Styling
 
-**Status:** Active (WP-01 next; WP-A shipped `0.10.83`–`0.10.86`)  
-**Date:** 2026-07-25 · **Activated:** 2026-07-26  
+**Status:** Active (WP-02 next; WP-A + WP-01 Done)  
+**Date:** 2026-07-25 · **Activated:** 2026-07-26 · **WP-01 Accepted:** 2026-07-27  
 **Owner:** Product / Architecture  
 **Related:** [DD-009](../design_decisions/DD-009-ai-execution-boundary.md) · [DD-017](../design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) · [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](../design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-021](../design_decisions/DD-021-advanced-support-surfaces.md) · [DD-022](../design_decisions/DD-022-conversational-collaboration-contracts.md) · [FC-001](FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · [ROADMAP](../ROADMAP.md)
 
@@ -458,11 +458,11 @@ evaluation. It must not become one monolithic agent feature.
 
 At minimum, decomposition should decide:
 
-1. **Conversational turn and authority contract** — [DD-022](../design_decisions/DD-022-conversational-collaboration-contracts.md) (**Proposed**)
-2. **Semantic conversation state** — DD-022 (**Proposed**)
-3. **Revision change summaries** — [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) §7 amendment (**Proposed**) + DD-022
-4. **Decoration affordances** — [DD-021](../design_decisions/DD-021-advanced-support-surfaces.md) §9 amendment (**Proposed**) + WP-05 audit
-5. **Styling evidence and evaluation** — [DD-017](../design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) FC-002 amendment (**Proposed**) + DD-022
+1. **Conversational turn and authority contract** — [DD-022](../design_decisions/DD-022-conversational-collaboration-contracts.md) (**Accepted**)
+2. **Semantic conversation state** — DD-022 (**Accepted**)
+3. **Revision change summaries** — [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) §7 (**Accepted**) + DD-022
+4. **Decoration affordances** — [DD-021](../design_decisions/DD-021-advanced-support-surfaces.md) §9 (**Accepted**) + WP-05 audit
+5. **Styling evidence and evaluation** — [DD-017](../design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) FC-002 amendment (**Accepted**) + DD-022
 
 Existing DDs are amended narrowly where they already own a decision. **DD-022** covers
 the genuinely new collaboration-state / turn boundary; it does not restate DD-017,
@@ -486,15 +486,15 @@ follow-ups, furniture swap verbs, and `styling_request` as **acknowledgement onl
 | ID | Work package | Entry condition |
 |---|---|---|
 | **FC-002/WP-A** | Conversation-safe turn + routing stabilize | Done `0.10.83`–`0.10.86` |
-| **FC-002/WP-01** | Architecture package: remaining turn contract details, semantic state ownership, manual-change summaries and styling boundary | **Awaiting Accept** — [DD-022](../design_decisions/DD-022-conversational-collaboration-contracts.md) + DD-017/018/021 amendments |
-| **FC-002/WP-02** | Conversation intent routing polish (LLM + clarification UX) | WP-01 Accepted; extends WP-A heuristics |
+| **FC-002/WP-01** | Architecture package: remaining turn contract details, semantic state ownership, manual-change summaries and styling boundary | **Done** 2026-07-27 — DD-022 + DD-017/018/021 amendments Accepted |
+| **FC-002/WP-02** | Conversation intent routing polish (LLM + clarification UX) | **Active** — WP-01; extends WP-A heuristics |
 | **FC-002/WP-03** | Semantic conversation state, reference resolution and preference provenance | WP-01; provider-neutral agent contract |
 | **FC-002/WP-04** | Manual-change understanding from project revisions and semantic operation summaries | WP-01; DD-018 §7 change-summary contract |
 | **FC-002/WP-05** | Decor capability metadata and semantic placement helpers over DD-021 support surfaces | WP-01; existing decor generators audited |
 | **FC-002/WP-06** | Styling candidate loop: arrange, dry-run, analyze, render, aesthetic compare and preview | WP-02/03/05; DD-017 evidence boundary confirmed |
-| **FC-002/WP-07** | User-controlled taste profile and learning from accepted/rejected styling proposals | Real WP-06 usage demonstrates need |
+| **FC-002/WP-07** | User-controlled taste profile (may retain labeled inferred prefs across projects) | Real WP-06 usage demonstrates need |
 
-**Still open for full FC-002:** WP-01 Accept, then WP-02…WP-07 (manual-change summaries, durable
+**Still open for full FC-002:** WP-02…WP-07 (routing polish, manual-change summaries, durable
 conversation state, decor helpers, styling candidates, eye-level aesthetics, taste profile).
 Automatic decoration does **not** exist yet.
 
@@ -531,11 +531,12 @@ Automatic decoration does **not** exist yet.
 ## 16. Open questions for decomposition
 
 Architectural questions from the original decomposition list are **resolved in
-[DD-022](../design_decisions/DD-022-conversational-collaboration-contracts.md)** (Proposed).
+[DD-022](../design_decisions/DD-022-conversational-collaboration-contracts.md)** (**Accepted**
+2026-07-27; inferred taste may persist across projects via WP-07 profile).
 Remaining implementation questions (not Accept blockers):
 
 - Which existing decor generators are safe for the first supported asset set? → WP-05
 - Exact eye-level camera poses for comparative styling? → WP-06
 - Concrete `agent_state` field freeze for provenance/focus? → WP-03
 - Concrete `summarize_changes` tool shape? → WP-04
-
+- Taste-profile storage / promotion of inferred prefs across projects? → WP-07

@@ -1,29 +1,36 @@
 # DD-022 — Conversational Collaboration Contracts (FC-002/WP-01)
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-07-26  
-**Version:** 0.1  
+**Accepted:** 2026-07-27  
+**Version:** 1.0  
 **Related:** [FC-002](../concepts/FC-002-conversational-design-collaboration-and-styling.md) · [DD-009](DD-009-ai-execution-boundary.md) · [DD-017](DD-017-collaborative-planning-and-contextual-evaluation.md) · [DD-018](DD-018-semantic-transactions-and-authority.md) · [DD-021](DD-021-advanced-support-surfaces.md) · [`agent_tool_contract.md`](../agent_tool_contract.md) · [ROADMAP](../ROADMAP.md)
 
 ------------------------------------------------------------------------
 
 ## Acceptance note
 
-**Proposed 2026-07-26** for Alexander Accept. This DD is the FC-002/WP-01 architecture
-package for boundaries that do not already belong to DD-017 / DD-018 / DD-021.
+**Accepted 2026-07-27** (Alexander). Locked defaults:
 
-Narrow companion amendments (same Accept gate):
+1. **Turn / commands** — No commands for conversation / question / observation /
+   feedback / clarification; planning + action may propose; `styling_request` ack-only
+   until WP-06, then Apply-gated proposals.
+2. **State tiers** — Project / session (`agent_state`) / provider transcript; transcript
+   is never product authority.
+3. **Change summaries** — Core from transaction `operations`; depth = Undo window
+   (≥ 50); no mesh-diff fallback.
+4. **`arrange_on_surface`** — **Not** required for MVP (candidate positions + `place_on`).
+5. **Inferred taste beyond project** — **Allowed** via the user-visible taste profile
+   (WP-07): preferences stay labeled `inferred`, inspectable and removable; no hidden
+   psychological profiling. Early WPs may still keep inferred prefs session/project-scoped
+   until that profile ships.
 
-- [DD-018](DD-018-semantic-transactions-and-authority.md) §7 — change summaries
-- [DD-017](DD-017-collaborative-planning-and-contextual-evaluation.md) — styling evidence boundary
-- [DD-021](DD-021-advanced-support-surfaces.md) — decor placement helpers scope
-
-Locked defaults proposed below. Binding field names land in `agent_tool_contract.md` /
-`json_protocol.md` during WP-03…WP-06.
+Companion amendments Accepted in the same gate: DD-017 styling evidence, DD-018 §7,
+DD-021 §9.
 
 ------------------------------------------------------------------------
 
-## Decision summary (Proposed)
+## Decision summary (Accepted)
 
 LayoutLab conversations are a **structured product surface**, not a free-form command
 compiler. Core owns inspectable **semantic conversation state** and **revision change
@@ -122,11 +129,13 @@ Every stored preference carries one of:
 explicit | inferred | project_default | turn_temporary
 ```
 
-- `inferred` is labeled and must not silently become permanent personal facts.
+- `inferred` is labeled and must not silently become unmarked permanent personal facts.
 - `turn_temporary` dies with the proposal/turn.
-- Cross-project psychological profiling is a non-goal (FC-002 §12).
-- Retaining inferred taste beyond the current project requires an **explicit** user
-  action (WP-07); default is project/session only.
+- Cross-project **hidden** psychological profiling remains a non-goal (FC-002 §12).
+- **Accepted:** inferred taste **may** live beyond the current project inside a
+  user-visible, correctable taste profile (WP-07). Until that profile exists,
+  implementations may keep inferred prefs session- or project-scoped without blocking
+  later promotion into the profile.
 
 ### 5. Reference resolution (architecture only)
 
@@ -185,7 +194,7 @@ Companion lock in DD-018 §7. Summary here:
 | Need generic `arrange_on_surface`? | **No** for MVP |
 | Eye-level cameras? | Deterministic fixed set; poses locked in WP-06 |
 | Density representation? | Soft signal in collaboration/evaluation (WP-06) |
-| Inferred taste beyond project? | Only after explicit user save (WP-07); default no |
+| Inferred taste beyond project? | **Yes** — via user-visible taste profile (WP-07); labeled + removable |
 
 ------------------------------------------------------------------------
 
@@ -199,6 +208,7 @@ Companion lock in DD-018 §7. Summary here:
 | Monolithic “FC-002 mega-DD” restating 017/018/021 | FC-002 §13 forbids restating owned boundaries |
 | New aesthetics channel for styling | Duplicate of DD-017; privacy/disclosure already defined |
 | Require `arrange_on_surface` before any styling | Over-builds; `place_on` + candidates enough |
+| Forbid all cross-project inferred taste | Rejected at Accept — profile may retain labeled inferred prefs (WP-07) |
 
 ------------------------------------------------------------------------
 
@@ -241,3 +251,4 @@ Companion lock in DD-018 §7. Summary here:
 | Ver | Date | Note |
 |---|---|---|
 | 0.1 | 2026-07-26 | Proposed — FC-002/WP-01 architecture package |
+| 1.0 | 2026-07-27 | **Accepted** — defaults 1–4 as proposed; inferred taste may persist across projects via WP-07 profile |

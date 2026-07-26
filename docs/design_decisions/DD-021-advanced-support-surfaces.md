@@ -142,7 +142,7 @@ All via DD-018. No Viewer-only parenting.
 
 Inspector shows support; invalid → red validity styling; place affordance as needed.
 
-### 9. FC-002 decoration helpers (Proposed amendment)
+### 9. FC-002 decoration helpers (Accepted amendment 2026-07-27)
 
 FC-002 styling may add Core helpers that **list host surfaces**, propose candidate
 positions on a surface, and place via existing `place_on` / `set_support` (see
@@ -179,4 +179,4 @@ generic `arrange_on_surface` operator (candidate positions + `place_on` suffice 
 | Ver | Date | Note |
 |---|---|---|
 | 1.0 | 2026-07-23 | **Accepted** — WP-07 horizontal host surfaces |
-| 1.1 | 2026-07-26 | **Proposed amendment (FC-002/WP-01)** — §9 decoration helpers; pairs with DD-022 |
+| 1.1 | 2026-07-27 | **Accepted** §9 decoration helpers (with DD-022; proposed 2026-07-26) |

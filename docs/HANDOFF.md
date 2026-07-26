@@ -4,11 +4,11 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-26 (FC-002/WP-01 DD-022 Proposed)
+**Last updated:** 2026-07-27 (FC-002/WP-01 Accepted → WP-02 Active)
 **Plugin / Core version:** 0.10.86 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
-**FC-002/WP-01** — [DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) **Proposed** (plus DD-017/018/021 amendments). Awaiting Accept.
+**FC-002/WP-02** conversation intent routing polish. [DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) **Accepted** (inferred taste may persist via WP-07 profile).
 **Overview:** [ROADMAP.md §0 Product map](ROADMAP.md#0-product-map) — now / done / planned at a glance.
 
 ------------------------------------------------------------------------
@@ -47,8 +47,9 @@ Lies in dieser Reihenfolge:
 Aktueller Stand (2026-07-26):
 - Produktfokus: Standalone Web Viewer (`viewer/`) + Core HTTP (`server/`)
 - FC-001/WP-01…WP-07 ✅; Viewer DM ✅; planning feedback ✅; agent blueprint ✅ (`0.10.82`)
-- FC-002 **Active** — WP-A ✅; **WP-01** DD-022 + amendments **Proposed** (Awaiting Accept)
+- FC-002 **Active** — WP-A + WP-01 ✅ (DD-022 Accepted 2026-07-27); **WP-02** next (routing polish)
 - styling_request in WP-A = Acknowledgement ohne Commands (Styling-Loop = WP-06)
+- Taste profile (WP-07): labeled inferred prefs **may** persist across projects
 - AI-03…AI-09 paused until FC-002 closes (ROADMAP §5 Later)
 - Blender = Runtime-Adapter, kein Default für neue Features
 - Core: python3 -m server (:8765); Viewer: cd viewer && npm run dev (:5173)
@@ -148,12 +149,12 @@ Full ordered foundations list: [ROADMAP.md §1](ROADMAP.md#1-implemented-foundat
 | [DD-011](design_decisions/DD-011-layout-variants-and-comparison.md) | Variants / Planning v1 | **Accepted** |
 | [DD-015](design_decisions/DD-015-soft-metrics-and-tradeoffs.md) | Soft metrics + tradeoffs | **Accepted** |
 | [DD-016](design_decisions/DD-016-deterministic-layout-recipes.md) | Layout recipes | **Accepted** |
-| [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) | Collaborative planning | **Accepted** (+ FC-002 styling amendment **Proposed**) |
-| [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) | Semantic transactions | **Accepted** (+ §7 change summaries **Proposed**) |
+| [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) | Collaborative planning | **Accepted** (+ FC-002 styling amendment) |
+| [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) | Semantic transactions | **Accepted** (+ §7 change summaries) |
 | [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) | Semantic direct manipulation | **Accepted** |
 | [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) | Spatial Project / independent rooms | **Accepted** |
-| [DD-021](design_decisions/DD-021-advanced-support-surfaces.md) | Advanced support surfaces / stacking | **Accepted** (+ §9 decor helpers **Proposed**) |
-| [DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) | Conversational collaboration contracts | **Proposed** (FC-002/WP-01) |
+| [DD-021](design_decisions/DD-021-advanced-support-surfaces.md) | Advanced support surfaces / stacking | **Accepted** (+ §9 decor helpers) |
+| [DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) | Conversational collaboration contracts | **Accepted** (FC-002/WP-01) |
 
 Index: [design_decisions/README.md](design_decisions/README.md).
 
@@ -222,7 +223,8 @@ If **next work** changes, update [`ROADMAP.md`](ROADMAP.md) first, then point he
 
 | Date | Change |
 |---|---|
-| 2026-07-26 | FC-002/WP-01: DD-022 Proposed + DD-017/018/021 amendments; awaiting Accept |
+| 2026-07-27 | FC-002/WP-01 **Accepted** (DD-022 + amendments; inferred taste may persist via WP-07); Active → WP-02 |
+| 2026-07-26 | FC-002/WP-01: DD-022 Proposed + DD-017/018/021 amendments |
 | 2026-07-26 | FC-002 **Active** — WP-01 next; AI-03…AI-09 moved to ROADMAP §5 Later |
 | 2026-07-26 | ROADMAP §0 Product map (now/done/planned overview) |
 | 2026-07-26 | FC-002/WP-A routing stabilize (`0.10.86`): planning goals vs conversation |
