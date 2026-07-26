@@ -214,17 +214,20 @@ remains attached to a semantic support surface rather than a hard-coded `z = 0`:
 support_ref = room_floor
 ```
 
-This keeps a future extension open for:
+**WP-03 MVP** started with floor support only. **WP-07** (`0.10.64`, [DD-021](../design_decisions/DD-021-advanced-support-surfaces.md))
+extends that to named **horizontal host surfaces** on furniture (first: desk
+`surface_top` + `lamp_basic` via `place_on` / `set_support`). Children follow host
+move/rotate; invalid support is visible (`INVALID_OFF_SUPPORT` / `INVALID_NO_SUPPORT`),
+never silently repaired.
+
+Still later (not WP-07):
 
 ```text
-support_ref = table.surface_top
-support_ref = shelf.surface
 support_ref = wall
 support_ref = ceiling
 ```
 
-The MVP only needs floor support. Free vertical placement and stacking are later
-work, not part of the first direct-manipulation slice.
+plus free vertical placement and physics-based stacking.
 
 ### 7.2 Snapping and feedback
 

@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **FC-001 §7.1 support wording:** Document that WP-03 was floor-only MVP and WP-07 (`0.10.64` / DD-021) added horizontal host surfaces; wall/ceiling mounts and physics stacking remain later.
 - **Roadmap ownership:** `docs/ROADMAP.md` is now the only binding source for product priorities and work order. MDD §17 is a short long-term phase summary; `docs/HANDOFF.md` is session/as-built only. Entry docs (`00_READ_THIS_FIRST.md`, `AI_CONTEXT.md`, `README.md`, `documentation_map.md`, agent rule) use the new reading order.
 
 ### Added
