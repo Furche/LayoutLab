@@ -10,6 +10,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **FC-002/WP-02 shipped:** Active → WP-03 (semantic conversation state).
 - **FC-002/WP-01 Accepted (2026-07-27):** DD-022 + DD-017/018/021 amendments Accepted. Defaults 1–4 as proposed; inferred taste **may** persist across projects via user-visible WP-07 taste profile (labeled, removable). Active → **FC-002/WP-02**.
 - **Active theme → FC-002:** ROADMAP §§0–5 now treat Conversational Design Collaboration & Styling as Active (WP-01 next; WP-02…WP-07 queued). AI-03…AI-09 moved to §5 Later until FC-002 closes. Product map, HANDOFF, README, AI_CONTEXT, concepts index updated.
 - **ROADMAP §0 Product map:** One-page overview of Feature Concepts and competence slices — status (Done / Next / Queued / Partial / Later / Deferred / Idea only) and whether a topic is scheduled at all; §§2–3 stay the binding work order.
@@ -18,6 +19,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **FC-002/WP-02 intent routing polish (`0.10.87`):** Vague mutation asks („Kannst du das verbessern?“) become `clarification` with `open_question`; follow-ups after an offer map to conversation vs action; Core clarification early-exit even when LLM is configured.
 - **FC-002/WP-01 architecture package (Accepted 2026-07-27):** [DD-022](docs/design_decisions/DD-022-conversational-collaboration-contracts.md) locks turn authority, semantic conversation-state tiers, preference provenance, and change-summary / styling boundaries; narrow amendments on DD-017 (styling evidence), DD-018 §7 (change summaries), DD-021 §9 (decor helpers). Inferred taste may persist across projects via WP-07 profile.
 - **FC-002/WP-A routing stabilize (`0.10.86`):** Planning goals (`Schlafzimmer mit Fenstern` / `gestalten`) are `planning_request` again (recipe fallback + requirements); assessments stay no-command; `styling_request` remains ack-only. FC-002 overall still Ready for decomposition; Active remains AI-03.
 - **Turn-routing furniture actions (`0.10.85`):** Cues like „austauschen“ / „tauschen“ / „drehen“ classify as `action_request`, so requests such as „Bett und Schreibtisch austauschen“ are no longer stripped to empty commands.

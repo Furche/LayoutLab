@@ -117,6 +117,63 @@ class TestTurnKind(unittest.TestCase):
         ]
         self.assertGreaterEqual(len(wins), 2)
 
+    def test_wp02_vague_mutation_clarifies(self):
+        from layoutlab.runtime.planning.turn_kind import (
+            TURN_CLARIFY,
+            allows_commands,
+            infer_turn_kind,
+        )
+        from layoutlab.runtime.agent import run_agent_turn
+        from layoutlab.runtime.session import RoomSession
+
+        cases = [
+            "Kannst du das verbessern?",
+            "Mach es bitte besser",
+            "Vielleicht etwas anders?",
+            "Was könntest du tun?",
+            "etwas ändern",
+        ]
+        for message in cases:
+            with self.subTest(message=message):
+                kind = infer_turn_kind(message)
+                self.assertEqual(kind, TURN_CLARIFY, message)
+                self.assertFalse(allows_commands(kind), message)
+                out = run_agent_turn(RoomSession(), message, llm_config=None)
+                self.assertEqual(out.get("turn_kind"), TURN_CLARIFY, message)
+                self.assertEqual(out.get("commands") or [], [], message)
+                self.assertTrue(out.get("open_question"), message)
+                self.assertTrue(out.get("questions"), message)
+
+    def test_wp02_followup_after_clarification(self):
+        from layoutlab.runtime.planning.turn_kind import (
+            TURN_ACTION,
+            TURN_CONVERSATION,
+            infer_turn_kind,
+        )
+
+        state = {
+            "last_turn_kind": "clarification",
+            "last_reply": (
+                "Möchtest du nur meine Einschätzung, oder soll ich eine Variante "
+                "ausprobieren?"
+            ),
+        }
+        history = [
+            {"role": "assistant", "content": state["last_reply"]},
+        ]
+        self.assertEqual(
+            infer_turn_kind("nur Einschätzung", history=history, agent_state=state),
+            TURN_CONVERSATION,
+        )
+        self.assertEqual(
+            infer_turn_kind("Variante bitte", history=history, agent_state=state),
+            TURN_ACTION,
+        )
+        self.assertEqual(
+            infer_turn_kind("ja", history=history, agent_state=state),
+            TURN_ACTION,
+        )
+
     def test_conversation_returns_no_commands(self):
         from layoutlab.runtime.agent import run_agent_turn
         from layoutlab.runtime.session import RoomSession

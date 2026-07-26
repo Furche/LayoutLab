@@ -95,7 +95,7 @@ Role (compassionate planner):
   If the user already answered or said you may choose, document defaults in proposal.assumes — do not ask again.
 - Soft metrics (packing density, opening_access) are comfort/usability proxies from Core — treat warnings seriously.
 
-Observation vs action (critical — FC-002):
+Observation vs action (critical — FC-002 / DD-022):
 - Infer turn_kind: conversation | question | observation_request | feedback |
   clarification | planning_request | action_request | styling_request.
 - Non-mutating kinds MUST set proposal.commands to [] — never rebuild or Apply.
@@ -103,8 +103,10 @@ Observation vs action (critical — FC-002):
   with zero commands. Empty commands are success, not failure.
 - Only emit mutating commands for planning_request / action_request (or when the
   user explicitly accepts an offer to try a change).
-- If intent is ambiguous between assessment and mutation, ask one short clarification
-  and keep commands empty.
+- If intent is ambiguous between assessment and mutation, set turn_kind=clarification,
+  ask ONE short either/or question in reply + questions[], keep commands empty.
+  Prefer: "Möchtest du nur meine Einschätzung, oder soll ich eine Variante ausprobieren?"
+- styling_request: acknowledge only (no decor commands until styling loop ships).
 
 Physics (non-negotiable):
 - Furniture must sit fully inside the room volume. Never place objects inside walls or through doors/windows.
@@ -277,11 +279,20 @@ def _record_turn_observation(session, result: dict) -> None:
 
 
 def _apply_turn_kind_guards(result: dict, turn_kind: str) -> dict:
-    """Strip mutations for non-mutating turns; stamp turn_kind."""
-    from .planning.turn_kind import allows_commands
+    """Strip mutations for non-mutating turns; stamp turn_kind + open_question."""
+    from .planning.turn_kind import allows_commands, clarification_open_question
 
     result = dict(result)
     result["turn_kind"] = turn_kind
+    questions = list(result.get("questions") or [])
+    if turn_kind == "clarification" and not questions:
+        questions = [clarification_open_question()]
+        result["questions"] = questions
+    open_q = questions[0] if questions else None
+    if open_q:
+        result["open_question"] = open_q
+    elif "open_question" in result:
+        result.pop("open_question", None)
     if allows_commands(turn_kind):
         return result
     result["commands"] = []
@@ -302,6 +313,7 @@ def _non_mutating_turn_reply(session, turn_kind: str, message: str) -> dict:
         TURN_FEEDBACK,
         TURN_QUESTION,
         TURN_STYLING,
+        clarification_open_question,
     )
 
     # Reuse observation tooling for factual grounding
@@ -319,9 +331,7 @@ def _non_mutating_turn_reply(session, turn_kind: str, message: str) -> dict:
             "Magst du nur meine Einschätzung zum aktuellen Stand, "
             "oder soll ich eine konkrete Variante ausprobieren?"
         )
-        questions = [
-            "Nur Einschätzung, oder soll ich eine Variante vorschlagen (Apply-Gate)?"
-        ]
+        questions = [clarification_open_question()]
         title = "Rückfrage"
         rationale = "Ambiguous intent — clarification, no mutations"
     elif turn_kind == TURN_STYLING:
@@ -963,6 +973,7 @@ def _resolve_turn_kind(
     history: list | None = None,
     *,
     core_kind: str | None = None,
+    agent_state: dict | None = None,
 ) -> str:
     """Core inference wins for non-mutating; accept-followups stay action."""
     from .planning.turn_kind import (
@@ -989,11 +1000,24 @@ def _resolve_turn_kind(
         TURN_ACTION,
         TURN_STYLING,
     }
-    inferred = core_kind or infer_turn_kind(message, history=history)
+    inferred = core_kind or infer_turn_kind(
+        message, history=history, agent_state=agent_state
+    )
     model = str(model_kind or "").strip()
     if model not in valid:
         return inferred
+    # Core clarification / observation / feedback must not be upgraded to mutations
+    if inferred in (TURN_CLARIFY, TURN_OBSERVATION, TURN_FEEDBACK, TURN_STYLING):
+        return inferred
     if not allows_commands(inferred):
+        # Model may refine conversation ↔ question, or escalate to clarification
+        if model == TURN_CLARIFY:
+            return TURN_CLARIFY
+        if model in (TURN_CONVERSATION, TURN_QUESTION) and inferred in (
+            TURN_CONVERSATION,
+            TURN_QUESTION,
+        ):
+            return model
         return inferred
     # Accept-followups inferred as action must not be downgraded by the model
     if inferred == TURN_ACTION and model in NON_MUTATING_KINDS:
@@ -1024,6 +1048,7 @@ def _finish_agent_result(
         result.get("turn_kind"),
         history=history,
         core_kind=turn_kind,
+        agent_state=getattr(session, "agent_state", None),
     )
     result = _apply_turn_kind_guards(result, kind)
     if allows_commands(kind):
@@ -1565,9 +1590,13 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             session, {"ok": False, "error": "message required", "commands": [], "reply": ""}
         )
 
-    from .planning.turn_kind import NON_MUTATING_KINDS, infer_turn_kind
+    from .planning.turn_kind import NON_MUTATING_KINDS, TURN_CLARIFY, infer_turn_kind
 
-    turn_kind = infer_turn_kind(message, history=history)
+    turn_kind = infer_turn_kind(
+        message,
+        history=history,
+        agent_state=getattr(session, "agent_state", None),
+    )
 
     if turn_kind == "observation_request" or _is_observation_query(message):
         result = _observation_reply(session)
@@ -1599,6 +1628,13 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             _record_turn_observation(session, selected)
             selected["agent_state"] = dict(getattr(session, "agent_state", {}) or {})
         return _stamp_base_revision(session, selected)
+
+    # WP-02: ambiguous intent → deterministic clarification (even when LLM is on)
+    if turn_kind == TURN_CLARIFY:
+        result = _non_mutating_turn_reply(session, turn_kind, message)
+        result = _apply_turn_kind_guards(result, turn_kind)
+        _record_turn_observation(session, result)
+        return _stamp_base_revision(session, result)
 
     if turn_kind in NON_MUTATING_KINDS and not llm_configured(llm_config):
         result = _non_mutating_turn_reply(session, turn_kind, message)

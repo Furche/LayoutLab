@@ -4,11 +4,11 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-27 (FC-002/WP-01 Accepted → WP-02 Active)
-**Plugin / Core version:** 0.10.86 · **Branch:** `main`
+**Last updated:** 2026-07-27 (FC-002/WP-02 `0.10.87` → WP-03 Active)
+**Plugin / Core version:** 0.10.87 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
-**FC-002/WP-02** conversation intent routing polish. [DD-022](design_decisions/DD-022-conversational-collaboration-contracts.md) **Accepted** (inferred taste may persist via WP-07 profile).
+**FC-002/WP-03** semantic conversation state. WP-02 routing polish shipped (`0.10.87`).
 **Overview:** [ROADMAP.md §0 Product map](ROADMAP.md#0-product-map) — now / done / planned at a glance.
 
 ------------------------------------------------------------------------
@@ -34,7 +34,7 @@ Respond to Alexander in **German**.
 ```
 LayoutLab — semantic interior planning (Standalone Viewer + Core).
 Repo: /Users/allex/Documents/00_codin/BlenderAddons/LayoutLab
-Branch: main. Core/plugin v0.10.86.
+Branch: main. Core/plugin v0.10.87.
 
 Lies in dieser Reihenfolge:
 1. 00_READ_THIS_FIRST.md
@@ -44,10 +44,10 @@ Lies in dieser Reihenfolge:
 5. zugehörige Accepted DDs
 6. docs/HANDOFF.md  ← Ist-Zustand / Gotchas
 
-Aktueller Stand (2026-07-26):
+Aktueller Stand (2026-07-27):
 - Produktfokus: Standalone Web Viewer (`viewer/`) + Core HTTP (`server/`)
 - FC-001/WP-01…WP-07 ✅; Viewer DM ✅; planning feedback ✅; agent blueprint ✅ (`0.10.82`)
-- FC-002 **Active** — WP-A + WP-01 ✅ (DD-022 Accepted 2026-07-27); **WP-02** next (routing polish)
+- FC-002 **Active** — WP-A…WP-02 ✅ (`0.10.87`); **WP-03** next (semantic conversation state)
 - styling_request in WP-A = Acknowledgement ohne Commands (Styling-Loop = WP-06)
 - Taste profile (WP-07): labeled inferred prefs **may** persist across projects
 - AI-03…AI-09 paused until FC-002 closes (ROADMAP §5 Later)
@@ -104,12 +104,12 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 
 | Component | Version |
 |---|---|
-| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.86** |
+| Plugin / Core (`layoutlab/__init__.py` `bl_info`) | **0.10.87** |
 | `bed_basic` | **0.7.0** — raised frame; optional `bed_entry` clearances; sizes in meters |
 | `wardrobe_basic` | **0.7.0** — `front_side`, `create_clearance`, part `clearance_front_access` |
 | `desk_basic` | **0.2.0** — tabletop + legs, optional `chair_access` clearance |
 | Room Model | **DD-010** — rectangle MVP; see `docs/room_model.md` |
-| Latest zip | `dist/layoutlab-0.10.86.zip` (rebuilt on commit when `layoutlab/` changes) |
+| Latest zip | `dist/layoutlab-0.10.87.zip` (rebuilt on commit when `layoutlab/` changes) |
 
 ------------------------------------------------------------------------
 
@@ -128,7 +128,7 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 - **Evaluation v0.2** preferred clearances + score rank (`0.10.80`)
 - **`kids_room_basic`** recipe + Kinderzimmer routing (`0.10.81`)
 - **Agent blueprint vision** — sketch/dry-run PNG + multimodal agent messages (`0.10.82`)
-- **FC-002/WP-A** — conversation-safe turns + routing stabilize (`0.10.83`–`0.10.86`): `turn_kind`, no-command for assessment, planning/action keep recipe fallback; `styling_request` = ack only (no decor loop). **FC-002 Active** — WP-01 next.
+- **FC-002/WP-A…WP-02** — conversation-safe turns + routing polish (`0.10.83`–`0.10.87`): vague asks → clarification; offer follow-ups; `open_question`. **FC-002 Active** — WP-03 next.
 - Default boot: furnished bedroom via Core; clearances as oriented mesh wireframes
 - Bundled generator sync; diagnostic checks; reference kids room fixtures under `tests/fixtures/`
 
@@ -223,6 +223,7 @@ If **next work** changes, update [`ROADMAP.md`](ROADMAP.md) first, then point he
 
 | Date | Change |
 |---|---|
+| 2026-07-27 | FC-002/WP-02 routing polish (`0.10.87`); Active → WP-03 |
 | 2026-07-27 | FC-002/WP-01 **Accepted** (DD-022 + amendments; inferred taste may persist via WP-07); Active → WP-02 |
 | 2026-07-26 | FC-002/WP-01: DD-022 Proposed + DD-017/018/021 amendments |
 | 2026-07-26 | FC-002 **Active** — WP-01 next; AI-03…AI-09 moved to ROADMAP §5 Later |

@@ -1,4 +1,4 @@
-"""Conversational turn kinds (FC-002/WP-A) — product intent, not UI modes."""
+"""Conversational turn kinds (FC-002/WP-A + WP-02) — product intent, not UI modes."""
 
 from __future__ import annotations
 
@@ -21,8 +21,12 @@ NON_MUTATING_KINDS = frozenset(
         TURN_OBSERVATION,
         TURN_FEEDBACK,
         TURN_CLARIFY,
-        TURN_STYLING,  # WP-A: acknowledge + ask; no styling loop yet
+        TURN_STYLING,  # ack only until WP-06
     }
+)
+
+DEFAULT_CLARIFY_QUESTION = (
+    "Möchtest du nur meine Einschätzung, oder soll ich eine Variante ausprobieren?"
 )
 
 # Known room-use labels (alone ≠ mutation; need planning intent alongside).
@@ -204,6 +208,19 @@ _ACCEPT_ACTION_PATTERNS = (
     r"\b(?:variante|option|vorschlag)\s+\d+\b",
 )
 
+_ASSESSMENT_ONLY_PATTERNS = (
+    r"\bnur\s+(eine?\s+)?(einschätz|meinung|idee|tipp)",
+    r"\bnur\s+(anschauen|anschau|schauen|reden|sprechen)\b",
+    r"\bkeine?\s+(änderung|aenderung|variante|vorschlag)\b",
+    r"\bnicht\s+(ändern|aendern|umbauen|ausprobieren)\b",
+    r"\bnoch\s+nicht\b",
+    r"\bspaeter\b",
+    r"\bspäter\b",
+    r"\blass\s+(es\s+)?so\b",
+    r"\bnein[,.]?\s*(danke|bitte)?\b",
+    r"\bloss\s+(einschätz|reden|ideen)",
+)
+
 _QUESTION_START = re.compile(
     r"^(wer|was|wann|wo|warum|wieso|weshalb|wie|welche|welcher|welches|ob)\b",
     re.I,
@@ -229,6 +246,27 @@ _CLARIFY_AMBIGUOUS = (
     r"\bkönnte\b.*\b(besser|schöner|schoner|gemütlich)\b",
     r"\bkonnte\b.*\b(besser|schoner|schöner|gemütlich)\b",
     r"\betwas (gemütlicher|gemutlicher|wärmer|warmer|aufgeräumter|aufgeraeumter)\b",
+    r"\b(kannst|könntest|konntest)\s+du\s+(etwas|was|irgendwas)\b",
+    r"\b(kannst|könntest|konntest)\s+du\s+(das|es)\s+(verbessern|optimieren)\b",
+    r"\bmach(e|t)?\s+(es|das)?\s*(bitte\s+)?(besser|schöner|schoner|anders)\b",
+    r"\bverbesser",
+    r"\boptimier",
+    r"\betwas\s+änder",
+    r"\betwas\s+aender",
+    r"\banders\s+machen\b",
+    r"\bwas\s+(kannst|könntest|könnten)\s+du\s+(tun|machen)\b",
+    r"\birgendwie\s+(besser|anders|schöner|schoner)\b",
+)
+
+_OFFER_IN_ASSISTANT = (
+    r"\bvariante\b",
+    r"\bausprobieren\b",
+    r"\bvorschlagen\b",
+    r"\bsoll ich\b",
+    r"\bapply[- ]?gate\b",
+    r"\beinschätzung\b.*\boder\b",
+    r"\beinschaetzung\b.*\boder\b",
+    r"\bnur\s+.*\boder\b",
 )
 
 
@@ -237,12 +275,20 @@ def allows_commands(turn_kind: str | None) -> bool:
     return kind not in NON_MUTATING_KINDS and kind != ""
 
 
+def clarification_open_question() -> str:
+    return DEFAULT_CLARIFY_QUESTION
+
+
 def _is_opinion(text: str) -> bool:
     return any(re.search(p, text) for p in _OPINION_PATTERNS)
 
 
 def _is_accept_action(text: str) -> bool:
     return any(re.search(p, text) for p in _ACCEPT_ACTION_PATTERNS)
+
+
+def _is_assessment_only(text: str) -> bool:
+    return any(re.search(p, text) for p in _ASSESSMENT_ONLY_PATTERNS)
 
 
 def _has_room_type(text: str) -> bool:
@@ -266,16 +312,89 @@ def _is_planning_request(text: str) -> bool:
     return False
 
 
-def infer_turn_kind(message: str, history: list | None = None) -> str:
-    """Infer FC-002 turn kind from a user message (deterministic v0).
+def _last_assistant_text(history: list | None) -> str:
+    for item in reversed(history or []):
+        if not isinstance(item, dict):
+            continue
+        if item.get("role") != "assistant":
+            continue
+        content = item.get("content")
+        if isinstance(content, str) and content.strip():
+            return content.strip().lower()
+    return ""
 
-    Priority: observation/opinion → accept → styling → planning → action →
-    feedback/clarify/question → conversation default.
+
+def _assistant_offered_choice(history: list | None, agent_state: dict | None) -> bool:
+    state = agent_state if isinstance(agent_state, dict) else {}
+    last_kind = str(state.get("last_turn_kind") or "").strip()
+    if last_kind in (TURN_CLARIFY, TURN_CONVERSATION, TURN_STYLING, TURN_FEEDBACK):
+        reply = str(state.get("last_reply") or "").lower()
+        if reply and any(re.search(p, reply) for p in _OFFER_IN_ASSISTANT):
+            return True
+        if last_kind == TURN_CLARIFY:
+            return True
+    assistant = _last_assistant_text(history)
+    if assistant and any(re.search(p, assistant) for p in _OFFER_IN_ASSISTANT):
+        return True
+    return False
+
+
+def _resolve_followup_after_offer(text: str) -> str | None:
+    """Map short answers after an AI offer/clarification to a concrete kind."""
+    if _is_assessment_only(text):
+        return TURN_CONVERSATION
+    if text in ("ja", "ok", "okay", "gerne", "gern", "yes", "mach", "machen"):
+        return TURN_ACTION
+    if _is_accept_action(text):
+        return TURN_ACTION
+    if any(k in text for k in ("variante", "vorschlag", "ausprobieren", "probieren")):
+        return TURN_ACTION
+    if any(k in text for k in ("änder", "aender")) and not _is_opinion(text):
+        return TURN_ACTION
+    return None
+
+
+def _is_vague_mutation_ask(text: str) -> bool:
+    """Mutate-ish language without a clear target → clarify, don't guess."""
+    if any(re.search(p, text) for p in _CLARIFY_AMBIGUOUS):
+        return True
+    has_mutate = any(k in text for k in _MUTATE_CUES)
+    has_noun = any(k in text for k in _FURNITURE_NOUNS)
+    if has_mutate and not has_noun:
+        vague = (
+            "besser",
+            "schöner",
+            "schoner",
+            "anders",
+            "etwas",
+            "irgend",
+            "verbesser",
+            "optimier",
+        )
+        if any(k in text for k in vague):
+            return True
+    return False
+
+
+def infer_turn_kind(
+    message: str,
+    history: list | None = None,
+    agent_state: dict | None = None,
+) -> str:
+    """Infer FC-002 turn kind from a user message (deterministic WP-02).
+
+    Priority: follow-up after offer → observation/opinion → accept → styling →
+    planning → action → feedback/clarify/question → conversation default.
     """
-    _ = history  # reserved for offer-context
     t = (message or "").strip().lower()
     if not t:
         return TURN_CLARIFY
+
+    # 0) Short answer after AI asked assessment vs try / offered a variant
+    if _assistant_offered_choice(history, agent_state):
+        follow = _resolve_followup_after_offer(t)
+        if follow:
+            return follow
 
     # 1) Assessment / observation (no mutation)
     if any(re.search(p, t) for p in _OBSERVATION_PATTERNS):
@@ -290,19 +409,24 @@ def infer_turn_kind(message: str, history: list | None = None) -> str:
     ) and not _is_planning_request(t):
         return TURN_CONVERSATION
 
-    # 2) Explicit accept / proceed
+    # 2) Ambiguous mutation asks → clarify before accept heuristics (WP-02)
+    #    ("mach es bitte besser" must not look like accept-of-offer)
+    if _is_vague_mutation_ask(t):
+        return TURN_CLARIFY
+
+    # 3) Explicit accept / proceed
     if _is_accept_action(t):
         return TURN_ACTION
 
-    # 3) Styling (WP-A: acknowledge only — commands blocked via NON_MUTATING)
+    # 4) Styling (ack only — commands blocked via NON_MUTATING)
     if any(k in t for k in _STYLING_CUES):
         return TURN_STYLING
 
-    # 4) Layout / room planning goals
+    # 5) Layout / room planning goals
     if _is_planning_request(t):
         return TURN_PLANNING
 
-    # 5) Targeted furniture mutations
+    # 6) Targeted furniture mutations
     if any(k in t for k in _MUTATE_CUES) and any(k in t for k in _FURNITURE_NOUNS):
         return TURN_ACTION
     if any(k in t for k in _MUTATE_CUES):
@@ -313,13 +437,13 @@ def infer_turn_kind(message: str, history: list | None = None) -> str:
     ):
         return TURN_ACTION
 
-    # 6) Feedback / ambiguity
+    # 7) Feedback / ambiguity
     if any(k in t for k in _FEEDBACK_CUES):
         return TURN_FEEDBACK
     if any(re.search(p, t) for p in _CLARIFY_AMBIGUOUS):
         return TURN_CLARIFY
 
-    # 7) Factual questions (not planning — planning already handled)
+    # 8) Factual questions (not planning — planning already handled)
     if "?" in t or _QUESTION_START.search(t):
         if _is_opinion(t):
             return TURN_CONVERSATION
@@ -329,5 +453,5 @@ def infer_turn_kind(message: str, history: list | None = None) -> str:
             return TURN_QUESTION
         return TURN_QUESTION
 
-    # 8) Safe default: conversation (bare "Schlafzimmer" alone stays here)
+    # 9) Safe default: conversation (bare "Schlafzimmer" alone stays here)
     return TURN_CONVERSATION

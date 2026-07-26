@@ -47,12 +47,15 @@ summarize manual changes since the last observation.
 
 ------------------------------------------------------------------------
 
-## Turn kinds (FC-002/WP-A)
+## Turn kinds (FC-002/WP-A + WP-02)
 
 Every agent result should include structured `turn_kind` and `observed_revision`.
+Optional `open_question` mirrors the first entry of `questions` (clarification UX).
 Non-mutating kinds (`conversation`, `question`, `observation_request`, `feedback`,
 `clarification`, and for now `styling_request`) **must** have empty `proposal.commands`.
 Empty commands are a valid success. Core must not force `plan_layout` on those turns.
+Vague mutation asks („Kannst du das verbessern?“) resolve to `clarification` with an
+either/or question; short answers after that offer map to conversation vs action (WP-02).
 On LLM failure or missing API key, bedroom intents (and „nochmal“ when `requirements.room_type` is bedroom) use Core `plan_layout` — never the kids-room keyword demo.
 
 ------------------------------------------------------------------------
@@ -211,6 +214,7 @@ After tool rounds, the model emits:
 ```json
 {
   "turn_kind": "conversation",
+  "open_question": null,
   "reply": "…",
   "questions": [],
   "proposal": {
