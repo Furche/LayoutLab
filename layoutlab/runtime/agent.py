@@ -248,6 +248,29 @@ def _slim_findings_for_state(quality: dict | None, analysis: dict | None = None)
     return []
 
 
+def _sync_collaboration_state(session, message: str, result: dict) -> None:
+    """WP-03: focus stack + labeled preferences on agent_state."""
+    from .planning.conversation_state import (
+        apply_preferences_from_message,
+        normalize_agent_state,
+        update_focus_from_message,
+        update_focus_from_result,
+    )
+    from .session import empty_agent_state
+
+    state = getattr(session, "agent_state", None)
+    if not isinstance(state, dict):
+        state = empty_agent_state()
+    state = normalize_agent_state(state)
+    state = apply_preferences_from_message(state, message or "")
+    state = update_focus_from_message(state, session, message or "")
+    state = update_focus_from_result(state, result or {})
+    if isinstance(result.get("resolved_refs"), dict):
+        state["resolved_refs"] = result.get("resolved_refs")
+    session.agent_state = state
+    result["agent_state"] = dict(state)
+
+
 def _record_turn_observation(session, result: dict) -> None:
     """Persist last observed revision + slim findings on agent_state (FC-002/WP-A)."""
     from .session import empty_agent_state
@@ -1039,9 +1062,13 @@ def _finish_agent_result(
     turn_kind: str | None = None,
     history: list | None = None,
     user_message: str | None = None,
+    resolved_refs: dict | None = None,
 ) -> dict:
     from .planning.turn_kind import allows_commands
 
+    if resolved_refs:
+        result = dict(result)
+        result["resolved_refs"] = resolved_refs
     msg = (user_message or conversation or "").strip()
     kind = _resolve_turn_kind(
         msg,
@@ -1078,12 +1105,14 @@ def _finish_agent_result(
 def _update_agent_state(
     session, result: dict, conversation: str, *, last_plan=None, placement_fp=None
 ) -> None:
+    from .planning.conversation_state import normalize_agent_state
+    from .session import empty_agent_state
+
     state = getattr(session, "agent_state", None)
     if not isinstance(state, dict):
-        from .session import empty_agent_state
-
         state = empty_agent_state()
-        session.agent_state = state
+    state = normalize_agent_state(state)
+    session.agent_state = state
     proposal = result.get("proposal") if isinstance(result.get("proposal"), dict) else {}
     req = proposal.get("requirements")
     if not isinstance(req, dict) and last_plan and isinstance(last_plan.get("requirements"), dict):
@@ -1147,6 +1176,9 @@ def _update_agent_state(
     elif result.get("selected_id"):
         state["last_selected_id"] = result.get("selected_id")
     state["last_reply"] = (result.get("reply") or "")[:240]
+    state["last_turn_kind"] = result.get("turn_kind") or state.get("last_turn_kind")
+    session.agent_state = state
+    _sync_collaboration_state(session, conversation, result)
 
 
 def _recipe_plan_fallback(
@@ -1437,7 +1469,16 @@ def _inject_agent_state_hint(session, messages: list) -> None:
         return
     if not any(
         state.get(k)
-        for k in ("goal", "requirements", "last_proposal_id", "last_analysis_summary", "last_reply")
+        for k in (
+            "goal",
+            "requirements",
+            "last_proposal_id",
+            "last_analysis_summary",
+            "last_reply",
+            "focus",
+            "preferences",
+            "resolved_refs",
+        )
     ):
         return
     messages.append(
@@ -1445,7 +1486,8 @@ def _inject_agent_state_hint(session, messages: list) -> None:
             "role": "system",
             "content": (
                 "Session agent_state (authoritative memory — reuse requirements on retry/"
-                "„nochmal“; do not invent conflicting intent):\n"
+                "„nochmal“; honour focus.object_ids / preferences with provenance; "
+                "do not invent conflicting intent):\n"
                 + json.dumps(state, ensure_ascii=False)
             ),
         }
@@ -1590,7 +1632,13 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             session, {"ok": False, "error": "message required", "commands": [], "reply": ""}
         )
 
-    from .planning.turn_kind import NON_MUTATING_KINDS, TURN_CLARIFY, infer_turn_kind
+    from .planning.turn_kind import NON_MUTATING_KINDS, TURN_ACTION, TURN_CLARIFY, infer_turn_kind
+    from .planning.conversation_state import (
+        clarification_for_reference,
+        labels_in_text,
+        message_has_deictic,
+        resolve_reference,
+    )
 
     turn_kind = infer_turn_kind(
         message,
@@ -1602,6 +1650,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
         result = _observation_reply(session)
         result = _apply_turn_kind_guards(result, "observation_request")
         _record_turn_observation(session, result)
+        _sync_collaboration_state(session, message, result)
         return _stamp_base_revision(session, result)
 
     # DD-017: choose among Core functional shortlist before non-mutating early exits
@@ -1629,53 +1678,91 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             selected["agent_state"] = dict(getattr(session, "agent_state", {}) or {})
         return _stamp_base_revision(session, selected)
 
+    # WP-03: clarify ambiguous/missing referents (never guess). Empty scenes with
+    # labeled create/swap intents may proceed (objects need not exist yet).
+    pending_resolved_refs = None
+    if turn_kind == TURN_ACTION and (
+        message_has_deictic(message) or labels_in_text(message)
+    ):
+        resolution = resolve_reference(session, getattr(session, "agent_state", None), message)
+        status = resolution.get("status")
+        if status == "ambiguous" or (
+            status == "unresolved" and message_has_deictic(message)
+        ):
+            result = clarification_for_reference(resolution)
+            result = _apply_turn_kind_guards(result, TURN_CLARIFY)
+            _record_turn_observation(session, result)
+            _sync_collaboration_state(session, message, result)
+            return _stamp_base_revision(session, result)
+        if status == "unresolved" and labels_in_text(message):
+            from .planning.conversation_state import _scene_furniture
+
+            if _scene_furniture(session):
+                result = clarification_for_reference(resolution)
+                result = _apply_turn_kind_guards(result, TURN_CLARIFY)
+                _record_turn_observation(session, result)
+                _sync_collaboration_state(session, message, result)
+                return _stamp_base_revision(session, result)
+        if status == "resolved":
+            pending_resolved_refs = resolution
+
     # WP-02: ambiguous intent → deterministic clarification (even when LLM is on)
     if turn_kind == TURN_CLARIFY:
         result = _non_mutating_turn_reply(session, turn_kind, message)
         result = _apply_turn_kind_guards(result, turn_kind)
         _record_turn_observation(session, result)
+        _sync_collaboration_state(session, message, result)
         return _stamp_base_revision(session, result)
 
     if turn_kind in NON_MUTATING_KINDS and not llm_configured(llm_config):
         result = _non_mutating_turn_reply(session, turn_kind, message)
         result = _apply_turn_kind_guards(result, turn_kind)
         _record_turn_observation(session, result)
+        _sync_collaboration_state(session, message, result)
         return _stamp_base_revision(session, result)
 
     if not llm_configured(llm_config):
         if _session_wants_recipe_planning(session, message):
             result = _recipe_plan_fallback(session, message)
             result["turn_kind"] = turn_kind
+            if pending_resolved_refs:
+                result["resolved_refs"] = pending_resolved_refs
             _record_turn_observation(session, result)
+            _sync_collaboration_state(session, message, result)
             return _stamp_base_revision(session, result)
         demo = _demo_as_agent_result(message)
         if demo:
             demo["turn_kind"] = turn_kind
-            return _stamp_base_revision(session, _attach_quality_preview(session, demo))
-        return _stamp_base_revision(
-            session,
-            {
-                "ok": True,
-                "mode": "demo",
-                "turn_kind": turn_kind,
-                "reply": (
-                    "Kein LLM-Key. Unter LLM-Einstellungen einen Key setzen, "
-                    "oder Demo-Intents nutzen (empty/furnished kids room, schrank, lösche den raum, analyze)."
-                ),
-                "questions": [],
-                "proposal": {
-                    "proposal_id": str(uuid.uuid4()),
-                    "title": "",
-                    "rationale": "",
-                    "assumes": [],
-                    "commands": [],
-                    "expected_risks": [],
-                },
-                "suggested_next_tools": ["get_scene_summary"],
+            if pending_resolved_refs:
+                demo["resolved_refs"] = pending_resolved_refs
+            demo = _attach_quality_preview(session, demo)
+            _sync_collaboration_state(session, message, demo)
+            return _stamp_base_revision(session, demo)
+        empty = {
+            "ok": True,
+            "mode": "demo",
+            "turn_kind": turn_kind,
+            "reply": (
+                "Kein LLM-Key. Unter LLM-Einstellungen einen Key setzen, "
+                "oder Demo-Intents nutzen (empty/furnished kids room, schrank, lösche den raum, analyze)."
+            ),
+            "questions": [],
+            "proposal": {
+                "proposal_id": str(uuid.uuid4()),
+                "title": "",
+                "rationale": "",
+                "assumes": [],
                 "commands": [],
-                "tool_trace": [],
+                "expected_risks": [],
             },
-        )
+            "suggested_next_tools": ["get_scene_summary"],
+            "commands": [],
+            "tool_trace": [],
+        }
+        if pending_resolved_refs:
+            empty["resolved_refs"] = pending_resolved_refs
+        _sync_collaboration_state(session, message, empty)
+        return _stamp_base_revision(session, empty)
 
     settings = resolve_llm_settings(llm_config)
     tools = openai_tool_definitions()
@@ -1692,20 +1779,21 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
         if role in ("user", "assistant") and isinstance(content, str) and content.strip():
             messages.append({"role": role, "content": content.strip()})
     messages.append({"role": "user", "content": message})
-    messages.append(
-        {
-            "role": "system",
-            "content": (
-                f"Core inferred turn_kind={turn_kind}. "
-                + (
-                    "Non-mutating turn: proposal.commands MUST be []. "
-                    "Do not call plan_layout unless the user explicitly asked to change the scene."
-                    if turn_kind in NON_MUTATING_KINDS
-                    else "Mutating commands are allowed only for explicit planning/action requests."
-                )
-            ),
-        }
+    kind_note = (
+        f"Core inferred turn_kind={turn_kind}. "
+        + (
+            "Non-mutating turn: proposal.commands MUST be []. "
+            "Do not call plan_layout unless the user explicitly asked to change the scene."
+            if turn_kind in NON_MUTATING_KINDS
+            else "Mutating commands are allowed only for explicit planning/action requests."
+        )
     )
+    if pending_resolved_refs:
+        kind_note += (
+            " Resolved referents (use these object_ids; do not guess others): "
+            + json.dumps(pending_resolved_refs, ensure_ascii=False)
+        )
+    messages.append({"role": "system", "content": kind_note})
 
     tool_trace = []
     last_plan = None
@@ -1748,6 +1836,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                         turn_kind=turn_kind,
                         history=history,
                         user_message=message,
+                        resolved_refs=pending_resolved_refs,
                     )
                 seen_tool_fps.add(fp)
 
@@ -1825,8 +1914,9 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                     last_plan=last_plan,
                     llm_config=llm_config,
                     turn_kind=turn_kind,
-                        history=history,
-                        user_message=message,
+                    history=history,
+                    user_message=message,
+                    resolved_refs=pending_resolved_refs,
                 )
 
             normalized = _normalize_proposal(parsed)
@@ -1855,8 +1945,9 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
                 last_plan=last_plan,
                 llm_config=llm_config,
                 turn_kind=turn_kind,
-                        history=history,
-                        user_message=message,
+                history=history,
+                user_message=message,
+                resolved_refs=pending_resolved_refs,
             )
 
         result = _finalize_proposal_from_messages(settings, messages, tool_trace)
@@ -1871,8 +1962,9 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             last_plan=last_plan,
             llm_config=llm_config,
             turn_kind=turn_kind,
-                        history=history,
-                        user_message=message,
+            history=history,
+            user_message=message,
+            resolved_refs=pending_resolved_refs,
         )
     except Exception as exc:
         if _session_wants_recipe_planning(session, conversation):

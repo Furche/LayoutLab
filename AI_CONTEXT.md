@@ -67,7 +67,7 @@ Planning (candidates / shortlist / chat) and semantic edit commands already run 
 Viewer direct manipulation (gizmos, drag → preview/commit) is shipped; next product work is
 in [`docs/ROADMAP.md`](docs/ROADMAP.md) (Active):
 [FC-002](docs/concepts/FC-002-conversational-design-collaboration-and-styling.md)
-(WP-03 semantic conversation state; WP-02 routing polish `0.10.87`). Direct-edit behaviour:
+(WP-04 change summaries; WP-03 state `0.10.88`). Direct-edit behaviour:
 [FC-001](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md).
 
 Not every chat turn is an edit request. Conversation, questions and observations

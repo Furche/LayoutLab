@@ -24,29 +24,23 @@ from . import transactions as tx
 
 # Keep in sync with layoutlab/__init__.py bl_info version when bumping the plugin.
 
-AGENT_STATE_SCHEMA = "0.2.0"
+AGENT_STATE_SCHEMA = "0.3.0"
 
 
 def empty_agent_state() -> dict:
-    """Lightweight session memory — not chat transcript (agent_tool_contract)."""
-    return {
-        "schema": AGENT_STATE_SCHEMA,
-        "goal": None,
-        "requirements": None,
-        "open_questions": [],
-        "last_proposal_id": None,
-        "last_analysis_summary": None,
-        "last_placement_fp": None,
-        "last_reply": None,
-        "last_shortlist": None,
-        "last_selected_id": None,
-        "last_turn_kind": None,
-        "last_observed_revision": None,
-        "last_observed_findings": None,
-    }
+    """Lightweight session memory — not chat transcript (agent_tool_contract / DD-022)."""
+    from .planning.conversation_state import empty_agent_state_v3
+
+    return empty_agent_state_v3()
 
 
-LAYOUTLAB_VERSION = "0.10.87"
+def normalize_session_agent_state(state: dict | None) -> dict:
+    from .planning.conversation_state import normalize_agent_state
+
+    return normalize_agent_state(state)
+
+
+LAYOUTLAB_VERSION = "0.10.88"
 
 SESSION_ACTIONS = frozenset(
     {
@@ -474,7 +468,9 @@ class RoomSession:
         other.project_name = self.project_name
         other._rooms = copy.deepcopy(self._rooms)
         other.mesh_store = self.mesh_store.clone()
-        other.agent_state = copy.deepcopy(self.agent_state)
+        other.agent_state = normalize_session_agent_state(
+            copy.deepcopy(self.agent_state)
+        )
         other.revision = int(self.revision)
         other.selected_object_id = self.selected_object_id
         return other

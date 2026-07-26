@@ -28,7 +28,7 @@ Not the LLM transcript — a small object on `RoomSession.agent_state` (updated 
 
 ```json
 {
-  "schema": "0.2.0",
+  "schema": "0.3.0",
   "goal": "Schlafzimmer planen",
   "requirements": { "room_type": "bedroom", "windows": 2 },
   "open_questions": [],
@@ -38,9 +38,25 @@ Not the LLM transcript — a small object on `RoomSession.agent_state` (updated 
   "last_reply": null,
   "last_turn_kind": "conversation",
   "last_observed_revision": 3,
-  "last_observed_findings": []
+  "last_observed_findings": [],
+  "focus": {
+    "object_ids": ["…"],
+    "labels": ["bed"],
+    "candidate_id": null,
+    "room_id": null,
+    "stack": []
+  },
+  "preferences": [
+    { "key": "style", "value": "minimal", "provenance": "explicit", "source": "…" }
+  ],
+  "resolved_refs": null
 }
 ```
+
+`schema` **0.3.0** (FC-002/WP-03): `focus` stack, labeled `preferences` with provenance
+(`explicit` | `inferred` | `project_default` | `turn_temporary`), and optional
+`resolved_refs` from Core reference resolution. Inferred prefs never overwrite explicit.
+Ambiguous pronouns/labels clarify; Core does not guess.
 
 `last_observed_revision` is stamped after each turn (FC-002/WP-A) so later slices can
 summarize manual changes since the last observation.
