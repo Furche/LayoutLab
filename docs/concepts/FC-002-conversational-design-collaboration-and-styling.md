@@ -481,11 +481,16 @@ These are stable planning references, not implementation-ready tickets. They are
 not added to the Active queue by this concept alone.
 
 **Shipped first vertical slice (not Active ROADMAP):** `FC-002/WP-A` conversation-safe
-turns (`0.10.83`) — turn kinds, no-command guarantees, `last_observed_revision`.
+turns (`0.10.83`) plus routing stabilizations (`0.10.84`–`0.10.86`).
+
+**WP-A includes:** structured `turn_kind`, no-command for assessment/observation/feedback/
+clarification, `planning_request`/`action_request` still reach recipe fallback, accept
+follow-ups, furniture swap verbs, and `styling_request` as **acknowledgement only**
+(no decor/styling candidate loop yet).
 
 | ID | Work package | Entry condition |
 |---|---|---|
-| **FC-002/WP-A** | Conversation-safe turn: `turn_kind`, no-command replies, observed revision | Done `0.10.83` (ahead of full WP-01) |
+| **FC-002/WP-A** | Conversation-safe turn + routing stabilize | Done `0.10.83`–`0.10.86` |
 | **FC-002/WP-01** | Architecture package: remaining turn contract details, semantic state ownership, manual-change summaries and styling boundary | Relevant DD review/amendments accepted |
 | **FC-002/WP-02** | Conversation intent routing polish (LLM + clarification UX) | WP-A; extends WP-A heuristics |
 | **FC-002/WP-03** | Semantic conversation state, reference resolution and preference provenance | WP-01; provider-neutral agent contract |
@@ -493,6 +498,10 @@ turns (`0.10.83`) — turn kinds, no-command guarantees, `last_observed_revision
 | **FC-002/WP-05** | Decor capability metadata and semantic placement helpers over DD-021 support surfaces | WP-01; existing decor generators audited |
 | **FC-002/WP-06** | Styling candidate loop: arrange, dry-run, analyze, render, aesthetic compare and preview | WP-02/03/05; DD-017 evidence boundary confirmed |
 | **FC-002/WP-07** | User-controlled taste profile and learning from accepted/rejected styling proposals | Real WP-06 usage demonstrates need |
+
+**Still open for full FC-002:** WP-01 and WP-03…WP-07 (manual-change summaries, durable
+conversation state, decor helpers, styling candidates, eye-level aesthetics, taste profile).
+Automatic decoration does **not** exist yet.
 
 ------------------------------------------------------------------------
 
@@ -504,6 +513,9 @@ turns (`0.10.83`) — turn kinds, no-command guarantees, `last_observed_revision
 2. Ambiguous action intent produces a clarification, not a guessed mutation.
 3. `turn_kind` and `observed_revision` are structured on the agent result; Core does not
    force `plan_layout` on non-mutating turns.
+4. Explicit room planning goals (e.g. „Schlafzimmer mit zwei Fenstern“) still reach
+   `planning_request` / recipe fallback and persist requirements for retries.
+5. `styling_request` is acknowledged without commands (full styling loop is later WPs).
 
 ### 15.2 Full concept MVP — complete when
 

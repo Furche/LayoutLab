@@ -25,7 +25,48 @@ NON_MUTATING_KINDS = frozenset(
     }
 )
 
-# Explicit mutate verbs — avoid bare "einricht" (matches "eingerichtet" opinions).
+# Known room-use labels (alone ≠ mutation; need planning intent alongside).
+_ROOM_TYPE_CUES = (
+    "schlafzimmer",
+    "kinderzimmer",
+    "bedroom",
+    "kids room",
+    "kidsroom",
+    "kindzimmer",
+    "schlafgemach",
+    "wohnzimmer",
+    "büro",
+    "buero",
+    "home office",
+    "homeoffice",
+)
+
+# With a room type (or "zimmer/raum"), these mark a layout/planning ask.
+_PLAN_INTENT_CUES = (
+    "gestalt",
+    "planen",
+    "plane ",
+    "brauch",
+    "benötig",
+    "benoetig",
+    "einrichten",
+    "möblier",
+    "moblier",
+    "furnished",
+    "furniture",
+    "fenster",
+    "window",
+    "möbel",
+    "mobel",
+    "variante",
+    "layout",
+    "für zwei",
+    "fuer zwei",
+    "für 2",
+    "fuer 2",
+)
+
+# Explicit mutate verbs — avoid bare "einricht" / "richte" (hit "eingerichtet").
 _MUTATE_CUES = (
     "bau",
     "erstell",
@@ -33,6 +74,8 @@ _MUTATE_CUES = (
     "anders einricht",
     "um einricht",
     "einrichten",
+    "gestalt",
+    "planen",
     "lösch",
     "losch",
     "clear",
@@ -49,7 +92,6 @@ _MUTATE_CUES = (
     "rückgängig",
     "ruckgangig",
     "änder",
-    "ander",
     "add ",
     "remove",
     "put ",
@@ -62,7 +104,8 @@ _MUTATE_CUES = (
     "umplan",
     "nochmal versuch",
     "nochmal plan",
-    "richte",
+    "richte mir",
+    "richte ein",
     "möblier",
     "moblier",
 )
@@ -91,21 +134,12 @@ _STYLING_CUES = (
     "einrichten gemütlich",
     "gemütlicher machen",
     "gemutlicher machen",
+    "wohnlicher",
+    "wohnlich machen",
     "aufhübsch",
     "aufhubsch",
     "schöner machen",
     "schoner machen",
-)
-
-_PLANNING_CUES = (
-    "schlafzimmer",
-    "kinderzimmer",
-    "plan_layout",
-    "variante",
-    "layout",
-    "möbel",
-    "mobel",
-    "furniture",
 )
 
 _OBSERVATION_PATTERNS = (
@@ -131,6 +165,7 @@ _OBSERVATION_PATTERNS = (
     r"\bso ungefaehr\b",
     r"\bhast du dir\b",
     r"\bwie vorgestellt\b",
+    r"\bsieht .+ (stimmig|ok|gut|richtig)\b",
 )
 
 _OPINION_PATTERNS = (
@@ -165,6 +200,8 @@ _ACCEPT_ACTION_PATTERNS = (
     r"\bdo\s+it\b",
     r"\bgo\s+ahead\b",
     r"\btry\s+it\b",
+    r"\bnimm\s+(?:die\s+|den\s+)?(?:variante|option|vorschlag)\s+\w+",
+    r"\b(?:variante|option|vorschlag)\s+\d+\b",
 )
 
 _QUESTION_START = re.compile(
@@ -208,57 +245,81 @@ def _is_accept_action(text: str) -> bool:
     return any(re.search(p, text) for p in _ACCEPT_ACTION_PATTERNS)
 
 
+def _has_room_type(text: str) -> bool:
+    return any(k in text for k in _ROOM_TYPE_CUES)
+
+
+def _is_planning_request(text: str) -> bool:
+    """Room layout goal: room type + planning/requirement language (not bare label)."""
+    has_space = _has_room_type(text) or any(
+        k in text for k in ("zimmer", "raum", "room")
+    )
+    if not has_space:
+        return False
+    if any(k in text for k in _PLAN_INTENT_CUES):
+        return True
+    # "Schlafzimmer mit 2 Fenstern" / "mit zwei Fenstern"
+    if re.search(r"\bmit\s+(\d+|zwei|drei|ein|einem|einer)\b", text):
+        return True
+    if "gestalt" in text:
+        return True
+    return False
+
+
 def infer_turn_kind(message: str, history: list | None = None) -> str:
     """Infer FC-002 turn kind from a user message (deterministic v0).
 
-    ``history`` is reserved for later offer-context; accept cues already map to action.
+    Priority: observation/opinion → accept → styling → planning → action →
+    feedback/clarify/question → conversation default.
     """
     _ = history  # reserved for offer-context
     t = (message or "").strip().lower()
     if not t:
         return TURN_CLARIFY
 
-    # Accept / proceed — especially after "soll ich … ausprobieren?"
-    if _is_accept_action(t):
-        return TURN_ACTION
-
-    # Opinions / critiques before mutate heuristics ("…schön eingerichtet?")
+    # 1) Assessment / observation (no mutation)
+    if any(re.search(p, t) for p in _OBSERVATION_PATTERNS):
+        return TURN_OBSERVATION
     if _is_opinion(t):
         return TURN_CONVERSATION
 
-    if any(k in t for k in _MUTATE_CUES) and any(k in t for k in _FURNITURE_NOUNS):
-        if any(k in t for k in _STYLING_CUES):
-            return TURN_STYLING
+    # Soft aesthetic remarks without verbs
+    if any(
+        k in t
+        for k in ("kühl", "kuehl", "eng", "leer", "vollgestellt")
+    ) and not _is_planning_request(t):
+        return TURN_CONVERSATION
+
+    # 2) Explicit accept / proceed
+    if _is_accept_action(t):
         return TURN_ACTION
 
+    # 3) Styling (WP-A: acknowledge only — commands blocked via NON_MUTATING)
     if any(k in t for k in _STYLING_CUES):
         return TURN_STYLING
 
+    # 4) Layout / room planning goals
+    if _is_planning_request(t):
+        return TURN_PLANNING
+
+    # 5) Targeted furniture mutations
+    if any(k in t for k in _MUTATE_CUES) and any(k in t for k in _FURNITURE_NOUNS):
+        return TURN_ACTION
     if any(k in t for k in _MUTATE_CUES):
         return TURN_ACTION
-
-    # "kannst du mal Bett und Schreibtisch …?" without matched verb yet — still action
-    # if a clear rearrange verb slipped past (covered above) or swap synonyms appear.
     if re.search(
         r"\b(kannst|könntest|konntest)\s+du\b.+\b(austausch|vertausch|tausch|verschieb|dreh|rotier|swap)\w*\b",
         t,
     ):
         return TURN_ACTION
 
-    if any(re.search(p, t) for p in _OBSERVATION_PATTERNS):
-        return TURN_OBSERVATION
-
+    # 6) Feedback / ambiguity
     if any(k in t for k in _FEEDBACK_CUES):
         return TURN_FEEDBACK
-
     if any(re.search(p, t) for p in _CLARIFY_AMBIGUOUS):
         return TURN_CLARIFY
 
-    if any(k in t for k in _PLANNING_CUES) and (
-        "plan" in t or "einrichten" in t or "richte" in t or "variante" in t
-    ):
-        return TURN_PLANNING
-
+    # 7) Factual questions (not planning — planning already handled)
     if "?" in t or _QUESTION_START.search(t):
         if _is_opinion(t):
             return TURN_CONVERSATION
@@ -268,8 +329,5 @@ def infer_turn_kind(message: str, history: list | None = None) -> str:
             return TURN_QUESTION
         return TURN_QUESTION
 
-    if any(k in t for k in ("kühl", "kuehl", "eng", "leer", "vollgestellt", "gemütlich", "gemutlich")):
-        return TURN_CONVERSATION
-
-    # Default: treat as conversation so we do not invent mutations
+    # 8) Safe default: conversation (bare "Schlafzimmer" alone stays here)
     return TURN_CONVERSATION

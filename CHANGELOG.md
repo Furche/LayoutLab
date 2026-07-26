@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **FC-002/WP-A routing stabilize (`0.10.86`):** Planning goals (`Schlafzimmer mit Fenstern` / `gestalten`) are `planning_request` again (recipe fallback + requirements); assessments stay no-command; `styling_request` remains ack-only. FC-002 overall still Ready for decomposition; Active remains AI-03.
 - **Turn-routing furniture actions (`0.10.85`):** Cues like „austauschen“ / „tauschen“ / „drehen“ classify as `action_request`, so requests such as „Bett und Schreibtisch austauschen“ are no longer stripped to empty commands.
 - **Turn-routing follow-up fix (`0.10.84`):** Accept cues like „kannst du das tun?“ / „kann losgehen“ are `action_request` (commands allowed); aesthetic critiques with „eingerichtet“ stay conversation — no forced rebuild.
 - **FC-002/WP-A conversation-safe turns (`0.10.83`):** Structured `turn_kind`, guaranteed empty commands for conversation/question/observation/feedback/clarification/styling-ack, `last_observed_revision` on agent state; Viewer treats no-command replies as success. AI-03 remains Active.

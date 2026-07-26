@@ -1,6 +1,6 @@
 # LayoutLab — Product Roadmap
 
-**Status:** Binding · **Updated:** 2026-07-26 (`0.10.85` furniture action turn cues)
+**Status:** Binding · **Updated:** 2026-07-26 (`0.10.86` FC-002/WP-A routing stabilize)
 
 > **This file is the only authoritative source for product priorities and work order.**
 >
@@ -42,6 +42,7 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 | FC-002/WP-A conversation-safe turns | `0.10.83` — `turn_kind`, no-command guarantees, `last_observed_revision` (FC-002 not Active) |
 | Turn-routing follow-up fix | `0.10.84` — accept cues → action; „eingerichtet“ critiques stay conversation |
 | Turn-routing furniture actions | `0.10.85` — austauschen/tauschen/drehen → action (no empty command strip) |
+| FC-002/WP-A routing stabilize | `0.10.86` — planning goals (`Schlafzimmer mit Fenstern`) vs assessment; recipe fallback restored |
 | FC-001/WP-01 — DD package | [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](design_decisions/DD-020-spatial-project-independent-rooms.md) **Accepted** |
 | FC-001/WP-02 — semantic transactions | `0.10.36` · [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) |
 | FC-001/WP-03 — furniture ops | `0.10.37` · [DD-019](design_decisions/DD-019-semantic-direct-manipulation.md) |
@@ -74,8 +75,8 @@ Long-term vision phases (not the working queue): [`LayoutLab_Master_Design_Docum
 | AI-03 Trade-off explanation | Short pros/cons/trade-offs in Viewer (no metrics dashboard) | [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) #9 | Next |
 
 AI-02 shipped (`0.10.81`). Agent blueprint vision shipped (`0.10.82`). FC-002/WP-A
-conversation-safe turns shipped (`0.10.83`) without making FC-002 Active. Continue AI
-competence queue with AI-03.
+conversation-safe turns shipped and stabilized (`0.10.83`–`0.10.86`) without making FC-002
+Active (`styling_request` = ack only). Continue AI competence queue with AI-03.
 
 ------------------------------------------------------------------------
 
@@ -133,7 +134,7 @@ Need a Feature Concept and/or DD before implementation — **not** active commit
 
 | Topic | Notes |
 |---|---|
-| [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) | **Ready for decomposition** — WP-A shipped (`0.10.83`); remaining WPs later; not Active — natural no-command conversation, manual-change understanding and semantic decoration/styling; AI-03/04/08 remain useful foundations |
+| [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) | **Ready for decomposition** — WP-A only (`0.10.83`–`0.10.86`); WP-01/03–07 open; not Active — AI-03 remains next |
 | Persisted project variants | Save, name, compare, favorite — **not** the same as ephemeral candidates |
 | Walkway / navigation analysis | Experimental idea in [`Future_Ideas.md`](Future_Ideas.md) §5 |
 | Polygon rooms | DD-010 next (`footprint.kind = polygon`) — after FC-001 WP-01…WP-06 |

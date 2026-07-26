@@ -55,7 +55,7 @@ field names and commands belong in the appropriate contract documents.
 | ID | Concept | Status | Related architecture |
 |---|---|---|---|
 | [FC-001](FC-001-semantic-direct-manipulation-and-multi-room-editing.md) | Semantic Direct Manipulation and Multi-Room Editing | **Implemented** (WP-01…WP-07 done) | DD-009, DD-010, DD-014; [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](../design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-020](../design_decisions/DD-020-spatial-project-independent-rooms.md) · [DD-021](../design_decisions/DD-021-advanced-support-surfaces.md) **Accepted** |
-| [FC-002](FC-002-conversational-design-collaboration-and-styling.md) | Conversational Design Collaboration and Styling | **Ready for decomposition** (WP-A shipped `0.10.83`) | DD-009, DD-017, DD-018, DD-019, DD-021 |
+| [FC-002](FC-002-conversational-design-collaboration-and-styling.md) | Conversational Design Collaboration and Styling | **Ready for decomposition** (WP-A only `0.10.83`–`0.10.86`) | DD-009, DD-017, DD-018, DD-019, DD-021 |
 
 ------------------------------------------------------------------------
 

@@ -1575,13 +1575,7 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
         _record_turn_observation(session, result)
         return _stamp_base_revision(session, result)
 
-    if turn_kind in NON_MUTATING_KINDS and not llm_configured(llm_config):
-        result = _non_mutating_turn_reply(session, turn_kind, message)
-        result = _apply_turn_kind_guards(result, turn_kind)
-        _record_turn_observation(session, result)
-        return _stamp_base_revision(session, result)
-
-    # DD-017: choose among Core functional shortlist before a new plan
+    # DD-017: choose among Core functional shortlist before non-mutating early exits
     from .planning.selection_surface import (
         apply_shortlist_selection,
         resolve_shortlist_selection,
@@ -1606,17 +1600,28 @@ def run_agent_turn(session, message: str, *, llm_config: dict | None = None, his
             selected["agent_state"] = dict(getattr(session, "agent_state", {}) or {})
         return _stamp_base_revision(session, selected)
 
+    if turn_kind in NON_MUTATING_KINDS and not llm_configured(llm_config):
+        result = _non_mutating_turn_reply(session, turn_kind, message)
+        result = _apply_turn_kind_guards(result, turn_kind)
+        _record_turn_observation(session, result)
+        return _stamp_base_revision(session, result)
+
     if not llm_configured(llm_config):
         if _session_wants_recipe_planning(session, message):
-            return _stamp_base_revision(session, _recipe_plan_fallback(session, message))
+            result = _recipe_plan_fallback(session, message)
+            result["turn_kind"] = turn_kind
+            _record_turn_observation(session, result)
+            return _stamp_base_revision(session, result)
         demo = _demo_as_agent_result(message)
         if demo:
+            demo["turn_kind"] = turn_kind
             return _stamp_base_revision(session, _attach_quality_preview(session, demo))
         return _stamp_base_revision(
             session,
             {
                 "ok": True,
                 "mode": "demo",
+                "turn_kind": turn_kind,
                 "reply": (
                     "Kein LLM-Key. Unter LLM-Einstellungen einen Key setzen, "
                     "oder Demo-Intents nutzen (empty/furnished kids room, schrank, lösche den raum, analyze)."
