@@ -65,10 +65,10 @@ Viewer (UX)  ←→  Core HTTP API  ←→  Spatial Project (rooms[], revision, 
 
 Planning (candidates / shortlist / chat) and semantic edit commands already run against Core.
 Viewer direct manipulation (gizmos, drag → preview/commit) is shipped; next product work is
-in [`docs/ROADMAP.md`](docs/ROADMAP.md) (Active). Direct-edit behaviour:
+in [`docs/ROADMAP.md`](docs/ROADMAP.md) (Active):
+[FC-002](docs/concepts/FC-002-conversational-design-collaboration-and-styling.md)
+(WP-01 architecture). Direct-edit behaviour:
 [FC-001](docs/concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md).
-Future conversational collaboration and styling behaviour:
-[FC-002](docs/concepts/FC-002-conversational-design-collaboration-and-styling.md).
 
 Not every chat turn is an edit request. Conversation, questions and observations
 may correctly produce no commands. When changes are requested, the AI proposes and

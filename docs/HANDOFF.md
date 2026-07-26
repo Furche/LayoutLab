@@ -4,11 +4,11 @@
 > **Owns:** technical as-built status, versions, gotchas, session notes.
 > **Does not own:** product priorities or work order — that is [`ROADMAP.md`](ROADMAP.md).
 
-**Last updated:** 2026-07-26 (ROADMAP §0 Product map)
+**Last updated:** 2026-07-26 (FC-002 Active — WP-01 next)
 **Plugin / Core version:** 0.10.86 · **Branch:** `main`
 
 **Active product work:** [ROADMAP.md §2 Active](ROADMAP.md#2-active) —
-**AI-03** trade-off explanation next. FC-002 remains Ready for decomposition (WP-A only).
+**FC-002/WP-01** architecture package. AI competence queue (AI-03…) paused until FC-002 closes.
 **Overview:** [ROADMAP.md §0 Product map](ROADMAP.md#0-product-map) — now / done / planned at a glance.
 
 ------------------------------------------------------------------------
@@ -47,9 +47,9 @@ Lies in dieser Reihenfolge:
 Aktueller Stand (2026-07-26):
 - Produktfokus: Standalone Web Viewer (`viewer/`) + Core HTTP (`server/`)
 - FC-001/WP-01…WP-07 ✅; Viewer DM ✅; planning feedback ✅; agent blueprint ✅ (`0.10.82`)
-- FC-002/WP-A conversation-safe turns ✅ (`0.10.83`–`0.10.86` routing fixes); FC-002 insgesamt Ready for decomposition, nicht fertig, nicht Active
-- styling_request in WP-A = Acknowledgement ohne Commands (kein Styling-Loop)
-- Active: AI-03 Trade-off explanation (siehe ROADMAP §2)
+- FC-002 **Active** — WP-A ✅ (`0.10.83`–`0.10.86`); **WP-01** next (architecture / DD amendments)
+- styling_request in WP-A = Acknowledgement ohne Commands (Styling-Loop = WP-06)
+- AI-03…AI-09 paused until FC-002 closes (ROADMAP §5 Later)
 - Blender = Runtime-Adapter, kein Default für neue Features
 - Core: python3 -m server (:8765); Viewer: cd viewer && npm run dev (:5173)
 
@@ -127,7 +127,7 @@ User Intent → Viewer UX → Core (rules/commands) → Spatial Project → scen
 - **Evaluation v0.2** preferred clearances + score rank (`0.10.80`)
 - **`kids_room_basic`** recipe + Kinderzimmer routing (`0.10.81`)
 - **Agent blueprint vision** — sketch/dry-run PNG + multimodal agent messages (`0.10.82`)
-- **FC-002/WP-A** — conversation-safe turns + routing stabilize (`0.10.83`–`0.10.86`): `turn_kind`, no-command for assessment, planning/action keep recipe fallback; `styling_request` = ack only (no decor loop). FC-002 overall not done.
+- **FC-002/WP-A** — conversation-safe turns + routing stabilize (`0.10.83`–`0.10.86`): `turn_kind`, no-command for assessment, planning/action keep recipe fallback; `styling_request` = ack only (no decor loop). **FC-002 Active** — WP-01 next.
 - Default boot: furnished bedroom via Core; clearances as oriented mesh wireframes
 - Bundled generator sync; diagnostic checks; reference kids room fixtures under `tests/fixtures/`
 
@@ -221,9 +221,11 @@ If **next work** changes, update [`ROADMAP.md`](ROADMAP.md) first, then point he
 
 | Date | Change |
 |---|---|
-| 2026-07-26 | FC-002/WP-A routing stabilize (`0.10.86`): planning goals vs conversation; still not Active |
-| 2026-07-25 | FC-002/WP-A conversation-safe turns (`0.10.83`); FC-002 still not Active |
-| 2026-07-25 | FC-002 Conversational Design Collaboration and Styling documented; Ready for decomposition, not Active |
+| 2026-07-26 | FC-002 **Active** — WP-01 next; AI-03…AI-09 moved to ROADMAP §5 Later |
+| 2026-07-26 | ROADMAP §0 Product map (now/done/planned overview) |
+| 2026-07-26 | FC-002/WP-A routing stabilize (`0.10.86`): planning goals vs conversation |
+| 2026-07-25 | FC-002/WP-A conversation-safe turns (`0.10.83`) |
+| 2026-07-25 | FC-002 Conversational Design Collaboration and Styling documented |
 | 2026-07-23 | `0.10.60` Room Z-rotate; Active → FC-001/WP-07 |
 | 2026-07-23 | `0.10.59` Chat thinking indicator; `0.10.58` planning feedback polish |
 | 2026-07-23 | Roadmap ownership moved to `docs/ROADMAP.md`; HANDOFF = session/as-built only |

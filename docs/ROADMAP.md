@@ -1,6 +1,6 @@
 # LayoutLab — Product Roadmap
 
-**Status:** Binding · **Updated:** 2026-07-26 (product map overview)
+**Status:** Binding · **Updated:** 2026-07-26 (FC-002 Active — WP-01 next)
 
 > **This file is the only authoritative source for product priorities and work order.**
 >
@@ -40,16 +40,16 @@ Status legend:
 | Thema | Art | Status | Geplant? | Detail |
 |---|---|---|---|---|
 | [FC-001](concepts/FC-001-semantic-direct-manipulation-and-multi-room-editing.md) Semantic direct manipulation + multi-room | Feature Concept | **Done** (WP-01…WP-07) | Yes — closed | Non-goals (shared walls, polygon, physics stacking, …) → Later / Deferred |
-| [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) Conversation, collaboration & styling | Feature Concept | **Partial** (WP-A only) | Yes — written; **not Active** | WP-01, WP-03…WP-07 open; see §5 |
+| [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) Conversation, collaboration & styling | Feature Concept | **Next** (Active; WP-A done) | Yes — **Active theme** | WP-01 now; WP-02…WP-07 in §3 |
 | AI-01 Evaluation scoring v0.2 | Competence slice | **Done** (`0.10.80`) | Yes — closed | §1 |
 | AI-02 `kids_room_basic` | Competence slice | **Done** (`0.10.81`) | Yes — closed | §1 |
-| AI-03 Trade-off explanation | Competence slice | **Next** | Yes — Active | §2 · DD-017 #9 |
-| AI-04 Allowlist expansion | Competence slice | **Queued** | Yes | §3 |
-| AI-05 Circulation soft metric | Competence slice | **Queued** | Yes | §3 |
-| AI-06 Walkway / navigation | Future FC | **Later** | Yes — queued *to create FC* | §3 / §5 · no FC file yet |
-| AI-07 Persisted variants | Future FC | **Later** | Yes — queued *to create FC/DD* | §3 / §5 · no FC file yet |
-| AI-08 Problem-first Intent | Competence slice | **Queued** | Yes | §3 |
-| AI-09 Automatic repair proposals | Competence slice | **Queued** | Yes | §3 |
+| AI-03 Trade-off explanation | Competence slice | **Later** | Yes — after FC-002 | §5 · DD-017 #9 |
+| AI-04 Allowlist expansion | Competence slice | **Later** | Yes — after AI-03 | §5 |
+| AI-05 Circulation soft metric | Competence slice | **Later** | Yes — after AI-04 | §5 |
+| AI-06 Walkway / navigation | Future FC | **Later** | Yes — after AI-05; *create FC* | §5 · no FC file yet |
+| AI-07 Persisted variants | Future FC | **Later** | Yes — after AI-06; *create FC/DD* | §5 · no FC file yet |
+| AI-08 Problem-first Intent | Competence slice | **Later** | Yes — after AI-07 | §5 |
+| AI-09 Automatic repair proposals | Competence slice | **Later** | Yes — after AI-08 | §5 |
 | Polygon rooms | Room-model extension | **Later** | Yes — named | §5 · DD-010 next; no FC |
 | AI aesthetics privacy stage 1 | Refinement | **Done** (`0.10.79`) | Yes — closed | §4 |
 | AI aesthetics privacy stage 2 | Refinement | **Deferred** | Yes — deferred until production offer | §4 / §6 |
@@ -84,7 +84,7 @@ Status legend:
 | Evaluation schema v0.2 (AI-01) | `0.10.80` — preferred clearances scored; context weights; rank tie-break |
 | `kids_room_basic` recipe (AI-02) | `0.10.81` — sleep/play/homework strategies; Kinderzimmer routing |
 | Agent blueprint vision | `0.10.82` — multimodal top-down PNG in sketch/dry-run seed (ASCII fallback) |
-| FC-002/WP-A conversation-safe turns | `0.10.83` — `turn_kind`, no-command guarantees, `last_observed_revision` (FC-002 not Active) |
+| FC-002/WP-A conversation-safe turns | `0.10.83` — `turn_kind`, no-command guarantees, `last_observed_revision` |
 | Turn-routing follow-up fix | `0.10.84` — accept cues → action; „eingerichtet“ critiques stay conversation |
 | Turn-routing furniture actions | `0.10.85` — austauschen/tauschen/drehen → action (no empty command strip) |
 | FC-002/WP-A routing stabilize | `0.10.86` — planning goals (`Schlafzimmer mit Fenstern`) vs assessment; recipe fallback restored |
@@ -117,24 +117,25 @@ Status legend:
 
 | ID | Scope | Concept / DDs | Status |
 |---|---|---|---|
-| AI-03 Trade-off explanation | Short pros/cons/trade-offs in Viewer (no metrics dashboard) | [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) #9 | Next |
+| **FC-002/WP-01** | Architecture package: turn-contract details, semantic conversation-state ownership, durable change-summary contract, styling boundary | [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) · amend [DD-017](design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) / [DD-018](design_decisions/DD-018-semantic-transactions-and-authority.md) / [DD-021](design_decisions/DD-021-advanced-support-surfaces.md) as needed; new DD only for a genuine new boundary | **Next** |
 
-AI-02 shipped (`0.10.81`). Agent blueprint vision shipped (`0.10.82`). FC-002/WP-A
-conversation-safe turns shipped and stabilized (`0.10.83`–`0.10.86`) without making FC-002
-Active (`styling_request` = ack only). Continue AI competence queue with AI-03.
+One theme at a time: finish FC-002 WPs before returning to the AI competence queue.
+WP-A (`0.10.83`–`0.10.86`) already shipped (`styling_request` = ack only until WP-06).
 
 ------------------------------------------------------------------------
 
 ## 3. Queued
 
+FC-002 work packages (after WP-01 Accept):
+
 | ID | Scope | Entry condition |
 |---|---|---|
-| AI-04 Allowlist expansion | More roles / semantic intentions / preference keys | After AI-03 |
-| AI-05 Circulation soft metric | Lightweight circulation proxy (walkway precursor) | After AI-04 |
-| AI-06 Walkway / navigation FC | Full navigation analysis Feature Concept → DD → impl | After AI-05; needs FC |
-| AI-07 Persisted variants | Save/name/compare/favorite (not ephemeral shortlist) | After AI-06; needs FC/DD |
-| AI-08 Problem-first Intent | Stronger requirements extraction before placement | After AI-07 |
-| AI-09 Automatic repair proposals | Explainable replans from findings (never silent) | After AI-08 |
+| FC-002/WP-02 | Conversation intent routing polish (LLM + clarification UX) | After WP-01; extends WP-A heuristics |
+| FC-002/WP-03 | Semantic conversation state, reference resolution, preference provenance | After WP-01 |
+| FC-002/WP-04 | Manual-change understanding from revisions + semantic operation summaries | After WP-01; needs change-summary contract |
+| FC-002/WP-05 | Decor capability metadata + semantic placement helpers (DD-021 surfaces) | After WP-01; decor generators audited |
+| FC-002/WP-06 | Styling candidate loop (arrange → dry-run → analyze → aesthetic compare → preview) | After WP-02/03/05; DD-017 evidence boundary |
+| FC-002/WP-07 | User-controlled taste profile from accepted/rejected styling proposals | After real WP-06 usage shows need |
 
 Not in this queue (deferred / UX-only): aesthetics privacy stage 2, DM polish, Capture, shared walls.
 
@@ -144,14 +145,10 @@ Not in this queue (deferred / UX-only): aesthetics privacy stage 2, DM polish, C
 
 Not blocking the Active/Queued track. No fixed sprint commitments except the aesthetics privacy minimum below.
 
-**Viewer score / trade-off explanation (refinement)**
-
-- Queued as **AI-03** — short pros/cons first; optional expandable detail later. No metrics dashboard.
-
 **Shortlist / proposal comparison UX (later polish)**
 
 - Current cards + reason + findings are enough for now (`0.10.58`).
-- Later: richer comparison without a metrics dashboard (e.g. clearer trade-offs, optional larger selected-card preview).
+- Richer comparison / AI-03 trade-off copy waits until after FC-002 (see §5).
 
 **Further recipes**
 
@@ -173,16 +170,20 @@ Stage 1 is closed for the opt-in flag. Stage 2 stays deferred.
 
 ------------------------------------------------------------------------
 
-## 5. Later Feature Concepts
+## 5. Later (after FC-002)
 
-Need a Feature Concept and/or DD before implementation — **not** active commitments:
+Ordered resume of the AI competence queue and other named themes — **not** active while FC-002 is Active:
 
-| Topic | Notes |
+| ID / topic | Notes |
 |---|---|
-| [FC-002](concepts/FC-002-conversational-design-collaboration-and-styling.md) | **Ready for decomposition** — WP-A only (`0.10.83`–`0.10.86`); WP-01/03–07 open; not Active — AI-03 remains next |
-| Persisted project variants | Save, name, compare, favorite — **not** the same as ephemeral candidates |
-| Walkway / navigation analysis | Experimental idea in [`Future_Ideas.md`](Future_Ideas.md) §5 |
-| Polygon rooms | DD-010 next (`footprint.kind = polygon`) — after FC-001 WP-01…WP-06 |
+| AI-03 Trade-off explanation | Short pros/cons in Viewer (no metrics dashboard) · DD-017 #9 |
+| AI-04 Allowlist expansion | More roles / semantic intentions / preference keys |
+| AI-05 Circulation soft metric | Lightweight circulation proxy (walkway precursor) |
+| AI-06 Walkway / navigation | Needs Feature Concept → DD → impl · [`Future_Ideas.md`](Future_Ideas.md) §5 |
+| AI-07 Persisted variants | Save/name/compare/favorite — not ephemeral shortlist; needs FC/DD |
+| AI-08 Problem-first Intent | Stronger requirements extraction before placement |
+| AI-09 Automatic repair proposals | Explainable replans from findings (never silent) |
+| Polygon rooms | DD-010 next (`footprint.kind = polygon`) |
 
 ------------------------------------------------------------------------
 

@@ -1,9 +1,9 @@
 # FC-002 — Conversational Design Collaboration and Styling
 
-**Status:** Ready for decomposition  
-**Date:** 2026-07-25  
+**Status:** Active (WP-01 next; WP-A shipped `0.10.83`–`0.10.86`)  
+**Date:** 2026-07-25 · **Activated:** 2026-07-26  
 **Owner:** Product / Architecture  
-**Related:** [DD-009](../design_decisions/DD-009-ai-execution-boundary.md) · [DD-017](../design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) · [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](../design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-021](../design_decisions/DD-021-advanced-support-surfaces.md) · [FC-001](FC-001-semantic-direct-manipulation-and-multi-room-editing.md)
+**Related:** [DD-009](../design_decisions/DD-009-ai-execution-boundary.md) · [DD-017](../design_decisions/DD-017-collaborative-planning-and-contextual-evaluation.md) · [DD-018](../design_decisions/DD-018-semantic-transactions-and-authority.md) · [DD-019](../design_decisions/DD-019-semantic-direct-manipulation.md) · [DD-021](../design_decisions/DD-021-advanced-support-surfaces.md) · [FC-001](FC-001-semantic-direct-manipulation-and-multi-room-editing.md) · [ROADMAP](../ROADMAP.md)
 
 ------------------------------------------------------------------------
 
@@ -477,10 +477,10 @@ DD-021 in another document.
 
 ## 14. Derived work packages
 
-These are stable planning references, not implementation-ready tickets. They are
-not added to the Active queue by this concept alone.
+These are stable planning references. Binding work order: [`docs/ROADMAP.md`](../ROADMAP.md)
+§§2–3 (FC-002 is **Active**).
 
-**Shipped first vertical slice (not Active ROADMAP):** `FC-002/WP-A` conversation-safe
+**Shipped first vertical slice:** `FC-002/WP-A` conversation-safe
 turns (`0.10.83`) plus routing stabilizations (`0.10.84`–`0.10.86`).
 
 **WP-A includes:** structured `turn_kind`, no-command for assessment/observation/feedback/
@@ -491,15 +491,15 @@ follow-ups, furniture swap verbs, and `styling_request` as **acknowledgement onl
 | ID | Work package | Entry condition |
 |---|---|---|
 | **FC-002/WP-A** | Conversation-safe turn + routing stabilize | Done `0.10.83`–`0.10.86` |
-| **FC-002/WP-01** | Architecture package: remaining turn contract details, semantic state ownership, manual-change summaries and styling boundary | Relevant DD review/amendments accepted |
-| **FC-002/WP-02** | Conversation intent routing polish (LLM + clarification UX) | WP-A; extends WP-A heuristics |
+| **FC-002/WP-01** | Architecture package: remaining turn contract details, semantic state ownership, manual-change summaries and styling boundary | **Active** — Relevant DD review/amendments accepted |
+| **FC-002/WP-02** | Conversation intent routing polish (LLM + clarification UX) | WP-01; extends WP-A heuristics |
 | **FC-002/WP-03** | Semantic conversation state, reference resolution and preference provenance | WP-01; provider-neutral agent contract |
 | **FC-002/WP-04** | Manual-change understanding from project revisions and semantic operation summaries | WP-01; DD-018 transaction history / change-summary contract |
 | **FC-002/WP-05** | Decor capability metadata and semantic placement helpers over DD-021 support surfaces | WP-01; existing decor generators audited |
 | **FC-002/WP-06** | Styling candidate loop: arrange, dry-run, analyze, render, aesthetic compare and preview | WP-02/03/05; DD-017 evidence boundary confirmed |
 | **FC-002/WP-07** | User-controlled taste profile and learning from accepted/rejected styling proposals | Real WP-06 usage demonstrates need |
 
-**Still open for full FC-002:** WP-01 and WP-03…WP-07 (manual-change summaries, durable
+**Still open for full FC-002:** WP-01 and WP-02…WP-07 (manual-change summaries, durable
 conversation state, decor helpers, styling candidates, eye-level aesthetics, taste profile).
 Automatic decoration does **not** exist yet.
 
